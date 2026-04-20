@@ -38,6 +38,7 @@ export interface ShellPanelDefinition {
   label: string;
   icon: LucideIcon;
   global?: boolean;
+  hidden?: boolean;
 }
 
 export interface ShellCommandDefinition {
