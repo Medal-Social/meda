@@ -1,0 +1,58 @@
+{
+  "name": "@medalsocial/meda",
+  "version": "0.1.0",
+  "description": "Shared Meda UI shell and runtime package.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "README.md",
+    "components.json",
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./shell": {
+      "types": "./dist/shell/index.d.ts",
+      "default": "./dist/shell/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "publishConfig": {
+    "provenance": true
+  },
+  "scripts": {
+    "build": "pnpm exec tsc -p tsconfig.build.json && node ./scripts/build.mjs",
+    "prepack": "pnpm build",
+    "test:run": "vitest run --environment jsdom"
+  },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-dom": ">=19"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.4.0",
+    "@fontsource-variable/geist": "^5.2.8",
+    "@fontsource-variable/geist-mono": "^5.2.7",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "lucide-react": "^1.8.0",
+    "react-resizable-panels": "^4.10.0",
+    "tailwind-merge": "^3.5.0",
+    "vaul": "^1.1.2"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "jsdom": "^29.0.2",
+    "typescript": "~6.0.2",
+    "vitest": "^4.1.4"
+  }
+}
