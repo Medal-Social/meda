@@ -2,7 +2,7 @@
   "name": "@medalsocial/meda",
   "version": "0.1.0",
   "description": "Shared Meda UI shell and runtime package.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
