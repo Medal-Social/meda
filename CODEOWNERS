@@ -1,0 +1,5 @@
+# Default: require review from maintainers
+* @alioftech @adaadev
+
+# CI and release pipeline
+.github/ @alioftech @adaadev

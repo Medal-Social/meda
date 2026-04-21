@@ -1,0 +1,60 @@
+name: Request changeset
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+    branches: [dev]
+
+permissions: {}
+
+jobs:
+  request:
+    if: |
+      !github.event.pull_request.draft &&
+      !startsWith(github.head_ref, 'changeset-release/') &&
+      github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Check if changeset needed
+        id: check
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.sha }} --depth=1
+          CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD)
+
+          HAS_CHANGESET=$(echo "$CHANGED" | grep -c '^\.changeset/.*\.md$' || true)
+          HAS_SRC=$(echo "$CHANGED" | grep -cE '^src/' || true)
+
+          if [[ "$HAS_CHANGESET" -eq 0 && "$HAS_SRC" -gt 0 ]]; then
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Ask Copilot to generate changeset
+        if: steps.check.outputs.needed == 'true'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: [
+                '@copilot Please add a changeset for this PR.',
+                '',
+                'Look at the diff and create a `.changeset/<descriptive-name>.md` file with:',
+                '- The correct bump type (`patch`, `minor`, or `major`)',
+                '- Package in scope: `@medalsocial/meda`',
+                '- A concise, user-facing summary (not implementation details)',
+                '',
+                'Follow the format of existing files in `.changeset/`.',
+              ].join('\n')
+            });
