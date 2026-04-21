@@ -23,9 +23,6 @@
     },
     "./styles.css": "./dist/styles.css"
   },
-  "publishConfig": {
-    "provenance": true
-  },
   "scripts": {
     "build": "pnpm exec tsc -p tsconfig.build.json && node ./scripts/build.mjs",
     "prepack": "pnpm build",
