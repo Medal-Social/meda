@@ -1,0 +1,4 @@
+:root {
+  --meda-shell-panel-dock-radius: var(--radius-4xl, 1.5rem);
+  --meda-shell-panel-dock-shadow: var(--shadow-panel-elevated, 0 32px 90px rgb(0 0 0 / 0.45));
+}
