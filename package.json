@@ -47,7 +47,7 @@
     "test:run": "vitest run --environment jsdom",
     "typecheck": "tsc --noEmit",
     "version": "changeset version",
-    "release": "pnpm build && pnpm publish --access public --no-git-checks",
+    "release": "pnpm build && changeset publish",
     "registry:validate": "node ./registry/scripts/validate-registry.mjs"
   },
   "peerDependencies": {
