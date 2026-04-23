@@ -27,7 +27,8 @@ scripts/
 
 ## Pull Requests
 
-- Branch from `prod` (the single-trunk default)
+- Branch from `dev` and target `dev` in your PR
+- Releases flow `dev → prod` via a second PR once a batch of changes is ready
 - Write or update tests for any behavior change
 - Ensure `pnpm lint`, `pnpm test`, and `pnpm build` pass before submitting
 - Add a changeset with `pnpm changeset` for any user-facing change

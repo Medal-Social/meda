@@ -4,9 +4,10 @@
 Shared Meda UI shell and runtime package. Public open-source, published to npm.
 
 ## Branch Strategy
-Single-trunk on `prod` (default branch). Feature work: `feat/*` → PR → `prod`. Changesets opens a "Release PR" (`changeset-release/prod` → `prod`) that bumps the version; merging it triggers the npm publish via OIDC.
+Two-branch flow: `feat/*` → PR → `dev` → PR → `prod`. `prod` is the default/stable branch. Changesets opens a "Release PR" (`changeset-release/prod` → `prod`) that bumps the version; merging it triggers the npm publish via OIDC.
 
 ## Release Pipeline
+- CI runs on pushes and PRs to both `dev` and `prod`
 - `release.yml` triggers on push to `prod`
 - Changesets action either opens the Release PR or, if the version bump is already committed, publishes directly
 - Uses npm OIDC trusted publishing (no static NPM_TOKEN)
