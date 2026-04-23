@@ -3,7 +3,7 @@ name: Request changeset
 on:
   pull_request:
     types: [opened, ready_for_review]
-    branches: [dev]
+    branches: [prod]
 
 permissions: {}
 
