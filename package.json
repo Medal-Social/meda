@@ -3,6 +3,14 @@
   "version": "0.1.1",
   "description": "Shared Meda UI shell and runtime package.",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Medal-Social/meda.git"
+  },
+  "homepage": "https://github.com/Medal-Social/meda#readme",
+  "bugs": {
+    "url": "https://github.com/Medal-Social/meda/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
