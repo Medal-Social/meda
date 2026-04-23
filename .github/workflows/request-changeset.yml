@@ -3,7 +3,7 @@ name: Request changeset
 on:
   pull_request:
     types: [opened, ready_for_review]
-    branches: [dev]
+    branches: [dev, prod]
 
 permissions: {}
 
@@ -30,9 +30,18 @@ jobs:
           CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD)
 
           HAS_CHANGESET=$(echo "$CHANGED" | grep -c '^\.changeset/.*\.md$' || true)
-          HAS_SRC=$(echo "$CHANGED" | grep -cE '^src/' || true)
 
-          if [[ "$HAS_CHANGESET" -eq 0 && "$HAS_SRC" -gt 0 ]]; then
+          # Non-package-affecting paths that do NOT require a changeset even if they change.
+          # Includes CI, hooks, docs, demo, registry, and repo-governance/config files that
+          # don't ship in the npm tarball.
+          NON_PKG=$(echo "$CHANGED" | grep -cE '^(\.github/|\.husky/|\.changeset/|demo/|registry/|docs/|\.gitignore$|\.editorconfig$|\.npmrc$|CODEOWNERS$|[^/]*\.md$|LICENSE$|NOTICE$|biome\.json$|vitest\.config\.ts$|vite\.config\.demo\.ts$)' || true)
+
+          # Everything else is assumed package-affecting (src/, scripts/, package.json,
+          # tsconfig*.json, pnpm-workspace.yaml, pnpm-lock.yaml, top-level configs, etc.).
+          TOTAL_CHANGED=$(echo "$CHANGED" | grep -c . || true)
+          PKG_AFFECTING=$((TOTAL_CHANGED - NON_PKG))
+
+          if [[ "$HAS_CHANGESET" -eq 0 && "$PKG_AFFECTING" -gt 0 ]]; then
             echo "needed=true" >> "$GITHUB_OUTPUT"
           else
             echo "needed=false" >> "$GITHUB_OUTPUT"
