@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { ShellModuleDefinition, ShellNavItem } from './types';
+import type { ShellModuleDefinition, ShellNavItem } from './types.js';
 
 interface ShellModuleNavRenderArgs {
   children: ReactNode;

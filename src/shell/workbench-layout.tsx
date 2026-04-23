@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { ShellViewportBand } from './types';
+import type { ShellViewportBand } from './types.js';
 
 export interface WorkbenchLayoutProps {
   viewportBand: ShellViewportBand;

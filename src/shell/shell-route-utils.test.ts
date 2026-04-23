@@ -5,6 +5,7 @@ import {
   getShellPanelViewsFromMatches,
   getShellTabsFromMatches,
 } from './shell-route-utils';
+import type { ShellRouteContext } from './types';
 
 describe('shell-route-utils', () => {
   it('resolves content layout from the last route handle', () => {
@@ -24,10 +25,7 @@ describe('shell-route-utils', () => {
     const tabs = [{ id: 'overview', label: 'Overview', to: '/frame' }];
 
     expect(
-      getShellTabsFromMatches(
-        [{ handle: { shellTabs: tabs }, params: { id: 'frame' } }],
-        '/frame'
-      )
+      getShellTabsFromMatches([{ handle: { shellTabs: tabs }, params: { id: 'frame' } }], '/frame')
     ).toEqual(tabs);
   });
 
@@ -36,7 +34,7 @@ describe('shell-route-utils', () => {
       [
         {
           handle: {
-            shellTabs: ({ params, pathname }) => [
+            shellTabs: ({ params, pathname }: ShellRouteContext) => [
               {
                 id: params.id ?? 'unknown',
                 label: pathname,

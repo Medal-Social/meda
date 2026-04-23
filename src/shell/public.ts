@@ -1,34 +1,3 @@
-export {
-  NavigationArea,
-  ShellAppRail,
-  ShellDesktopPanelDock,
-  ShellFrame,
-  ShellHeaderFrame,
-  ShellPanelToggle,
-  ShellModuleNav,
-  ShellPanelRail,
-  ShellScrollableContent,
-  ShellStateProvider,
-  ShellTabBar,
-  WorkbenchLayout,
-} from './index';
-
-export {
-  buildShellSectionCommands,
-  buildShellShortcutMap,
-  getDefaultShellPanelView,
-  getShellPanelCollection,
-  getShellPanelView,
-  getShellActionsFromMatches,
-  getShellContentLayoutFromMatches,
-  getShellContentMaxWidth,
-  getShellPanelViewsFromMatches,
-  getShellTabsFromMatches,
-  getResolvedShellPanelWidth,
-  isShellPanelViewAvailable,
-  resolveShellPanelView,
-} from './index';
-
 export type {
   ShellCommandDefinition,
   ShellContentLayout,
@@ -44,6 +13,32 @@ export type {
   ShellTab,
   ShellViewDefinition,
   ShellViewportBand,
-} from './index';
-
-export { useShellState } from './index';
+} from './index.js';
+export {
+  buildShellSectionCommands,
+  buildShellShortcutMap,
+  getDefaultShellPanelView,
+  getResolvedShellPanelWidth,
+  getShellActionsFromMatches,
+  getShellContentLayoutFromMatches,
+  getShellContentMaxWidth,
+  getShellPanelCollection,
+  getShellPanelView,
+  getShellPanelViewsFromMatches,
+  getShellTabsFromMatches,
+  isShellPanelViewAvailable,
+  NavigationArea,
+  resolveShellPanelView,
+  ShellAppRail,
+  ShellDesktopPanelDock,
+  ShellFrame,
+  ShellHeaderFrame,
+  ShellModuleNav,
+  ShellPanelRail,
+  ShellPanelToggle,
+  ShellScrollableContent,
+  ShellStateProvider,
+  ShellTabBar,
+  useShellState,
+  WorkbenchLayout,
+} from './index.js';
