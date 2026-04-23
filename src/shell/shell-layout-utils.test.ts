@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  getResolvedShellPanelWidth,
-  getShellContentMaxWidth,
-} from './shell-layout-utils';
+import { getResolvedShellPanelWidth, getShellContentMaxWidth } from './shell-layout-utils';
 
 describe('shell-layout-utils', () => {
   it('returns workspace content caps by viewport band', () => {

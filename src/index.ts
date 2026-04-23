@@ -1,1 +1,1 @@
-export * from './shell/public';
+export * from './shell/public.js';

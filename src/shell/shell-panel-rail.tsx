@@ -1,4 +1,4 @@
-import type { ShellPanelDefinition } from './types';
+import type { ShellPanelDefinition } from './types.js';
 
 export interface ShellPanelRailProps {
   moduleViews: ShellPanelDefinition[];

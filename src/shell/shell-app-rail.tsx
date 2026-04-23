@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-import type { ShellRailItem } from './types';
+import type { ShellRailItem } from './types.js';
 
 interface ShellAppRailRenderArgs {
   children: ReactNode;

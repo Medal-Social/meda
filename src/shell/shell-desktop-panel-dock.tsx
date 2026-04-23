@@ -67,7 +67,11 @@ export function ShellDesktopPanelDock({
   viewIds?: string[];
   width: number;
   onWidthChange: (width: number) => void;
-  renderPanel: (options: { defaultView: string; viewIds?: string[]; className?: string }) => React.ReactNode;
+  renderPanel: (options: {
+    defaultView: string;
+    viewIds?: string[];
+    className?: string;
+  }) => React.ReactNode;
   className?: string;
 }) {
   return (
