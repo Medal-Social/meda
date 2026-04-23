@@ -29,6 +29,8 @@
   "scripts": {
     "build": "pnpm exec tsc -p tsconfig.build.json && node ./scripts/build.mjs",
     "prepack": "pnpm build",
+    "demo:dev": "vite --config vite.config.demo.ts",
+    "demo:build": "vite build --config vite.config.demo.ts",
     "test": "vitest run --environment jsdom",
     "test:run": "vitest run --environment jsdom",
     "typecheck": "tsc --noEmit",
@@ -59,8 +61,12 @@
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
     "jsdom": "^29.0.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "typescript": "~6.0.2",
+    "vite": "^8.0.4",
     "vitest": "^4.1.4"
   }
 }
