@@ -1,5 +1,8 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { Home, LayoutGrid, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { afterEach, describe, expect, it } from 'vitest';
 import {
   NavigationArea,
   ShellAppRail,
@@ -7,16 +10,13 @@ import {
   ShellFrame,
   ShellHeaderFrame,
   ShellModuleNav,
-  ShellStateProvider,
-  ShellTabBar,
-  WorkbenchLayout,
   type ShellRailItem,
+  ShellStateProvider,
   type ShellTab,
+  ShellTabBar,
   useShellState,
+  WorkbenchLayout,
 } from '../index';
-import { Home, LayoutGrid, Sparkles } from 'lucide-react';
-import { afterEach, describe, expect, it } from 'vitest';
-import { useState } from 'react';
 
 afterEach(() => {
   cleanup();
@@ -62,7 +62,10 @@ function FixtureConsumer() {
       <button type="button" onClick={() => shell.restoreLastPanelView('assistant')}>
         open panel
       </button>
-      <button type="button" onClick={() => shell.selectEntity('frame-13', { panelView: 'overview' })}>
+      <button
+        type="button"
+        onClick={() => shell.selectEntity('frame-13', { panelView: 'overview' })}
+      >
         select entity
       </button>
     </div>

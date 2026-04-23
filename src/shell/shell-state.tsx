@@ -47,7 +47,9 @@ function readStoredSidePanelWidth(storageKey: string) {
   if (typeof window === 'undefined') return DEFAULT_SIDE_PANEL_WIDTH;
 
   const storedValue =
-    typeof window.localStorage?.getItem === 'function' ? window.localStorage.getItem(storageKey) : null;
+    typeof window.localStorage?.getItem === 'function'
+      ? window.localStorage.getItem(storageKey)
+      : null;
   const stored = Number(storedValue);
   return Number.isFinite(stored) && stored > 0
     ? clampSidePanelWidth(stored)
@@ -92,9 +94,7 @@ export function ShellStateProvider({
     };
   }, []);
 
-  function updateSearchParams(
-    mutate: (nextSearchParams: URLSearchParams) => void
-  ) {
+  function updateSearchParams(mutate: (nextSearchParams: URLSearchParams) => void) {
     setSearchParams((currentSearchParams) => {
       const nextSearchParams = new URLSearchParams(currentSearchParams);
       mutate(nextSearchParams);
@@ -173,6 +173,7 @@ export function ShellStateProvider({
     setCommandPaletteOpen(false);
   }
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: inner setters/handlers are re-created each render; wrapping all of them in useCallback is a separate refactor — deps here are the observable state values only.
   const value = useMemo<ShellStateContextValue>(
     () => ({
       activePanelView,

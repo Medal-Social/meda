@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useState } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   DEFAULT_SIDE_PANEL_WIDTH,
   MAX_SIDE_PANEL_WIDTH,
@@ -69,7 +69,10 @@ function ShellStateConsumer() {
       <button type="button" onClick={() => shell.restoreLastPanelView('fallback')}>
         restore panel
       </button>
-      <button type="button" onClick={() => shell.selectEntity('frame-13', { panelView: 'overview' })}>
+      <button
+        type="button"
+        onClick={() => shell.selectEntity('frame-13', { panelView: 'overview' })}
+      >
         select entity
       </button>
       <button type="button" onClick={() => shell.clearEntity()}>

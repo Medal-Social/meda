@@ -23,8 +23,7 @@ function joinClasses(...values: Array<string | false | null | undefined>) {
 
 const tabBarClassName =
   'flex h-[var(--tab-bar-height)] shrink-0 items-center gap-3 overflow-x-auto bg-[var(--background)] px-3';
-const tabClassName =
-  'border-b-[1.5px] pb-2.5 pt-2.5 text-xs whitespace-nowrap transition-colors';
+const tabClassName = 'border-b-[1.5px] pb-2.5 pt-2.5 text-xs whitespace-nowrap transition-colors';
 const activeTabClassName = 'border-[var(--primary)] text-[var(--primary)]';
 const inactiveTabClassName =
   'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]';
@@ -60,7 +59,7 @@ export function ShellTabBar({
   }
 
   return (
-    <div aria-label={ariaLabel} className={joinClasses(tabBarClassName, className)}>
+    <nav aria-label={ariaLabel} className={joinClasses(tabBarClassName, className)}>
       {tabs.map((tab) => {
         const isActive = tab.id === activeTab;
 
@@ -79,6 +78,6 @@ export function ShellTabBar({
           </button>
         );
       })}
-    </div>
+    </nav>
   );
 }

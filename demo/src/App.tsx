@@ -1,5 +1,5 @@
+import { ShellFrame, ShellStateProvider } from '@medalsocial/meda';
 import { useState } from 'react';
-import { ShellStateProvider, ShellFrame } from '@medalsocial/meda';
 
 export function App() {
   const [searchParams, setSearchParams] = useState(() => new URLSearchParams());
@@ -12,7 +12,9 @@ export function App() {
       }}
     >
       <ShellFrame
-        header={<div style={{ padding: '8px 16px', borderBottom: '1px solid #e5e7eb' }}>Header</div>}
+        header={
+          <div style={{ padding: '8px 16px', borderBottom: '1px solid #e5e7eb' }}>Header</div>
+        }
         navigation={<nav style={{ width: 200, borderRight: '1px solid #e5e7eb' }}>Navigation</nav>}
         content={
           <main style={{ padding: 24 }}>

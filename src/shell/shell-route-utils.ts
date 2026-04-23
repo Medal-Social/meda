@@ -14,11 +14,16 @@ function getRouteHandle(match: ShellRouteMatchLike | undefined) {
   return match?.handle as ShellViewDefinition | undefined;
 }
 
-export function getShellContentLayoutFromMatches(matches: ShellRouteMatchLike[]): ShellContentLayout {
+export function getShellContentLayoutFromMatches(
+  matches: ShellRouteMatchLike[]
+): ShellContentLayout {
   return getRouteHandle(getLastMatch(matches))?.shellContentLayout ?? 'workspace';
 }
 
-export function getShellTabsFromMatches(matches: ShellRouteMatchLike[], pathname: string): ShellTab[] {
+export function getShellTabsFromMatches(
+  matches: ShellRouteMatchLike[],
+  pathname: string
+): ShellTab[] {
   const lastMatch = getLastMatch(matches);
   const shellTabs = getRouteHandle(lastMatch)?.shellTabs;
 

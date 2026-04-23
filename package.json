@@ -29,6 +29,10 @@
   "scripts": {
     "build": "pnpm exec tsc -p tsconfig.build.json && node ./scripts/build.mjs",
     "prepack": "pnpm build",
+    "prepare": "husky",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
     "demo:dev": "vite --config vite.config.demo.ts",
     "demo:build": "vite build --config vite.config.demo.ts",
     "test": "vitest run --environment jsdom",
@@ -55,6 +59,7 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.12",
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.0",
     "@testing-library/jest-dom": "^6.9.1",
@@ -62,6 +67,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "husky": "^9.1.7",
     "jsdom": "^29.0.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

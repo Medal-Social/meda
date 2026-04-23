@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { resolve, dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -35,15 +35,33 @@ for (const [file, json] of parsedFiles.entries()) {
   if (file === 'registry.json') continue;
 
   assert(typeof json?.name === 'string' && json.name.length > 0, `${file} must include a name.`);
-  assert(typeof json?.type === 'string' && json.type.startsWith('registry:'), `${file} must include a registry type.`);
+  assert(
+    typeof json?.type === 'string' && json.type.startsWith('registry:'),
+    `${file} must include a registry type.`
+  );
   assert(Array.isArray(json?.dependencies), `${file} must declare dependencies.`);
-  assert(Array.isArray(json?.files) && json.files.length > 0, `${file} must include at least one file entry.`);
+  assert(
+    Array.isArray(json?.files) && json.files.length > 0,
+    `${file} must include at least one file entry.`
+  );
 
   for (const itemFile of json.files) {
-    assert(typeof itemFile?.path === 'string' && itemFile.path.length > 0, `${file} has a file entry without a path.`);
-    assert(typeof itemFile?.target === 'string' && itemFile.target.length > 0, `${file} has a file entry without a target.`);
-    assert(typeof itemFile?.type === 'string' && itemFile.type.startsWith('registry:'), `${file} has a file entry with an invalid type.`);
-    assert(typeof itemFile?.content === 'string' && itemFile.content.trim().length > 0, `${file} has a file entry without inline content.`);
+    assert(
+      typeof itemFile?.path === 'string' && itemFile.path.length > 0,
+      `${file} has a file entry without a path.`
+    );
+    assert(
+      typeof itemFile?.target === 'string' && itemFile.target.length > 0,
+      `${file} has a file entry without a target.`
+    );
+    assert(
+      typeof itemFile?.type === 'string' && itemFile.type.startsWith('registry:'),
+      `${file} has a file entry with an invalid type.`
+    );
+    assert(
+      typeof itemFile?.content === 'string' && itemFile.content.trim().length > 0,
+      `${file} has a file entry without inline content.`
+    );
   }
 }
 

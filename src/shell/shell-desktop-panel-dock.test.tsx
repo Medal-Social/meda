@@ -1,6 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { cleanup } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ShellDesktopPanelDock } from './shell-desktop-panel-dock';
 
@@ -11,7 +10,12 @@ afterEach(() => {
 describe('ShellDesktopPanelDock', () => {
   it('renders the open dock state and forwards panel props', () => {
     const renderPanel = vi.fn(({ defaultView, viewIds, className }) => (
-      <div data-testid="panel" data-view={defaultView} data-view-ids={viewIds?.join(',')} className={className} />
+      <div
+        data-testid="panel"
+        data-view={defaultView}
+        data-view-ids={viewIds?.join(',')}
+        className={className}
+      />
     ));
 
     render(

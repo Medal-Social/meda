@@ -14,7 +14,6 @@ export function ShellHeaderFrame({
 }) {
   return (
     <header
-      role="banner"
       className={[
         'relative z-[var(--z-sticky)] grid h-[var(--header-height)] w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 bg-[var(--header)] px-3 shadow-[var(--shadow-header)] sm:px-4',
         className,
@@ -24,7 +23,10 @@ export function ShellHeaderFrame({
     >
       {left}
       <div className="min-w-0">{center}</div>
-      <div data-testid="shell-header-actions" className="hidden items-center justify-end gap-2 md:flex">
+      <div
+        data-testid="shell-header-actions"
+        className="hidden items-center justify-end gap-2 md:flex"
+      >
         {right}
       </div>
     </header>

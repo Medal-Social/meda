@@ -42,7 +42,9 @@ export function ShellScrollableContent({
       ) : (
         <div
           data-testid="shell-content-workspace"
-          className={joinClasses('mx-auto w-full px-5 py-5 sm:px-6 sm:py-6 md:px-8 md:py-8 lg:px-10')}
+          className={joinClasses(
+            'mx-auto w-full px-5 py-5 sm:px-6 sm:py-6 md:px-8 md:py-8 lg:px-10'
+          )}
           style={maxWidth ? { maxWidth: `${maxWidth}px` } : undefined}
         >
           {children}
