@@ -32,7 +32,9 @@ jobs:
           HAS_CHANGESET=$(echo "$CHANGED" | grep -c '^\.changeset/.*\.md$' || true)
 
           # Non-package-affecting paths that do NOT require a changeset even if they change.
-          NON_PKG=$(echo "$CHANGED" | grep -cE '^(\.github/|\.husky/|\.changeset/|demo/|registry/|docs/|\.gitignore$|\.editorconfig$|[^/]*\.md$|LICENSE$|NOTICE$|biome\.json$|vitest\.config\.ts$|vite\.config\.demo\.ts$)' || true)
+          # Includes CI, hooks, docs, demo, registry, and repo-governance/config files that
+          # don't ship in the npm tarball.
+          NON_PKG=$(echo "$CHANGED" | grep -cE '^(\.github/|\.husky/|\.changeset/|demo/|registry/|docs/|\.gitignore$|\.editorconfig$|\.npmrc$|CODEOWNERS$|[^/]*\.md$|LICENSE$|NOTICE$|biome\.json$|vitest\.config\.ts$|vite\.config\.demo\.ts$)' || true)
 
           # Everything else is assumed package-affecting (src/, scripts/, package.json,
           # tsconfig*.json, pnpm-workspace.yaml, pnpm-lock.yaml, top-level configs, etc.).
