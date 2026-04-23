@@ -22,19 +22,29 @@ Meda ships a `styles.css` with its design tokens. Import it once in your entry s
 
 ## Usage
 
+`ShellStateProvider` stores panel/selection state in URL search params and is router-agnostic. You provide a `ShellSearchParamsAdapter` so it can read and update them however your router prefers. A minimal, in-memory adapter:
+
 ```tsx
+import { useState } from 'react';
 import { ShellStateProvider, ShellFrame } from '@medalsocial/meda';
 
 export function App() {
+  const [searchParams, setSearchParams] = useState(() => new URLSearchParams());
+
   return (
-    <ShellStateProvider>
-      <ShellFrame>
-        {/* your app */}
-      </ShellFrame>
+    <ShellStateProvider
+      adapter={{
+        searchParams,
+        setSearchParams: (updater) => setSearchParams((current) => updater(current)),
+      }}
+    >
+      <ShellFrame>{/* your app */}</ShellFrame>
     </ShellStateProvider>
   );
 }
 ```
+
+For a real app, wire the adapter to your router (e.g. TanStack Router's `useSearch`/`useNavigate`, React Router's `useSearchParams`) so URL changes persist state.
 
 See the [demo app](./demo) for a live playground.
 
