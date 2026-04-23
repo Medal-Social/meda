@@ -104,9 +104,9 @@ In the consumer app, pin to the snapshot:
 For rapid local iteration, link the built library into the consumer:
 
 ```bash
-# in this repo
+# in this repo (run from the package root — this is where package.json lives)
 pnpm build
-cd dist && pnpm link --global
+pnpm link --global
 
 # in the consumer
 pnpm link --global @medalsocial/meda
