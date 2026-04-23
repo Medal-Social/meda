@@ -27,11 +27,12 @@ scripts/
 
 ## Pull Requests
 
-- Branch from `dev`
+- Branch from `prod` (the single-trunk default)
 - Write or update tests for any behavior change
-- Ensure `pnpm test` and `pnpm build` pass before submitting
+- Ensure `pnpm lint`, `pnpm test`, and `pnpm build` pass before submitting
 - Add a changeset with `pnpm changeset` for any user-facing change
 - Do not commit generated `dist/` artifacts
+- The pre-commit hook runs `pnpm lint` and `pnpm test`; do not bypass with `--no-verify`
 
 ## Code Style
 
@@ -75,3 +76,39 @@ AI assistance is allowed, but contributors are responsible for the final patch.
 - Review every AI-generated change before committing
 - Write or update tests for any behavior change
 - Use your own commit message and PR summary
+
+## Working on Meda Alongside a Consumer App
+
+Meda is published to npm. Consumers install it as a normal dependency. For iterative work that spans Meda and a consumer (e.g. a sibling app), two workflows are supported:
+
+### 1. Snapshot release (preferred for PRs)
+
+Use Changesets snapshot versioning to publish a throwaway preview:
+
+```bash
+pnpm changeset                          # describe the change
+pnpm changeset version --snapshot dev   # versions as 0.x.y-dev-<sha>
+pnpm build
+pnpm publish --tag dev --no-git-checks  # publishes @medalsocial/meda@0.x.y-dev-<sha>
+```
+
+In the consumer app, pin to the snapshot:
+
+```json
+"@medalsocial/meda": "0.1.1-dev-abc1234"
+```
+
+### 2. `pnpm link` (local only)
+
+For rapid local iteration, link the built library into the consumer:
+
+```bash
+# in this repo
+pnpm build
+cd dist && pnpm link --global
+
+# in the consumer
+pnpm link --global @medalsocial/meda
+```
+
+Unlink before committing — never commit `pnpm link` state.
