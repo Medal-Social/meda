@@ -1,8 +1,16 @@
+import { useState } from 'react';
 import { ShellStateProvider, ShellFrame } from '@medalsocial/meda';
 
 export function App() {
+  const [searchParams, setSearchParams] = useState(() => new URLSearchParams());
+
   return (
-    <ShellStateProvider>
+    <ShellStateProvider
+      adapter={{
+        searchParams,
+        setSearchParams: (updater) => setSearchParams((current) => updater(current)),
+      }}
+    >
       <ShellFrame
         header={<div style={{ padding: '8px 16px', borderBottom: '1px solid #e5e7eb' }}>Header</div>}
         navigation={<nav style={{ width: 200, borderRight: '1px solid #e5e7eb' }}>Navigation</nav>}
