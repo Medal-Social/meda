@@ -1,4 +1,4 @@
-import type { ShellCommandDefinition, ShellModuleDefinition, ShellPanelDefinition } from './types';
+import type { ShellCommandDefinition, ShellModuleDefinition, ShellPanelDefinition } from './types.js';
 
 export interface ShellPanelCollection {
   globalViews: ShellPanelDefinition[];

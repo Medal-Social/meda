@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { ShellTab } from './types';
+import type { ShellTab } from './types.js';
 
 interface ShellTabBarRenderArgs {
   children: ReactNode;

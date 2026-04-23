@@ -11,7 +11,7 @@ export {
   ShellStateProvider,
   ShellTabBar,
   WorkbenchLayout,
-} from './index';
+} from './index.js';
 
 export {
   buildShellSectionCommands,
@@ -27,7 +27,7 @@ export {
   getResolvedShellPanelWidth,
   isShellPanelViewAvailable,
   resolveShellPanelView,
-} from './index';
+} from './index.js';
 
 export type {
   ShellCommandDefinition,
@@ -44,6 +44,6 @@ export type {
   ShellTab,
   ShellViewDefinition,
   ShellViewportBand,
-} from './index';
+} from './index.js';
 
-export { useShellState } from './index';
+export { useShellState } from './index.js';
