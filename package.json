@@ -43,6 +43,9 @@
     "format": "biome format --write .",
     "demo:dev": "vite --config vite.config.demo.ts",
     "demo:build": "vite build --config vite.config.demo.ts",
+    "worker:build": "pnpm demo:build && node ./scripts/copy-registry-to-dist.mjs",
+    "worker:dev": "pnpm worker:build && wrangler dev",
+    "worker:deploy": "pnpm worker:build && wrangler deploy",
     "test": "vitest run --environment jsdom",
     "test:run": "vitest run --environment jsdom",
     "typecheck": "tsc --noEmit",
@@ -81,6 +84,7 @@
     "react-dom": "^19.2.4",
     "typescript": "~6.0.2",
     "vite": "^8.0.4",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.4",
+    "wrangler": "^4.0.0"
   }
 }

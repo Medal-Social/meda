@@ -56,11 +56,16 @@ See the [demo app](./demo) for a live playground.
 
 ## Alternative: shadcn registry
 
-Prefer to copy source into your project instead of installing? The shadcn-compatible registry lives at [`./registry`](./registry). Serve it statically and run:
+Prefer to copy source into your project instead of installing? The shadcn-compatible registry is served alongside the demo playground on Cloudflare Workers.
 
 ```bash
-npx shadcn add <registry-url>/r/meda-shell.json
+# Once DNS for meda.medalsocial.com is live:
+npx shadcn add https://meda.medalsocial.com/r/meda-shell.json
+npx shadcn add https://meda.medalsocial.com/r/meda-shell-state.json
+npx shadcn add https://meda.medalsocial.com/r/meda-workbench-layout.json
 ```
+
+The registry index is at `https://meda.medalsocial.com/registry.json`. Source JSON files live under [`./registry`](./registry) in this repo and are deployed as static assets via Cloudflare Workers — see `wrangler.toml` and `.github/workflows/deploy-worker.yml`.
 
 ## Development
 

@@ -1,0 +1,14 @@
+name = "meda-landing"
+compatibility_date = "2026-04-24"
+
+# Static assets: the demo playground + the shadcn registry.
+# `worker:build` copies `registry/` into `demo/dist/r/` and `demo/dist/registry.json`
+# before deploy. See package.json scripts.
+[assets]
+directory = "./demo/dist"
+not_found_handling = "single-page-application"
+
+# After DNS setup, add:
+# routes = [
+#   { pattern = "meda.medalsocial.com", custom_domain = true }
+# ]
