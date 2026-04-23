@@ -78,4 +78,4 @@ Changesets + GitHub Actions (OIDC trusted publishing). Add a changeset with `pnp
 
 ## License
 
-Apache-2.0.
+Apache-2.0. See [LICENSE](./LICENSE) and [NOTICE](./NOTICE).
