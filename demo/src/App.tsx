@@ -481,7 +481,7 @@ import { Link } from 'react-router'; // or your router's Link
 />`}
     >
       <div className="preview-canvas preview-canvas--flush">
-        <div className="w-full">
+        <aside className="flex w-full flex-col bg-[var(--sidebar)] px-3 py-4">
           <ShellModuleNav
             module={{
               id: 'inbox',
@@ -494,6 +494,18 @@ import { Link } from 'react-router'; // or your router's Link
                 { to: '/inbox/docs', label: 'Documents', icon: FileText },
               ],
             }}
+            ariaLabel="Inbox pages"
+            className="min-h-0 flex-1"
+            headerClassName="mb-1 flex items-start px-3 pb-3"
+            titleClassName="text-[11px] font-bold tracking-widest text-[var(--sidebar-primary)] uppercase"
+            descriptionClassName="mt-0.5 text-[11px] text-[var(--muted-foreground)]"
+            itemsClassName="flex flex-col gap-0.5 pt-1"
+            itemClassName="group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors"
+            activeItemClassName="bg-[var(--sidebar-accent)] text-[var(--sidebar-primary)]"
+            inactiveItemClassName="text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)]"
+            itemIconClassName="mt-0.5 shrink-0"
+            itemLabelClassName="text-[14px] font-medium leading-tight"
+            itemShortcutClassName="ml-auto shrink-0 rounded bg-[var(--sidebar-accent)] px-1.5 py-0.5 text-[10px] text-[var(--muted-foreground)]"
             isItemActive={(item) => item.to === '/inbox/mentions'}
             renderLink={({ item, className, children }) => (
               <a
@@ -506,7 +518,7 @@ import { Link } from 'react-router'; // or your router's Link
               </a>
             )}
           />
-        </div>
+        </aside>
       </div>
     </ComponentDoc>
   );
