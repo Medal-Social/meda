@@ -404,6 +404,7 @@ function AppRailDemo() {
       registryItem="meda-shell"
       code={`import { ShellAppRail } from '@medalsocial/meda';
 import { Home, Inbox, Users } from 'lucide-react';
+import { Link } from 'react-router'; // or your router's Link
 
 <ShellAppRail
   mainItems={[
@@ -415,6 +416,11 @@ import { Home, Inbox, Users } from 'lucide-react';
     { to: '/search', label: 'Search', icon: Search },
   ]}
   isItemActive={(item) => item.to === pathname}
+  renderLink={({ item, className, children }) => (
+    <Link to={item.to} className={className}>
+      {children}
+    </Link>
+  )}
 />`}
     >
       <div className="preview-canvas">
@@ -430,6 +436,17 @@ import { Home, Inbox, Users } from 'lucide-react';
             { to: '/help', label: 'Help', icon: HelpCircle },
           ]}
           isItemActive={(item) => item.to === '/projects'}
+          renderLink={({ item, className, children }) => (
+            <a
+              key={item.to}
+              href={item.to}
+              onClick={(event) => event.preventDefault()}
+              className={className}
+              aria-label={item.label}
+            >
+              {children}
+            </a>
+          )}
         />
       </div>
     </ComponentDoc>
@@ -443,6 +460,7 @@ function ModuleNavDemo() {
       description="Module sidebar with title, description, and a list of nav items (icon + label + optional description + shortcut). Used inside a module's own layout."
       registryItem="meda-shell"
       code={`import { ShellModuleNav } from '@medalsocial/meda';
+import { Link } from 'react-router'; // or your router's Link
 
 <ShellModuleNav
   module={{
@@ -455,6 +473,11 @@ function ModuleNavDemo() {
     ],
   }}
   isItemActive={(item) => item.to === pathname}
+  renderLink={({ item, className, children }) => (
+    <Link to={item.to} className={className}>
+      {children}
+    </Link>
+  )}
 />`}
     >
       <div className="preview-canvas preview-canvas--flush">
@@ -472,6 +495,16 @@ function ModuleNavDemo() {
               ],
             }}
             isItemActive={(item) => item.to === '/inbox/mentions'}
+            renderLink={({ item, className, children }) => (
+              <a
+                key={item.to}
+                href={item.to}
+                onClick={(event) => event.preventDefault()}
+                className={className}
+              >
+                {children}
+              </a>
+            )}
           />
         </div>
       </div>
