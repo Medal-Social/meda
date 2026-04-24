@@ -255,7 +255,7 @@ function ShellFrameDemo() {
   />
 </ShellStateProvider>`}
     >
-      <div className="preview-canvas preview-canvas--flush">
+      <div className="preview-canvas preview-canvas--shell">
         <ShellStateProvider
           adapter={{
             searchParams,
@@ -264,7 +264,7 @@ function ShellFrameDemo() {
         >
           <ShellFrame
             header={
-              <div className="flex h-full w-full items-center justify-between px-4 text-sm">
+              <div className="flex h-12 w-full shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--card)] px-4 text-sm">
                 <div className="flex items-center gap-3">
                   <span className="font-medium">Workspace</span>
                   <span className="text-[var(--muted-foreground)]">/ Projects</span>
@@ -276,7 +276,7 @@ function ShellFrameDemo() {
               </div>
             }
             navigation={
-              <nav className="flex h-full w-40 flex-col gap-0.5 border-r border-[var(--border)] bg-[var(--sidebar)] p-3 text-sm">
+              <nav className="flex w-40 shrink-0 flex-col gap-0.5 border-r border-[var(--border)] bg-[var(--sidebar)] p-3 text-sm">
                 {[
                   { label: 'Inbox' },
                   { label: 'Projects', active: true },
@@ -324,6 +324,7 @@ function WorkbenchDemo() {
       code={`import { WorkbenchLayout } from '@medalsocial/meda';
 
 <WorkbenchLayout
+  viewportBand="desktop" // mobile | tablet | desktop | wide | ultrawide
   toolbar={<Toolbar />}
   main={<Canvas />}
   aside={<Inspector />}
@@ -337,8 +338,10 @@ function WorkbenchDemo() {
           }}
         >
           <WorkbenchLayout
+            viewportBand="desktop"
+            className="p-5"
             toolbar={
-              <div className="flex h-10 items-center gap-3 border-b border-[var(--border)] bg-[var(--card)] px-3 text-xs">
+              <div className="flex h-10 items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 text-xs">
                 <button
                   type="button"
                   className="rounded px-2 py-1 text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
@@ -361,7 +364,7 @@ function WorkbenchDemo() {
               </div>
             }
             main={
-              <div className="flex h-full items-center justify-center p-6 text-sm text-[var(--muted-foreground)]">
+              <div className="flex min-h-60 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--card)] p-6 text-sm text-[var(--muted-foreground)]">
                 <div className="rounded-xl border border-dashed border-[var(--border)] px-12 py-8 text-center">
                   Canvas
                   <div className="mt-1 text-xs">main region</div>
@@ -369,7 +372,7 @@ function WorkbenchDemo() {
               </div>
             }
             aside={
-              <div className="h-full w-64 border-l border-[var(--border)] bg-[var(--card)] p-4 text-sm">
+              <div className="rounded-md border border-[var(--border)] bg-[var(--card)] p-4 text-sm">
                 <div className="mb-2 font-mono text-[11px] uppercase tracking-wider text-[var(--primary)]">
                   Inspector
                 </div>

@@ -605,3 +605,21 @@ a {
   padding: 0;
   align-items: stretch;
 }
+
+/* ShellFrame and WorkbenchLayout use h-screen internally — give them
+   enough room so the nav + content aren't clipped. */
+.preview-canvas--shell {
+  padding: 0;
+  align-items: stretch;
+  min-height: 28rem;
+  height: 28rem;
+  display: block; /* not flex — let the frame control its own layout */
+}
+
+/* Override h-screen on ShellFrame and WorkbenchLayout when they render
+   inside a preview — force them to fill the preview box instead of 100vh. */
+.preview-canvas--shell [data-testid="shell-frame"],
+.preview-canvas--shell [data-testid="workbench-layout"] {
+  height: 100% !important;
+  max-height: 100% !important;
+}
