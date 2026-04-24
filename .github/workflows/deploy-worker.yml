@@ -4,10 +4,21 @@ on:
   push:
     branches: [prod]
     paths:
+      # Demo source, registry JSON, and worker config
       - 'demo/**'
       - 'registry/**'
-      - 'scripts/copy-registry-to-dist.mjs'
       - 'wrangler.toml'
+      # The build script that combines demo + registry
+      - 'scripts/copy-registry-to-dist.mjs'
+      # Library source — demo imports @medalsocial/meda aliased to src/
+      - 'src/**'
+      # Build inputs that affect the Vite output
+      - 'vite.config.demo.ts'
+      - 'tsconfig.json'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      # This workflow itself
       - '.github/workflows/deploy-worker.yml'
 
 permissions: {}
