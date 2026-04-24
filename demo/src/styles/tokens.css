@@ -1,0 +1,187 @@
+/* ============================================================
+   Layer 1 — Primitives
+   ============================================================ */
+:root {
+  /* Brand color scale — used for accents, not backgrounds */
+  --color-brand-50: #f5f3f7;
+  --color-brand-100: #e8e4ed;
+  --color-brand-200: #d4cce0;
+  --color-brand-300: #b9a8cc;
+  --color-brand-400: #9f5fc8;
+  --color-brand-500: #7e3fac;
+  --color-brand-600: #5b2d8c;
+  --color-brand-700: #3b1d6c;
+  --color-brand-800: #2d1650;
+  --color-brand-900: #1a1035;
+  --color-brand-950: #0a0510;
+
+  /* Accent colors */
+  --color-accent-magenta: #c026d3;
+  --color-accent-cyan: #06b6d4;
+  --color-accent-gold: #d97706;
+  --color-success: #10b981;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+
+  /* Status semantic colors */
+  --color-status-open: #71717a;
+  --color-status-mitigating: var(--color-warning);
+  --color-status-resolved: var(--color-success);
+  --color-status-accepted: #3b82f6;
+
+  /* Radius scale */
+  --radius: 0.5rem;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Z-index ladder */
+  --z-dropdown: 40;
+  --z-sticky: 45;
+  --z-modal: 50;
+  --z-popover: 55;
+  --z-tooltip: 60;
+  --z-toast: 70;
+  --z-max: 9999;
+
+  /* Shell dimensions */
+  --app-rail-width: 80px;
+  --right-rail-width: 40px;
+  --section-sidebar-width: 260px;
+  --header-height: 48px;
+  --tab-bar-height: 40px;
+  --side-panel-width: 360px;
+  --bottom-nav-height: 56px;
+}
+
+/* ============================================================
+   Layer 2 — Semantic (dark default)
+   Neutral dark canvas with a subtle purple hue bias
+   ============================================================ */
+:root {
+  --background: oklch(0.16 0.015 285.82);
+  --foreground: oklch(0.93 0.009 285.82);
+  --card: oklch(0.22 0.02 285.82);
+  --card-foreground: oklch(0.93 0.009 285.82);
+  --primary: var(--color-brand-400);
+  --primary-foreground: oklch(0.16 0.015 285.82);
+  --secondary: oklch(0.3 0.022 285.82);
+  --secondary-foreground: oklch(0.93 0.009 285.82);
+  --muted: oklch(0.3 0.022 285.82);
+  --muted-foreground: oklch(0.715 0.016 285.82);
+  --accent: oklch(0.3 0.022 285.82);
+  --accent-foreground: oklch(0.93 0.009 285.82);
+  --destructive: var(--color-danger);
+  --border: oklch(0.4 0.03 285.82);
+  --input: oklch(0.3 0.022 285.82);
+  --ring: var(--color-brand-400);
+}
+
+/* Light mode */
+.light {
+  --background: oklch(0.97 0.003 285.82);
+  --foreground: oklch(0.19 0.013 285.82);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.19 0.013 285.82);
+  --primary: var(--color-brand-500);
+  --primary-foreground: #ffffff;
+  --secondary: oklch(0.93 0.01 285.82);
+  --secondary-foreground: oklch(0.4 0.03 285.82);
+  --muted: oklch(0.93 0.01 285.82);
+  --muted-foreground: oklch(0.55 0.02 285.82);
+  --accent: oklch(0.93 0.01 285.82);
+  --accent-foreground: oklch(0.4 0.03 285.82);
+  --border: oklch(0.88 0.025 285.82);
+  --input: oklch(0.88 0.025 285.82);
+  --ring: var(--color-brand-500);
+}
+
+/* ============================================================
+   Layer 3 — Component tokens (derived from semantic tokens)
+   ============================================================ */
+:root {
+  /* App Rail — darkest element */
+  --app-rail: oklch(0.13 0.02 285.82);
+  --app-rail-foreground: var(--muted-foreground);
+  --app-rail-active: var(--foreground);
+  --app-rail-active-bg: oklch(0.25 0.04 285.82);
+  --app-rail-item-active-bg: color-mix(in oklab, var(--primary) 18%, transparent);
+
+  /* Section Sidebar */
+  --sidebar: oklch(0.2 0.02 285.82);
+  --sidebar-foreground: var(--muted-foreground);
+  --sidebar-primary: var(--foreground);
+  --sidebar-primary-foreground: var(--background);
+  --sidebar-accent: oklch(0.29 0.025 285.82);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: oklch(0.38 0.03 285.82);
+  --sidebar-ring: var(--ring);
+
+  /* Header — slightly lighter than rail for subtle differentiation */
+  --header: oklch(0.15 0.012 285.82);
+  --header-foreground: var(--foreground);
+  --header-border: var(--border);
+
+  /* Side panel */
+  --side-panel: var(--card);
+  --side-panel-foreground: var(--foreground);
+  --side-panel-border: var(--border);
+
+  /* Workspace surfaces */
+  --surface-1: color-mix(in oklab, var(--background) 70%, var(--card) 30%);
+  --surface-2: color-mix(in oklab, var(--background) 52%, var(--card) 48%);
+  --surface-3: color-mix(in oklab, var(--background) 36%, var(--card) 64%);
+  --surface-highlight: color-mix(in oklab, var(--foreground) 8%, transparent);
+
+  /* Product lines */
+  --product-line-frame: var(--color-brand-400);
+  --product-line-canvas: var(--color-accent-magenta);
+  --product-line-studio: var(--color-accent-cyan);
+  --product-line-handset: var(--color-status-accepted);
+
+  /* Shadows — depth-based separation instead of border lines */
+  --shadow-sidebar: 1px 0 3px rgba(0, 0, 0, 0.25);
+  --shadow-sidebar-peek: 4px 0 12px rgba(0, 0, 0, 0.3);
+  --shadow-header: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-panel: -1px 0 3px rgba(0, 0, 0, 0.25);
+  --shadow-bottom-nav: 0 -1px 3px rgba(0, 0, 0, 0.25);
+
+  /* Subtle border — for internal dividers only */
+  --border-subtle: oklch(0.3 0.015 285.82 / 0.5);
+}
+
+/* Layer 3 — Light overrides */
+.light {
+  --app-rail: oklch(0.93 0.005 285.82);
+  --app-rail-foreground: oklch(0.5 0.02 285.82);
+  --app-rail-active: oklch(0.2 0.015 285.82);
+  --app-rail-active-bg: oklch(0.84 0.02 285.82);
+  --app-rail-item-active-bg: color-mix(in oklab, var(--primary) 12%, transparent);
+
+  --sidebar: oklch(0.97 0.005 285.82);
+  --sidebar-foreground: oklch(0.45 0.025 285.82);
+  --sidebar-primary: oklch(0.19 0.013 285.82);
+  --sidebar-accent: oklch(0.93 0.01 285.82);
+  --sidebar-accent-foreground: oklch(0.19 0.013 285.82);
+  --sidebar-border: oklch(0.88 0.025 285.82);
+
+  --header: oklch(1 0 0);
+  --side-panel: oklch(1 0 0);
+  --side-panel-border: oklch(0.88 0.025 285.82);
+
+  --surface-1: color-mix(in oklab, var(--background) 88%, var(--card) 12%);
+  --surface-2: color-mix(in oklab, var(--background) 76%, var(--card) 24%);
+  --surface-3: color-mix(in oklab, var(--background) 64%, var(--card) 36%);
+  --surface-highlight: color-mix(in oklab, var(--foreground) 6%, transparent);
+
+  --shadow-sidebar: 1px 0 3px rgba(0, 0, 0, 0.06);
+  --shadow-sidebar-peek: 4px 0 12px rgba(0, 0, 0, 0.08);
+  --shadow-header: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-panel: -1px 0 3px rgba(0, 0, 0, 0.06);
+  --shadow-bottom-nav: 0 -1px 3px rgba(0, 0, 0, 0.08);
+  --border-subtle: oklch(0.88 0.015 285.82 / 0.5);
+}
