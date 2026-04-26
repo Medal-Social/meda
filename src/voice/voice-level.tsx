@@ -19,10 +19,14 @@ export function VoiceLevel({
 }: VoiceLevelProps) {
   const historyRef = React.useRef<number[]>(Array(BAR_COUNT).fill(0));
   const [, force] = React.useState(0);
+  // Only the 'bars' variant reads historyRef, so gate history updates and the
+  // resulting forced rerender to that variant — avoids a superfluous render on
+  // every level tick for 'ring' and 'wave'.
   React.useEffect(() => {
+    if (variant !== 'bars') return;
     historyRef.current = [...historyRef.current.slice(1), Math.min(1, Math.max(0, level))];
     force((v) => v + 1);
-  }, [level]);
+  }, [level, variant]);
 
   if (variant === 'bars') {
     return (

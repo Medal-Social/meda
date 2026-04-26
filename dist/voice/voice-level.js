@@ -4,10 +4,15 @@ const BAR_COUNT = 9;
 export function VoiceLevel({ level, variant = 'bars', width = 140, height = 48, className, }) {
     const historyRef = React.useRef(Array(BAR_COUNT).fill(0));
     const [, force] = React.useState(0);
+    // Only the 'bars' variant reads historyRef, so gate history updates and the
+    // resulting forced rerender to that variant — avoids a superfluous render on
+    // every level tick for 'ring' and 'wave'.
     React.useEffect(() => {
+        if (variant !== 'bars')
+            return;
         historyRef.current = [...historyRef.current.slice(1), Math.min(1, Math.max(0, level))];
         force((v) => v + 1);
-    }, [level]);
+    }, [level, variant]);
     if (variant === 'bars') {
         return (_jsx("div", { role: "presentation", className: ['flex items-end gap-1', className ?? ''].join(' '), style: { width, height }, children: historyRef.current.map((v, i) => (_jsx("span", { className: "flex-1 rounded-sm bg-primary", style: { height: `${15 + v * 85}%`, opacity: 0.4 + v * 0.6 } }, i))) }));
     }

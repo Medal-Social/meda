@@ -9,13 +9,18 @@ class MicCapture extends AudioWorkletProcessor {
     this.inputRate = sampleRate;
     this.ratio = this.inputRate / TARGET_RATE;
     this.buffer = [];
+    // Persist the fractional resampling offset across process() callbacks so
+    // non-integer ratios (e.g. 44.1kHz→16kHz) don't accumulate ~1% drift.
+    this.resampleOffset = 0;
   }
   resampleAndAppend(input) {
-    let i = 0;
+    let i = this.resampleOffset;
     while (i < input.length) {
       this.buffer.push(input[Math.floor(i)]);
       i += this.ratio;
     }
+    // Carry the fractional part forward into the next callback.
+    this.resampleOffset = i - input.length;
   }
   process(inputs) {
     const ch = inputs[0]?.[0];
@@ -48,7 +53,11 @@ export function useMicCapture(opts = {}) {
     const nodeRef = useRef(null);
     const onFrameRef = useRef(opts.onFrame);
     onFrameRef.current = opts.onFrame;
+    // Generation token: incremented on every start/stop so an in-flight start()
+    // can detect that a newer call has superseded it and bail out.
+    const genRef = useRef(0);
     const stop = useCallback(() => {
+        genRef.current += 1;
         nodeRef.current?.disconnect();
         nodeRef.current = null;
         streamRef.current?.getTracks().forEach((t) => {
@@ -61,8 +70,34 @@ export function useMicCapture(opts = {}) {
         setLevel(0);
     }, []);
     const start = useCallback(async () => {
+        // Bug 5 fix: tear down any existing capture before starting a new one so
+        // we don't orphan the previous stream/context.
+        if (ctxRef.current ?? streamRef.current) {
+            stop();
+        }
+        // Grab the current generation so we can detect if stop() (or a second
+        // start()) is called while we are awaiting getUserMedia / addModule.
+        genRef.current += 1;
+        const gen = genRef.current;
         setState('requesting');
         setError(null);
+        // Inline cleanup helper used in the catch path (Bug 2 fix): ensures tracks
+        // and context are released even when start() fails mid-flight.
+        const cleanupRefs = (stream, ctx) => {
+            stream?.getTracks().forEach((t) => {
+                t.stop();
+            });
+            void ctx?.close();
+            // Clear refs only if this generation still owns them (a superseding
+            // start() may have already set new refs).
+            if (genRef.current === gen) {
+                if (streamRef.current === stream)
+                    streamRef.current = null;
+                if (ctxRef.current === ctx)
+                    ctxRef.current = null;
+                nodeRef.current = null;
+            }
+        };
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: opts.audioConstraints ?? {
@@ -71,6 +106,15 @@ export function useMicCapture(opts = {}) {
                     autoGainControl: true,
                 },
             });
+            // Bug 4 fix: if stop() fired while we were awaiting getUserMedia, a
+            // newer generation is active — release the stream we just acquired and
+            // bail out without transitioning to 'capturing'.
+            if (genRef.current !== gen) {
+                stream.getTracks().forEach((t) => {
+                    t.stop();
+                });
+                return;
+            }
             streamRef.current = stream;
             const ctx = new AudioContext();
             ctxRef.current = ctx;
@@ -82,6 +126,11 @@ export function useMicCapture(opts = {}) {
             finally {
                 URL.revokeObjectURL(url);
             }
+            // Bug 4 fix: check again after the async addModule call.
+            if (genRef.current !== gen) {
+                cleanupRefs(stream, ctx);
+                return;
+            }
             const node = new AudioWorkletNode(ctx, 'meda-mic-capture');
             nodeRef.current = node;
             node.port.onmessage = (e) => {
@@ -91,14 +140,25 @@ export function useMicCapture(opts = {}) {
             };
             const src = ctx.createMediaStreamSource(stream);
             src.connect(node);
+            // Web Audio graphs only run when connected to a destination. The
+            // worklet's process() callback is never invoked otherwise — no PCM
+            // frames, no level updates. Route through a 0-gain node so we don't
+            // produce audible feedback from the user's own mic.
+            const silent = ctx.createGain();
+            silent.gain.value = 0;
+            node.connect(silent);
+            silent.connect(ctx.destination);
             setState('capturing');
         }
         catch (err) {
+            // Bug 2 fix: release the mic and AudioContext if they were acquired
+            // before the failure so we don't leave the hardware mic open.
+            cleanupRefs(streamRef.current, ctxRef.current);
             const e = err;
             setError(e);
             setState(e.name === 'NotAllowedError' ? 'denied' : 'idle');
         }
-    }, [opts.audioConstraints]);
+    }, [opts.audioConstraints, stop]);
     // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally empty - should only run on mount
     useEffect(() => {
         if (opts.autoStart)
