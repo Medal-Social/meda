@@ -2,3 +2,25 @@
   --meda-shell-panel-dock-radius: var(--radius-4xl, 1.5rem);
   --meda-shell-panel-dock-shadow: var(--shadow-panel-elevated, 0 32px 90px rgb(0 0 0 / 0.45));
 }
+
+/* VoiceOrb (WebGL): minimal container styles — visual identity lives in the GLSL shader. */
+.meda-voice-orb {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 9999px;
+  cursor: pointer;
+  position: relative;
+}
+.meda-voice-orb[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.meda-voice-orb canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none;
+}
