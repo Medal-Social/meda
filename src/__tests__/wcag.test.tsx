@@ -2,10 +2,23 @@ import '@testing-library/jest-dom/vitest';
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { axe } from 'vitest-axe';
-import { toHaveNoViolations } from 'vitest-axe/matchers.js';
+// Value-side import lives under dist/; the package's matchers.d.ts only re-exports as types.
+import { toHaveNoViolations } from 'vitest-axe/dist/matchers.js';
+
 import { TranscriptStream } from '../chat/index.js';
 import { Inspector, InspectorField } from '../panel/index.js';
 import { EventCard } from '../timeline/index.js';
+
+declare module 'vitest' {
+  // Match @testing-library/jest-dom/vitest's signature so TS doesn't conflict.
+  // biome-ignore lint/suspicious/noExplicitAny: must align with jest-dom declaration
+  interface Assertion<T = any> {
+    toHaveNoViolations(): T;
+  }
+  interface AsymmetricMatchersContaining {
+    toHaveNoViolations(): unknown;
+  }
+}
 
 expect.extend({ toHaveNoViolations });
 
@@ -23,7 +36,6 @@ describe('WCAG AA', () => {
           primary: 'Morpheus',
           secondary: '4 turns · $0.07',
         }}
-        isSelected={false}
       />
     );
     expect(await axe(container)).toHaveNoViolations();
