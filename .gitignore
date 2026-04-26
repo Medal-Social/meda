@@ -5,6 +5,7 @@ node_modules/
 .turbo/
 .cache/
 .parcel-cache/
+.wrangler/
 *.tsbuildinfo
 
 # Test / coverage
