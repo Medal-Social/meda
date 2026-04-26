@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "meda-shell",
+  "type": "registry:block",
+  "title": "Meda Shell",
+  "description": "Install a Meda shell scaffold wired to the shared package.",
+  "dependencies": ["@medalsocial/meda"],
+  "files": [
+    {
+      "path": "registry/meda/meda-shell/meda-shell.tsx",
+      "content": "import {\n  NavigationArea,\n  ShellFrame,\n  ShellHeaderFrame,\n  ShellScrollableContent,\n  ShellTabBar,\n  type ShellTab,\n} from '@medalsocial/meda'\nimport type { ComponentProps, ReactNode } from 'react'\n\ntype MedaShellProps = {\n  headerLeft: ReactNode\n  headerRight?: ReactNode\n  navigation: ReactNode\n  tabs?: ShellTab[]\n  activeTab?: string\n  renderTabLink: ComponentProps<typeof ShellTabBar>['renderLink']\n  children: ReactNode\n}\n\nexport function MedaShell({\n  headerLeft,\n  headerRight,\n  navigation,\n  tabs = [],\n  activeTab,\n  renderTabLink,\n  children,\n}: MedaShellProps) {\n  return (\n    <ShellFrame\n      header={\n        <ShellHeaderFrame\n          left={headerLeft}\n          center={\n            tabs.length > 0 ? (\n              <ShellTabBar\n                tabs={tabs}\n                activeTab={activeTab}\n                ariaLabel=\"Workspace tabs\"\n                renderLink={renderTabLink}\n              />\n            ) : null\n          }\n          right={headerRight}\n        />\n      }\n      navigation={<NavigationArea>{navigation}</NavigationArea>}\n      content={\n        <ShellScrollableContent layout=\"workspace\" maxWidth={1120}>\n          {children}\n        </ShellScrollableContent>\n      }\n    />\n  )\n}\n",
+      "type": "registry:block",
+      "target": "components/meda/meda-shell.tsx"
+    }
+  ]
+}

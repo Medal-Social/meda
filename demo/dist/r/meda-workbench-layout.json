@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "meda-workbench-layout",
+  "type": "registry:component",
+  "title": "Meda Workbench Layout",
+  "description": "Install a Meda workbench layout wrapper for dashboard-like detail views.",
+  "dependencies": ["@medalsocial/meda"],
+  "files": [
+    {
+      "path": "registry/meda/meda-workbench-layout/meda-workbench-layout.tsx",
+      "content": "export { WorkbenchLayout as MedaWorkbenchLayout } from '@medalsocial/meda'\n",
+      "type": "registry:component",
+      "target": "components/meda/meda-workbench-layout.tsx"
+    }
+  ]
+}

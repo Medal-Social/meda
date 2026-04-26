@@ -54,8 +54,15 @@ export const VoiceOrb = React.forwardRef<HTMLButtonElement, VoiceOrbProps>(funct
       style={styleVar}
       {...rest}
     >
-      <span aria-hidden className="meda-voice-orb__halo absolute inset-0 rounded-full" />
+      <span
+        aria-hidden
+        className="meda-voice-orb__halo pointer-events-none absolute -inset-10 rounded-full"
+      />
       <span aria-hidden className="meda-voice-orb__core absolute inset-0 rounded-full" />
+      <span
+        aria-hidden
+        className="meda-voice-orb__breath pointer-events-none absolute -inset-3 rounded-full"
+      />
       <span
         aria-hidden
         className="meda-voice-orb__label relative text-[11px] font-medium tracking-[0.08em] text-primary-foreground/80"
