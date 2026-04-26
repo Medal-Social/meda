@@ -3,7 +3,9 @@ export interface DateSwitcherProps {
     value: Date;
     /** Reference for "today" comparison and forward-disable. */
     now: Date;
+    /** IANA timezone for "same day" / display semantics. Defaults to local. */
+    tz?: string;
     onChange: (next: Date) => void;
     className?: string;
 }
-export declare function DateSwitcher({ value, now, onChange, className }: DateSwitcherProps): import("react/jsx-runtime").JSX.Element;
+export declare function DateSwitcher({ value, now, tz, onChange, className }: DateSwitcherProps): import("react/jsx-runtime").JSX.Element;

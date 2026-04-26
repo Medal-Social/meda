@@ -5,18 +5,25 @@ export interface DateSwitcherProps {
   value: Date;
   /** Reference for "today" comparison and forward-disable. */
   now: Date;
+  /** IANA timezone for "same day" / display semantics. Defaults to local. */
+  tz?: string;
   onChange: (next: Date) => void;
   className?: string;
 }
 
-function startOfDay(d: Date): number {
-  const c = new Date(d);
-  c.setHours(0, 0, 0, 0);
-  return c.getTime();
+// "YYYY-MM-DD" in the given tz (or local if undefined). Comparing these
+// strings is a robust same-day check that doesn't depend on local-time math.
+function ymdInTz(d: Date, tz?: string): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: tz,
+  }).format(d);
 }
 
-function isSameDay(a: Date, b: Date): boolean {
-  return startOfDay(a) === startOfDay(b);
+function isSameDay(a: Date, b: Date, tz?: string): boolean {
+  return ymdInTz(a, tz) === ymdInTz(b, tz);
 }
 
 function addDays(d: Date, delta: number): Date {
@@ -27,16 +34,17 @@ function addDays(d: Date, delta: number): Date {
   return c;
 }
 
-function fmtDate(d: Date): string {
+function fmtDate(d: Date, tz?: string): string {
   return new Intl.DateTimeFormat('en-US', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    timeZone: tz,
   }).format(d);
 }
 
-export function DateSwitcher({ value, now, onChange, className }: DateSwitcherProps) {
-  const isToday = isSameDay(value, now);
+export function DateSwitcher({ value, now, tz, onChange, className }: DateSwitcherProps) {
+  const isToday = isSameDay(value, now, tz);
   const goPrev = () => onChange(addDays(value, -1));
   const goNext = () => onChange(addDays(value, 1));
 
@@ -53,7 +61,7 @@ export function DateSwitcher({ value, now, onChange, className }: DateSwitcherPr
 
       <div className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-sm">
         <Calendar className="size-3.5 text-muted-foreground" />
-        <span className="font-medium">{fmtDate(value)}</span>
+        <span className="font-medium">{fmtDate(value, tz)}</span>
         {isToday && (
           <span className="ml-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-500">
             today

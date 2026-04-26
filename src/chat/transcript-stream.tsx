@@ -21,14 +21,28 @@ export function TranscriptStream({
   className,
 }: TranscriptStreamProps) {
   const ref = useRef<HTMLDivElement | null>(null);
+  // Snapshot of "was the user near the bottom?" sampled BEFORE the new turn
+  // renders, so that a tall appended turn doesn't push the bottom off-screen
+  // and falsely look like the user scrolled away.
+  const wasAtBottomRef = useRef(true);
 
-  // Auto-follow last turn when user is near bottom
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onScroll = () => {
+      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      wasAtBottomRef.current = distanceFromBottom < SCROLL_THRESHOLD;
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Auto-follow last turn when the user was near the bottom before the new turn appended.
   // biome-ignore lint/correctness/useExhaustiveDependencies: turns changes trigger scroll check
   useEffect(() => {
     const el = ref.current;
     if (!el || !autoScroll) return;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    if (distanceFromBottom < SCROLL_THRESHOLD) {
+    if (wasAtBottomRef.current) {
       el.scrollTop = el.scrollHeight;
     }
   }, [turns, autoScroll]);

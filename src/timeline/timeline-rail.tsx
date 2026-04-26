@@ -96,7 +96,7 @@ export function TimelineRail({
       data-meda-component="timeline-rail"
     >
       <div className="px-3.5 pb-2.5 pt-3.5">
-        <DateSwitcher value={date} now={now} onChange={(d) => onDateChange?.(d)} />
+        <DateSwitcher value={date} now={now} tz={tz} onChange={(d) => onDateChange?.(d)} />
       </div>
 
       {/* Zoom */}
