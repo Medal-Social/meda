@@ -1,6 +1,14 @@
 import '@testing-library/jest-dom/vitest';
+import { cleanup } from '@testing-library/react';
 import * as React from 'react';
-import { vi } from 'vitest';
+import { afterEach, vi } from 'vitest';
+
+// Tear down rendered DOM between tests so that getByText assertions don't
+// match nodes left behind by previous renders (testing-library doesn't
+// auto-cleanup when vitest is configured with `globals: false`).
+afterEach(() => {
+  cleanup();
+});
 
 // Mock window.matchMedia (not available in jsdom)
 Object.defineProperty(window, 'matchMedia', {
@@ -16,6 +24,18 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 });
+
+// Mock HTMLCanvasElement.getContext for jsdom
+HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
+  fillRect: vi.fn(),
+  fillText: vi.fn(),
+  clearRect: vi.fn(),
+  strokeRect: vi.fn(),
+  fillStyle: '',
+  font: '',
+  lineWidth: 1,
+  strokeStyle: '',
+})) as unknown as (contextId: string, options?: unknown) => CanvasRenderingContext2D | null;
 
 // Mock @react-three/fiber so tests run in jsdom without WebGL
 vi.mock('@react-three/fiber', () => ({
