@@ -41,6 +41,10 @@
       "types": "./dist/chat/index.d.ts",
       "default": "./dist/chat/index.js"
     },
+    "./panel": {
+      "types": "./dist/panel/index.d.ts",
+      "default": "./dist/panel/index.js"
+    },
     "./styles.css": "./dist/styles.css"
   },
   "publishConfig": {
