@@ -13,6 +13,26 @@ export default defineConfig({
         replacement: resolve(__dirname, 'src/styles/globals.css'),
       },
       {
+        find: '@medalsocial/meda/timeline',
+        replacement: resolve(__dirname, 'src/timeline/index.ts'),
+      },
+      {
+        find: '@medalsocial/meda/chat',
+        replacement: resolve(__dirname, 'src/chat/index.ts'),
+      },
+      {
+        find: '@medalsocial/meda/panel',
+        replacement: resolve(__dirname, 'src/panel/index.ts'),
+      },
+      {
+        find: '@medalsocial/meda/voice',
+        replacement: resolve(__dirname, 'src/voice/index.ts'),
+      },
+      {
+        find: '@medalsocial/meda/shell',
+        replacement: resolve(__dirname, 'src/shell/index.ts'),
+      },
+      {
         find: '@medalsocial/meda',
         replacement: resolve(__dirname, 'src/index.ts'),
       },
