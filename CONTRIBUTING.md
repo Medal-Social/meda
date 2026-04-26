@@ -96,7 +96,7 @@ pnpm publish --tag dev --no-git-checks  # publishes @medalsocial/meda@0.x.y-dev-
 In the consumer app, pin to the snapshot:
 
 ```json
-"@medalsocial/meda": "0.1.1-dev-abc1234"
+"@medalsocial/meda": "0.2.0-dev-abc1234"
 ```
 
 ### 2. `pnpm link` (local only)

@@ -75,7 +75,7 @@ export function App() {
 
         <section className="hero">
           <span className="badge">
-            <span>v0.1.1</span>
+            <span>v0.2.0</span>
             <span>·</span>
             <span>Apache-2.0</span>
             <span>·</span>
