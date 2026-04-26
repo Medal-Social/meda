@@ -9,29 +9,65 @@ import { Scene } from './voice-orb-scene.js';
 // ---------------------------------------------------------------------------
 // Theming helpers
 // ---------------------------------------------------------------------------
-function hslToHex(hsl) {
-    const match = hsl.match(/(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%/);
-    if (!match)
-        return '#9A6AC2'; // Pilot purple fallback
-    const h = Number(match[1]);
-    const s = Number(match[2]) / 100;
-    const l = Number(match[3]) / 100;
-    const a = s * Math.min(l, 1 - l);
+const FALLBACK_COLOR = '#9A6AC2'; // Pilot purple
+function hslToHex(h, s, l) {
+    const sl = s / 100;
+    const ll = l / 100;
+    const a = sl * Math.min(ll, 1 - ll);
     const f = (n) => {
         const k = (n + h / 30) % 12;
-        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        const color = ll - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
         return Math.round(255 * color)
             .toString(16)
             .padStart(2, '0');
     };
     return `#${f(0)}${f(8)}${f(4)}`;
 }
+/**
+ * Convert any CSS color token to a hex string the Three.js shader can consume.
+ *
+ * Handles:
+ *   - hex: #RGB / #RRGGBB / #RRGGBBAA
+ *   - Tailwind/shadcn space-separated HSL: "271 36% 60%"
+ *   - hsl(), rgb(), oklch(), color(), var() — resolved via browser CSSOM
+ */
+export function parseColor(value, fallback = FALLBACK_COLOR) {
+    const v = value.trim();
+    if (!v)
+        return fallback;
+    // Already a hex literal — pass through directly.
+    if (/^#[0-9a-fA-F]{3,8}$/.test(v))
+        return v;
+    // Tailwind/shadcn convention: "H S% L%" (no leading "hsl(")
+    const hslMatch = v.match(/^(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%$/);
+    if (hslMatch) {
+        return hslToHex(Number(hslMatch[1]), Number(hslMatch[2]), Number(hslMatch[3]));
+    }
+    // Functional notation — hsl(), rgb(), oklch(), color(), var(), etc.
+    // Let the browser resolve it via a throw-away element.
+    if (typeof document !== 'undefined' && (v.includes('(') || v.startsWith('var'))) {
+        const probe = document.createElement('div');
+        probe.style.display = 'none';
+        probe.style.color = v;
+        document.body.appendChild(probe);
+        const computed = getComputedStyle(probe).color;
+        document.body.removeChild(probe);
+        const m = computed.match(/rgb(?:a)?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/);
+        if (m) {
+            const r = Number(m[1]);
+            const g = Number(m[2]);
+            const b = Number(m[3]);
+            return `#${[r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
+        }
+    }
+    return fallback;
+}
 function readMedaColors(el) {
     const style = getComputedStyle(el);
     const primary = style.getPropertyValue('--primary').trim();
     const accent = style.getPropertyValue('--accent').trim();
-    const colorA = hslToHex(primary);
-    const colorB = accent ? hslToHex(accent) : colorA;
+    const colorA = parseColor(primary);
+    const colorB = accent ? parseColor(accent) : colorA;
     return [colorA, colorB];
 }
 const DEFAULT_COLORS = ['#9A6AC2', '#7B4FAB'];

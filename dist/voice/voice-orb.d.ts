@@ -1,5 +1,14 @@
 import * as React from 'react';
 import type { TurnPhase } from './types.js';
+/**
+ * Convert any CSS color token to a hex string the Three.js shader can consume.
+ *
+ * Handles:
+ *   - hex: #RGB / #RRGGBB / #RRGGBBAA
+ *   - Tailwind/shadcn space-separated HSL: "271 36% 60%"
+ *   - hsl(), rgb(), oklch(), color(), var() — resolved via browser CSSOM
+ */
+export declare function parseColor(value: string, fallback?: string): string;
 export interface VoiceOrbProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     /** Held / not held. Drives the squish + halo intensity. */
     pressed: boolean;

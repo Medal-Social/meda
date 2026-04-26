@@ -81,8 +81,9 @@ export function useMicCapture(opts = {}) {
         const gen = genRef.current;
         setState('requesting');
         setError(null);
-        // Inline cleanup helper used in the catch path (Bug 2 fix): ensures tracks
-        // and context are released even when start() fails mid-flight.
+        // Helper for the stale-generation early-return paths (after addModule):
+        // releases resources acquired by this invocation without touching refs
+        // that may already belong to a superseding start().
         const cleanupRefs = (stream, ctx) => {
             stream?.getTracks().forEach((t) => {
                 t.stop();
@@ -98,65 +99,80 @@ export function useMicCapture(opts = {}) {
                 nodeRef.current = null;
             }
         };
+        // Track resources acquired by THIS invocation so the catch block can
+        // release exactly what we opened — not whatever a newer start() may have
+        // placed in the shared refs.
+        let acquiredStream = null;
+        let acquiredCtx = null;
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
+            acquiredStream = await navigator.mediaDevices.getUserMedia({
                 audio: opts.audioConstraints ?? {
                     echoCancellation: true,
                     noiseSuppression: true,
                     autoGainControl: true,
                 },
             });
-            // Bug 4 fix: if stop() fired while we were awaiting getUserMedia, a
-            // newer generation is active — release the stream we just acquired and
-            // bail out without transitioning to 'capturing'.
+            // If stop() fired while we were awaiting getUserMedia a newer generation
+            // is active — release the stream we just acquired and bail out.
             if (genRef.current !== gen) {
-                stream.getTracks().forEach((t) => {
+                acquiredStream.getTracks().forEach((t) => {
                     t.stop();
                 });
                 return;
             }
-            streamRef.current = stream;
-            const ctx = new AudioContext();
-            ctxRef.current = ctx;
+            streamRef.current = acquiredStream;
+            acquiredCtx = new AudioContext();
+            ctxRef.current = acquiredCtx;
             const blob = new Blob([WORKLET_CODE], { type: 'application/javascript' });
             const url = URL.createObjectURL(blob);
             try {
-                await ctx.audioWorklet.addModule(url);
+                await acquiredCtx.audioWorklet.addModule(url);
             }
             finally {
                 URL.revokeObjectURL(url);
             }
-            // Bug 4 fix: check again after the async addModule call.
+            // Check again after the async addModule call.
             if (genRef.current !== gen) {
-                cleanupRefs(stream, ctx);
+                cleanupRefs(acquiredStream, acquiredCtx);
                 return;
             }
-            const node = new AudioWorkletNode(ctx, 'meda-mic-capture');
+            const node = new AudioWorkletNode(acquiredCtx, 'meda-mic-capture');
             nodeRef.current = node;
             node.port.onmessage = (e) => {
                 const msg = e.data;
                 setLevel(msg.level);
                 onFrameRef.current?.({ pcm: msg.pcm, level: msg.level });
             };
-            const src = ctx.createMediaStreamSource(stream);
+            const src = acquiredCtx.createMediaStreamSource(acquiredStream);
             src.connect(node);
             // Web Audio graphs only run when connected to a destination. The
             // worklet's process() callback is never invoked otherwise — no PCM
             // frames, no level updates. Route through a 0-gain node so we don't
             // produce audible feedback from the user's own mic.
-            const silent = ctx.createGain();
+            const silent = acquiredCtx.createGain();
             silent.gain.value = 0;
             node.connect(silent);
-            silent.connect(ctx.destination);
+            silent.connect(acquiredCtx.destination);
             setState('capturing');
         }
         catch (err) {
-            // Bug 2 fix: release the mic and AudioContext if they were acquired
-            // before the failure so we don't leave the hardware mic open.
-            cleanupRefs(streamRef.current, ctxRef.current);
-            const e = err;
-            setError(e);
-            setState(e.name === 'NotAllowedError' ? 'denied' : 'idle');
+            // Release only the resources THIS start() acquired. Reading from refs
+            // here would be unsafe — a superseding start() may have already stored
+            // its own resources there.
+            acquiredStream?.getTracks().forEach((t) => {
+                t.stop();
+            });
+            void acquiredCtx?.close();
+            if (genRef.current === gen) {
+                if (streamRef.current === acquiredStream)
+                    streamRef.current = null;
+                if (ctxRef.current === acquiredCtx)
+                    ctxRef.current = null;
+                nodeRef.current = null;
+                const e = err;
+                setError(e);
+                setState(e.name === 'NotAllowedError' ? 'denied' : 'idle');
+            }
         }
     }, [opts.audioConstraints, stop]);
     // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally empty - should only run on mount
