@@ -1,5 +1,20 @@
 # @medalsocial/meda
 
+## 0.2.0
+
+### Minor Changes
+
+- [#15](https://github.com/Medal-Social/meda/pull/15) [`ea97961`](https://github.com/Medal-Social/meda/commit/ea97961259a94aea35bdd7e211569e05088a0d9d) Thanks [@alioftech](https://github.com/alioftech)! - VoiceOrb rebuilt with Three.js + R3F + GLSL shaders for production-quality audio-reactive animation. Public API preserved; new optional `outputLevel` prop for TTS playback reactivity. Adapted from ElevenLabs UI's MIT-licensed orb component with Meda token-driven theming and 5-phase state model.
+
+- [#15](https://github.com/Medal-Social/meda/pull/15) [`ea97961`](https://github.com/Medal-Social/meda/commit/ea97961259a94aea35bdd7e211569e05088a0d9d) Thanks [@alioftech](https://github.com/alioftech)! - Add `/voice` subpath export with voice interaction primitives:
+
+  - `useMicCapture()` hook for mic capture with AudioWorklet + RMS level
+  - `<VoiceOrb>` glass-orb mic button with phase + voice-level reactivity
+  - `<VoiceLevel>` level meter (bars / wave / ring variants)
+  - `<VoiceStatusPill>` phase indicator badge
+
+  Used by pilot-talk for hold-to-talk UI. The hook ships its AudioWorklet inline via Blob URL so consumers don't need to copy worklet files into their public dir.
+
 ## 0.1.1
 
 ### Patch Changes
