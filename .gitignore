@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build caches
+.turbo/
+.cache/
+.parcel-cache/
+*.tsbuildinfo
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+Thumbs.db
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Demo build output
+demo/dist/
+
+# NOTE: dist/ is intentionally committed — this is a published library
+# and downstream consumers (e.g. pilot-talk via pnpm link) read from dist.
