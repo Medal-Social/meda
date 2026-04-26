@@ -20,4 +20,19 @@ describe('InspectorJSON', () => {
     render(<InspectorJSON data={{ ids: [1, 2, 3] }} />);
     expect(screen.getByText(/"ids"/)).toBeInTheDocument();
   });
+
+  it('does not infinitely recurse on circular objects', () => {
+    type Circ = { self?: unknown; label: string };
+    const node: Circ = { label: 'root' };
+    node.self = node;
+    expect(() => render(<InspectorJSON data={node} />)).not.toThrow();
+    expect(screen.getByText(/"\[Circular\]"/)).toBeInTheDocument();
+  });
+
+  it('does not infinitely recurse on circular arrays', () => {
+    const arr: unknown[] = [1];
+    arr.push(arr);
+    expect(() => render(<InspectorJSON data={{ items: arr }} />)).not.toThrow();
+    expect(screen.getByText(/"\[Circular\]"/)).toBeInTheDocument();
+  });
 });

@@ -52,4 +52,22 @@ describe('ToolCallBlock', () => {
     };
     expect(() => render(<ToolCallBlock call={circCall} />)).not.toThrow();
   });
+
+  it('does not crash when args is null', () => {
+    const nullCall: ToolCall = {
+      id: 't4',
+      name: 'noop',
+      args: null as unknown as Record<string, unknown>,
+    };
+    expect(() => render(<ToolCallBlock call={nullCall} />)).not.toThrow();
+  });
+
+  it('does not crash when args is undefined', () => {
+    const undefinedCall: ToolCall = {
+      id: 't5',
+      name: 'noop',
+      args: undefined as unknown as Record<string, unknown>,
+    };
+    expect(() => render(<ToolCallBlock call={undefinedCall} />)).not.toThrow();
+  });
 });

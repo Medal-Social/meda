@@ -33,13 +33,15 @@ export function ToolCallBlock({ call, className }: ToolCallBlockProps) {
         )}
       </div>
       <div className="text-muted-foreground">
-        {Object.entries(call.args).map(([k, v], i) => (
-          <span key={k}>
-            {i > 0 && ', '}
-            <span className="text-primary">{k}</span>: {''}
-            <span className="text-emerald-500">{safeStringify(v)}</span>
-          </span>
-        ))}
+        {Object.entries(call.args && typeof call.args === 'object' ? call.args : {}).map(
+          ([k, v], i) => (
+            <span key={k}>
+              {i > 0 && ', '}
+              <span className="text-primary">{k}</span>: {''}
+              <span className="text-emerald-500">{safeStringify(v)}</span>
+            </span>
+          )
+        )}
         {call.resultSummary && (
           <span className="text-muted-foreground"> → {call.resultSummary}</span>
         )}

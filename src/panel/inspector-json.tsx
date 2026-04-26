@@ -12,7 +12,13 @@ type Token =
   | { kind: 'number'; text: string }
   | { kind: 'literal'; text: string };
 
-function tokenize(value: unknown, level: number, key: string | null, indent: number): Token[] {
+function tokenize(
+  value: unknown,
+  level: number,
+  key: string | null,
+  indent: number,
+  seen: WeakSet<object>
+): Token[] {
   const out: Token[] = [];
   const pad = ' '.repeat(level * indent);
   if (key !== null) {
@@ -31,20 +37,31 @@ function tokenize(value: unknown, level: number, key: string | null, indent: num
   } else if (typeof value === 'boolean') {
     out.push({ kind: 'literal', text: String(value) });
   } else if (Array.isArray(value)) {
-    out.push({ kind: 'punct', text: '[\n' });
-    value.forEach((v, i) => {
-      out.push(...tokenize(v, level + 1, null, indent));
-      out.push({ kind: 'punct', text: i < value.length - 1 ? ',\n' : '\n' });
-    });
-    out.push({ kind: 'punct', text: `${pad}]` });
+    if (seen.has(value)) {
+      out.push({ kind: 'literal', text: '"[Circular]"' });
+    } else {
+      seen.add(value);
+      out.push({ kind: 'punct', text: '[\n' });
+      value.forEach((v, i) => {
+        out.push(...tokenize(v, level + 1, null, indent, seen));
+        out.push({ kind: 'punct', text: i < value.length - 1 ? ',\n' : '\n' });
+      });
+      out.push({ kind: 'punct', text: `${pad}]` });
+    }
   } else if (typeof value === 'object') {
-    out.push({ kind: 'punct', text: '{\n' });
-    const entries = Object.entries(value as Record<string, unknown>);
-    entries.forEach(([k, v], i) => {
-      out.push(...tokenize(v, level + 1, k, indent));
-      out.push({ kind: 'punct', text: i < entries.length - 1 ? ',\n' : '\n' });
-    });
-    out.push({ kind: 'punct', text: `${pad}}` });
+    const obj = value as Record<string, unknown>;
+    if (seen.has(obj)) {
+      out.push({ kind: 'literal', text: '"[Circular]"' });
+    } else {
+      seen.add(obj);
+      out.push({ kind: 'punct', text: '{\n' });
+      const entries = Object.entries(obj);
+      entries.forEach(([k, v], i) => {
+        out.push(...tokenize(v, level + 1, k, indent, seen));
+        out.push({ kind: 'punct', text: i < entries.length - 1 ? ',\n' : '\n' });
+      });
+      out.push({ kind: 'punct', text: `${pad}}` });
+    }
   } else {
     out.push({ kind: 'literal', text: String(value) });
   }
@@ -60,7 +77,7 @@ const KIND_CLASS: Record<Token['kind'], string> = {
 };
 
 export function InspectorJSON({ data, indent = 2, className }: InspectorJSONProps) {
-  const tokens = tokenize(data, 0, null, indent);
+  const tokens = tokenize(data, 0, null, indent, new WeakSet());
   return (
     <pre
       className={[
