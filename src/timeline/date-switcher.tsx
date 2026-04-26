@@ -9,8 +9,6 @@ export interface DateSwitcherProps {
   className?: string;
 }
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-
 function startOfDay(d: Date): number {
   const c = new Date(d);
   c.setHours(0, 0, 0, 0);
@@ -19,6 +17,14 @@ function startOfDay(d: Date): number {
 
 function isSameDay(a: Date, b: Date): boolean {
   return startOfDay(a) === startOfDay(b);
+}
+
+function addDays(d: Date, delta: number): Date {
+  // Use calendar arithmetic, not fixed-ms offsets, so DST 23h/25h days
+  // don't bump the result to the wrong calendar date.
+  const c = new Date(d);
+  c.setDate(c.getDate() + delta);
+  return c;
 }
 
 function fmtDate(d: Date): string {
@@ -31,8 +37,8 @@ function fmtDate(d: Date): string {
 
 export function DateSwitcher({ value, now, onChange, className }: DateSwitcherProps) {
   const isToday = isSameDay(value, now);
-  const goPrev = () => onChange(new Date(value.getTime() - ONE_DAY_MS));
-  const goNext = () => onChange(new Date(value.getTime() + ONE_DAY_MS));
+  const goPrev = () => onChange(addDays(value, -1));
+  const goNext = () => onChange(addDays(value, 1));
 
   return (
     <div className={['flex items-center gap-2', className ?? ''].join(' ')}>

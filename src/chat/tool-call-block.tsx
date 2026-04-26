@@ -6,6 +6,17 @@ export interface ToolCallBlockProps {
   className?: string;
 }
 
+function safeStringify(v: unknown): string {
+  // Tolerate values JSON.stringify can't handle (BigInt, circular refs, etc.)
+  // so a malformed tool arg never crashes the transcript view.
+  try {
+    const out = JSON.stringify(v);
+    return out === undefined ? String(v) : out;
+  } catch {
+    return String(v);
+  }
+}
+
 export function ToolCallBlock({ call, className }: ToolCallBlockProps) {
   return (
     <div
@@ -26,7 +37,7 @@ export function ToolCallBlock({ call, className }: ToolCallBlockProps) {
           <span key={k}>
             {i > 0 && ', '}
             <span className="text-primary">{k}</span>: {''}
-            <span className="text-emerald-500">{JSON.stringify(v)}</span>
+            <span className="text-emerald-500">{safeStringify(v)}</span>
           </span>
         ))}
         {call.resultSummary && (

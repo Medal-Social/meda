@@ -44,6 +44,12 @@ export function TimelineRail({
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [isFollowing, setIsFollowing] = useState(followLive);
 
+  // Mirror parent prop changes into local state so a controlled toggle of
+  // `followLive` from outside actually flips auto-follow.
+  useEffect(() => {
+    setIsFollowing(followLive);
+  }, [followLive]);
+
   const liveCount = useMemo(() => events.filter((e) => e.isLive).length, [events]);
   const totalCalls = useMemo(() => events.filter((e) => e.kind === 'session').length, [events]);
 

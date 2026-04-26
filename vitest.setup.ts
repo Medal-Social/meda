@@ -1,6 +1,14 @@
 import '@testing-library/jest-dom/vitest';
+import { cleanup } from '@testing-library/react';
 import * as React from 'react';
-import { vi } from 'vitest';
+import { afterEach, vi } from 'vitest';
+
+// Tear down rendered DOM between tests so that getByText assertions don't
+// match nodes left behind by previous renders (testing-library doesn't
+// auto-cleanup when vitest is configured with `globals: false`).
+afterEach(() => {
+  cleanup();
+});
 
 // Mock window.matchMedia (not available in jsdom)
 Object.defineProperty(window, 'matchMedia', {

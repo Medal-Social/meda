@@ -3,6 +3,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { TimelineRail } from './timeline-rail.js';
 import type { TimelineEvent } from './types.js';
 
+// jsdom stub for Element.scrollTo (TimelineRail's auto-follow effect calls
+// scrollTop=, which jsdom supports; but other rerender paths used in this
+// suite touch it via a function on some jsdom builds — the explicit stub
+// keeps the rerender test stable across versions).
+if (!Element.prototype.scrollTo) {
+  Element.prototype.scrollTo = (() => {}) as unknown as typeof Element.prototype.scrollTo;
+}
+
 const NOW = new Date('2026-04-26T15:24:09Z');
 
 const events: TimelineEvent[] = [
@@ -60,5 +68,21 @@ describe('TimelineRail', () => {
   it('renders the manage retention link', () => {
     render(<TimelineRail date={NOW} now={NOW} events={events} />);
     expect(screen.getAllByText(/manage retention/i).length).toBeGreaterThan(0);
+  });
+
+  it('honors followLive prop changes after the initial render', () => {
+    const { rerender } = render(
+      <TimelineRail date={NOW} now={NOW} events={events} followLive={true} />
+    );
+    // Following → no jump-to-live affordance.
+    expect(screen.queryByText(/jump to live/i)).not.toBeInTheDocument();
+
+    // Parent toggles followLive off.
+    rerender(<TimelineRail date={NOW} now={NOW} events={events} followLive={false} />);
+    expect(screen.getByText(/jump to live/i)).toBeInTheDocument();
+
+    // And back on.
+    rerender(<TimelineRail date={NOW} now={NOW} events={events} followLive={true} />);
+    expect(screen.queryByText(/jump to live/i)).not.toBeInTheDocument();
   });
 });

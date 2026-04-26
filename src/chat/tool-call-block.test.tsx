@@ -31,4 +31,25 @@ describe('ToolCallBlock', () => {
     const { container } = render(<ToolCallBlock call={call} />);
     expect(container.textContent).toContain('range');
   });
+
+  it('does not crash when an arg is unserializable (BigInt)', () => {
+    const bigCall: ToolCall = {
+      id: 't2',
+      name: 'math.bignum',
+      args: { count: 9_007_199_254_740_993n as unknown as number },
+    };
+    expect(() => render(<ToolCallBlock call={bigCall} />)).not.toThrow();
+  });
+
+  it('does not crash when an arg is a circular structure', () => {
+    type Circ = { self?: unknown };
+    const circular: Circ = {};
+    circular.self = circular;
+    const circCall: ToolCall = {
+      id: 't3',
+      name: 'graph.cycle',
+      args: { node: circular },
+    };
+    expect(() => render(<ToolCallBlock call={circCall} />)).not.toThrow();
+  });
 });
