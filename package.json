@@ -99,11 +99,11 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.0",
     "@tailwindcss/vite": "^4.2.4",
-    "@types/three": "^0.184.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.184.0",
     "@vitejs/plugin-react": "^6.0.1",
     "husky": "^9.1.7",
     "jsdom": "^29.0.2",
@@ -113,6 +113,7 @@
     "typescript": "~6.0.2",
     "vite": "^8.0.4",
     "vitest": "^4.1.4",
+    "vitest-axe": "^0.1.0",
     "wrangler": "^4.0.0"
   }
 }

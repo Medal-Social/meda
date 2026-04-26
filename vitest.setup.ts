@@ -17,6 +17,18 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// Mock HTMLCanvasElement.getContext for jsdom
+HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
+  fillRect: vi.fn(),
+  fillText: vi.fn(),
+  clearRect: vi.fn(),
+  strokeRect: vi.fn(),
+  fillStyle: '',
+  font: '',
+  lineWidth: 1,
+  strokeStyle: '',
+})) as unknown as (contextId: string, options?: unknown) => CanvasRenderingContext2D | null;
+
 // Mock @react-three/fiber so tests run in jsdom without WebGL
 vi.mock('@react-three/fiber', () => ({
   Canvas: ({ children }: { children: React.ReactNode }) =>
