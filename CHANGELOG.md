@@ -1,5 +1,17 @@
 # @medalsocial/meda
 
+## 0.3.0
+
+### Minor Changes
+
+- [#21](https://github.com/Medal-Social/meda/pull/21) [`ace3072`](https://github.com/Medal-Social/meda/commit/ace307290602c701e83f6829a109026f489f5731) Thanks [@alioftech](https://github.com/alioftech)! - Add three new subpath exports backing the pilot-talk Activity surface and any other Medal app needing timeline/chat/inspector primitives:
+
+  - **`@medalsocial/meda/timeline`** — `<TimelineRail>` (composite) plus `<DateSwitcher>`, `<LiveIndicator>`, `<EventCard>`, `<TimelineTape>`, `<ScrubBar>`. Generic over a `TimelineEvent[]` shape; sticky LIVE pinning + auto-follow + jump-to-live built in.
+  - **`@medalsocial/meda/chat`** — `<TranscriptStream>` (composite) plus `<TurnCard>`, `<ToolCallBlock>`, `<LatencyBadge>`, `<LatencyBreakdown>`. Per-turn play, per-stage latency, inline tool blocks.
+  - **`@medalsocial/meda/panel`** — `<Inspector>` (composite) plus `<InspectorField>`, `<InspectorJSON>`. Tabbed property panel with token-keyed JSON pretty-print.
+
+  All primitives are pure presentational, consume Meda's shadcn-semantic tokens, ship a Storybook-style demo route in `demo/`, and pass `vitest-axe` WCAG AA.
+
 ## 0.2.0
 
 ### Minor Changes
