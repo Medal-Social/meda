@@ -33,6 +33,10 @@
       "types": "./dist/voice/index.d.ts",
       "default": "./dist/voice/index.js"
     },
+    "./timeline": {
+      "types": "./dist/timeline/index.d.ts",
+      "default": "./dist/timeline/index.js"
+    },
     "./styles.css": "./dist/styles.css"
   },
   "publishConfig": {
