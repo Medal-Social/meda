@@ -29,6 +29,10 @@
       "types": "./dist/shell/index.d.ts",
       "default": "./dist/shell/index.js"
     },
+    "./voice": {
+      "types": "./dist/voice/index.d.ts",
+      "default": "./dist/voice/index.js"
+    },
     "./styles.css": "./dist/styles.css"
   },
   "publishConfig": {
