@@ -113,142 +113,73 @@ uniform float uPressed;
 uniform float uOpacity;
 uniform float uOffsets[7];
 
-// destructive red for error flash
 const vec3 ERROR_COLOR = vec3(0.85, 0.18, 0.18);
+const float PI = 3.14159265358979323846;
 
 varying vec2 vUv;
 
-const float PI = 3.14159265358979323846;
-
-// Helper: draw an oval in polar UV space with soft falloff
-bool drawOval(vec2 polarUv, vec2 polarCenter, float a, float b,
-              bool reverseGradient, float softness, out vec4 color) {
-  vec2 p = polarUv - polarCenter;
-  float oval = (p.x * p.x) / (a * a) + (p.y * p.y) / (b * b);
-  float edge = smoothstep(1.0, 1.0 - softness, oval);
-  if (edge > 0.0) {
-    float gradient = reverseGradient
-      ? (1.0 - (p.x / a + 1.0) / 2.0)
-      : ((p.x / a + 1.0) / 2.0);
-    gradient = mix(0.5, gradient, 0.1);
-    color = vec4(vec3(gradient), 0.85 * edge);
-    return true;
-  }
-  return false;
-}
-
-// Map grayscale to 4-stop color ramp
-vec3 colorRamp(float t, vec3 c1, vec3 c2, vec3 c3, vec3 c4) {
-  if (t < 0.33) return mix(c1, c2, t * 3.0);
-  if (t < 0.66) return mix(c2, c3, (t - 0.33) * 3.0);
-  return mix(c3, c4, (t - 0.66) * 3.0);
-}
-
-// Noisy ring radius from fbm
-float sharpRing(float theta, float radius, float time) {
-  float noiseVal = fbm(vec3(cos(theta), sin(theta), time * 0.12)) * 0.5 + 0.5;
-  return 1.0 + (noiseVal - 0.5) * 0.45;
-}
-
-float smoothRing(float theta, float radius, float time) {
-  float noiseVal = fbm(vec3(cos(theta) * 0.7, sin(theta) * 0.7, time * 0.08)) * 0.5 + 0.5;
-  return 0.9 + (noiseVal - 0.5) * 0.32;
-}
-
-// Procedural flow distortion (replaces texture sampling from ElevenLabs original)
-float flow(float theta, float radius, float time) {
-  return fbm(vec3(cos(theta) * radius, sin(theta) * radius, time * 0.15)) * 0.5 + 0.5;
-}
-
 void main() {
   vec2 uv = vUv * 2.0 - 1.0;
+  float r = length(uv);
 
-  float radius = length(uv);
-  float theta = atan(uv.y, uv.x);
-  if (theta < 0.0) theta += 2.0 * PI;
+  // Discard fragments outside the unit circle so the canvas stays clean.
+  if (r > 1.0) {
+    gl_FragColor = vec4(0.0);
+    return;
+  }
 
-  // Phase-modulated audio volumes
-  // uPhaseT: 0=idle,1=listening,2=thinking,3=speaking,4=error
-  float isListening  = clamp(1.0 - abs(uPhaseT - 1.0), 0.0, 1.0);
-  float isThinking   = clamp(1.0 - abs(uPhaseT - 2.0), 0.0, 1.0);
-  float isSpeaking   = clamp(1.0 - abs(uPhaseT - 3.0), 0.0, 1.0);
+  // ---- Phase masks (0..1 for each phase) -----------------------------------
+  // uPhaseT smoothly interpolates between numeric phases:
+  // 0=idle, 1=listening, 2=thinking, 3=speaking, 4=error.
+  float isListening = clamp(1.0 - abs(uPhaseT - 1.0), 0.0, 1.0);
+  float isThinking  = clamp(1.0 - abs(uPhaseT - 2.0), 0.0, 1.0);
+  float isSpeaking  = clamp(1.0 - abs(uPhaseT - 3.0), 0.0, 1.0);
 
   float inputDrive  = uInputVolume  * isListening;
   float outputDrive = uOutputVolume * isSpeaking;
+  float thinkPulse  = isThinking * (0.5 + 0.5 * sin(uTime * 2.0));
+  float drive = max(inputDrive, max(outputDrive, thinkPulse * 0.4));
 
-  // thinking: slow radial pulse
-  float thinkPulse  = isThinking * (0.5 + 0.5 * sin(uTime * 2.2));
+  // ---- Surface displacement: gentle 3D feel via noise ---------------------
+  // Sample fbm in 3D with time as the third axis so the surface evolves slowly.
+  float n = fbm(vec3(uv * 1.4, uAnimation * 0.18)) * 0.5 + 0.5;     // 0..1
+  float n2 = fbm(vec3(uv * 2.6 + 4.7, uAnimation * 0.10)) * 0.5 + 0.5;
 
-  float effectiveDrive = max(inputDrive, max(outputDrive, thinkPulse * 0.5));
+  // ---- Color: smooth two-stop gradient driven by noise + radius ----------
+  vec3 cA = mix(uColorA, ERROR_COLOR, uErrorFlash);
+  vec3 cB = mix(uColorB, ERROR_COLOR * 0.55, uErrorFlash * 0.7);
 
-  // Flow distortion of angle (replaces texture-based flow in original)
-  float flowNoise = flow(theta, radius * 0.5, uAnimation * 0.2) - 0.5;
-  theta += flowNoise * mix(0.08, 0.28, effectiveDrive);
+  // Mix factor blends two colors based on noise — keeps the orb gradient-y.
+  // Subtle vertical bias so the top is slightly brighter (3D illusion).
+  float topLight = smoothstep(-1.0, 1.0, uv.y * 0.6 + 0.4);
+  float mixT = clamp(n * 0.6 + topLight * 0.4 + n2 * 0.1, 0.0, 1.0);
+  vec3 base = mix(cA, cB, mixT);
 
-  vec4 color = vec4(1.0, 1.0, 1.0, 1.0);
+  // Internal highlight (top-left, classic glass orb)
+  vec2 highlightCenter = vec2(-0.35, 0.45);
+  float hi = smoothstep(0.55, 0.0, length(uv - highlightCenter));
+  base += vec3(1.0) * hi * 0.18;
 
-  // Animated oval blobs (same approach as ElevenLabs original, procedural noise for size)
-  float originalCenters[7];
-  originalCenters[0] = 0.0;
-  originalCenters[1] = 0.5 * PI;
-  originalCenters[2] = 1.0 * PI;
-  originalCenters[3] = 1.5 * PI;
-  originalCenters[4] = 2.0 * PI;
-  originalCenters[5] = 2.5 * PI;
-  originalCenters[6] = 3.0 * PI;
+  // Bottom shadow (depth illusion)
+  float shadow = smoothstep(0.3, 1.0, -uv.y) * 0.25;
+  base = mix(base, base * 0.6, shadow);
 
-  float centers[7];
-  for (int i = 0; i < 7; i++) {
-    centers[i] = originalCenters[i] + 0.5 * sin(uTime / 20.0 + uOffsets[i]);
-  }
+  // ---- Audio reactivity: pulse intensity on listening/speaking ------------
+  // Drive an inner glow that pulses with input/output volume.
+  float glow = (1.0 - r) * (1.0 - r);
+  base += cA * drive * glow * 0.6;
 
-  for (int i = 0; i < 7; i++) {
-    // Use procedural noise for oval size variation instead of texture
-    float n = fbm(vec3(float(i) * 1.7 + uAnimation * 0.05, 0.5, 0.5)) * 0.5 + 0.5;
-    float a = 0.5 + n * 0.3;
-    float b = n * mix(3.5, 2.5, inputDrive);
-    bool rev = (i % 2 == 1);
+  // ---- Press: slight core brighten ----------------------------------------
+  base = mix(base, base * 1.18, uPressed * (1.0 - smoothstep(0.0, 0.55, r)));
 
-    float distTheta = min(
-      abs(theta - centers[i]),
-      min(abs(theta + 2.0 * PI - centers[i]), abs(theta - 2.0 * PI - centers[i]))
-    );
+  // ---- Edge falloff: smooth rim, soft halo --------------------------------
+  // Sphere-like alpha falloff at the edge of the unit circle.
+  float alpha = smoothstep(1.0, 0.92, r);
+  // Outer halo glow extends slightly beyond the disc — but we discarded
+  // r > 1.0 above to keep canvas clean. For a rim, fade in a thin shell.
+  float rim = smoothstep(0.85, 1.0, r);
+  base += cA * rim * 0.25 * mix(0.6, 1.0, drive);
 
-    vec4 ovalColor;
-    if (drawOval(vec2(distTheta, radius), vec2(0.0), a, b, rev, 0.6, ovalColor)) {
-      color.rgb = mix(color.rgb, ovalColor.rgb, ovalColor.a);
-      color.a = max(color.a, ovalColor.a);
-    }
-  }
-
-  // Noisy rings driven by input volume
-  float rr1 = sharpRing(theta, radius, uTime);
-  float rr2 = smoothRing(theta, radius, uTime);
-  float inputR1 = radius + inputDrive * 0.2;
-  float inputR2 = radius + inputDrive * 0.15;
-  float opa1 = mix(0.2, 0.6, inputDrive);
-  float opa2 = mix(0.15, 0.45, inputDrive);
-  float ringAlpha1 = (inputR2 >= rr1) ? opa1 : 0.0;
-  float ringAlpha2 = smoothstep(rr2 - 0.05, rr2 + 0.05, inputR1) * opa2;
-  float totalRingAlpha = max(ringAlpha1, ringAlpha2);
-  color.rgb = 1.0 - (1.0 - color.rgb) * (1.0 - vec3(1.0) * totalRingAlpha);
-
-  // Color ramp: black → colorA → colorB → white
-  vec3 effectiveColorA = mix(uColorA, ERROR_COLOR, uErrorFlash);
-  vec3 effectiveColorB = mix(uColorB, ERROR_COLOR * 0.6, uErrorFlash * 0.7);
-
-  float luminance = color.r;
-  color.rgb = colorRamp(luminance,
-    vec3(0.0),
-    effectiveColorA,
-    effectiveColorB,
-    vec3(1.0)
-  );
-
-  // Press squish: slightly brighten core on press
-  color.rgb = mix(color.rgb, color.rgb * 1.12, uPressed * smoothstep(0.6, 0.0, radius));
-
-  color.a *= uOpacity;
-  gl_FragColor = color;
+  gl_FragColor = vec4(base, alpha * uOpacity);
 }
 `;

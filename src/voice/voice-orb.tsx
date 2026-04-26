@@ -3,8 +3,11 @@
 import { Canvas } from '@react-three/fiber';
 import * as React from 'react';
 import type { TurnPhase } from './types.js';
-import './voice-orb.css';
 import { Scene } from './voice-orb-scene.js';
+
+// Note: CSS for `.meda-voice-orb` is shipped via @medalsocial/meda/styles.css
+// (re-exported from globals.css). We avoid a JS-side CSS import here so
+// Meda's tsc-only build pipeline doesn't need CSS bundling.
 
 // ---------------------------------------------------------------------------
 // Theming helpers

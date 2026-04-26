@@ -1,6 +1,5 @@
 import * as React from 'react';
 import type { TurnPhase } from './types.js';
-import './voice-orb.css';
 export interface VoiceOrbProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     /** Held / not held. Drives the squish + halo intensity. */
     pressed: boolean;
