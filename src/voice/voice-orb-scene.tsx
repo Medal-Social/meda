@@ -54,7 +54,7 @@ export function Scene({
   colors,
   reducedMotion = false,
   pressed = false,
-  variant = 'metal',
+  variant = 'aurora',
 }: SceneProps) {
   const meshRef = React.useRef<THREE.Mesh<THREE.CircleGeometry, THREE.ShaderMaterial>>(null);
 

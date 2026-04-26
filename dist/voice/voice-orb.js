@@ -74,7 +74,7 @@ const DEFAULT_COLORS = ['#9A6AC2', '#7B4FAB'];
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export const VoiceOrb = React.forwardRef(function VoiceOrb({ pressed, level = 0, outputLevel = 0, phase = 'idle', size = 144, disabled, label = 'Hold to talk', colors: colorsProp, variant = 'metal', className, style, ...rest }, ref) {
+export const VoiceOrb = React.forwardRef(function VoiceOrb({ pressed, level = 0, outputLevel = 0, phase = 'idle', size = 144, disabled, label = 'Hold to talk', colors: colorsProp, variant = 'aurora', className, style, ...rest }, ref) {
     const buttonRef = React.useRef(null);
     // Merge forwarded ref
     React.useImperativeHandle(ref, () => buttonRef.current);

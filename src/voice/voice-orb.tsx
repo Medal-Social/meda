@@ -110,12 +110,12 @@ export interface VoiceOrbProps extends React.ButtonHTMLAttributes<HTMLButtonElem
   /**
    * Visual variant.
    *
-   * - `'metal'` (default): smooth chrome-like sphere with strong specular +
-   *   depth shading. Apple Siri / Vision Pro adjacent. Best for object-like,
+   * - `'aurora'` (default): soft layered ribbons of color drifting across a
+   *   translucent disc. Northern-lights aesthetic. Calm, atmospheric, reads
+   *   like motion even at idle. Default for Medal apps.
+   * - `'metal'`: smooth chrome-like sphere with strong specular + depth
+   *   shading. Apple Siri / Vision Pro adjacent. Use for object-like,
    *   premium-feeling presence.
-   * - `'aurora'`: soft layered ribbons of color drifting across a translucent
-   *   disc. Northern-lights aesthetic. Calm, atmospheric, reads like motion
-   *   even at idle. Great for thinking/listening moods.
    */
   variant?: VoiceOrbVariant;
 }
@@ -134,7 +134,7 @@ export const VoiceOrb = React.forwardRef<HTMLButtonElement, VoiceOrbProps>(funct
     disabled,
     label = 'Hold to talk',
     colors: colorsProp,
-    variant = 'metal',
+    variant = 'aurora',
     className,
     style,
     ...rest

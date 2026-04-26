@@ -31,7 +31,7 @@ function splitmix32(seed) {
         return (t >>> 0) / 4294967296;
     };
 }
-export function Scene({ level = 0, outputLevel = 0, phase = 'idle', colors, reducedMotion = false, pressed = false, variant = 'metal', }) {
+export function Scene({ level = 0, outputLevel = 0, phase = 'idle', colors, reducedMotion = false, pressed = false, variant = 'aurora', }) {
     const meshRef = React.useRef(null);
     // Smoothers for audio signals
     const inputSmoother = React.useRef(createVolumeSmoother());
