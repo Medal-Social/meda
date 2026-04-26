@@ -1,0 +1,26 @@
+/* Minimal container styles for VoiceOrb (WebGL rebuild). */
+/* All visual identity lives in the GLSL shader. */
+
+.meda-voice-orb {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 9999px;
+}
+
+/* Canvas fills the button; pointer-events disabled so clicks pass to the button */
+.meda-voice-orb canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meda-voice-orb {
+    /* biome-ignore lint/complexity/noImportantStyles: necessary to override animations for a11y */
+    transition: none !important;
+  }
+}
