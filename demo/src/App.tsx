@@ -8,6 +8,19 @@ import {
   ShellTabBar,
   WorkbenchLayout,
 } from '@medalsocial/meda';
+import { type ToolCall, TranscriptStream, type Turn } from '@medalsocial/meda/chat';
+import {
+  Inspector,
+  InspectorField,
+  InspectorJSON,
+  type InspectorTab,
+} from '@medalsocial/meda/panel';
+import {
+  ScrubBar,
+  type ScrubMark,
+  type TimelineEvent,
+  TimelineRail,
+} from '@medalsocial/meda/timeline';
 import {
   Bell,
   FileText,
@@ -171,6 +184,9 @@ export function App() {
           <ModuleNavDemo />
           <TabBarDemo />
           <HeaderFrameDemo />
+          <TimelineDemo />
+          <ChatDemo />
+          <PanelDemo />
         </section>
 
         {/* ───────────── Shadcn registry ───────────── */}
@@ -628,6 +644,263 @@ function HeaderFrameDemo() {
               toggle to see state change
             </span>
           </div>
+        </div>
+      </div>
+    </ComponentDoc>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   v0.3.0 activity primitive demos
+   ═══════════════════════════════════════════════════════════════ */
+
+const NOW = new Date();
+
+const fixtureEvents: TimelineEvent[] = [
+  {
+    id: 'live',
+    startedAt: NOW.getTime() - 134_000,
+    isLive: true,
+    kind: 'session',
+    primary: 'Morpheus',
+    secondary: '4 turns · $0.07',
+  },
+  {
+    id: 'past1',
+    startedAt: NOW.getTime() - 4 * 3600 * 1000,
+    endedAt: NOW.getTime() - 4 * 3600 * 1000 + 8 * 60 * 1000,
+    kind: 'session',
+    primary: 'Morpheus',
+    secondary: '14 turns · $0.31',
+  },
+  {
+    id: 'past2',
+    startedAt: NOW.getTime() - 6 * 3600 * 1000,
+    endedAt: NOW.getTime() - 6 * 3600 * 1000 + 3 * 60 * 1000,
+    kind: 'session',
+    primary: 'Kitchen',
+    secondary: '5 turns · $0.04',
+  },
+  {
+    id: 'sched',
+    startedAt: NOW.getTime() + 90 * 60 * 1000,
+    kind: 'scheduled',
+    primary: 'Daily recap',
+    secondary: 'outbound',
+  },
+];
+
+function TimelineDemo() {
+  const [date, setDate] = useState(NOW);
+  return (
+    <ComponentDoc
+      name="TimelineRail"
+      description="Vertical timeline sidebar showing live, past, and scheduled sessions. Tape auto-scrolls to keep LIVE events visible. Prev/next date switching included."
+      registryItem="meda-shell"
+      code={`import { TimelineRail, type TimelineEvent } from '@medalsocial/meda/timeline';
+
+<TimelineRail
+  date={date}
+  now={now}
+  events={events}
+  onDateChange={setDate}
+  onSelect={(e) => console.log('select', e.id)}
+/>`}
+    >
+      <div className="preview-canvas preview-canvas--flush" style={{ height: 420 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', height: '100%' }}>
+          <TimelineRail
+            date={date}
+            now={NOW}
+            events={fixtureEvents}
+            onDateChange={setDate}
+            onSelect={(e) => console.log('timeline select', e.id)}
+          />
+          <div className="flex flex-col gap-2 p-5">
+            <p className="text-sm font-medium">TimelineRail</p>
+            <p className="text-xs text-[var(--muted-foreground)]">
+              1 live event · 2 past · 1 scheduled. Click events; use prev/next to change date;
+              observe LIVE pin auto-scroll.
+            </p>
+            <p className="mt-2 font-mono text-xs text-[var(--muted-foreground)]">
+              date: {date.toDateString()}
+            </p>
+          </div>
+        </div>
+      </div>
+    </ComponentDoc>
+  );
+}
+
+const scrubMarks: ScrubMark[] = [
+  { id: 'm1', positionPct: 5, kind: 'turn', label: 'Turn 1' },
+  { id: 'm2', positionPct: 22, kind: 'tool', label: 'calendar.list' },
+  { id: 'm3', positionPct: 44, kind: 'barge', label: 'Barge-in' },
+  { id: 'm4', positionPct: 68, kind: 'turn', label: 'Turn 3' },
+  { id: 'm5', positionPct: 85, kind: 'error', label: 'TTS timeout' },
+];
+
+const fixtureTurns: Turn[] = [
+  {
+    id: 't1',
+    speaker: 'user',
+    speakerLabel: 'Ali',
+    text: 'Hey, what do I have on my calendar tomorrow?',
+    startedAt: NOW.getTime() - 120_000,
+  },
+  {
+    id: 't2',
+    speaker: 'assistant',
+    speakerLabel: 'Morpheus',
+    modelLabel: 'claude-opus-4-7',
+    text: 'Let me pull that up for you.',
+    startedAt: NOW.getTime() - 118_000,
+    latency: { sttMs: 210, claudeMs: 440, ttsMs: 180 },
+    toolCalls: [
+      {
+        id: 'tc1',
+        name: 'calendar.list',
+        args: { date: 'tomorrow', maxResults: 10 },
+        resultSummary: '3 events',
+        latencyMs: 320,
+      } satisfies ToolCall,
+    ],
+  },
+  {
+    id: 't3',
+    speaker: 'assistant',
+    speakerLabel: 'Morpheus',
+    text: 'You have a stand-up at 9 AM, lunch with the team at noon, and a 3 PM design review…',
+    startedAt: NOW.getTime() - 5_000,
+    streaming: true,
+  },
+];
+
+function ChatDemo() {
+  const [positionMs, setPositionMs] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const durationMs = 130_000;
+  return (
+    <ComponentDoc
+      name="ScrubBar · TranscriptStream · ToolCallBlock"
+      description="Per-conversation playback controls (ScrubBar with turn/tool/barge/error marks) paired with a scrollable TranscriptStream that renders TurnCards including inline ToolCallBlocks and latency badges."
+      registryItem="meda-shell"
+      code={`import { ScrubBar, TranscriptStream } from '@medalsocial/meda/chat';
+
+<ScrubBar
+  durationMs={durationMs}
+  positionMs={positionMs}
+  isLive={false}
+  marks={marks}
+  onSeek={setPositionMs}
+  isPlaying={isPlaying}
+  onPlayPause={() => setIsPlaying(p => !p)}
+/>
+<TranscriptStream turns={turns} />`}
+    >
+      <div className="preview-canvas preview-canvas--flush">
+        <div className="flex flex-col" style={{ height: 440 }}>
+          <ScrubBar
+            durationMs={durationMs}
+            positionMs={positionMs}
+            isLive={false}
+            marks={scrubMarks}
+            onSeek={setPositionMs}
+            isPlaying={isPlaying}
+            onPlayPause={() => setIsPlaying((p) => !p)}
+            onSkipBack={() => setPositionMs(0)}
+            onSkipForward={() => setPositionMs(durationMs)}
+          />
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <TranscriptStream turns={fixtureTurns} />
+          </div>
+        </div>
+      </div>
+    </ComponentDoc>
+  );
+}
+
+const inspectorTabs: InspectorTab[] = [
+  {
+    id: 'overview',
+    label: 'Overview',
+    content: (
+      <div className="px-3.5 py-2">
+        <InspectorField label="Session ID" value="sess_01jx7k2" />
+        <InspectorField label="Agent" value="Morpheus" hint="claude-opus-4-7" />
+        <InspectorField label="Duration" value="2 m 14 s" />
+        <InspectorField label="Turns" value="4" />
+        <InspectorField label="Cost" value="$0.07" />
+      </div>
+    ),
+  },
+  {
+    id: 'personality',
+    label: 'Personality',
+    content: (
+      <div className="min-h-0 flex-1 overflow-auto px-3.5 py-2">
+        <InspectorJSON
+          data={{
+            name: 'Morpheus',
+            voice: 'ash',
+            model: 'claude-opus-4-7',
+            systemPrompt: 'You are a calm, concise assistant…',
+            tools: ['calendar.list', 'calendar.create', 'reminders.set'],
+            temperature: 1,
+          }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: 'logs',
+    label: 'Logs',
+    content: (
+      <pre className="overflow-auto px-3.5 py-2 font-mono text-[11px] text-muted-foreground">
+        {`[10:14:01.032] session started sess_01jx7k2
+[10:14:01.210] STT stream open
+[10:14:02.440] claude request sent
+[10:14:02.880] tool: calendar.list args={date:"tomorrow"}
+[10:14:03.200] tool result: 3 events
+[10:14:03.640] TTS stream open
+[10:14:04.180] TTS first chunk
+[10:14:15.310] session ended (clean)`}
+      </pre>
+    ),
+  },
+];
+
+function PanelDemo() {
+  return (
+    <ComponentDoc
+      name="Inspector · InspectorField · InspectorJSON"
+      description="Tabbed inspector panel for session details. InspectorField renders labelled key-value rows; InspectorJSON renders syntax-highlighted JSON; tabs are fully customisable."
+      registryItem="meda-shell"
+      code={`import { Inspector, InspectorField, InspectorJSON } from '@medalsocial/meda/panel';
+import type { InspectorTab } from '@medalsocial/meda/panel';
+
+const tabs: InspectorTab[] = [
+  {
+    id: 'overview',
+    label: 'Overview',
+    content: (
+      <>
+        <InspectorField label="Agent" value="Morpheus" hint="claude-opus-4-7" />
+        <InspectorField label="Duration" value="2 m 14 s" />
+      </>
+    ),
+  },
+  // … personality (InspectorJSON), logs (plain text)
+];
+
+<Inspector tabs={tabs} defaultTab="overview" />`}
+    >
+      <div className="preview-canvas preview-canvas--flush" style={{ height: 380 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', height: '100%' }}>
+          <div className="flex items-center justify-center border-r border-[var(--border)] p-6 text-sm text-[var(--muted-foreground)]">
+            main content area
+          </div>
+          <Inspector tabs={inspectorTabs} defaultTab="overview" className="h-full" />
         </div>
       </div>
     </ComponentDoc>
