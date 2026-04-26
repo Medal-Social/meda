@@ -26,12 +26,38 @@ function isSameDay(a: Date, b: Date, tz?: string): boolean {
   return ymdInTz(a, tz) === ymdInTz(b, tz);
 }
 
-function addDays(d: Date, delta: number): Date {
-  // Use calendar arithmetic, not fixed-ms offsets, so DST 23h/25h days
-  // don't bump the result to the wrong calendar date.
-  const c = new Date(d);
-  c.setDate(c.getDate() + delta);
-  return c;
+// Returns the tz offset (in minutes) for `date` in `tz`. Positive = east of
+// UTC, e.g. Europe/Stockholm CET → +60. Tolerates "GMT", "GMT+05", and
+// "GMT+05:30" formats from Intl.DateTimeFormat.
+function tzOffsetMinutes(date: Date, tz: string): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz,
+    timeZoneName: 'longOffset',
+  }).formatToParts(date);
+  const name = parts.find((p) => p.type === 'timeZoneName')?.value ?? 'GMT';
+  const m = /GMT(?:([+-])(\d{1,2})(?::?(\d{2}))?)?/.exec(name);
+  if (!m?.[1]) return 0;
+  const sign = m[1] === '+' ? 1 : -1;
+  const hours = Number.parseInt(m[2] ?? '0', 10);
+  const mins = Number.parseInt(m[3] ?? '0', 10);
+  return sign * (hours * 60 + mins);
+}
+
+function addDays(d: Date, delta: number, tz?: string): Date {
+  if (!tz) {
+    // No tz: step the calendar day in the browser's local timezone (DST-safe
+    // there because setDate honors local DST transitions).
+    const c = new Date(d);
+    c.setDate(c.getDate() + delta);
+    return c;
+  }
+  // tz-aware: advance 24h, then correct for any DST shift between the
+  // original day and the target day so the *wall clock* in `tz` lands on the
+  // same hour:minute on the next/previous calendar day.
+  const offsetBefore = tzOffsetMinutes(d, tz);
+  const candidate = new Date(d.getTime() + delta * 86_400_000);
+  const offsetAfter = tzOffsetMinutes(candidate, tz);
+  return new Date(candidate.getTime() + (offsetBefore - offsetAfter) * 60_000);
 }
 
 function fmtDate(d: Date, tz?: string): string {
@@ -45,8 +71,8 @@ function fmtDate(d: Date, tz?: string): string {
 
 export function DateSwitcher({ value, now, tz, onChange, className }: DateSwitcherProps) {
   const isToday = isSameDay(value, now, tz);
-  const goPrev = () => onChange(addDays(value, -1));
-  const goNext = () => onChange(addDays(value, 1));
+  const goPrev = () => onChange(addDays(value, -1, tz));
+  const goNext = () => onChange(addDays(value, 1, tz));
 
   return (
     <div className={['flex items-center gap-2', className ?? ''].join(' ')}>

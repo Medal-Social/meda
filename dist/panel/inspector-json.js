@@ -1,5 +1,5 @@
 import { jsx as _jsx } from "react/jsx-runtime";
-function tokenize(value, level, key, indent) {
+function tokenize(value, level, key, indent, seen) {
     const out = [];
     const pad = ' '.repeat(level * indent);
     if (key !== null) {
@@ -23,21 +23,34 @@ function tokenize(value, level, key, indent) {
         out.push({ kind: 'literal', text: String(value) });
     }
     else if (Array.isArray(value)) {
-        out.push({ kind: 'punct', text: '[\n' });
-        value.forEach((v, i) => {
-            out.push(...tokenize(v, level + 1, null, indent));
-            out.push({ kind: 'punct', text: i < value.length - 1 ? ',\n' : '\n' });
-        });
-        out.push({ kind: 'punct', text: `${pad}]` });
+        if (seen.has(value)) {
+            out.push({ kind: 'literal', text: '"[Circular]"' });
+        }
+        else {
+            seen.add(value);
+            out.push({ kind: 'punct', text: '[\n' });
+            value.forEach((v, i) => {
+                out.push(...tokenize(v, level + 1, null, indent, seen));
+                out.push({ kind: 'punct', text: i < value.length - 1 ? ',\n' : '\n' });
+            });
+            out.push({ kind: 'punct', text: `${pad}]` });
+        }
     }
     else if (typeof value === 'object') {
-        out.push({ kind: 'punct', text: '{\n' });
-        const entries = Object.entries(value);
-        entries.forEach(([k, v], i) => {
-            out.push(...tokenize(v, level + 1, k, indent));
-            out.push({ kind: 'punct', text: i < entries.length - 1 ? ',\n' : '\n' });
-        });
-        out.push({ kind: 'punct', text: `${pad}}` });
+        const obj = value;
+        if (seen.has(obj)) {
+            out.push({ kind: 'literal', text: '"[Circular]"' });
+        }
+        else {
+            seen.add(obj);
+            out.push({ kind: 'punct', text: '{\n' });
+            const entries = Object.entries(obj);
+            entries.forEach(([k, v], i) => {
+                out.push(...tokenize(v, level + 1, k, indent, seen));
+                out.push({ kind: 'punct', text: i < entries.length - 1 ? ',\n' : '\n' });
+            });
+            out.push({ kind: 'punct', text: `${pad}}` });
+        }
     }
     else {
         out.push({ kind: 'literal', text: String(value) });
@@ -52,7 +65,7 @@ const KIND_CLASS = {
     literal: 'text-amber-500',
 };
 export function InspectorJSON({ data, indent = 2, className }) {
-    const tokens = tokenize(data, 0, null, indent);
+    const tokens = tokenize(data, 0, null, indent, new WeakSet());
     return (_jsx("pre", { className: [
             'mt-1.5 overflow-x-auto rounded-md border border-border bg-background p-2.5 font-mono text-[11px] leading-relaxed text-foreground',
             className ?? '',
