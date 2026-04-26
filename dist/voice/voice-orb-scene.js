@@ -31,7 +31,7 @@ function splitmix32(seed) {
         return (t >>> 0) / 4294967296;
     };
 }
-export function Scene({ level = 0, outputLevel = 0, phase = 'idle', colors, reducedMotion = false, pressed = false, }) {
+export function Scene({ level = 0, outputLevel = 0, phase = 'idle', colors, reducedMotion = false, pressed = false, variant = 'metal', }) {
     const meshRef = React.useRef(null);
     // Smoothers for audio signals
     const inputSmoother = React.useRef(createVolumeSmoother());
@@ -76,6 +76,7 @@ export function Scene({ level = 0, outputLevel = 0, phase = 'idle', colors, redu
         uPressed: { value: 0 },
         uOpacity: { value: 0 },
         uOffsets: { value: offsets },
+        uVariant: { value: variant === 'aurora' ? 1 : 0 },
     }), [] // intentionally empty — uniforms are mutated in useFrame
     );
     useFrame((_, delta) => {
@@ -113,6 +114,8 @@ export function Scene({ level = 0, outputLevel = 0, phase = 'idle', colors, redu
         // Color lerp
         u.uColorA.value.lerp(colorARef.current, 0.08);
         u.uColorB.value.lerp(colorBRef.current, 0.08);
+        // Variant — switched live (no animation; consumer changes are instant)
+        u.uVariant.value = variant === 'aurora' ? 1 : 0;
     });
     return (_jsxs("mesh", { ref: meshRef, children: [_jsx("circleGeometry", { args: [3.5, 64] }), _jsx("shaderMaterial", { uniforms: uniforms, vertexShader: VERTEX_SHADER, fragmentShader: FRAGMENT_SHADER, transparent: true })] }));
 }

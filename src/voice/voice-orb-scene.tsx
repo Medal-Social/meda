@@ -35,6 +35,8 @@ function splitmix32(seed: number): () => number {
   };
 }
 
+export type VoiceOrbVariant = 'metal' | 'aurora';
+
 export interface SceneProps {
   level?: number;
   outputLevel?: number;
@@ -42,6 +44,7 @@ export interface SceneProps {
   colors: [string, string];
   reducedMotion?: boolean;
   pressed?: boolean;
+  variant?: VoiceOrbVariant;
 }
 
 export function Scene({
@@ -51,6 +54,7 @@ export function Scene({
   colors,
   reducedMotion = false,
   pressed = false,
+  variant = 'metal',
 }: SceneProps) {
   const meshRef = React.useRef<THREE.Mesh<THREE.CircleGeometry, THREE.ShaderMaterial>>(null);
 
@@ -104,6 +108,7 @@ export function Scene({
       uPressed: { value: 0 },
       uOpacity: { value: 0 },
       uOffsets: { value: offsets },
+      uVariant: { value: variant === 'aurora' ? 1 : 0 },
     }),
     [] // intentionally empty — uniforms are mutated in useFrame
   );
@@ -150,6 +155,9 @@ export function Scene({
     // Color lerp
     u.uColorA.value.lerp(colorARef.current, 0.08);
     u.uColorB.value.lerp(colorBRef.current, 0.08);
+
+    // Variant — switched live (no animation; consumer changes are instant)
+    u.uVariant.value = variant === 'aurora' ? 1 : 0;
   });
 
   return (

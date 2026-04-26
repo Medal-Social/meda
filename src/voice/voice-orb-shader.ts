@@ -111,12 +111,105 @@ uniform float uPhaseT;
 uniform float uErrorFlash;
 uniform float uPressed;
 uniform float uOpacity;
-uniform float uOffsets[7];
+uniform float uVariant;        // 0 = metal, 1 = aurora
 
 const vec3 ERROR_COLOR = vec3(0.85, 0.18, 0.18);
 const float PI = 3.14159265358979323846;
 
 varying vec2 vUv;
+
+// =============================================================================
+// METAL look — smooth chrome-like sphere with strong specular + depth shading.
+// Apple Siri / Vision Pro adjacent.
+// =============================================================================
+vec4 metalLook(vec2 uv, float r, vec3 cA, vec3 cB, float drive) {
+  // Two octaves of noise for surface variation
+  float n  = fbm(vec3(uv * 1.4, uAnimation * 0.18)) * 0.5 + 0.5;
+  float n2 = fbm(vec3(uv * 2.6 + 4.7, uAnimation * 0.10)) * 0.5 + 0.5;
+
+  // Vertical light bias — top brighter than bottom (3D illusion)
+  float topLight = smoothstep(-1.0, 1.0, uv.y * 0.6 + 0.4);
+  float mixT = clamp(n * 0.55 + topLight * 0.45 + n2 * 0.08, 0.0, 1.0);
+
+  // Light cream color for the highlight band — gives the chrome look.
+  // Brightens cA toward white for the upper portion of the sphere.
+  vec3 highlightTone = mix(cA, vec3(0.95, 0.92, 0.98), 0.55);
+  vec3 deepTone      = mix(cB, vec3(0.04, 0.02, 0.10), 0.55);
+
+  // 4-stop ramp: cream highlight → cA → cB → deep core
+  vec3 base;
+  if (mixT > 0.66) {
+    base = mix(cA, highlightTone, (mixT - 0.66) / 0.34);
+  } else if (mixT > 0.33) {
+    base = mix(cB, cA, (mixT - 0.33) / 0.33);
+  } else {
+    base = mix(deepTone, cB, mixT / 0.33);
+  }
+
+  // Specular: tight bright spot top-left
+  vec2 specCenter = vec2(-0.35, 0.45);
+  float spec = smoothstep(0.45, 0.0, length(uv - specCenter));
+  base += vec3(1.0) * spec * 0.32;
+
+  // Bottom shadow for depth
+  float shadow = smoothstep(0.3, 1.0, -uv.y) * 0.35;
+  base = mix(base, base * 0.55, shadow);
+
+  // Inner glow on audio
+  float glow = (1.0 - r) * (1.0 - r);
+  base += cA * drive * glow * 0.5;
+
+  return vec4(base, 1.0);
+}
+
+// =============================================================================
+// AURORA look — soft layered ribbons drifting across a translucent disc.
+// Northern-lights aesthetic. Calm, atmospheric.
+// =============================================================================
+vec4 auroraLook(vec2 uv, float r, vec3 cA, vec3 cB, float drive) {
+  float t = uAnimation * 0.25;
+
+  // Disc base — deep, translucent. cB darkened.
+  vec3 baseColor = mix(cB * 0.25, cB * 0.55, smoothstep(1.0, 0.0, r));
+
+  // Three drifting ribbons at different y-offsets, angles, and speeds.
+  // Each ribbon is a horizontally-stretched soft band whose vertical position
+  // oscillates with time + noise.
+
+  // Ribbon 1 — upper, primary color
+  float y1 = uv.y - (sin(t * 0.7 + uv.x * 1.5) * 0.18) - 0.15;
+  float band1 = exp(-pow(y1 / 0.18, 2.0));
+  float n1 = fbm(vec3(uv.x * 2.0 + t, uv.y * 0.8, t * 0.4)) * 0.5 + 0.5;
+  vec3 ribbon1 = cA * band1 * n1 * 1.4;
+
+  // Ribbon 2 — middle, accent color (cooler — shift cA toward cyan)
+  vec3 cool = mix(cA, vec3(0.36, 0.83, 1.0), 0.45);
+  float y2 = uv.y - (sin(t * 0.55 + uv.x * 2.2 + 1.7) * 0.22) + 0.05;
+  float band2 = exp(-pow(y2 / 0.14, 2.0));
+  float n2 = fbm(vec3(uv.x * 2.6 + t * 0.6 + 3.1, uv.y * 0.6, t * 0.3)) * 0.5 + 0.5;
+  vec3 ribbon2 = cool * band2 * n2 * 1.0;
+
+  // Ribbon 3 — lower, warm accent (shift cA toward pink)
+  vec3 warm = mix(cA, vec3(1.0, 0.49, 0.83), 0.55);
+  float y3 = uv.y - (sin(t * 0.4 + uv.x * 1.8 + 4.2) * 0.18) + 0.30;
+  float band3 = exp(-pow(y3 / 0.16, 2.0));
+  float n3 = fbm(vec3(uv.x * 2.2 + t * 0.45 + 7.9, uv.y * 0.7, t * 0.35)) * 0.5 + 0.5;
+  vec3 ribbon3 = warm * band3 * n3 * 0.85;
+
+  // Stack ribbons additively over the disc
+  vec3 base = baseColor + ribbon1 + ribbon2 + ribbon3;
+
+  // Audio drive intensifies all ribbons + brightens center
+  base += (ribbon1 + ribbon2 + ribbon3) * drive * 0.6;
+  float glow = (1.0 - r) * (1.0 - r);
+  base += cA * drive * glow * 0.35;
+
+  // Subtle inner rim accent for legibility against dark backgrounds
+  float rim = smoothstep(0.82, 0.98, r);
+  base += cA * rim * 0.22;
+
+  return vec4(base, 1.0);
+}
 
 void main() {
   vec2 uv = vUv * 2.0 - 1.0;
@@ -128,7 +221,7 @@ void main() {
     return;
   }
 
-  // ---- Phase masks (0..1 for each phase) -----------------------------------
+  // ---- Phase masks (0..1 for each phase) ---------------------------------
   // uPhaseT smoothly interpolates between numeric phases:
   // 0=idle, 1=listening, 2=thinking, 3=speaking, 4=error.
   float isListening = clamp(1.0 - abs(uPhaseT - 1.0), 0.0, 1.0);
@@ -140,45 +233,25 @@ void main() {
   float thinkPulse  = isThinking * (0.5 + 0.5 * sin(uTime * 2.0));
   float drive = max(inputDrive, max(outputDrive, thinkPulse * 0.4));
 
-  // ---- Surface displacement: gentle 3D feel via noise ---------------------
-  // Sample fbm in 3D with time as the third axis so the surface evolves slowly.
-  float n = fbm(vec3(uv * 1.4, uAnimation * 0.18)) * 0.5 + 0.5;     // 0..1
-  float n2 = fbm(vec3(uv * 2.6 + 4.7, uAnimation * 0.10)) * 0.5 + 0.5;
-
-  // ---- Color: smooth two-stop gradient driven by noise + radius ----------
+  // ---- Resolve effective colors with error tint --------------------------
   vec3 cA = mix(uColorA, ERROR_COLOR, uErrorFlash);
   vec3 cB = mix(uColorB, ERROR_COLOR * 0.55, uErrorFlash * 0.7);
 
-  // Mix factor blends two colors based on noise — keeps the orb gradient-y.
-  // Subtle vertical bias so the top is slightly brighter (3D illusion).
-  float topLight = smoothstep(-1.0, 1.0, uv.y * 0.6 + 0.4);
-  float mixT = clamp(n * 0.6 + topLight * 0.4 + n2 * 0.1, 0.0, 1.0);
-  vec3 base = mix(cA, cB, mixT);
+  // ---- Pick variant ------------------------------------------------------
+  vec4 result;
+  if (uVariant > 0.5) {
+    result = auroraLook(uv, r, cA, cB, drive);
+  } else {
+    result = metalLook(uv, r, cA, cB, drive);
+  }
 
-  // Internal highlight (top-left, classic glass orb)
-  vec2 highlightCenter = vec2(-0.35, 0.45);
-  float hi = smoothstep(0.55, 0.0, length(uv - highlightCenter));
-  base += vec3(1.0) * hi * 0.18;
+  vec3 base = result.rgb;
 
-  // Bottom shadow (depth illusion)
-  float shadow = smoothstep(0.3, 1.0, -uv.y) * 0.25;
-  base = mix(base, base * 0.6, shadow);
-
-  // ---- Audio reactivity: pulse intensity on listening/speaking ------------
-  // Drive an inner glow that pulses with input/output volume.
-  float glow = (1.0 - r) * (1.0 - r);
-  base += cA * drive * glow * 0.6;
-
-  // ---- Press: slight core brighten ----------------------------------------
+  // ---- Press: slight core brighten ---------------------------------------
   base = mix(base, base * 1.18, uPressed * (1.0 - smoothstep(0.0, 0.55, r)));
 
-  // ---- Edge falloff: smooth rim, soft halo --------------------------------
-  // Sphere-like alpha falloff at the edge of the unit circle.
+  // ---- Edge falloff: smooth alpha at the disc boundary -------------------
   float alpha = smoothstep(1.0, 0.92, r);
-  // Outer halo glow extends slightly beyond the disc — but we discarded
-  // r > 1.0 above to keep canvas clean. For a rim, fade in a thin shell.
-  float rim = smoothstep(0.85, 1.0, r);
-  base += cA * rim * 0.25 * mix(0.6, 1.0, drive);
 
   gl_FragColor = vec4(base, alpha * uOpacity);
 }

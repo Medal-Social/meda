@@ -74,7 +74,7 @@ const DEFAULT_COLORS = ['#9A6AC2', '#7B4FAB'];
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export const VoiceOrb = React.forwardRef(function VoiceOrb({ pressed, level = 0, outputLevel = 0, phase = 'idle', size = 144, disabled, label = 'Hold to talk', colors: colorsProp, className, style, ...rest }, ref) {
+export const VoiceOrb = React.forwardRef(function VoiceOrb({ pressed, level = 0, outputLevel = 0, phase = 'idle', size = 144, disabled, label = 'Hold to talk', colors: colorsProp, variant = 'metal', className, style, ...rest }, ref) {
     const buttonRef = React.useRef(null);
     // Merge forwarded ref
     React.useImperativeHandle(ref, () => buttonRef.current);
@@ -119,5 +119,5 @@ export const VoiceOrb = React.forwardRef(function VoiceOrb({ pressed, level = 0,
             disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
             pressed ? 'scale-[0.97]' : 'scale-100',
             className ?? '',
-        ].join(' '), style: btnStyle, ...rest, children: _jsx(Canvas, { gl: { alpha: true, antialias: true, premultipliedAlpha: true }, style: { pointerEvents: 'none' }, children: _jsx(Scene, { level: level, outputLevel: outputLevel, phase: phase, colors: resolvedColors, reducedMotion: reducedMotion, pressed: pressed }) }) }));
+        ].join(' '), style: btnStyle, ...rest, children: _jsx(Canvas, { gl: { alpha: true, antialias: true, premultipliedAlpha: true }, style: { pointerEvents: 'none' }, children: _jsx(Scene, { level: level, outputLevel: outputLevel, phase: phase, colors: resolvedColors, reducedMotion: reducedMotion, pressed: pressed, variant: variant }) }) }));
 });

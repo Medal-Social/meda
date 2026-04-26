@@ -1,5 +1,7 @@
 import * as React from 'react';
 import type { TurnPhase } from './types.js';
+import { type VoiceOrbVariant } from './voice-orb-scene.js';
+export type { VoiceOrbVariant } from './voice-orb-scene.js';
 /**
  * Convert any CSS color token to a hex string the Three.js shader can consume.
  *
@@ -28,5 +30,16 @@ export interface VoiceOrbProps extends React.ButtonHTMLAttributes<HTMLButtonElem
      * and --accent from CSS at mount and on theme change.
      */
     colors?: [string, string];
+    /**
+     * Visual variant.
+     *
+     * - `'metal'` (default): smooth chrome-like sphere with strong specular +
+     *   depth shading. Apple Siri / Vision Pro adjacent. Best for object-like,
+     *   premium-feeling presence.
+     * - `'aurora'`: soft layered ribbons of color drifting across a translucent
+     *   disc. Northern-lights aesthetic. Calm, atmospheric, reads like motion
+     *   even at idle. Great for thinking/listening moods.
+     */
+    variant?: VoiceOrbVariant;
 }
 export declare const VoiceOrb: React.ForwardRefExoticComponent<VoiceOrbProps & React.RefAttributes<HTMLButtonElement>>;

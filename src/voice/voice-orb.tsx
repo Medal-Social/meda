@@ -3,7 +3,9 @@
 import { Canvas } from '@react-three/fiber';
 import * as React from 'react';
 import type { TurnPhase } from './types.js';
-import { Scene } from './voice-orb-scene.js';
+import { Scene, type VoiceOrbVariant } from './voice-orb-scene.js';
+
+export type { VoiceOrbVariant } from './voice-orb-scene.js';
 
 // Note: CSS for `.meda-voice-orb` is shipped via @medalsocial/meda/styles.css
 // (re-exported from globals.css). We avoid a JS-side CSS import here so
@@ -105,6 +107,17 @@ export interface VoiceOrbProps extends React.ButtonHTMLAttributes<HTMLButtonElem
    * and --accent from CSS at mount and on theme change.
    */
   colors?: [string, string];
+  /**
+   * Visual variant.
+   *
+   * - `'metal'` (default): smooth chrome-like sphere with strong specular +
+   *   depth shading. Apple Siri / Vision Pro adjacent. Best for object-like,
+   *   premium-feeling presence.
+   * - `'aurora'`: soft layered ribbons of color drifting across a translucent
+   *   disc. Northern-lights aesthetic. Calm, atmospheric, reads like motion
+   *   even at idle. Great for thinking/listening moods.
+   */
+  variant?: VoiceOrbVariant;
 }
 
 // ---------------------------------------------------------------------------
@@ -121,6 +134,7 @@ export const VoiceOrb = React.forwardRef<HTMLButtonElement, VoiceOrbProps>(funct
     disabled,
     label = 'Hold to talk',
     colors: colorsProp,
+    variant = 'metal',
     className,
     style,
     ...rest
@@ -206,6 +220,7 @@ export const VoiceOrb = React.forwardRef<HTMLButtonElement, VoiceOrbProps>(funct
           colors={resolvedColors}
           reducedMotion={reducedMotion}
           pressed={pressed}
+          variant={variant}
         />
       </Canvas>
     </button>
