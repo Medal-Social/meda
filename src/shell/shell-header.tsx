@@ -1,9 +1,10 @@
 'use client';
 
 import { ChevronDown, PanelRightClose, PanelRightOpen } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import { useMedaShell } from './shell-provider.js';
+import { ThemeToggle } from './theme.js';
 
 // ---------------------------------------------------------------------------
 // Legacy components — preserved for back-compat
@@ -65,23 +66,119 @@ export function ShellPanelToggle({
 }
 
 // ---------------------------------------------------------------------------
-// Task 7.3 stub — WorkspaceSwitcher (stub; full implementation in next commit)
+// Task 7.3 — WorkspaceSwitcher
 // ---------------------------------------------------------------------------
 
 export interface WorkspaceSwitcherProps {
   workspaceMenuFooter?: ReactNode;
 }
 
-export function WorkspaceSwitcher(_props: WorkspaceSwitcherProps = {}) {
-  const { workspace } = useMedaShell();
+export function WorkspaceSwitcher({ workspaceMenuFooter }: WorkspaceSwitcherProps = {}) {
+  const { workspace, workspaces } = useMedaShell();
+
+  // Controlled open state — avoids portal/jsdom issues with @base-ui/react Menu.Portal.
+  // The menu popup renders inline in the component tree for full test coverage.
+  const [open, setOpen] = useState(false);
+
+  const toggle = () => setOpen((o) => !o);
+  const close = () => setOpen(false);
+
   return (
-    <button
-      type="button"
-      className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium hover:bg-accent"
-    >
-      <span>{workspace.name}</span>
-      <ChevronDown size={14} aria-hidden="true" />
-    </button>
+    <div className="relative">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        onClick={toggle}
+        className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium hover:bg-accent"
+      >
+        {workspace.icon != null && (
+          <span className="shrink-0" aria-hidden="true">
+            {workspace.icon}
+          </span>
+        )}
+        <span>{workspace.name}</span>
+        <ChevronDown size={14} aria-hidden="true" />
+      </button>
+
+      {/* Backdrop to dismiss on outside click */}
+      {open && <div role="none" className="fixed inset-0 z-40" onClick={close} />}
+
+      {open && (
+        <div
+          role="menu"
+          className={cn(
+            'absolute left-0 top-full z-50 mt-1 min-w-[200px] rounded-md border border-border',
+            'bg-popover py-1 shadow-md'
+          )}
+        >
+          {/* Workspace list */}
+          {workspaces.length > 0 && (
+            <>
+              {workspaces.map((ws) => (
+                <button
+                  key={ws.id}
+                  type="button"
+                  role="menuitem"
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent"
+                  onClick={close}
+                >
+                  {ws.icon != null && <span aria-hidden="true">{ws.icon}</span>}
+                  {ws.name}
+                </button>
+              ))}
+              <hr className="my-1 border-border" />
+            </>
+          )}
+
+          <button
+            type="button"
+            role="menuitem"
+            className="flex w-full items-center px-3 py-1.5 text-sm hover:bg-accent"
+            onClick={close}
+          >
+            Manage workspaces
+          </button>
+
+          <hr className="my-1 border-border" />
+
+          <button
+            type="button"
+            role="menuitem"
+            className="flex w-full items-center px-3 py-1.5 text-sm hover:bg-accent"
+            onClick={close}
+          >
+            Settings
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="flex w-full items-center px-3 py-1.5 text-sm hover:bg-accent"
+            onClick={close}
+          >
+            Profile
+          </button>
+
+          {/* Theme toggle inline per spec §22a */}
+          <div className="flex items-center px-3 py-1.5">
+            <ThemeToggle />
+          </div>
+
+          <hr className="my-1 border-border" />
+
+          <button
+            type="button"
+            role="menuitem"
+            className="flex w-full items-center px-3 py-1.5 text-sm hover:bg-accent"
+            onClick={close}
+          >
+            Sign out
+          </button>
+
+          {workspaceMenuFooter}
+        </div>
+      )}
+    </div>
   );
 }
 

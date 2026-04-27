@@ -2,7 +2,12 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Menu } from 'lucide-react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ShellHeader, ShellHeaderFrame, ShellPanelToggle } from './shell-header.js';
+import {
+  ShellHeader,
+  ShellHeaderFrame,
+  ShellPanelToggle,
+  WorkspaceSwitcher,
+} from './shell-header.js';
 import { MedaShellProvider } from './shell-provider.js';
 import type { AppDefinition, WorkspaceDefinition } from './types.js';
 
@@ -152,5 +157,56 @@ describe('ShellHeader — has no center slot', () => {
     // Direct div children of the header — should be 2 (left, right) not 3
     const divChildren = Array.from(header?.children ?? []).filter((c) => c.tagName === 'DIV');
     expect(divChildren.length).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 7.3 — WorkspaceSwitcher
+// ---------------------------------------------------------------------------
+
+describe('WorkspaceSwitcher — renders icon, name, chevron', () => {
+  it('displays workspace name and a chevron button', () => {
+    renderWithProvider(<WorkspaceSwitcher />);
+
+    expect(screen.getByText('Acme Corp')).toBeInTheDocument();
+    // The trigger button wraps name + chevron
+    const trigger = screen.getByRole('button', { name: /acme corp/i });
+    expect(trigger).toBeInTheDocument();
+  });
+});
+
+describe('WorkspaceSwitcher — click opens menu with workspace list + Settings/Profile/Sign out', () => {
+  it('shows workspace items + fixed actions after click', () => {
+    renderWithProvider(<WorkspaceSwitcher />);
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    expect(screen.getByText('Beta LLC')).toBeInTheDocument();
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.getByText('Profile')).toBeInTheDocument();
+    expect(screen.getByText('Sign out')).toBeInTheDocument();
+  });
+});
+
+describe('WorkspaceSwitcher — empty workspaces array still shows Settings/Profile/Sign out', () => {
+  it('omits workspace list but keeps fixed actions', () => {
+    renderWithProvider(<WorkspaceSwitcher />, { workspaces: [] });
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    expect(screen.queryByText('Beta LLC')).not.toBeInTheDocument();
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.getByText('Profile')).toBeInTheDocument();
+    expect(screen.getByText('Sign out')).toBeInTheDocument();
+  });
+});
+
+describe('WorkspaceSwitcher — workspaceMenuFooter slot renders extra items', () => {
+  it('footer node is rendered inside the menu', () => {
+    renderWithProvider(<WorkspaceSwitcher workspaceMenuFooter={<div>Footer Item</div>} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    expect(screen.getByText('Footer Item')).toBeInTheDocument();
   });
 });
