@@ -1,6 +1,6 @@
 /* ============================================================
    Layer 1 — Meda base tokens
-   Declared on :root (light) and .dark
+   Declared on :root (light) and .dark / [data-theme='dark']
    ============================================================ */
 :root {
   --meda-base: #f6f7f9;
@@ -11,7 +11,8 @@
   --meda-subtle: #8b95a6;
   --meda-accent: #1a1035;
 }
-.dark {
+.dark,
+[data-theme="dark"] {
   --meda-base: #07080c;
   --meda-surface: #0c0e14;
   --meda-elevated: #11131a;
@@ -47,7 +48,8 @@
   --ring: var(--meda-accent);
   --radius: 0.5rem;
 }
-.dark {
+.dark,
+[data-theme="dark"] {
   --border: hsl(0 0% 100% / 0.06);
   --input: hsl(0 0% 100% / 0.06);
 }
@@ -76,7 +78,8 @@
   --z-shell-panel: 45;
   --z-shell-fullscreen: 60;
 }
-.dark {
+.dark,
+[data-theme="dark"] {
   --shell-border: hsl(0 0% 100% / 0.06);
   --shell-shadow: 0 4px 12px hsl(0 0% 0% / 0.45);
 }
