@@ -22,6 +22,11 @@ import {
 } from '@medalsocial/meda';
 import { type ToolCall, TranscriptStream, type Turn } from '@medalsocial/meda/chat';
 import {
+  MarketingCallout,
+  MarketingContact,
+  MarketingLeadMagnet,
+} from '@medalsocial/meda/marketing';
+import {
   Inspector,
   InspectorField,
   InspectorJSON,
@@ -142,6 +147,26 @@ const registryItems = [
     title: 'Extras',
     description:
       'Extras.WorkbenchLayout, Extras.ShellTabBar, Extras.ShellScrollableContent — legacy-compatible opt-in helpers.',
+  },
+  {
+    name: 'meda-marketing',
+    title: 'Marketing',
+    description: 'Install the complete marketing trio: callout, contact, and lead magnet.',
+  },
+  {
+    name: 'meda-marketing-callout',
+    title: 'Marketing Callout',
+    description: 'Install the campaign callout block for launch CTAs and highlighted messages.',
+  },
+  {
+    name: 'meda-marketing-contact',
+    title: 'Marketing Contact',
+    description: 'Install the contact section with form, office, and direct-contact slots.',
+  },
+  {
+    name: 'meda-marketing-lead-magnet',
+    title: 'Marketing Lead Magnet',
+    description: 'Install the lead capture block with featured/sidebar layouts and modal form.',
   },
 ] as const;
 
@@ -539,6 +564,7 @@ function SiteWorkspace() {
                 <TimelineDemo />
                 <ChatDemo />
                 <PanelDemo />
+                <MarketingDemo />
               </section>
 
               <section id="registry" className="section section--subtle">
@@ -546,8 +572,8 @@ function SiteWorkspace() {
                   <div className="eyebrow">Shadcn registry</div>
                   <h2 className="section-title">Composable registry items</h2>
                   <p className="section-sub">
-                    Three shadcn-compatible registry items, each independently installable and
-                    carrying its own <code>registryDependencies</code>.
+                    shadcn-compatible registry items, each independently installable. The full
+                    component library above is always available via the npm package.
                   </p>
                 </div>
                 <div className="registry-grid">
@@ -1025,5 +1051,126 @@ const tabs: InspectorTab[] = [
         </div>
       </div>
     </ComponentDoc>
+  );
+}
+
+function MarketingDemoForm({ label = 'Request access' }: { label?: string }) {
+  return (
+    <form aria-label={label} className="space-y-3">
+      <label className="block text-sm font-medium text-[var(--foreground)]">
+        Work email
+        <input
+          className="mt-2 h-10 w-full rounded-md border border-[var(--input)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]"
+          placeholder="you@company.com"
+          type="email"
+        />
+      </label>
+      <button
+        className="inline-flex min-h-10 w-full items-center justify-center rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-[var(--primary-foreground)]"
+        type="button"
+      >
+        Submit
+      </button>
+    </form>
+  );
+}
+
+function MarketingDemo() {
+  return (
+    <>
+      <ComponentDoc
+        name="MarketingCallout"
+        description="Campaign callout block for highlighted messages, launch prompts, and conversion CTAs. Supports full-width band and compact card variants."
+        registryItem="meda-marketing-callout"
+        code={`import { MarketingCallout } from '@medalsocial/meda/marketing';
+
+<MarketingCallout
+  eyebrow="Launch campaign"
+  title="Turn every product update into pipeline"
+  description="A focused callout block for landing pages and launch notes."
+  ctas={[
+    { label: 'Book demo', href: '/demo' },
+    { label: 'Read playbook', href: '/playbook', variant: 'secondary' },
+  ]}
+/>`}
+      >
+        <div className="preview-canvas preview-canvas--flush">
+          <MarketingCallout
+            eyebrow="Launch campaign"
+            title="Turn every product update into pipeline"
+            description="A focused callout block for landing pages, launch notes, and campaign moments that need clear next steps."
+            ctas={[
+              { label: 'Book demo', href: '#demo' },
+              { label: 'Read playbook', href: '#playbook', variant: 'secondary' },
+            ]}
+          />
+        </div>
+      </ComponentDoc>
+
+      <ComponentDoc
+        name="MarketingContact"
+        description="Contact section with an intro, form slot, office details, and direct-contact card. Consumers bring their own form implementation."
+        registryItem="meda-marketing-contact"
+        code={`import { MarketingContact } from '@medalsocial/meda/marketing';
+
+<MarketingContact
+  intro="Give buyers a direct path to the team."
+  form={<YourForm />}
+  office={{ email: 'hello@medalsocial.com' }}
+  contactPerson={{ name: 'Ali', role: 'Marketing lead' }}
+/>`}
+      >
+        <div className="preview-canvas preview-canvas--flush">
+          <MarketingContact
+            intro="Give buyers a direct path to the team behind the campaign."
+            form={<MarketingDemoForm />}
+            office={{
+              title: 'Oslo office',
+              address: 'Torggata 1, 0181 Oslo',
+              email: 'hello@medalsocial.com',
+              phone: '+47 22 00 00 00',
+              hours: 'Mon-Fri, 09:00-17:00',
+            }}
+            contactPerson={{
+              title: 'Direct contact',
+              name: 'Ali',
+              role: 'Marketing lead',
+              description: 'Helps teams package launches into crisp, trackable campaigns.',
+              email: 'ali@medalsocial.com',
+              phone: '+47 99 00 00 00',
+            }}
+          />
+        </div>
+      </ComponentDoc>
+
+      <ComponentDoc
+        name="MarketingLeadMagnet"
+        description="Lead capture block with featured/sidebar layouts and an accessible modal form trigger. Consumers pass their own form slot."
+        registryItem="meda-marketing-lead-magnet"
+        code={`import { MarketingLeadMagnet } from '@medalsocial/meda/marketing';
+
+<MarketingLeadMagnet
+  title="Get the launch checklist"
+  benefits={['Messaging outline', 'QA pass', 'Analytics checklist']}
+  form={<YourForm />}
+/>`}
+      >
+        <div className="preview-canvas">
+          <MarketingLeadMagnet
+            title="Get the launch checklist"
+            description="A practical campaign checklist for turning product updates into repeatable launch systems."
+            benefits={['Messaging outline', 'QA pass', 'Analytics checklist']}
+            buttonText="Download checklist"
+            formTitle="Send me the checklist"
+            form={<MarketingDemoForm label="Lead magnet form" />}
+            image={
+              <div className="flex aspect-[4/3] min-h-48 items-center justify-center bg-[var(--muted)] p-8 text-center text-sm font-semibold text-[var(--muted-foreground)]">
+                Launch checklist preview
+              </div>
+            }
+          />
+        </div>
+      </ComponentDoc>
+    </>
   );
 }

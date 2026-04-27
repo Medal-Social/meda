@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "meda-marketing",
+  "type": "registry:block",
+  "title": "Meda Marketing",
+  "description": "Install Meda marketing wrappers for callouts, contact sections, and lead magnets.",
+  "dependencies": ["@medalsocial/meda"],
+  "files": [
+    {
+      "path": "registry/meda/meda-marketing/meda-marketing.tsx",
+      "content": "export {\n  MarketingCallout as MedaMarketingCallout,\n  MarketingContact as MedaMarketingContact,\n  MarketingCtaList as MedaMarketingCtaList,\n  MarketingLeadMagnet as MedaMarketingLeadMagnet,\n} from '@medalsocial/meda/marketing'\nexport type {\n  MarketingCalloutProps,\n  MarketingContactPerson,\n  MarketingContactProps,\n  MarketingCta,\n  MarketingCtaListProps,\n  MarketingLeadMagnetProps,\n  MarketingOffice,\n} from '@medalsocial/meda/marketing'\n",
+      "type": "registry:block",
+      "target": "components/meda/meda-marketing.tsx"
+    }
+  ]
+}

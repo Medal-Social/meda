@@ -21,6 +21,10 @@ export default defineConfig({
         replacement: resolve(__dirname, 'src/chat/index.ts'),
       },
       {
+        find: '@medalsocial/meda/marketing',
+        replacement: resolve(__dirname, 'src/marketing/index.ts'),
+      },
+      {
         find: '@medalsocial/meda/panel',
         replacement: resolve(__dirname, 'src/panel/index.ts'),
       },

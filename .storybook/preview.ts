@@ -27,6 +27,7 @@ const preview: Preview = {
             'Iconography',
           ],
           'Shell v2',
+          'Marketing',
           'Chat',
           'Timeline',
           'Voice',

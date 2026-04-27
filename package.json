@@ -37,6 +37,10 @@
       "types": "./dist/timeline/index.d.ts",
       "default": "./dist/timeline/index.js"
     },
+    "./marketing": {
+      "types": "./dist/marketing/index.d.ts",
+      "default": "./dist/marketing/index.js"
+    },
     "./chat": {
       "types": "./dist/chat/index.d.ts",
       "default": "./dist/chat/index.js"
@@ -78,6 +82,7 @@
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006 --no-open",
     "storybook:build": "storybook build -o storybook-static",
+    "chromatic": "chromatic --build-script-name=storybook:build --exit-zero-on-changes",
     "visual": "playwright test",
     "visual:update": "playwright test --update-snapshots",
     "visual:report": "playwright show-report tests/visual/report",
@@ -135,6 +140,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.184.0",
     "@vitejs/plugin-react": "^6.0.1",
+    "chromatic": "^16.6.0",
     "husky": "^9.1.7",
     "jsdom": "^29.0.2",
     "next-themes": "^0.4.0",
