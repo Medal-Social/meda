@@ -3,15 +3,18 @@ import type { ReactNode } from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ThemeAdapter } from './types.js';
 
-const ThemeCtx = createContext<ThemeAdapter | null>(null);
+/** @internal – used by theme adapters; not part of the public API. */
+export const ThemeCtx = createContext<ThemeAdapter | null>(null);
 
 export function DefaultThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<'light' | 'dark' | 'system'>('system');
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
-    const saved = window.localStorage.getItem('meda:theme') as 'light' | 'dark' | 'system' | null;
-    if (saved) setThemeState(saved);
+    const saved = window.localStorage.getItem('meda:theme');
+    if (saved === 'light' || saved === 'dark' || saved === 'system') {
+      setThemeState(saved);
+    }
   }, []);
 
   useEffect(() => {

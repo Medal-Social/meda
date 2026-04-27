@@ -1,7 +1,12 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, render, renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DefaultThemeProvider, useTheme } from './theme.js';
+
+// Ensure next-themes is never loaded when the default adapter is used.
+vi.mock('next-themes', () => {
+  throw new Error('next-themes was imported — must not happen with default adapter');
+});
 
 function createStorageMock() {
   const store = new Map<string, string>();
@@ -22,6 +27,32 @@ function createStorageMock() {
 function wrapper({ children }: { children: ReactNode }) {
   return <DefaultThemeProvider>{children}</DefaultThemeProvider>;
 }
+
+describe('NextThemesAdapter — does not import next-themes when adapter="default"', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('renders DefaultThemeProvider without loading next-themes', () => {
+    // Stub localStorage so the DefaultThemeProvider useEffect can run safely.
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+    });
+
+    // The vi.mock above makes next-themes throw on import. If this render triggers
+    // that import, the test will fail. Passing means the bridge file was not loaded.
+    expect(() =>
+      render(
+        <DefaultThemeProvider>
+          <div />
+        </DefaultThemeProvider>
+      )
+    ).not.toThrow();
+  });
+});
 
 describe('useTheme', () => {
   beforeEach(() => {
@@ -51,24 +82,21 @@ describe('useTheme', () => {
   });
 
   it("resolvedTheme follows system when theme is 'system'", () => {
-    // Override matchMedia to report dark system preference
-    Object.defineProperty(window, 'matchMedia', {
-      writable: true,
-      value: vi.fn().mockImplementation((query: string) => {
+    // Stub matchMedia to report dark system preference
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockImplementation((query: string) => {
         const matches = query === '(prefers-color-scheme: dark)';
-        const listeners: Array<() => void> = [];
         return {
           matches,
           media: query,
           onchange: null,
-          addEventListener: vi.fn((_event: string, cb: () => void) => {
-            listeners.push(cb);
-          }),
+          addEventListener: vi.fn(),
           removeEventListener: vi.fn(),
           dispatchEvent: vi.fn(),
         };
-      }),
-    });
+      })
+    );
 
     const { result } = renderHook(() => useTheme(), { wrapper });
     act(() => {});

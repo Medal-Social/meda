@@ -13,6 +13,7 @@ export * from './shell-scrollable-content.js';
 export * from './shell-state.js';
 export * from './shell-tab-bar.js';
 export * from './theme.js';
+export * from './theme-next-themes.js';
 export * from './types.js';
 export * from './use-shell-viewport.js';
 export * from './utils.js';
