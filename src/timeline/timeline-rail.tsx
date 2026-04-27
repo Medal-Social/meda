@@ -112,7 +112,9 @@ export function TimelineRail({
       {/* Status row */}
       <div className="flex items-center gap-2 border-b border-border px-3.5 pb-2.5 text-[11px] tabular-nums text-muted-foreground">
         {liveCount > 0 && (
-          <span className="inline-flex items-center gap-1.5 font-semibold text-success">
+          // text-success-700 for the 11px label so it clears WCAG AA on
+          // the white card; the dot keeps the lighter -600 accent.
+          <span className="inline-flex items-center gap-1.5 font-semibold text-success-700">
             <span className="size-1.5 animate-pulse rounded-full bg-success shadow-[0_0_0_3px_rgba(16,185,129,0.18)]" />
             {liveCount} live
           </span>
@@ -143,7 +145,9 @@ export function TimelineRail({
         <button
           type="button"
           onClick={jumpToLive}
-          className="absolute right-3 top-32 z-20 inline-flex items-center gap-1.5 rounded-full bg-success-600 px-3 py-1 text-[11px] font-semibold text-white shadow-md hover:bg-success-700"
+          // bg-success-700/-800 (vs. -600/-700) so 11px white text clears
+          // WCAG AA on hover and at rest.
+          className="absolute right-3 top-32 z-20 inline-flex items-center gap-1.5 rounded-full bg-success-700 px-3 py-1 text-[11px] font-semibold text-white shadow-md hover:bg-success-800"
         >
           Jump to live
         </button>

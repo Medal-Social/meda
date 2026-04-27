@@ -126,6 +126,7 @@
     "@biomejs/biome": "^2.4.12",
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.0",
+    "@chromatic-com/storybook": "^5.1.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.0",
     "@size-limit/preset-small-lib": "^12.1.0",
@@ -142,10 +143,13 @@
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.184.0",
     "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/browser-playwright": "4.1.4",
+    "@vitest/coverage-v8": "4.1.4",
     "chromatic": "^16.6.0",
     "husky": "^9.1.7",
     "jsdom": "^29.0.2",
     "next-themes": "^0.4.0",
+    "playwright": "^1.59.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "size-limit": "^12.1.0",
@@ -155,9 +159,6 @@
     "vite": "^8.0.4",
     "vitest": "^4.1.4",
     "vitest-axe": "^0.1.0",
-    "wrangler": "^4.0.0",
-    "playwright": "^1.59.1",
-    "@vitest/browser-playwright": "4.1.4",
-    "@vitest/coverage-v8": "4.1.4"
+    "wrangler": "^4.0.0"
   }
 }
