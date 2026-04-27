@@ -210,6 +210,112 @@ describe('ContextRail — resize clamping', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// Phase 9.2 tests — module items rendering
+// ---------------------------------------------------------------------------
+
+describe('ContextRail — module items rendering', () => {
+  it('renders module title + description in header', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+
+    expect(screen.getByRole('heading', { name: 'Mail' })).toBeInTheDocument();
+    expect(screen.getByText('Inbox + sent')).toBeInTheDocument();
+  });
+
+  it('renders one item per module.items entry', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+
+    // 3 items: Inbox, Sent, Drafts
+    expect(screen.getByText('Inbox')).toBeInTheDocument();
+    expect(screen.getByText('Sent')).toBeInTheDocument();
+    expect(screen.getByText('Drafts')).toBeInTheDocument();
+    // Link elements
+    const links = screen.getAllByRole('link');
+    expect(links).toHaveLength(3);
+  });
+
+  it('active item has bg-primary/10 and text-primary classes', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} activeItemId="inbox" />
+      </Wrapper>
+    );
+
+    const inboxLink = screen.getByRole('link', { name: /inbox/i });
+    expect(inboxLink.className).toContain('bg-primary/10');
+    expect(inboxLink.className).toContain('text-primary');
+  });
+
+  it('active item has aria-current="page"', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} activeItemId="inbox" />
+      </Wrapper>
+    );
+
+    const inboxLink = screen.getByRole('link', { name: /inbox/i });
+    expect(inboxLink).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('inactive items do not have bg-primary/10', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} activeItemId="inbox" />
+      </Wrapper>
+    );
+
+    const sentLink = screen.getByRole('link', { name: /sent/i });
+    expect(sentLink.className).not.toContain('bg-primary/10');
+    expect(sentLink.className).not.toContain('text-primary');
+  });
+
+  it('renderLink prop wraps each item in custom element', () => {
+    render(
+      <Wrapper>
+        <ContextRail
+          appId="mail"
+          module={MODULE}
+          renderLink={({ item, children }) => (
+            <span key={item.id} data-testid={`link-${item.id}`}>
+              {children}
+            </span>
+          )}
+        />
+      </Wrapper>
+    );
+
+    expect(screen.getByTestId('link-inbox')).toBeInTheDocument();
+    expect(screen.getByTestId('link-sent')).toBeInTheDocument();
+    expect(screen.getByTestId('link-drafts')).toBeInTheDocument();
+    // No default <a> elements rendered
+    expect(screen.queryAllByRole('link')).toHaveLength(0);
+  });
+
+  it('item with shortcut renders keyboard shortcut text', () => {
+    const moduleWithShortcut: ContextModule = {
+      id: 'mail',
+      label: 'Mail',
+      items: [{ id: 'inbox', label: 'Inbox', icon: Inbox, to: '/inbox', shortcut: '⌘I' }],
+    };
+
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={moduleWithShortcut} />
+      </Wrapper>
+    );
+
+    expect(screen.getByText('⌘I')).toBeInTheDocument();
+  });
+});
+
 describe('ContextRail — width persistence via useShellLayoutState', () => {
   it('calls storage.save when width is committed on pointerUp', async () => {
     const storage = {
