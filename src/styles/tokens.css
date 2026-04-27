@@ -82,8 +82,8 @@
 }
 
 /* ============================================================
-   Layer 4 — Motion tokens
-   Theme-independent timing and easing
+   Motion tokens — theme-independent timing and easing
+   Mirror of motion.ts (Phase 5)
    ============================================================ */
 :root {
   --motion-fast: 140ms;
