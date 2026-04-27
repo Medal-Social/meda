@@ -1,0 +1,11 @@
+/*
+ * Storybook global styles
+ *
+ * Mirrors the demo app's Tailwind + token pipeline so primitives render with
+ * the same styling in Storybook (and therefore in Playwright visual snapshots)
+ * as they do in the demo. Without this, Tailwind utility classes used by
+ * primitives would be unstyled and snapshots would be misleading.
+ */
+@import "tailwindcss";
+@import "../../demo/src/styles/tokens.css";
+@import "../styles/globals.css";

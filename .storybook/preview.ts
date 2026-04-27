@@ -1,7 +1,10 @@
 import { withThemeByDataAttribute } from '@storybook/addon-themes';
 import type { Preview } from '@storybook/react-vite';
 
-import '../src/styles/globals.css';
+// Storybook-specific globals: Tailwind + tokens + the package's own globals.
+// Mirrors the demo app's CSS pipeline so primitives render with their
+// production styling under both Storybook and Playwright visual snapshots.
+import '../src/__stories__/storybook-globals.css';
 
 const preview: Preview = {
   parameters: {
@@ -17,12 +20,6 @@ const preview: Preview = {
       // Run axe checks on every story render in the addon panel.
       element: '#storybook-root',
       manual: false,
-    },
-    chromatic: {
-      // Single 1280px snapshot per story by default; override per-story when
-      // a viewport-specific layout matters.
-      viewports: [1280],
-      pauseAnimationAtEnd: true,
     },
   },
   decorators: [
