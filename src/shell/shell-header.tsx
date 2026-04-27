@@ -1,5 +1,13 @@
-import { PanelRightClose, PanelRightOpen } from 'lucide-react';
+'use client';
+
+import { ChevronDown, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { cn } from '../lib/utils.js';
+import { useMedaShell } from './shell-provider.js';
+
+// ---------------------------------------------------------------------------
+// Legacy components — preserved for back-compat
+// ---------------------------------------------------------------------------
 
 export function ShellHeaderFrame({
   left,
@@ -53,5 +61,98 @@ export function ShellPanelToggle({
     >
       {panelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
     </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Task 7.3 stub — WorkspaceSwitcher (stub; full implementation in next commit)
+// ---------------------------------------------------------------------------
+
+export interface WorkspaceSwitcherProps {
+  workspaceMenuFooter?: ReactNode;
+}
+
+export function WorkspaceSwitcher(_props: WorkspaceSwitcherProps = {}) {
+  const { workspace } = useMedaShell();
+  return (
+    <button
+      type="button"
+      className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium hover:bg-accent"
+    >
+      <span>{workspace.name}</span>
+      <ChevronDown size={14} aria-hidden="true" />
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Task 7.4 stub — AppTabs (stub; full implementation in next commit)
+// ---------------------------------------------------------------------------
+
+export function AppTabs() {
+  const { apps } = useMedaShell();
+  return (
+    <div className="flex items-center">
+      {apps.map((app) => (
+        <button key={app.id} type="button" className="px-3 py-2 text-sm">
+          {app.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Task 7.5 stub — PanelToggle (stub; full implementation in next commit)
+// ---------------------------------------------------------------------------
+
+export function PanelToggle() {
+  const { panel } = useMedaShell();
+  const isOpen = panel.mode !== 'closed';
+  return (
+    <button
+      type="button"
+      aria-label={isOpen ? 'Close right panel' : 'Open right panel'}
+      className="inline-flex h-8 w-8 items-center justify-center rounded-md"
+    >
+      {isOpen ? (
+        <PanelRightClose size={18} aria-hidden="true" />
+      ) : (
+        <PanelRightOpen size={18} aria-hidden="true" />
+      )}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Task 7.2 — ShellHeader (opinionated 56px header, spec §8)
+// ---------------------------------------------------------------------------
+
+export interface ShellHeaderProps {
+  globalActions?: ReactNode;
+  className?: string;
+}
+
+export function ShellHeader({ globalActions, className }: ShellHeaderProps = {}) {
+  return (
+    <header
+      className={cn(
+        'flex h-[var(--shell-header-height)] w-full items-center justify-between',
+        'border-b border-border bg-background px-3',
+        className
+      )}
+    >
+      {/* Left region: WorkspaceSwitcher then AppTabs (no separator between them) */}
+      <div className="flex items-center">
+        <WorkspaceSwitcher />
+        <AppTabs />
+      </div>
+
+      {/* Right region: optional globalActions slot then mandatory PanelToggle */}
+      <div className="flex items-center gap-2">
+        {globalActions}
+        <PanelToggle />
+      </div>
+    </header>
   );
 }
