@@ -12,6 +12,8 @@ export { MobileHeader } from './mobile/mobile-header.js';
 export { motion } from './motion.js';
 export { ResizableHandle, ResizableShell, ResizableShellPanel } from './resizable-shell.js';
 export { RightPanel } from './right-panel.js';
+export type { ShellAuthFrameProps, ShellAuthTheme, ShellAuthThemeToggleProps, } from './shell-auth-frame.js';
+export { ShellAuthFrame, ShellAuthThemeToggle } from './shell-auth-frame.js';
 export { AppTabs, PanelToggle, ShellHeader, WorkspaceSwitcher } from './shell-header.js';
 export { ShellMain } from './shell-main.js';
 export type { MedaShellProviderProps } from './shell-provider.js';
