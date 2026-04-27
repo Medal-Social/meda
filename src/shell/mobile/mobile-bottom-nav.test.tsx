@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { Menu, Star } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -192,5 +192,109 @@ describe('MedaShellProvider — mobileBottomNav prop overrides defaults', () => 
     expect(buttons.length).toBe(1);
     expect(screen.getByText('Foo')).toBeInTheDocument();
     expect(screen.queryByText('Menu')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 14.3: Mobile long-press on Menu opens command palette
+// ---------------------------------------------------------------------------
+
+describe('MobileBottomNav — long-press on Menu opens command palette', () => {
+  it('long-press (500ms) on Menu opens command palette', () => {
+    vi.useFakeTimers();
+
+    function PaletteStateReader() {
+      const ctx = useMedaShell();
+      return <span data-testid="palette-open">{String(ctx.commandPalette.open)}</span>;
+    }
+
+    render(
+      <MedaShellProvider workspace={defaultWorkspace} apps={defaultApps}>
+        <PaletteStateReader />
+        <MobileBottomNav />
+      </MedaShellProvider>
+    );
+
+    expect(screen.getByTestId('palette-open').textContent).toBe('false');
+
+    const menuBtn = screen.getByRole('button', { name: 'Menu' });
+    fireEvent.pointerDown(menuBtn);
+
+    // Before 500ms — palette still closed
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+    expect(screen.getByTestId('palette-open').textContent).toBe('false');
+
+    // After 500ms — palette opens
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    expect(screen.getByTestId('palette-open').textContent).toBe('true');
+
+    vi.useRealTimers();
+  });
+
+  it('short-press on Menu (pointerup before 500ms) opens menu drawer, not command palette', () => {
+    vi.useFakeTimers();
+
+    function StateReader() {
+      const ctx = useMedaShell();
+      return (
+        <>
+          <span data-testid="palette-open">{String(ctx.commandPalette.open)}</span>
+          <span data-testid="drawer-open">{ctx.mobileDrawer.open ?? 'null'}</span>
+        </>
+      );
+    }
+
+    render(
+      <MedaShellProvider workspace={defaultWorkspace} apps={defaultApps}>
+        <StateReader />
+        <MobileBottomNav />
+      </MedaShellProvider>
+    );
+
+    const menuBtn = screen.getByRole('button', { name: 'Menu' });
+
+    // Short-press: pointerdown then pointerup within 200ms
+    fireEvent.pointerDown(menuBtn);
+    vi.advanceTimersByTime(200);
+    fireEvent.pointerUp(menuBtn);
+    fireEvent.click(menuBtn);
+
+    expect(screen.getByTestId('palette-open').textContent).toBe('false');
+    expect(screen.getByTestId('drawer-open').textContent).toBe('menu-drawer');
+
+    vi.useRealTimers();
+  });
+
+  it('pointer cancel mid-long-press does NOT open palette', () => {
+    vi.useFakeTimers();
+
+    function PaletteStateReader() {
+      const ctx = useMedaShell();
+      return <span data-testid="palette-open">{String(ctx.commandPalette.open)}</span>;
+    }
+
+    render(
+      <MedaShellProvider workspace={defaultWorkspace} apps={defaultApps}>
+        <PaletteStateReader />
+        <MobileBottomNav />
+      </MedaShellProvider>
+    );
+
+    const menuBtn = screen.getByRole('button', { name: 'Menu' });
+
+    // Start press, then pointer leaves before 500ms
+    fireEvent.pointerDown(menuBtn);
+    vi.advanceTimersByTime(300);
+    fireEvent.pointerLeave(menuBtn);
+
+    // Advance past 500ms — timer should have been cancelled
+    vi.advanceTimersByTime(300);
+    expect(screen.getByTestId('palette-open').textContent).toBe('false');
+
+    vi.useRealTimers();
   });
 });

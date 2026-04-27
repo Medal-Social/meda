@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { cn } from '../../lib/utils.js';
 import { useMedaShell } from '../shell-provider.js';
 import type { MobileBottomNavItem } from '../types.js';
@@ -15,6 +16,8 @@ export interface MobileBottomNavProps {
  * Renders 4 buttons sourced from `ctx.mobileBottomNav` (provider-controlled,
  * overrideable per-app via `mobileBottomNav` prop). Each button click opens
  * the corresponding drawer via `ctx.mobileDrawer.setOpen`.
+ *
+ * The Menu button supports long-press (500ms) to open the command palette.
  *
  * Hidden on non-mobile viewports and when the right panel is in fullscreen mode.
  */
@@ -40,12 +43,53 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
   );
 }
 
+/** Long-press threshold in milliseconds */
+const LONG_PRESS_DURATION = 500;
+
 function MobileBottomNavButton({ item }: { item: MobileBottomNavItem }) {
   const ctx = useMedaShell();
   const Icon = item.icon;
   const label = typeof item.label === 'function' ? item.label() : item.label;
+  const isMenu = item.id === 'menu';
+
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFiredRef = useRef(false);
+
+  const cancelTimer = () => {
+    if (longPressTimerRef.current !== null) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const handlePointerDown = () => {
+    if (!isMenu) return;
+    longPressFiredRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      longPressFiredRef.current = true;
+      longPressTimerRef.current = null;
+      ctx.commandPalette.setOpen(true);
+    }, LONG_PRESS_DURATION);
+  };
+
+  const handlePointerUp = () => {
+    cancelTimer();
+  };
+
+  const handlePointerLeave = () => {
+    cancelTimer();
+  };
+
+  const handlePointerCancel = () => {
+    cancelTimer();
+  };
 
   const handleClick = () => {
+    if (isMenu && longPressFiredRef.current) {
+      // Long-press already fired — suppress the regular click action
+      longPressFiredRef.current = false;
+      return;
+    }
     if (typeof item.opens === 'string') {
       ctx.mobileDrawer.setOpen(item.opens);
     } else {
@@ -57,6 +101,10 @@ function MobileBottomNavButton({ item }: { item: MobileBottomNavItem }) {
   return (
     <button
       type="button"
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerLeave}
+      onPointerCancel={handlePointerCancel}
       onClick={handleClick}
       aria-label={label}
       className="flex h-full flex-1 flex-col items-center justify-center gap-0.5 text-muted-foreground hover:text-foreground"
