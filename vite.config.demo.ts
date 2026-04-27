@@ -10,7 +10,7 @@ export default defineConfig({
     alias: [
       {
         find: '@medalsocial/meda/styles.css',
-        replacement: resolve(__dirname, 'src/styles/globals.css'),
+        replacement: resolve(__dirname, 'src/styles/theme.css'),
       },
       {
         find: '@medalsocial/meda/timeline',

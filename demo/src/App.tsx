@@ -48,7 +48,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
-import { useState } from 'react';
+import { type ComponentProps, useState } from 'react';
 import { ComponentDoc } from './ComponentDoc';
 
 /* ─────────────────────────────────────────────────────────────────────────── *
@@ -78,6 +78,13 @@ const APPS: AppDefinition[] = [
   { id: 'projects', label: 'Projects', icon: FolderOpen },
   { id: 'team', label: 'Team', icon: Users },
 ];
+
+const ICON_RAIL_ITEMS: ComponentProps<typeof IconRail>['mainItems'] = APPS.map((app) => ({
+  id: app.id,
+  label: app.label,
+  icon: app.icon,
+  to: `#${app.id}`,
+}));
 
 const CONTEXT_MODULE: ContextModule = {
   id: 'inbox',
@@ -143,7 +150,7 @@ const registryItems = [
 
 export function App() {
   return (
-    <div className="dark">
+    <div className="dark min-h-screen bg-background text-foreground">
       <div className="page">
         <nav className="nav">
           <div className="brand">
@@ -363,7 +370,7 @@ function ShellV2Demo() {
   <AppShell>
     <ShellHeader />
     <AppShellBody>
-      <IconRail />
+      <IconRail mainItems={railItems} activeId="inbox" />
       <ContextRail modules={[module]} activeItemId={id} onItemClick={setId} />
       <ShellMain><YourPage /></ShellMain>
       <RightPanel />
@@ -388,7 +395,7 @@ function ShellV2Demo() {
           <AppShell>
             <ShellHeader />
             <AppShellBody>
-              <IconRail />
+              <IconRail mainItems={ICON_RAIL_ITEMS} activeId="inbox" />
               <ContextRail
                 modules={[CONTEXT_MODULE]}
                 activeItemId={activeItem}
