@@ -9,8 +9,6 @@
       "!**/coverage",
       "!**/registry/r",
       "!**/storybook-static",
-      "!**/tests/visual/report",
-      "!**/test-results",
       "!test/fixtures/**/node_modules",
       "!test/fixtures/**/.next"
     ]

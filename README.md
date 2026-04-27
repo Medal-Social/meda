@@ -52,6 +52,7 @@ See the [demo app](./demo) for a live playground.
 
 - `@medalsocial/meda` — curated public API (components + helpers)
 - `@medalsocial/meda/shell` — shell-only subpath
+- `@medalsocial/meda/marketing` — marketing sections and campaign blocks
 - `@medalsocial/meda/styles.css` — design tokens + base styles
 
 ## Alternative: shadcn registry
@@ -82,7 +83,7 @@ pnpm storybook:build   # storybook-static/
 pnpm size-limit        # bundle-size gate
 ```
 
-## Storybook + visual regression
+## Storybook + Chromatic
 
 Stories are colocated as `Component.stories.tsx` next to each primitive. Build
 the static bundle with:
@@ -91,23 +92,16 @@ the static bundle with:
 pnpm storybook:build
 ```
 
-Visual regression runs via **Playwright** snapshots on every PR. The
-`tests/visual/primitives.spec.ts` spec discovers every story from Storybook's
-`index.json`, navigates to each iframe URL, and compares a screenshot of
-`#storybook-root` against committed PNG baselines under
-`tests/visual/primitives.spec.ts-snapshots/`.
+Visual review runs via **Chromatic**. The `Chromatic` GitHub workflow publishes
+Storybook on pushes and pull requests targeting `dev` or `prod`, using the
+repository secret `CHROMATIC_PROJECT_TOKEN`.
 
 ```bash
-pnpm visual          # run the diff locally (boots Storybook automatically)
-pnpm visual:update   # regenerate baselines after an intentional change
-pnpm visual:report   # open the last HTML report
+pnpm chromatic
 ```
 
-The `Visual regression` GitHub workflow runs the same command in CI; on a
-failed diff it uploads the Playwright HTML report as a `playwright-visual-report`
-artifact for side-by-side review. No SaaS or secret required — baselines
-live in the repo and are reviewed via `git diff` of the PNG files (or the
-artifact viewer for a richer side-by-side).
+Chromatic handles UI diffs and review state, so visual snapshot baselines are
+not committed to this repository.
 
 ## Release
 

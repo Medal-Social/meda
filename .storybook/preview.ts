@@ -3,7 +3,7 @@ import type { Preview } from '@storybook/react-vite';
 
 // Storybook-specific globals: Tailwind + tokens + the package's own globals.
 // Mirrors the demo app's CSS pipeline so primitives render with their
-// production styling under both Storybook and Playwright visual snapshots.
+// production styling under both Storybook and Chromatic.
 import '../src/__stories__/storybook-globals.css';
 
 const preview: Preview = {

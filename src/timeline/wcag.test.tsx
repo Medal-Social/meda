@@ -79,8 +79,8 @@ describe('timeline a11y', () => {
   it('TimelineRail has no axe violations', async () => {
     // TimelineRail wraps TimelineTape; we can't shrink its hardcoded
     // PAST_SPAN_SEC / FUTURE_PAD_SEC, so axe takes a couple seconds. Override
-    // axe's runOnly to a smaller rule subset to keep the wall-clock under the
-    // default 5s test timeout — we still cover the high-signal WCAG 2 AA rules.
+    // axe's runOnly to a smaller rule subset; the explicit timeout keeps the
+    // test stable when the full suite is contending for jsdom workers.
     const { container } = render(
       <TimelineRail
         date={NOW}
@@ -103,5 +103,5 @@ describe('timeline a11y', () => {
         runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa'] },
       })
     ).toHaveNoViolations();
-  });
+  }, 15_000);
 });

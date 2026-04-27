@@ -15,7 +15,7 @@ const config: StorybookConfig = {
     reactDocgen: 'react-docgen-typescript',
   },
   // Mirror the demo's Vite pipeline so Tailwind utilities used by primitives
-  // render correctly in Storybook (and therefore in Playwright visual snapshots).
+  // render correctly in Storybook and Chromatic.
   viteFinal: async (cfg) => {
     cfg.plugins = [...(cfg.plugins ?? []), tailwindcss()];
     return cfg;

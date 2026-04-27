@@ -187,7 +187,7 @@ export const WithRegisteredCommands: Story = {
 
 /**
  * Palette open — shows the full command list across all groups.
- * Useful for visual regression snapshots.
+ * Useful for Chromatic visual review.
  */
 export const Open: Story = {
   decorators: [
