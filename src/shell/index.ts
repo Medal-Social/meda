@@ -1,4 +1,5 @@
 export * from './app-shell.js';
+export * from './command-palette.js';
 export * from './context-rail.js';
 export * from './icon-rail.js';
 export * from './mobile/mobile-bottom-nav.js';
