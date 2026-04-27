@@ -1,3 +1,5 @@
+'use client';
+
 // SPDX-License-Identifier: Apache-2.0
 
 import { Canvas } from '@react-three/fiber';
@@ -16,7 +18,11 @@ export type { VoiceOrbVariant } from './voice-orb-scene.js';
 // Theming helpers
 // ---------------------------------------------------------------------------
 
-const FALLBACK_COLOR = '#9A6AC2'; // Pilot purple
+// Fallback colors used only if CSS custom properties fail to resolve.
+// Both values are from the canonical brand ramp (.lib.pen):
+//   brand-400 (#9A6AC2) and brand-500 (#7E3FAC).
+// Runtime path reads --primary and --accent first.
+const FALLBACK_COLOR = '#9A6AC2'; // brand-400
 
 function hslToHex(h: number, s: number, l: number): string {
   const sl = s / 100;
@@ -83,7 +89,7 @@ function readMedaColors(el: HTMLElement): [string, string] {
   return [colorA, colorB];
 }
 
-const DEFAULT_COLORS: [string, string] = ['#9A6AC2', '#7B4FAB'];
+const DEFAULT_COLORS: [string, string] = ['#9A6AC2', '#7E3FAC']; // brand-400 → brand-500
 
 // ---------------------------------------------------------------------------
 // Props

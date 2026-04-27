@@ -1,3 +1,5 @@
+'use client';
+
 import { formatClock } from '../lib/format-time.js';
 import { cn } from '../lib/utils.js';
 

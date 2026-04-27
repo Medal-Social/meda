@@ -1,3 +1,5 @@
+'use client';
+
 import { cn } from '../lib/utils.js';
 import type { TimelineEvent } from './types.js';
 

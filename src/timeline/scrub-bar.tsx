@@ -1,3 +1,5 @@
+'use client';
+
 import { Pause, Play, SkipBack, SkipForward } from 'lucide-react';
 import { useRef } from 'react';
 import { formatDuration } from '../lib/format-time.js';
