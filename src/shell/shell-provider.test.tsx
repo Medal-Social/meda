@@ -1,9 +1,9 @@
-import { fireEvent, render, renderHook, screen } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { LayoutGrid, Menu } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { ShellStorageAdapter } from './layout-state.js';
-import { MedaShellProvider, useMedaShell } from './shell-provider.js';
+import { MedaShellProvider, useMedaShell, useShellSelection } from './shell-provider.js';
 import type { AppDefinition, MobileBottomNavItem, WorkspaceDefinition } from './types.js';
 
 // ---------------------------------------------------------------------------
@@ -164,5 +164,72 @@ describe('MedaShellProvider', () => {
     });
 
     expect(result.current.commandPaletteHotkey).toBe('mod+shift+k');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// useShellSelection
+// ---------------------------------------------------------------------------
+
+describe('useShellSelection', () => {
+  it('getter/setter pair; null by default', () => {
+    const { result } = renderHook(() => useShellSelection<{ id: string }>(), {
+      wrapper: Wrapper,
+    });
+
+    // null by default
+    expect(result.current[0]).toBeNull();
+
+    // set a value
+    act(() => {
+      result.current[1]({ id: 'foo' });
+    });
+    expect(result.current[0]).toEqual({ id: 'foo' });
+
+    // reset to null
+    act(() => {
+      result.current[1](null);
+    });
+    expect(result.current[0]).toBeNull();
+  });
+
+  it('multiple subscribers see same value', () => {
+    type Sel = { id: string };
+
+    function ConsumerA() {
+      const [sel] = useShellSelection<Sel>();
+      return <span data-testid="a">{JSON.stringify(sel)}</span>;
+    }
+
+    function ConsumerB() {
+      const [sel] = useShellSelection<Sel>();
+      return <span data-testid="b">{JSON.stringify(sel)}</span>;
+    }
+
+    function Trigger() {
+      const [, setSelection] = useShellSelection<Sel>();
+      return (
+        <button type="button" onClick={() => setSelection({ id: 'x' })}>
+          trigger
+        </button>
+      );
+    }
+
+    render(
+      <MedaShellProvider workspace={workspace} apps={apps}>
+        <ConsumerA />
+        <ConsumerB />
+        <Trigger />
+      </MedaShellProvider>
+    );
+
+    // both start null
+    expect(screen.getByTestId('a').textContent).toBe('null');
+    expect(screen.getByTestId('b').textContent).toBe('null');
+
+    fireEvent.click(screen.getByText('trigger'));
+
+    expect(screen.getByTestId('a').textContent).toBe(JSON.stringify({ id: 'x' }));
+    expect(screen.getByTestId('b').textContent).toBe(JSON.stringify({ id: 'x' }));
   });
 });

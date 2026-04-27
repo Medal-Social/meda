@@ -54,6 +54,9 @@ interface MedaShellContextValue {
   };
   mobileBottomNav: MobileBottomNavItem[];
   commandPaletteHotkey: string;
+  /** Selection bridge between main workspace and right panel views (spec §17). */
+  selection: unknown | null;
+  setSelection: (value: unknown | null) => void;
 }
 
 const Ctx = createContext<MedaShellContextValue | null>(null);
@@ -62,6 +65,18 @@ export function useMedaShell(): MedaShellContextValue {
   const v = useContext(Ctx);
   if (!v) throw new Error('useMedaShell must be used inside <MedaShellProvider>');
   return v;
+}
+
+/**
+ * Selection bridge between main workspace and right panel views (spec §17).
+ *
+ * `T` is consumer-typed: setSelection writes whatever shape you pass; the
+ * matching getter narrows to `T | null`. The shell does not validate the
+ * shape — coordinate types between writer and readers in your app.
+ */
+export function useShellSelection<T>(): readonly [T | null, (value: T | null) => void] {
+  const ctx = useMedaShell();
+  return [ctx.selection as T | null, ctx.setSelection as (value: T | null) => void] as const;
 }
 
 // ---------------------------------------------------------------------------
@@ -96,6 +111,8 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
   const storage = useMemo(() => props.storage ?? createLocalStorageAdapter(), [props.storage]);
 
   const [activeAppId, setActiveApp] = useState(props.defaultActiveApp ?? props.apps[0]?.id ?? '');
+
+  const [selection, setSelection] = useState<unknown | null>(null);
 
   const [layoutState, setLayoutState] = useShellLayoutState({
     workspaceId: props.workspace.id,
@@ -155,6 +172,8 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
       contextRail,
       mobileBottomNav: props.mobileBottomNav ?? defaultMobileBottomNav,
       commandPaletteHotkey: props.commandPaletteHotkey ?? 'mod+k',
+      selection,
+      setSelection,
     }),
     [
       props.workspace,
@@ -165,6 +184,7 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
       contextRail,
       props.mobileBottomNav,
       props.commandPaletteHotkey,
+      selection,
     ]
   );
 
