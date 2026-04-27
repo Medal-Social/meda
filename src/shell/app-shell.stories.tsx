@@ -20,6 +20,7 @@ import { ContextRail } from './context-rail.js';
 import type { IconRailItem } from './icon-rail.js';
 import { IconRail } from './icon-rail.js';
 import { ShellHeader } from './shell-header.js';
+import { ShellMain } from './shell-main.js';
 import { MedaShellProvider } from './shell-provider.js';
 import type { AppDefinition, ContextItem, ContextModule, WorkspaceDefinition } from './types.js';
 
@@ -190,9 +191,13 @@ export const Combined: Story = {
       <AppShellBody>
         <IconRail mainItems={RAIL_MAIN_ITEMS} utilityItems={RAIL_UTILITY_ITEMS} activeId="inbox" />
         <ContextRail appId="inbox" module={INBOX_MODULE} activeItemId="inbox" />
-        <div className="flex flex-1 items-center justify-center text-muted-foreground">
-          Main content area
-        </div>
+        <ShellMain layout="workspace">
+          <h1 className="text-2xl font-semibold text-foreground mb-2">Inbox</h1>
+          <p className="text-muted-foreground">
+            Main content area — rendered inside ShellMain with workspace layout (max-w-[1280px],
+            responsive padding).
+          </p>
+        </ShellMain>
       </AppShellBody>
     </AppShell>
   ),
