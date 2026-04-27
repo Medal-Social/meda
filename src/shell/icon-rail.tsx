@@ -54,15 +54,17 @@ function itemClass(isActive: boolean) {
 }
 
 // ---------------------------------------------------------------------------
-// RailDivider
+// RailDivider — Picasso pattern: chevron toggle that repositions utility items
+// between top and bottom of the rail (spatial, not expansion-related).
+// State is component-local (useState), NOT persisted via useShellLayoutState.
 // ---------------------------------------------------------------------------
 
-interface RailDividerProps {
+export interface RailDividerProps {
   pinnedBottom: boolean;
   onToggle: () => void;
 }
 
-function RailDivider({ pinnedBottom, onToggle }: RailDividerProps) {
+export function RailDivider({ pinnedBottom, onToggle }: RailDividerProps) {
   return (
     <button
       type="button"
