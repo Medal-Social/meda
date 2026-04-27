@@ -85,8 +85,10 @@ interface MedaShellContextValue {
   panel: {
     mode: PanelMode;
     activeView: string | null;
+    width: number;
     setMode: (m: PanelMode) => void;
     setActiveView: (v: string | null) => void;
+    setWidth: (w: number) => void;
   };
   contextRail: {
     width: number;
@@ -170,6 +172,7 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
     () => ({
       mode: layoutState.rightPanel.mode,
       activeView: layoutState.rightPanel.activeView,
+      width: layoutState.rightPanel.width,
       setMode: (mode: PanelMode) =>
         setLayoutState({
           ...layoutState,
@@ -179,6 +182,11 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
         setLayoutState({
           ...layoutState,
           rightPanel: { ...layoutState.rightPanel, activeView },
+        }),
+      setWidth: (width: number) =>
+        setLayoutState({
+          ...layoutState,
+          rightPanel: { ...layoutState.rightPanel, width },
         }),
     }),
     [layoutState, setLayoutState]

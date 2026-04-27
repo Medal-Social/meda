@@ -112,8 +112,10 @@ describe('MedaShellProvider', () => {
     // panel shape
     expect(ctx.panel.mode).toBe('closed');
     expect(ctx.panel.activeView).toBeNull();
+    expect(ctx.panel.width).toBe(340);
     expect(typeof ctx.panel.setMode).toBe('function');
     expect(typeof ctx.panel.setActiveView).toBe('function');
+    expect(typeof ctx.panel.setWidth).toBe('function');
     // contextRail shape
     expect(typeof ctx.contextRail.width).toBe('number');
     expect(typeof ctx.contextRail.collapsed).toBe('boolean');
@@ -340,5 +342,46 @@ describe('MedaShellProvider — themeAdapter prop selects correct provider', () 
     // Children render (may need a tick for Suspense + lazy to resolve)
     await screen.findByTestId('child');
     expect(screen.getByTestId('child').textContent).toBe('ok');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MedaShellProvider — panel.width / panel.setWidth round-trip
+// ---------------------------------------------------------------------------
+
+describe('MedaShellProvider — panel.width / panel.setWidth round-trip via useShellLayoutState', () => {
+  it('panel.width defaults to 340 (DEFAULTS in layout-state)', () => {
+    const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+    expect(result.current.panel.width).toBe(340);
+  });
+
+  it('panel.setWidth updates panel.width in context', () => {
+    const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+
+    act(() => {
+      result.current.panel.setWidth(420);
+    });
+
+    expect(result.current.panel.width).toBe(420);
+  });
+
+  it('panel.setWidth persists width to storage adapter', () => {
+    const storage = makeStubStorage(null);
+
+    const { result } = renderHook(() => useMedaShell(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <MedaShellProvider workspace={workspace} apps={apps} storage={storage}>
+          {children}
+        </MedaShellProvider>
+      ),
+    });
+
+    act(() => {
+      result.current.panel.setWidth(460);
+    });
+
+    expect(storage.save).toHaveBeenCalled();
+    const savedState = storage.save.mock.calls[storage.save.mock.calls.length - 1][1];
+    expect((savedState as { rightPanel: { width: number } }).rightPanel.width).toBe(460);
   });
 });
