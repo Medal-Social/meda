@@ -46,6 +46,9 @@ const meta = {
   component: ResizableShell,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },
+  // Stories below use `render` instead of args; meta-level args satisfy the
+  // StoryObj<typeof meta> type requirement that `children` be present.
+  args: { children: null },
 } satisfies Meta<typeof ResizableShell>;
 
 export default meta;
