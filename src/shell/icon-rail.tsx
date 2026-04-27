@@ -114,11 +114,6 @@ export function IconRail({
       </>
     );
 
-    // The trigger render element carries the item class (active/inactive styling)
-    // AND the data-testid. This means tests can fire mouseEnter on it to open
-    // the tooltip AND check its className for active state in one selector.
-    const triggerRender = <span data-testid={`icon-rail-trigger-${item.id}`} className={klass} />;
-
     const linkContent = renderLink ? (
       // renderLink consumers receive the className so they can apply it themselves
       renderLink({ item, isActive, className: klass, children: inner })
@@ -135,8 +130,14 @@ export function IconRail({
 
     return (
       <Tooltip key={item.id}>
-        {/* Trigger span owns the visual state; link inside provides navigation */}
-        <TooltipTrigger render={triggerRender}>{linkContent}</TooltipTrigger>
+        {/* Trigger span owns the visual state; link inside provides navigation. */}
+        <TooltipTrigger
+          render={
+            <span data-testid={`icon-rail-trigger-${item.id}`} className={klass}>
+              {linkContent}
+            </span>
+          }
+        />
         <TooltipContent side="right">{item.label}</TooltipContent>
       </Tooltip>
     );

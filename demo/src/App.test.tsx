@@ -7,6 +7,6 @@ describe('demo App', () => {
     render(<App />);
 
     expect(screen.getByRole('heading', { name: /the shell that runs medal/i })).toBeInTheDocument();
-    expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument();
+    expect(screen.getAllByRole('navigation', { name: 'Primary' }).length).toBeGreaterThan(0);
   });
 });

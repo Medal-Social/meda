@@ -18,6 +18,7 @@ import {
   RightPanel,
   ShellHeader,
   ShellMain,
+  useMedaShell,
 } from '@medalsocial/meda';
 import { type ToolCall, TranscriptStream, type Turn } from '@medalsocial/meda/chat';
 import {
@@ -48,7 +49,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
-import { type ComponentProps, useState } from 'react';
+import { type ComponentProps, useEffect, useState } from 'react';
 import { ComponentDoc } from './ComponentDoc';
 
 /* ─────────────────────────────────────────────────────────────────────────── *
@@ -144,6 +145,142 @@ const registryItems = [
   },
 ] as const;
 
+const SITE_SECTION_TO_APP = {
+  overview: 'overview',
+  install: 'overview',
+  shell: 'shell',
+  components: 'components',
+  registry: 'registry',
+} as const;
+
+const SITE_APP_TO_SECTION = {
+  overview: 'overview',
+  shell: 'shell',
+  components: 'components',
+  registry: 'registry',
+} as const;
+
+type SiteSectionId = keyof typeof SITE_SECTION_TO_APP;
+type SiteAppId = keyof typeof SITE_APP_TO_SECTION;
+
+const SITE_WORKSPACE: WorkspaceDefinition = {
+  id: 'meda-ui',
+  name: 'Meda UI',
+  icon: <MedalSocialMark className="site-workspace-mark" />,
+};
+
+const SITE_APPS: AppDefinition[] = [
+  { id: 'overview', label: 'Overview', icon: BookOpen },
+  { id: 'shell', label: 'Shell', icon: LayoutDashboard },
+  { id: 'components', label: 'Components', icon: Sparkles },
+  { id: 'registry', label: 'Registry', icon: FolderOpen },
+];
+
+const SITE_RAIL_ITEMS: ComponentProps<typeof IconRail>['mainItems'] = SITE_APPS.map((app) => ({
+  id: app.id,
+  label: app.label,
+  icon: app.icon,
+  to: `#${SITE_APP_TO_SECTION[app.id as SiteAppId]}`,
+}));
+
+const SITE_CONTEXT_MODULE: ContextModule = {
+  id: 'meda-docs',
+  label: 'Meda workspace',
+  description: 'Docs, live primitives, and install paths',
+  items: [
+    { id: 'overview', label: 'Overview', icon: BookOpen, to: '#overview', shortcut: '1' },
+    { id: 'install', label: 'Install', icon: Zap, to: '#install', shortcut: '2' },
+    { id: 'shell', label: 'Shell v2', icon: LayoutDashboard, to: '#shell', shortcut: '3' },
+    { id: 'components', label: 'Components', icon: Sparkles, to: '#components', shortcut: '4' },
+    { id: 'registry', label: 'Registry', icon: FolderOpen, to: '#registry', shortcut: '5' },
+  ],
+};
+
+const SITE_PANEL_VIEWS: PanelView[] = [
+  {
+    id: 'usage',
+    label: 'Usage',
+    icon: Zap,
+    render: () => (
+      <div className="site-panel-stack">
+        <div>
+          <p className="site-panel-kicker">Package</p>
+          <h3 className="site-panel-title">@medalsocial/meda</h3>
+          <p className="site-panel-copy">
+            Install the compiled package when you want Medal to own upgrades and API evolution.
+          </p>
+        </div>
+        <pre className="codeblock codeblock--inline">pnpm add @medalsocial/meda</pre>
+        <a
+          className="site-panel-link"
+          href="https://www.npmjs.com/package/@medalsocial/meda"
+          target="_blank"
+          rel="noreferrer"
+        >
+          npm package
+        </a>
+      </div>
+    ),
+  },
+  {
+    id: 'registry',
+    label: 'Registry',
+    icon: FolderOpen,
+    render: () => (
+      <div className="site-panel-stack">
+        <div>
+          <p className="site-panel-kicker">Source install</p>
+          <h3 className="site-panel-title">shadcn-compatible registry</h3>
+          <p className="site-panel-copy">
+            Copy the shell source into a product repo when the consuming app needs direct ownership.
+          </p>
+        </div>
+        {registryItems.map((item) => (
+          <a className="site-panel-link" href={`#registry`} key={item.name}>
+            {item.name}
+          </a>
+        ))}
+      </div>
+    ),
+  },
+];
+
+const SITE_MOBILE_NAV: ComponentProps<typeof MobileBottomNav>['items'] = [
+  { id: 'menu', label: 'Menu', icon: LayoutDashboard, opens: 'menu-drawer' },
+  { id: 'module', label: 'Docs', icon: BookOpen, opens: 'module-drawer' },
+  { id: 'panels', label: 'Panel', icon: PanelRight, opens: 'panels-drawer' },
+  { id: 'ai', label: 'Links', icon: Sparkles, opens: 'ai-drawer' },
+];
+
+function isSiteSection(value: string): value is SiteSectionId {
+  return value in SITE_SECTION_TO_APP;
+}
+
+function getInitialSiteSection(): SiteSectionId {
+  if (typeof window === 'undefined') return 'overview';
+  const hash = window.location.hash.replace('#', '');
+  return isSiteSection(hash) ? hash : 'overview';
+}
+
+function getInitialSiteApp(): SiteAppId {
+  return SITE_SECTION_TO_APP[getInitialSiteSection()] as SiteAppId;
+}
+
+function scrollSiteSectionIntoView(sectionId: SiteSectionId) {
+  const section = document.getElementById(sectionId);
+  const scroller = section?.closest<HTMLElement>('.site-main');
+  if (!section || !scroller) return;
+
+  const sectionRect = section.getBoundingClientRect();
+  const scrollerRect = scroller.getBoundingClientRect();
+  scroller.scrollTo({
+    top: scroller.scrollTop + sectionRect.top - scrollerRect.top,
+    left: 0,
+    behavior: 'auto',
+  });
+  window.scrollTo(0, 0);
+}
+
 /* ─────────────────────────────────────────────────────────────────────────── *
  * App root
  * ─────────────────────────────────────────────────────────────────────────── */
@@ -151,230 +288,361 @@ const registryItems = [
 export function App() {
   return (
     <div className="dark min-h-screen bg-background text-foreground">
-      <div className="page">
-        <nav className="nav">
-          <div className="brand">
-            <span className="brand-dot" />
-            <span>@medalsocial/meda</span>
-          </div>
-          <div className="nav-links">
-            <a href="#install">Install</a>
-            <a href="#shell">Shell v2</a>
-            <a href="#components">Components</a>
-            <a href="#registry">Registry</a>
-            <a href="/storybook/">Storybook</a>
-            <a
-              href="https://www.npmjs.com/package/@medalsocial/meda"
-              target="_blank"
-              rel="noreferrer"
-            >
-              npm
-            </a>
-            <a href="https://github.com/Medal-Social/meda" target="_blank" rel="noreferrer">
-              GitHub
-            </a>
-          </div>
-        </nav>
+      <MedaShellProvider
+        workspace={SITE_WORKSPACE}
+        workspaces={[SITE_WORKSPACE]}
+        apps={SITE_APPS}
+        defaultActiveApp={getInitialSiteApp()}
+        panelViews={SITE_PANEL_VIEWS}
+        mobileBottomNav={SITE_MOBILE_NAV}
+        themeAdapter="default"
+      >
+        <SiteWorkspace />
+      </MedaShellProvider>
+    </div>
+  );
+}
 
-        <section className="hero">
-          <span className="badge">
-            <span>v1.0.0-rc.1</span>
-            <span>·</span>
-            <span>Apache-2.0</span>
-            <span>·</span>
-            <span>React 19</span>
-          </span>
-          <h1>
-            <em>The shell that runs Medal.</em>
-          </h1>
-          <p className="lead">
-            Production-tested React primitives for app shells, navigation, panels, command palettes,
-            and workbench layouts. Ship it as an npm package, or copy source into your project via
-            the shadcn-compatible registry — whichever fits your taste.
-          </p>
-          <div className="cta-row">
-            <button
-              className="btn btn-primary"
-              type="button"
-              onClick={() => navigator.clipboard.writeText('pnpm add @medalsocial/meda')}
-            >
-              pnpm add @medalsocial/meda
-            </button>
-            <a
-              className="btn btn-secondary"
-              href="https://github.com/Medal-Social/meda"
-              target="_blank"
-              rel="noreferrer"
-            >
-              View on GitHub →
-            </a>
-          </div>
-        </section>
+function SiteWorkspace() {
+  const { activeAppId, setActiveApp } = useMedaShell();
+  const [activeSection, setActiveSection] = useState<SiteSectionId>(getInitialSiteSection);
 
-        {/* ───────────── Install paths ───────────── */}
-        <section id="install" className="section">
-          <div className="section-header">
-            <div className="eyebrow">Install</div>
-            <h2 className="section-title">Two ways to use meda</h2>
-            <p className="section-sub">
-              Pick whichever fits your team. Both ship the same components — the difference is
-              whether you own the source or treat it as a versioned dependency.
-            </p>
-          </div>
-          <div className="install-grid">
-            <div className="install-card">
-              <div className="install-card-label">
-                <span>◆ npm package</span>
-              </div>
-              <h3>Install as a dependency</h3>
-              <p>
-                Standard install. Compiled <code>dist/</code> ships to npm, upgrades flow through
-                your lockfile, types are included. Best when you want Medal to own the component
-                evolution.
-              </p>
-              <pre className="codeblock">
-                <span className="prompt">$ </span>pnpm add @medalsocial/meda
-                {'\n\n'}
-                <span className="comment">{'/* your entry CSS */'}</span>
-                {'\n'}@import <span className="tok-str">'@medalsocial/meda/styles.css'</span>
-              </pre>
-            </div>
-            <div className="install-card">
-              <div className="install-card-label">
-                <span>◆ shadcn registry</span>
-              </div>
-              <h3>Copy source into your repo</h3>
-              <p>
-                shadcn CLI copies the source files into your project. You own them, fork them, tweak
-                them. Best when you want full control over Tailwind classes and component internals.
-              </p>
-              <pre className="codeblock">
-                <span className="prompt">$ </span>npx shadcn add \{'\n'}
-                {'  '}https://meda.medalsocial.com/r/meda-shell.json
-              </pre>
-            </div>
-          </div>
-        </section>
+  const navigateToSection = (sectionId: string, replace = false) => {
+    if (!isSiteSection(sectionId)) return;
+    setActiveSection(sectionId);
+    setActiveApp(SITE_SECTION_TO_APP[sectionId]);
+    const nextHash = `#${sectionId}`;
+    if (window.location.hash !== nextHash) {
+      const method = replace ? 'replaceState' : 'pushState';
+      window.history[method](null, '', nextHash);
+    }
+    scrollSiteSectionIntoView(sectionId);
+  };
 
-        {/* ───────────── Shell v2 live demo ───────────── */}
-        <section id="shell" className="section">
-          <div className="section-header section-header--left">
-            <div className="eyebrow">Shell v2</div>
-            <h2 className="section-title">Full shell — live demo</h2>
-            <p className="section-sub">
-              <code>MedaShellProvider</code> wraps <code>AppShell</code> + regions. Click the icon
-              rail, switch app tabs, open the right panel, or hit{' '}
-              <kbd className="font-mono text-xs">⌘K</kbd> for the command palette.
-            </p>
-          </div>
-          <ShellV2Demo />
-        </section>
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const sectionId = getInitialSiteSection();
+      setActiveSection(sectionId);
+      setActiveApp(SITE_SECTION_TO_APP[sectionId]);
+      window.requestAnimationFrame(() => scrollSiteSectionIntoView(sectionId));
+    };
+    window.addEventListener('hashchange', handleLocationChange);
+    window.addEventListener('popstate', handleLocationChange);
+    return () => {
+      window.removeEventListener('hashchange', handleLocationChange);
+      window.removeEventListener('popstate', handleLocationChange);
+    };
+  }, [setActiveApp]);
 
-        {/* ───────────── Per-component gallery ───────────── */}
-        <section id="components" className="section">
-          <div className="section-header section-header--left">
-            <div className="eyebrow">Components</div>
-            <h2 className="section-title">Live demos for every primitive</h2>
-            <p className="section-sub">
-              Activity, chat, and inspector primitives. Every preview below is the actual component
-              from the published <code>@medalsocial/meda</code> package, rendered on this page.
-            </p>
-          </div>
+  useEffect(() => {
+    window.requestAnimationFrame(() => {
+      scrollSiteSectionIntoView(getInitialSiteSection());
+    });
+  }, []);
 
-          <TimelineDemo />
-          <ChatDemo />
-          <PanelDemo />
-        </section>
+  useEffect(() => {
+    const sectionId = SITE_APP_TO_SECTION[activeAppId as SiteAppId];
+    if (!sectionId || sectionId === activeSection) return;
+    setActiveSection(sectionId);
+    window.history.replaceState(null, '', `#${sectionId}`);
+    scrollSiteSectionIntoView(sectionId);
+  }, [activeAppId, activeSection]);
 
-        {/* ───────────── Shadcn registry ───────────── */}
-        <section id="registry" className="section section--subtle">
-          <div className="section-header section-header--left">
-            <div className="eyebrow">Shadcn registry</div>
-            <h2 className="section-title">Composable registry items</h2>
-            <p className="section-sub">
-              Three shadcn-compatible registry items, each independently installable and carrying
-              its own <code>registryDependencies</code>. The full component library above is always
-              available via the npm package — the registry is for consumers who want source-level
-              ownership.
-            </p>
-          </div>
-          <div className="registry-grid">
-            {registryItems.map((item) => (
-              <div className="registry-card" key={item.name}>
-                <div className="registry-name">@meda / {item.name}</div>
-                <h3 className="registry-title">{item.title}</h3>
-                <p className="registry-desc">{item.description}</p>
-                <pre className="registry-cmd">{`npx shadcn add \\
-  …/r/${item.name}.json`}</pre>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <footer className="footer">
-          <div className="footer-showcase">
-            <div className="footer-brand-block">
-              <div className="footer-kicker">Open-source UI software</div>
-              <div className="footer-lockup">
-                <MedalSocialMark className="footer-mark footer-mark--meda" />
-                <div className="footer-lockup-copy">
-                  <div className="footer-logo-title">Meda UI</div>
-                  <p>The interface shell, primitives, and design tokens behind Medal.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="footer-divider" aria-hidden="true" />
-
-            <div className="footer-brand-block">
-              <div className="footer-kicker">Maintained by</div>
+  return (
+    <>
+      <CommandPalette />
+      <AppShell className="site-app-shell">
+        <ShellHeader
+          className="site-shell-header"
+          globalActions={
+            <div className="site-header-actions">
+              <a className="site-header-link" href="/storybook/">
+                Storybook
+              </a>
               <a
-                className="footer-lockup footer-lockup--link"
-                href="https://medalsocial.com"
+                className="site-header-link"
+                href="https://github.com/Medal-Social/meda"
                 target="_blank"
                 rel="noreferrer"
               >
-                <MedalSocialMark className="footer-mark footer-mark--medal" />
-                <div className="footer-lockup-copy">
-                  <div className="footer-logo-title">Medal Social</div>
-                  <p>Designed, shipped, and battle-tested by the team building Medal.</p>
-                </div>
-              </a>
-            </div>
-          </div>
-
-          <div className="footer-inner">
-            <div className="footer-meta">© 2026 Medal Social · Apache-2.0 · React 19</div>
-            <div className="footer-links">
-              <a
-                href="https://github.com/Medal-Social/meda/blob/prod/LICENSE"
-                target="_blank"
-                rel="noreferrer"
-              >
-                License
-              </a>
-              <a
-                href="https://github.com/Medal-Social/meda/blob/prod/CONTRIBUTING.md"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Contributing
-              </a>
-              <a
-                href="https://www.npmjs.com/package/@medalsocial/meda"
-                target="_blank"
-                rel="noreferrer"
-              >
-                npm
-              </a>
-              <a href="https://github.com/Medal-Social/meda" target="_blank" rel="noreferrer">
                 GitHub
               </a>
             </div>
+          }
+        />
+        <MobileHeader
+          globalActions={
+            <a className="site-header-link" href="/storybook/">
+              Storybook
+            </a>
+          }
+        />
+        <AppShellBody className="site-app-body">
+          <IconRail
+            mainItems={SITE_RAIL_ITEMS}
+            activeId={SITE_SECTION_TO_APP[activeSection]}
+            utilityItems={[
+              { id: 'storybook', label: 'Storybook', icon: BookOpen, to: '/storybook/' },
+              {
+                id: 'github',
+                label: 'GitHub',
+                icon: FileText,
+                to: 'https://github.com/Medal-Social/meda',
+              },
+            ]}
+            renderLink={({ item, isActive, className, children }) => {
+              const sectionId = item.to.startsWith('#') ? item.to.slice(1) : null;
+              const isExternal = item.to.startsWith('http');
+              return (
+                <a
+                  key={item.id}
+                  href={item.to}
+                  aria-label={item.label}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={className}
+                  target={isExternal ? '_blank' : undefined}
+                  rel={isExternal ? 'noreferrer' : undefined}
+                  onClick={
+                    sectionId
+                      ? (event) => {
+                          event.preventDefault();
+                          navigateToSection(sectionId);
+                        }
+                      : undefined
+                  }
+                >
+                  {children}
+                </a>
+              );
+            }}
+            footer={<MedalSocialMark className="site-rail-mark" />}
+          />
+          <ContextRail
+            appId={activeAppId}
+            module={SITE_CONTEXT_MODULE}
+            activeItemId={activeSection}
+            renderLink={({ item, isActive, className, children }) => (
+              <a
+                key={item.id}
+                href={item.to}
+                data-active={isActive}
+                className={className}
+                onClick={(event) => {
+                  event.preventDefault();
+                  navigateToSection(item.id);
+                }}
+              >
+                {children}
+              </a>
+            )}
+            className="site-context-rail"
+          />
+          <ShellMain layout="fullbleed" className="site-main">
+            <div className="site-workspace">
+              <section id="overview" className="hero">
+                <span className="badge">
+                  <span>v1.0.0-rc.1</span>
+                  <span>Apache-2.0</span>
+                  <span>React 19</span>
+                </span>
+                <h1>
+                  <em>The shell that runs Medal.</em>
+                </h1>
+                <p className="lead">
+                  Production-tested React primitives for app shells, navigation, panels, command
+                  palettes, and workbench layouts. Ship it as an npm package, or copy source into
+                  your project via the shadcn-compatible registry.
+                </p>
+                <div className="cta-row">
+                  <button
+                    className="btn btn-primary"
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText('pnpm add @medalsocial/meda')}
+                  >
+                    pnpm add @medalsocial/meda
+                  </button>
+                  <a
+                    className="btn btn-secondary"
+                    href="https://github.com/Medal-Social/meda"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View on GitHub
+                  </a>
+                </div>
+              </section>
+
+              <section id="install" className="section">
+                <div className="section-header">
+                  <div className="eyebrow">Install</div>
+                  <h2 className="section-title">Two ways to use meda</h2>
+                  <p className="section-sub">
+                    Pick the ownership model that fits your team. Both paths use the same Meda shell
+                    primitives and tokens.
+                  </p>
+                </div>
+                <div className="install-grid">
+                  <div className="install-card">
+                    <div className="install-card-label">
+                      <span>NPM PACKAGE</span>
+                    </div>
+                    <h3>Install as a dependency</h3>
+                    <p>
+                      Compiled <code>dist/</code> ships to npm, upgrades flow through your lockfile,
+                      and types are included.
+                    </p>
+                    <pre className="codeblock">
+                      <span className="prompt">$ </span>pnpm add @medalsocial/meda
+                      {'\n\n'}
+                      <span className="comment">{'/* your entry CSS */'}</span>
+                      {'\n'}@import <span className="tok-str">'@medalsocial/meda/styles.css'</span>
+                    </pre>
+                  </div>
+                  <div className="install-card">
+                    <div className="install-card-label">
+                      <span>SHADCN REGISTRY</span>
+                    </div>
+                    <h3>Copy source into your repo</h3>
+                    <p>
+                      shadcn CLI copies the source files into your project so you can own and adapt
+                      the internals.
+                    </p>
+                    <pre className="codeblock">
+                      <span className="prompt">$ </span>npx shadcn add \{'\n'}
+                      {'  '}https://meda.medalsocial.com/r/meda-shell.json
+                    </pre>
+                  </div>
+                </div>
+              </section>
+
+              <section id="shell" className="section">
+                <div className="section-header section-header--left">
+                  <div className="eyebrow">Shell v2</div>
+                  <h2 className="section-title">Full shell live demo</h2>
+                  <p className="section-sub">
+                    <code>MedaShellProvider</code> wraps <code>AppShell</code> and its regions. Use
+                    the rail, panel toggle, and command palette the same way a product app would.
+                  </p>
+                </div>
+                <ShellV2Demo />
+              </section>
+
+              <section id="components" className="section">
+                <div className="section-header section-header--left">
+                  <div className="eyebrow">Components</div>
+                  <h2 className="section-title">Primitive workbench</h2>
+                  <p className="section-sub">
+                    Activity, chat, and inspector primitives rendered as working Meda surfaces.
+                  </p>
+                </div>
+
+                <TimelineDemo />
+                <ChatDemo />
+                <PanelDemo />
+              </section>
+
+              <section id="registry" className="section section--subtle">
+                <div className="section-header section-header--left">
+                  <div className="eyebrow">Shadcn registry</div>
+                  <h2 className="section-title">Composable registry items</h2>
+                  <p className="section-sub">
+                    Three shadcn-compatible registry items, each independently installable and
+                    carrying its own <code>registryDependencies</code>.
+                  </p>
+                </div>
+                <div className="registry-grid">
+                  {registryItems.map((item) => (
+                    <div className="registry-card" key={item.name}>
+                      <div className="registry-name">@meda / {item.name}</div>
+                      <h3 className="registry-title">{item.title}</h3>
+                      <p className="registry-desc">{item.description}</p>
+                      <pre className="registry-cmd">{`npx shadcn add \\
+  .../r/${item.name}.json`}</pre>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <SiteFooter />
+            </div>
+          </ShellMain>
+          <RightPanel panelViews={SITE_PANEL_VIEWS} defaultView="usage" />
+        </AppShellBody>
+        <MobileDrawers
+          menuItems={SITE_RAIL_ITEMS}
+          module={SITE_CONTEXT_MODULE}
+          panelViews={SITE_PANEL_VIEWS}
+        />
+        <MobileBottomNav items={SITE_MOBILE_NAV} />
+      </AppShell>
+    </>
+  );
+}
+
+function SiteFooter() {
+  return (
+    <footer className="footer">
+      <div className="footer-showcase">
+        <div className="footer-brand-block">
+          <div className="footer-kicker">Open-source UI software</div>
+          <div className="footer-lockup">
+            <MedalSocialMark className="footer-mark footer-mark--meda" />
+            <div className="footer-lockup-copy">
+              <div className="footer-logo-title">Meda UI</div>
+              <p>The interface shell, primitives, and design tokens behind Medal.</p>
+            </div>
           </div>
-        </footer>
+        </div>
+
+        <div className="footer-divider" aria-hidden="true" />
+
+        <div className="footer-brand-block">
+          <div className="footer-kicker">Maintained by</div>
+          <a
+            className="footer-lockup footer-lockup--link"
+            href="https://medalsocial.com"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <MedalSocialMark className="footer-mark footer-mark--medal" />
+            <div className="footer-lockup-copy">
+              <div className="footer-logo-title">Medal Social</div>
+              <p>Designed, shipped, and battle-tested by the team building Medal.</p>
+            </div>
+          </a>
+        </div>
       </div>
-    </div>
+
+      <div className="footer-inner">
+        <div className="footer-meta">© 2026 Medal Social · Apache-2.0 · React 19</div>
+        <div className="footer-links">
+          <a
+            href="https://github.com/Medal-Social/meda/blob/prod/LICENSE"
+            target="_blank"
+            rel="noreferrer"
+          >
+            License
+          </a>
+          <a
+            href="https://github.com/Medal-Social/meda/blob/prod/CONTRIBUTING.md"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Contributing
+          </a>
+          <a
+            href="https://www.npmjs.com/package/@medalsocial/meda"
+            target="_blank"
+            rel="noreferrer"
+          >
+            npm
+          </a>
+          <a href="https://github.com/Medal-Social/meda" target="_blank" rel="noreferrer">
+            GitHub
+          </a>
+        </div>
+      </div>
+    </footer>
   );
 }
 
@@ -422,13 +690,13 @@ function ShellV2Demo() {
     <ShellHeader />
     <AppShellBody>
       <IconRail mainItems={railItems} activeId="inbox" />
-      <ContextRail modules={[module]} activeItemId={id} onItemClick={setId} />
+      <ContextRail appId="inbox" module={module} activeItemId={id} />
       <ShellMain><YourPage /></ShellMain>
       <RightPanel />
     </AppShellBody>
     {/* Mobile */}
     <MobileHeader />
-    <MobileDrawers modules={[module]} activeItemId={id} onItemClick={setId} />
+    <MobileDrawers menuItems={railItems} module={module} panelViews={panels} />
     <MobileBottomNav items={bottomNavItems} />
   </AppShell>
 </MedaShellProvider>`}
@@ -448,9 +716,20 @@ function ShellV2Demo() {
             <AppShellBody>
               <IconRail mainItems={ICON_RAIL_ITEMS} activeId="inbox" />
               <ContextRail
-                modules={[CONTEXT_MODULE]}
+                appId="inbox"
+                module={CONTEXT_MODULE}
                 activeItemId={activeItem}
-                onItemClick={(item) => setActiveItem(item.id)}
+                renderLink={({ item, isActive, className, children }) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    data-active={isActive}
+                    className={className}
+                    onClick={() => setActiveItem(item.id)}
+                  >
+                    {children}
+                  </button>
+                )}
               />
               <ShellMain>
                 <div className="flex flex-col gap-4 p-6">
@@ -473,9 +752,9 @@ function ShellV2Demo() {
             </AppShellBody>
             <MobileHeader />
             <MobileDrawers
-              modules={[CONTEXT_MODULE]}
-              activeItemId={activeItem}
-              onItemClick={(item) => setActiveItem(item.id)}
+              menuItems={ICON_RAIL_ITEMS}
+              module={CONTEXT_MODULE}
+              panelViews={PANEL_VIEWS}
             />
             <MobileBottomNav
               items={[
