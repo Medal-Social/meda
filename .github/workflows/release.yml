@@ -30,6 +30,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # changesets/action stages + commits the version bump, which fires the
+      # Husky pre-commit hook (lint + test). The vitest 'storybook' project
+      # runs every *.stories.tsx in headless Chromium via @vitest/browser-
+      # playwright, so the browser binary needs to be present before that
+      # commit. --with-deps installs the required system libs on Ubuntu.
+      - run: pnpm exec playwright install chromium --with-deps
+
       - run: pnpm build
 
       - name: Create release PR or publish packages
