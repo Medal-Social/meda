@@ -8,7 +8,7 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Inbox, MessageSquare, Settings } from 'lucide-react';
+import { Building2, FlaskConical, Inbox, MessageSquare, Settings, Zap } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { ShellHeader } from './shell-header.js';
 import { MedaShellProvider } from './shell-provider.js';
@@ -21,19 +21,19 @@ import type { AppDefinition, WorkspaceDefinition } from './types.js';
 const WORKSPACE_ACME: WorkspaceDefinition = {
   id: 'ws-acme',
   name: 'Acme Corp',
-  icon: <span aria-hidden="true">🏢</span>,
+  icon: <Building2 size={20} aria-hidden="true" />,
 };
 
 const WORKSPACE_BETA: WorkspaceDefinition = {
   id: 'ws-beta',
   name: 'Beta Workspace',
-  icon: <span aria-hidden="true">⚡</span>,
+  icon: <Zap size={20} aria-hidden="true" />,
 };
 
 const WORKSPACE_GAMMA: WorkspaceDefinition = {
   id: 'ws-gamma',
   name: 'Gamma Labs',
-  icon: <span aria-hidden="true">🔬</span>,
+  icon: <FlaskConical size={20} aria-hidden="true" />,
 };
 
 const APPS_3: AppDefinition[] = [
