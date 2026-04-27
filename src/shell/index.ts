@@ -1,27 +1,50 @@
-export * from './app-shell.js';
-export * from './command-palette.js';
-export * from './context-rail.js';
-export * from './extras/index.js';
-export * from './icon-rail.js';
-export * from './mobile/mobile-bottom-nav.js';
-export * from './mobile/mobile-drawers.js';
-export * from './mobile/mobile-header.js';
-export * from './motion.js';
-export * from './navigation-area.js';
-export * from './resizable-shell.js';
-export * from './right-panel.js';
-export * from './shell-app-rail.js';
-export * from './shell-frame.js';
-export * from './shell-header.js';
-export * from './shell-layout-utils.js';
-export * from './shell-main.js';
-export * from './shell-module-nav.js';
-export * from './shell-panel-rail.js';
-export * from './shell-provider.js';
-export * from './shell-route-utils.js';
-export * from './shell-state.js';
-export * from './theme.js';
-export * from './theme-next-themes.js';
-export * from './types.js';
-export * from './use-shell-viewport.js';
-export * from './utils.js';
+'use client';
+
+// Layout
+export { AppShell, AppShellBody } from './app-shell.js';
+export type { CommandGroupDefinition } from './command-palette.js';
+// Command palette
+export { CommandPalette, useCommandGroup, useCommands } from './command-palette.js';
+export { ContextRail } from './context-rail.js';
+// Extras (legacy components ported during Phase 15 — opt-in for apps that need them)
+export * as Extras from './extras/index.js';
+// Rails + main + panel
+export { IconRail, RailDivider } from './icon-rail.js';
+export type { ShellStorageAdapter } from './layout-state.js';
+// Storage adapter (consumers may want to provide their own)
+export { createLocalStorageAdapter } from './layout-state.js';
+export { MobileBottomNav } from './mobile/mobile-bottom-nav.js';
+export { MobileDrawers } from './mobile/mobile-drawers.js';
+// Mobile (individual exports + namespaced fallback)
+export { MobileHeader } from './mobile/mobile-header.js';
+// Hooks + tokens
+export { motion } from './motion.js';
+// Resize primitives
+export { ResizableHandle, ResizableShell, ResizableShellPanel } from './resizable-shell.js';
+export { RightPanel } from './right-panel.js';
+// Header (and its individual children for advanced composition)
+export { AppTabs, PanelToggle, ShellHeader, WorkspaceSwitcher } from './shell-header.js';
+export { ShellMain } from './shell-main.js';
+export type { MedaShellProviderProps } from './shell-provider.js';
+// Provider + hooks
+export { MedaShellProvider, useMedaShell, useShellSelection } from './shell-provider.js';
+// Theme
+export { DefaultThemeProvider, ThemeToggle, useTheme } from './theme.js';
+export { NextThemesAdapter } from './theme-next-themes.js';
+// Types
+export type {
+  AppDefinition,
+  CommandDefinition,
+  ContextItem,
+  ContextModule,
+  MobileBottomNavItem,
+  PanelMode,
+  PanelView,
+  ShellLinkRenderArgs,
+  ShellMainLayout,
+  ShellRenderContext,
+  ShellViewport,
+  ThemeAdapter,
+  WorkspaceDefinition,
+} from './types.js';
+export { useShellViewport } from './use-shell-viewport.js';
