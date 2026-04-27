@@ -45,7 +45,8 @@ describe('ShellAuthFrame', () => {
     expect(screen.getByTestId('shell-auth-preview-shell-header')).toBeInTheDocument();
     expect(screen.getByTestId('shell-auth-preview-icon-rail')).toBeInTheDocument();
     expect(screen.getByTestId('shell-auth-preview-context-rail')).toBeInTheDocument();
-    expect(screen.getByTestId('shell-auth-preview-right-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('shell-auth-preview-panel-toggle')).toBeInTheDocument();
+    expect(screen.queryByTestId('shell-auth-preview-right-panel')).not.toBeInTheDocument();
   });
 });
 

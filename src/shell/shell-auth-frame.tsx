@@ -165,32 +165,37 @@ function DefaultAuthPreview() {
   return (
     <div
       data-testid="shell-auth-default-preview"
-      className="relative overflow-hidden rounded-xl border border-white/16 bg-background text-foreground shadow-2xl shadow-black/30"
+      className="relative overflow-hidden rounded-[1.5rem] border border-white/16 bg-[color-mix(in_srgb,var(--background)_88%,transparent)] p-2 text-foreground shadow-2xl shadow-black/30 backdrop-blur"
       aria-hidden
     >
-      <div className="flex h-9 items-center gap-1.5 border-border border-b bg-card px-3">
-        <span className="size-2 rounded-full bg-rose-400" />
-        <span className="size-2 rounded-full bg-amber-400" />
-        <span className="size-2 rounded-full bg-emerald-400" />
-      </div>
-      <div className="min-h-[22rem] bg-background">
+      <div className="overflow-hidden rounded-[1.125rem] border border-border/70 bg-background shadow-sm">
+        <div className="flex h-9 items-center justify-between bg-card/90 px-3">
+          <div className="flex items-center gap-1.5">
+            <span className="size-2 rounded-full bg-rose-400" />
+            <span className="size-2 rounded-full bg-amber-400" />
+            <span className="size-2 rounded-full bg-emerald-400" />
+          </div>
+          <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[9px] font-medium text-muted-foreground sm:inline-flex">
+            app.medal.social
+          </span>
+        </div>
         <div
           data-testid="shell-auth-preview-shell-header"
-          className="flex h-11 items-center justify-between border-shell-border border-b bg-shell-header px-3"
+          className="flex h-12 items-center justify-between border-shell-border border-t border-b bg-shell-header px-3"
         >
           <div className="flex min-w-0 items-center gap-2">
-            <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Sparkles className="size-3.5" aria-hidden="true" />
             </span>
             <span className="truncate text-[11px] font-semibold">Medal Social</span>
-            <div className="ml-2 hidden items-center sm:flex">
+            <div className="ml-2 hidden items-center gap-0.5 rounded-full bg-muted/70 p-0.5 sm:flex">
               {PREVIEW_TABS.map((tab) => (
                 <span
                   key={tab}
                   className={cx(
-                    'px-2 py-1 text-[10px] font-medium',
+                    'rounded-full px-2 py-1 text-[10px] font-medium',
                     tab === 'Inbox'
-                      ? 'border-primary border-b-2 text-foreground'
+                      ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground'
                   )}
                 >
@@ -200,19 +205,22 @@ function DefaultAuthPreview() {
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="hidden rounded-md bg-primary px-2 py-1 text-[9px] font-semibold text-primary-foreground sm:inline-flex">
+            <span className="hidden rounded-lg bg-primary px-2.5 py-1.5 text-[9px] font-semibold text-primary-foreground sm:inline-flex">
               + New
             </span>
-            <span className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground">
+            <span
+              data-testid="shell-auth-preview-panel-toggle"
+              className="inline-flex size-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-sm"
+            >
               <PanelRightOpen className="size-3.5" aria-hidden="true" />
             </span>
           </div>
         </div>
 
-        <div className="grid min-h-[19.25rem] grid-cols-[44px_minmax(0,1fr)] overflow-hidden sm:grid-cols-[44px_124px_minmax(0,1fr)_118px] lg:grid-cols-[48px_148px_minmax(0,1fr)_136px]">
+        <div className="grid min-h-[19.75rem] grid-cols-[44px_minmax(0,1fr)] gap-2 bg-shell-main p-2 sm:grid-cols-[48px_138px_minmax(0,1fr)] lg:grid-cols-[52px_156px_minmax(0,1fr)]">
           <aside
             data-testid="shell-auth-preview-icon-rail"
-            className="flex flex-col items-center gap-1 border-shell-border border-r bg-shell-rail py-2"
+            className="flex flex-col items-center gap-1 rounded-2xl bg-shell-rail p-1.5 shadow-sm ring-1 ring-border/70"
           >
             {PREVIEW_RAIL_ITEMS.map((item) => (
               <PreviewRailItem
@@ -230,7 +238,7 @@ function DefaultAuthPreview() {
 
           <aside
             data-testid="shell-auth-preview-context-rail"
-            className="hidden flex-col border-shell-border border-r bg-shell-context sm:flex"
+            className="hidden overflow-hidden rounded-2xl bg-shell-context shadow-sm ring-1 ring-border/70 sm:flex sm:flex-col"
           >
             <div className="border-shell-border border-b px-3 py-3">
               <p className="text-[11px] font-semibold text-foreground">Customer OS</p>
@@ -249,7 +257,7 @@ function DefaultAuthPreview() {
             </div>
           </aside>
 
-          <main className="min-w-0 overflow-hidden bg-shell-main p-3">
+          <main className="min-w-0 overflow-hidden rounded-2xl bg-background/80 p-3 shadow-sm ring-1 ring-border/70">
             <div className="mb-3 flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-[9px] font-medium uppercase text-muted-foreground">
@@ -257,22 +265,22 @@ function DefaultAuthPreview() {
                 </p>
                 <p className="mt-1 truncate text-sm font-semibold">Launch queue and support</p>
               </div>
-              <span className="rounded-md bg-success/12 px-2 py-1 text-[9px] font-semibold text-success">
+              <span className="rounded-full bg-success/12 px-2 py-1 text-[9px] font-semibold text-success">
                 Live
               </span>
             </div>
 
-            <div className="mb-3 flex h-8 items-center gap-2 rounded-md border border-border bg-card px-2 text-muted-foreground shadow-sm">
+            <div className="mb-3 flex h-9 items-center gap-2 rounded-xl border border-border bg-card px-2.5 text-muted-foreground shadow-sm">
               <Search className="size-3.5 shrink-0" aria-hidden="true" />
               <span className="truncate text-[10px]">Ask Meda to draft a customer reply...</span>
-              <kbd className="ml-auto hidden rounded bg-muted px-1.5 py-0.5 font-mono text-[8px] text-muted-foreground sm:inline">
+              <kbd className="ml-auto hidden rounded-md bg-muted px-1.5 py-0.5 font-mono text-[8px] text-muted-foreground sm:inline">
                 CMD K
               </kbd>
             </div>
 
             <div className="grid gap-2 sm:grid-cols-3">
               {PREVIEW_METRICS.map((metric) => (
-                <div key={metric.label} className="rounded-md border border-border bg-card p-2">
+                <div key={metric.label} className="rounded-xl border border-border bg-card p-2.5">
                   <p className="text-[9px] font-medium text-muted-foreground">{metric.label}</p>
                   <p className="mt-1 text-base font-semibold">{metric.value}</p>
                 </div>
@@ -280,7 +288,7 @@ function DefaultAuthPreview() {
             </div>
 
             <div className="mt-3 grid gap-2 lg:grid-cols-[minmax(0,1fr)_112px]">
-              <div className="rounded-md border border-border bg-card p-2.5">
+              <div className="rounded-xl border border-border bg-card p-2.5">
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-[11px] font-semibold">Priority work</p>
                   <p className="text-[9px] text-muted-foreground">Updated now</p>
@@ -292,7 +300,7 @@ function DefaultAuthPreview() {
                 </div>
               </div>
 
-              <div className="hidden rounded-md border border-border bg-card p-2.5 lg:block">
+              <div className="hidden rounded-xl border border-border bg-card p-2.5 lg:block">
                 <p className="text-[10px] font-semibold">Publish health</p>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
                   <div className="h-full w-[72%] rounded-full bg-primary" />
@@ -303,34 +311,6 @@ function DefaultAuthPreview() {
               </div>
             </div>
           </main>
-
-          <aside
-            data-testid="shell-auth-preview-right-panel"
-            className="hidden flex-col border-shell-border border-l bg-shell-panel sm:flex"
-          >
-            <div className="flex items-center justify-between border-shell-border border-b px-3 py-2">
-              <p className="text-[11px] font-semibold">Copilot</p>
-              <span className="size-2 rounded-full bg-success" />
-            </div>
-            <div className="space-y-2 p-3">
-              <div className="rounded-md border border-border bg-card p-2">
-                <p className="text-[9px] font-medium text-muted-foreground">Suggested next step</p>
-                <p className="mt-1 text-[10px] font-semibold leading-4">
-                  Reply to creator payout thread.
-                </p>
-              </div>
-              <div className="rounded-md border border-border bg-card p-2">
-                <p className="text-[9px] font-medium text-muted-foreground">Insights</p>
-                <p className="mt-1 text-[10px] leading-4">
-                  Support volume is down 18% after automation changes.
-                </p>
-              </div>
-              <div className="rounded-md bg-primary/10 p-2 text-primary">
-                <p className="text-[10px] font-semibold">Draft ready</p>
-                <p className="mt-1 text-[9px] leading-4">Review before sending.</p>
-              </div>
-            </div>
-          </aside>
         </div>
       </div>
     </div>
