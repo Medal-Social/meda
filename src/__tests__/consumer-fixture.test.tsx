@@ -3,6 +3,8 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Home, LayoutGrid, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
+// Legacy shell primitives — imported from the legacy surface directly
+// (they're no longer in the root barrel since Phase 16 switched it to v2)
 import {
   NavigationArea,
   ShellAppRail,
@@ -16,7 +18,7 @@ import {
   ShellTabBar,
   useShellState,
   WorkbenchLayout,
-} from '../index';
+} from '../shell/public';
 
 afterEach(() => {
   cleanup();
