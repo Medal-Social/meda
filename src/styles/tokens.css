@@ -80,3 +80,15 @@
   --shell-border: hsl(0 0% 100% / 0.06);
   --shell-shadow: 0 4px 12px hsl(0 0% 0% / 0.45);
 }
+
+/* ============================================================
+   Layer 4 — Motion tokens
+   Theme-independent timing and easing
+   ============================================================ */
+:root {
+  --motion-fast: 140ms;
+  --motion-default: 200ms;
+  --motion-panel: 240ms;
+  --motion-fullscreen: 280ms;
+  --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
