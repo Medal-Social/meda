@@ -63,7 +63,7 @@ describe('storage adapter', () => {
 
     // setItem called exactly once for this key (debounce coalesced the calls)
     const callsForKey = (localStorage.setItem as ReturnType<typeof vi.fn>).mock.calls.filter(
-      ([k]: [string, string]) => k === 'meda:test'
+      ([k]: unknown[]) => k === 'meda:test'
     );
     expect(callsForKey).toHaveLength(1);
   });
