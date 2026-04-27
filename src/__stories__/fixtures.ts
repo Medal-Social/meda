@@ -9,7 +9,7 @@ import type {
 } from '../shell/extras/types.js';
 import type { ScrubMark, TimelineEvent } from '../timeline/types.js';
 
-// Frozen instant used everywhere — keeps visual snapshots stable.
+// Frozen instant used everywhere — keeps visual review stable.
 export const NOW_MS = new Date('2026-04-26T15:24:09Z').getTime();
 
 export const SAMPLE_TURNS: Turn[] = [

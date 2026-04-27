@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "meda-marketing-callout",
+  "type": "registry:component",
+  "title": "Meda Marketing Callout",
+  "description": "Install the Meda marketing callout wrapper.",
+  "dependencies": ["@medalsocial/meda"],
+  "files": [
+    {
+      "path": "registry/meda/meda-marketing-callout/meda-marketing-callout.tsx",
+      "content": "export { MarketingCallout as MedaMarketingCallout, MarketingCtaList as MedaMarketingCtaList } from '@medalsocial/meda/marketing'\nexport type { MarketingCalloutProps, MarketingCta, MarketingCtaListProps } from '@medalsocial/meda/marketing'\n",
+      "type": "registry:component",
+      "target": "components/meda/meda-marketing-callout.tsx"
+    }
+  ]
+}

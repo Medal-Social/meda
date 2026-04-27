@@ -1,0 +1,32 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import { SpacingScale } from '../foundations';
+
+<Meta title="Foundations/Spacing" />
+
+# Spacing
+
+Meda's spacing scale follows a 4px base. Eight named steps cover layouts from tight inline gaps to larger page breaks.
+
+## Scale
+
+<div style={{ marginTop: '24px' }}>
+  <SpacingScale />
+</div>
+
+## Choosing a step
+
+| Use case | Token |
+| --- | --- |
+| Inline gap between related items | `xs` (4px) |
+| Tight padding inside a small control | `sm` (8px) |
+| Default padding inside list rows | `md` (12px) |
+| Standard card padding | `lg` (16px) |
+| Section padding inside a panel | `xl` (24px) |
+| Block separation within a section | `2xl` (32px) |
+| Section-to-section break | `3xl` (48px) |
+| Page-level break | `4xl` (64px) |
+
+## Guardrails
+
+- Do not introduce ad-hoc pixel values when a scale step fits.
+- Do not mix Tailwind default spacing steps that sit between Meda tokens.

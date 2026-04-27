@@ -10,7 +10,11 @@ export default defineConfig({
     alias: [
       {
         find: '@medalsocial/meda/styles.css',
-        replacement: resolve(__dirname, 'src/styles/globals.css'),
+        replacement: resolve(__dirname, 'src/styles/theme.css'),
+      },
+      {
+        find: '@medalsocial/meda/brand',
+        replacement: resolve(__dirname, 'src/brand/index.ts'),
       },
       {
         find: '@medalsocial/meda/timeline',
@@ -19,6 +23,10 @@ export default defineConfig({
       {
         find: '@medalsocial/meda/chat',
         replacement: resolve(__dirname, 'src/chat/index.ts'),
+      },
+      {
+        find: '@medalsocial/meda/marketing',
+        replacement: resolve(__dirname, 'src/marketing/index.ts'),
       },
       {
         find: '@medalsocial/meda/panel',

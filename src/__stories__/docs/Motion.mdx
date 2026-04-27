@@ -1,0 +1,29 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import { MotionScale } from '../foundations';
+
+<Meta title="Foundations/Motion" />
+
+# Motion
+
+Four duration tokens cover common transitions. All transitions use the same easing curve: `cubic-bezier(0.2, 0.8, 0.2, 1)`.
+
+<div style={{ marginTop: '24px' }}>
+  <MotionScale />
+</div>
+
+## Reduced motion
+
+Meda respects `prefers-reduced-motion: reduce`. Components that animate position, size, or opacity should shorten or remove non-essential motion for that preference.
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  .my-component {
+    transition-duration: 0.01ms;
+  }
+}
+```
+
+## Guardrails
+
+- Do not introduce ad-hoc durations for standard UI transitions.
+- Keep easing curves consistent unless a component has a specific motion rationale.

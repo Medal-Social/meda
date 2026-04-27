@@ -1,0 +1,18 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import { ZIndexTable } from '../foundations';
+
+<Meta title="Foundations/Z-Index" />
+
+# Z-Index
+
+Three named layers cover shell-owned stacking. Anything outside this scale should be reviewed before it becomes part of the system.
+
+<div style={{ marginTop: '24px' }}>
+  <ZIndexTable />
+</div>
+
+## Why so few layers
+
+Most overlays in Meda use portals or `@base-ui/react` primitives that manage their own stacking context. The tokens here describe shell-owned layering only.
+
+For dropdowns, dialogs, tooltips, and toasts, prefer the primitive's stacking behavior over raw z-index values.

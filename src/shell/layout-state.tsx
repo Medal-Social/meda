@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PanelMode } from './types.js';
 
 export interface ShellStorageAdapter {
@@ -53,6 +53,10 @@ export interface ShellLayoutState {
   rightPanel: { mode: PanelMode; activeView: string | null; width: number };
 }
 
+export type ShellLayoutStateUpdater =
+  | ShellLayoutState
+  | ((prev: ShellLayoutState) => ShellLayoutState);
+
 const DEFAULTS: ShellLayoutState = {
   contextRail: { width: 300, collapsed: false },
   rightPanel: { mode: 'closed', activeView: null, width: 340 },
@@ -92,9 +96,12 @@ export function useShellLayoutState({
   workspaceId,
   appId,
   storage,
-}: UseShellLayoutStateArgs): readonly [ShellLayoutState, (next: ShellLayoutState) => void] {
+}: UseShellLayoutStateArgs): readonly [ShellLayoutState, (next: ShellLayoutStateUpdater) => void] {
   const key = `meda:shell:${workspaceId}:${appId}`;
   const [state, setStateInternal] = useState<ShellLayoutState>(DEFAULTS);
+  const [persistRevision, setPersistRevision] = useState(0);
+  const persistedRevisionRef = useRef(0);
+  const pendingSaveKeyRef = useRef(key);
 
   // Hydrate after mount. Effect re-runs when key changes (workspace/app switch).
   useEffect(() => {
@@ -104,10 +111,22 @@ export function useShellLayoutState({
     }
   }, [key, storage]);
 
-  const setState = (next: ShellLayoutState) => {
-    setStateInternal(next);
-    storage.save(key, next);
-  };
+  const setState = useCallback(
+    (next: ShellLayoutStateUpdater) => {
+      pendingSaveKeyRef.current = key;
+      setStateInternal((prev) => {
+        return typeof next === 'function' ? next(prev) : next;
+      });
+      setPersistRevision((revision) => revision + 1);
+    },
+    [key]
+  );
+
+  useEffect(() => {
+    if (persistedRevisionRef.current === persistRevision) return;
+    persistedRevisionRef.current = persistRevision;
+    storage.save(pendingSaveKeyRef.current, state);
+  }, [persistRevision, state, storage]);
 
   return [state, setState] as const;
 }

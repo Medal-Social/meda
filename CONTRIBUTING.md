@@ -67,29 +67,20 @@ If you legitimately need to bump a limit (a new dep, a real feature growth):
 
 Reviewers MUST flag a silent limit bump.
 
-## Visual regression (Playwright snapshots)
+## Visual review (Chromatic)
 
-Every Storybook story has a committed PNG baseline under
-`tests/visual/primitives.spec.ts-snapshots/`. CI fails any PR whose rendering
-diverges from those baselines.
+Visual review runs through Chromatic. The `Chromatic` GitHub workflow publishes
+Storybook for pull requests and pushes targeting `dev` or `prod`, using the
+repository secret `CHROMATIC_PROJECT_TOKEN`.
 
 ```bash
-pnpm visual          # run the diff locally — boots Storybook on :6006
-pnpm visual:update   # regenerate baselines after an intentional change
-pnpm visual:report   # open the HTML report from the last run
+pnpm chromatic
 ```
 
-When you intentionally change a primitive's appearance:
+When you intentionally change a primitive's appearance, review and accept the
+expected diff in Chromatic. Do not commit visual snapshot PNGs.
 
-1. Run `pnpm visual:update` to regenerate the affected baselines.
-2. **Inspect the new PNGs** (`git diff` the `.png` files, or open them) and
-   confirm every change is intentional.
-3. Commit the updated baselines with the PR.
-
-When CI flags a visual diff you didn't expect, download the
-`playwright-visual-report` artifact from the Actions run for a side-by-side
-view of expected vs. actual vs. diff. Reviewers MUST verify any new baseline
-PNGs are intentional before approving.
+Reviewers MUST verify expected Chromatic diffs before approving visual changes.
 
 ## Reporting Issues
 

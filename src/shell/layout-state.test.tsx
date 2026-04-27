@@ -152,6 +152,53 @@ describe('useShellLayoutState', () => {
     expect(result.current[0]).toEqual(next);
   });
 
+  it('accepts updater functions and persists the resolved state', () => {
+    const storage = makeStubStorage(null);
+
+    const { result } = renderHook(() =>
+      useShellLayoutState({ workspaceId: 'w1', appId: 'a1', storage })
+    );
+
+    act(() => {
+      result.current[1]((prev) => ({
+        ...prev,
+        rightPanel: { ...prev.rightPanel, width: 410 },
+      }));
+    });
+
+    expect(result.current[0].rightPanel.width).toBe(410);
+    expect(storage.save).toHaveBeenCalledTimes(1);
+    expect(storage.save).toHaveBeenCalledWith('meda:shell:w1:a1', {
+      ...DEFAULTS,
+      rightPanel: { ...DEFAULTS.rightPanel, width: 410 },
+    });
+  });
+
+  it('does not write to storage inside the React updater callback', () => {
+    const storage = makeStubStorage(null);
+
+    const { result } = renderHook(() =>
+      useShellLayoutState({ workspaceId: 'w1', appId: 'a1', storage })
+    );
+
+    act(() => {
+      result.current[1]((prev) => {
+        expect(storage.save).not.toHaveBeenCalled();
+        return {
+          ...prev,
+          contextRail: { ...prev.contextRail, collapsed: true },
+        };
+      });
+    });
+
+    expect(result.current[0].contextRail.collapsed).toBe(true);
+    expect(storage.save).toHaveBeenCalledTimes(1);
+    expect(storage.save).toHaveBeenCalledWith('meda:shell:w1:a1', {
+      ...DEFAULTS,
+      contextRail: { ...DEFAULTS.contextRail, collapsed: true },
+    });
+  });
+
   it('keys by (workspaceId, appId)', () => {
     const storage = makeStubStorage(null);
 

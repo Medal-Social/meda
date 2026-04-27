@@ -461,6 +461,21 @@ describe('MedaShellProvider — panel.focus', () => {
     expect(result.current.panel.activeView).toBe('ai');
   });
 
+  it('panel.focus preserves same-tick panel width updates', () => {
+    const { result } = renderHook(() => useMedaShell(), {
+      wrapper: makePanelWrapper('closed'),
+    });
+
+    act(() => {
+      result.current.panel.setWidth(480);
+      result.current.panel.focus('ai');
+    });
+
+    expect(result.current.panel.width).toBe(480);
+    expect(result.current.panel.mode).toBe('panel');
+    expect(result.current.panel.activeView).toBe('ai');
+  });
+
   it('panel.focus — preserves expanded mode when already open', () => {
     const { result } = renderHook(() => useMedaShell(), {
       wrapper: makePanelWrapper('expanded'),
@@ -485,6 +500,24 @@ describe('MedaShellProvider — panel.focus', () => {
 
     expect(result.current.panel.mode).toBe('fullscreen');
     expect(result.current.panel.activeView).toBe('notes');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MedaShellProvider — contextRail same-tick updates
+// ---------------------------------------------------------------------------
+
+describe('MedaShellProvider — contextRail same-tick updates', () => {
+  it('preserves width when collapsed in the same tick', () => {
+    const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+
+    act(() => {
+      result.current.contextRail.setWidth(420);
+      result.current.contextRail.setCollapsed(true);
+    });
+
+    expect(result.current.contextRail.width).toBe(420);
+    expect(result.current.contextRail.collapsed).toBe(true);
   });
 });
 

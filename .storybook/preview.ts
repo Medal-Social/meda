@@ -3,13 +3,40 @@ import type { Preview } from '@storybook/react-vite';
 
 // Storybook-specific globals: Tailwind + tokens + the package's own globals.
 // Mirrors the demo app's CSS pipeline so primitives render with their
-// production styling under both Storybook and Playwright visual snapshots.
+// production styling under both Storybook and Chromatic.
 import '../src/__stories__/storybook-globals.css';
 
 const preview: Preview = {
   parameters: {
     layout: 'padded',
     backgrounds: { disable: true }, // theme decorator drives background
+    options: {
+      storySort: {
+        order: [
+          'Get Started',
+          ['Introduction', 'Installation', 'Theming'],
+          'Foundations',
+          [
+            'Color',
+            'Typography',
+            'Spacing',
+            'Radii',
+            'Shadows',
+            'Motion',
+            'Z-Index',
+            'Iconography',
+          ],
+          'Shell v2',
+          'Marketing',
+          'Chat',
+          'Timeline',
+          'Voice',
+          'Panel',
+          'Inbox',
+          '*',
+        ],
+      },
+    },
     controls: {
       matchers: {
         color: /(background|color)$/i,
@@ -18,7 +45,7 @@ const preview: Preview = {
     },
     a11y: {
       // Run axe checks on every story render in the addon panel.
-      element: '#storybook-root',
+      context: '#storybook-root',
       manual: false,
     },
   },

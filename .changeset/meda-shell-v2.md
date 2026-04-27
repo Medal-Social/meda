@@ -11,7 +11,8 @@ Shell v2 — breaking rewrite.
   WorkspaceSwitcher, AppTabs, PanelToggle, IconRail (60px no expand,
   hover tooltip), RailDivider, ContextRail (resizable, persisted),
   ResizableShell, ShellMain (3 layouts), RightPanel (4 modes), MobileHeader,
-  MobileBottomNav, MobileDrawers, CommandPalette (⌘K), ThemeToggle.
+  MobileBottomNav, MobileDrawers, CommandPalette (⌘K), ThemeToggle,
+  MedalSocialMark.
 - Removed: ShellFrame, ShellHeaderFrame, ShellAppRail, ShellModuleNav,
   ShellPanelRail, ShellPanelToggle, NavigationArea, ShellState (use the
   new MedaShellProvider + v2 components).

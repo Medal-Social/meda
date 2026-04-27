@@ -1,0 +1,57 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import { IconCatalog } from '../foundations';
+
+<Meta title="Foundations/Iconography" />
+
+# Iconography
+
+Meda uses Lucide through `lucide-react`.
+
+## Sample set
+
+Common icons used across the shell:
+
+<div style={{ marginTop: '24px' }}>
+  <IconCatalog
+    names={[
+      'Home',
+      'Search',
+      'Settings',
+      'User',
+      'Bell',
+      'Plus',
+      'X',
+      'Check',
+      'ChevronDown',
+      'ChevronRight',
+      'MoreHorizontal',
+      'Mic',
+      'Send',
+      'Paperclip',
+      'Edit',
+      'Trash',
+    ]}
+  />
+</div>
+
+Browse the full set at [lucide.dev/icons](https://lucide.dev/icons).
+
+## Sizing
+
+| Size | Pixels | Use case |
+| --- | --- | --- |
+| `sm` | 14px | Inline with body text |
+| `md` | 16px | Default UI control |
+| `lg` | 20px | Header or prominent action |
+
+```tsx
+import { Settings } from 'lucide-react';
+
+<Settings aria-hidden="true" height={16} width={16} />
+```
+
+## Accessibility
+
+- Decorative icons should use `aria-hidden`.
+- Standalone icon buttons need an accessible label on the button.
+- Keep Lucide's default stroke width unless the design explicitly calls for a variant.

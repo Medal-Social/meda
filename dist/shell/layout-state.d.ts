@@ -15,6 +15,7 @@ export interface ShellLayoutState {
         width: number;
     };
 }
+export type ShellLayoutStateUpdater = ShellLayoutState | ((prev: ShellLayoutState) => ShellLayoutState);
 interface UseShellLayoutStateArgs {
     workspaceId: string;
     appId: string;
@@ -27,5 +28,5 @@ interface UseShellLayoutStateArgs {
  * memoized once at the provider level). An inline-constructed adapter would
  * loop the hydration effect and clobber local mutations.
  */
-export declare function useShellLayoutState({ workspaceId, appId, storage, }: UseShellLayoutStateArgs): readonly [ShellLayoutState, (next: ShellLayoutState) => void];
+export declare function useShellLayoutState({ workspaceId, appId, storage, }: UseShellLayoutStateArgs): readonly [ShellLayoutState, (next: ShellLayoutStateUpdater) => void];
 export {};

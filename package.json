@@ -25,6 +25,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./brand": {
+      "types": "./dist/brand/index.d.ts",
+      "default": "./dist/brand/index.js"
+    },
     "./shell": {
       "types": "./dist/shell/index.d.ts",
       "default": "./dist/shell/index.js"
@@ -36,6 +40,10 @@
     "./timeline": {
       "types": "./dist/timeline/index.d.ts",
       "default": "./dist/timeline/index.js"
+    },
+    "./marketing": {
+      "types": "./dist/marketing/index.d.ts",
+      "default": "./dist/marketing/index.js"
     },
     "./chat": {
       "types": "./dist/chat/index.d.ts",
@@ -68,8 +76,9 @@
     "format": "biome format --write .",
     "demo:dev": "vite --config vite.config.demo.ts",
     "demo:build": "vite build --config vite.config.demo.ts",
-    "worker:build": "pnpm demo:build && node ./scripts/copy-registry-to-dist.mjs",
-    "worker:dev": "pnpm worker:build && wrangler dev",
+    "worker:build": "pnpm demo:build && pnpm storybook:build && node ./scripts/copy-registry-to-dist.mjs",
+    "worker:build:dev": "pnpm demo:build && node ./scripts/copy-registry-to-dist.mjs --skip-storybook",
+    "worker:dev": "pnpm worker:build:dev && wrangler dev",
     "worker:deploy": "pnpm worker:build && wrangler deploy",
     "test": "vitest run --environment jsdom",
     "test:run": "vitest run --environment jsdom",
@@ -77,9 +86,7 @@
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006 --no-open",
     "storybook:build": "storybook build -o storybook-static",
-    "visual": "playwright test",
-    "visual:update": "playwright test --update-snapshots",
-    "visual:report": "playwright show-report tests/visual/report",
+    "chromatic": "chromatic --build-script-name=storybook:build --exit-zero-on-changes",
     "size-limit": "size-limit",
     "size-limit:why": "size-limit --why",
     "version": "changeset version",
@@ -123,6 +130,7 @@
     "@react-three/fiber": "^9.6.0",
     "@size-limit/preset-small-lib": "^12.1.0",
     "@storybook/addon-a11y": "^10.3.5",
+    "@storybook/addon-docs": "10.3.5",
     "@storybook/addon-themes": "^10.3.5",
     "@storybook/react-vite": "^10.3.5",
     "@tailwindcss/vite": "^4.2.4",
@@ -131,8 +139,8 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.184.0",
-    "@playwright/test": "^1.48.0",
     "@vitejs/plugin-react": "^6.0.1",
+    "chromatic": "^16.6.0",
     "husky": "^9.1.7",
     "jsdom": "^29.0.2",
     "next-themes": "^0.4.0",
