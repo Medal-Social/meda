@@ -58,12 +58,36 @@ const DEFAULTS: ShellLayoutState = {
   rightPanel: { mode: 'closed', activeView: null, width: 340 },
 };
 
+function isShellLayoutState(value: unknown): value is ShellLayoutState {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Partial<ShellLayoutState>;
+  if (
+    !v.contextRail ||
+    typeof v.contextRail.width !== 'number' ||
+    typeof v.contextRail.collapsed !== 'boolean'
+  ) {
+    return false;
+  }
+  if (!v.rightPanel || typeof v.rightPanel.width !== 'number') return false;
+  const validModes: PanelMode[] = ['closed', 'panel', 'expanded', 'fullscreen'];
+  if (!validModes.includes(v.rightPanel.mode as PanelMode)) return false;
+  if (v.rightPanel.activeView !== null && typeof v.rightPanel.activeView !== 'string') return false;
+  return true;
+}
+
 interface UseShellLayoutStateArgs {
   workspaceId: string;
   appId: string;
   storage: ShellStorageAdapter;
 }
 
+/**
+ * Per-(workspaceId, appId) layout state with localStorage persistence.
+ *
+ * The `storage` adapter must be referentially stable across renders (typically
+ * memoized once at the provider level). An inline-constructed adapter would
+ * loop the hydration effect and clobber local mutations.
+ */
 export function useShellLayoutState({
   workspaceId,
   appId,
@@ -75,8 +99,8 @@ export function useShellLayoutState({
   // Hydrate after mount. Effect re-runs when key changes (workspace/app switch).
   useEffect(() => {
     const stored = storage.load(key);
-    if (stored !== null && typeof stored === 'object') {
-      setStateInternal(stored as ShellLayoutState);
+    if (isShellLayoutState(stored)) {
+      setStateInternal(stored);
     }
   }, [key, storage]);
 

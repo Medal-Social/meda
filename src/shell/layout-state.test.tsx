@@ -97,7 +97,7 @@ describe('storage adapter', () => {
 // useShellLayoutState
 // ---------------------------------------------------------------------------
 
-const _DEFAULTS = {
+const DEFAULTS = {
   contextRail: { width: 300, collapsed: false },
   rightPanel: { mode: 'closed', activeView: null, width: 340 },
 };
@@ -134,6 +134,9 @@ describe('useShellLayoutState', () => {
     const { result } = renderHook(() =>
       useShellLayoutState({ workspaceId: 'w1', appId: 'a1', storage })
     );
+
+    // null storage falls through to defaults
+    expect(result.current[0]).toEqual(DEFAULTS);
 
     const next = {
       contextRail: { width: 250, collapsed: false },
@@ -183,5 +186,13 @@ describe('useShellLayoutState', () => {
     });
 
     expect(storage.save).toHaveBeenLastCalledWith('meda:shell:w1:a2', stateA2);
+  });
+
+  it('useShellLayoutState — ignores malformed stored value (falls through to defaults)', () => {
+    const storage = makeStubStorage({ contextRail: 'wat' } as unknown);
+    const { result } = renderHook(() =>
+      useShellLayoutState({ workspaceId: 'w1', appId: 'a1', storage })
+    );
+    expect(result.current[0]).toEqual(DEFAULTS);
   });
 });
