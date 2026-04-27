@@ -40,6 +40,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # The vitest 'storybook' project runs every *.stories.tsx in headless
+      # Chromium via @vitest/browser-playwright, so the browser binary needs
+      # to be present before `pnpm test` runs. --with-deps installs the
+      # required system libs on Ubuntu runners.
+      - run: pnpm exec playwright install chromium --with-deps
+
       - run: pnpm test
 
   build:
