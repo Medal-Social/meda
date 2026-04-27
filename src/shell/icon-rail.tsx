@@ -123,7 +123,12 @@ export function IconRail({
       // renderLink consumers receive the className so they can apply it themselves
       renderLink({ item, isActive, className: klass, children: inner })
     ) : (
-      <a href={item.to} aria-current={isActive ? 'page' : undefined} className="contents">
+      <a
+        href={item.to}
+        aria-label={item.label}
+        aria-current={isActive ? 'page' : undefined}
+        className="contents"
+      >
         {inner}
       </a>
     );

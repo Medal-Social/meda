@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { ChevronDown, Monitor, Moon, PanelRightClose, PanelRightOpen, Sun } from 'lucide-react';
 import type { ReactNode } from 'react';
 import {
   DropdownMenu,
@@ -11,8 +11,35 @@ import {
 } from '../components/ui/dropdown-menu.js';
 import { cn } from '../lib/utils.js';
 import { useMedaShell } from './shell-provider.js';
-import { ThemeToggle } from './theme.js';
+import { useTheme } from './theme.js';
 import { useShellViewport } from './use-shell-viewport.js';
+
+// ---------------------------------------------------------------------------
+// ThemeToggleMenuItem — theme toggle rendered as a proper menuitem so that
+// role="menu" aria-required-children is satisfied. The DropdownMenuItem render
+// prop replaces the base-ui <div> with a <button> that cycles the theme.
+// ---------------------------------------------------------------------------
+
+type Theme = 'light' | 'dark' | 'system';
+
+const NEXT_THEME: Record<Theme, Theme> = { light: 'dark', dark: 'system', system: 'light' };
+const THEME_ICON: Record<Theme, typeof Sun> = { light: Sun, dark: Moon, system: Monitor };
+const THEME_LABEL: Record<Theme, string> = {
+  light: 'Switch to dark theme',
+  dark: 'Switch to system theme',
+  system: 'Switch to light theme',
+};
+
+function ThemeToggleMenuItem() {
+  const { theme, setTheme } = useTheme();
+  const Icon = THEME_ICON[theme];
+  return (
+    <DropdownMenuItem onClick={() => setTheme(NEXT_THEME[theme])}>
+      <Icon size={16} aria-hidden="true" />
+      {THEME_LABEL[theme]}
+    </DropdownMenuItem>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // WorkspaceSwitcher
@@ -66,12 +93,8 @@ export function WorkspaceSwitcher({ workspaceMenuFooter }: WorkspaceSwitcherProp
         <DropdownMenuItem>Settings</DropdownMenuItem>
         <DropdownMenuItem>Profile</DropdownMenuItem>
 
-        {/* ThemeToggle inline — rendered in a non-interactive wrapper
-            because nesting a button inside MenuPrimitive.Item is invalid HTML. */}
-        <div role="none" className="flex items-center px-1.5 py-1">
-          <ThemeToggle />
-        </div>
-
+        <DropdownMenuSeparator />
+        <ThemeToggleMenuItem />
         <DropdownMenuSeparator />
 
         <DropdownMenuItem>Sign out</DropdownMenuItem>
