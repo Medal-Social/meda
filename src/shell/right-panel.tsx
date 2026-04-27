@@ -21,6 +21,7 @@ import { useEffect, useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import { useMedaShell } from './shell-provider.js';
 import type { PanelMode, PanelView, ShellRenderContext } from './types.js';
+import { useShellViewport } from './use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
 // Constants — spec §12 dimensions
@@ -120,6 +121,7 @@ export function RightPanel({
   modes = ['panel', 'expanded', 'fullscreen'],
   className,
 }: RightPanelProps) {
+  const band = useShellViewport();
   const ctx = useMedaShell();
   const { mode, activeView, width, setMode, setActiveView, setWidth } = ctx.panel;
 
@@ -135,6 +137,11 @@ export function RightPanel({
   // setWidth (persist) is called on pointerUp.
   const [displayWidth, setDisplayWidth] = useState<number | null>(null);
   const resolvedWidth = displayWidth ?? width;
+
+  // On mobile, the right panel renders as a drawer via <MobileDrawers > PanelsDrawer />.
+  // The desktop-shaped <RightPanel> hides; consumers must mount <MobileDrawers> to expose
+  // panel views on mobile.
+  if (band === 'mobile') return null;
 
   const renderCtx: ShellRenderContext = {
     workspaceId: ctx.workspace.id,
