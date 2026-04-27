@@ -1,7 +1,7 @@
-import { act, render, renderHook } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DefaultThemeProvider, useTheme } from './theme.js';
+import { DefaultThemeProvider, ThemeToggle, useTheme } from './theme.js';
 
 // Ensure next-themes is never loaded when the default adapter is used.
 vi.mock('next-themes', () => {
@@ -110,5 +110,46 @@ describe('useTheme', () => {
     expect(() => renderHook(() => useTheme())).toThrow(
       'useTheme must be used inside <MedaShellProvider>'
     );
+  });
+});
+
+describe('ThemeToggle', () => {
+  beforeEach(() => {
+    vi.stubGlobal('localStorage', createStorageMock());
+  });
+
+  afterEach(() => {
+    document.documentElement.classList.remove('dark');
+    vi.unstubAllGlobals();
+  });
+
+  it('renders sun/moon/system icons, cycles through 3 states on click', () => {
+    render(
+      <DefaultThemeProvider>
+        <ThemeToggle />
+      </DefaultThemeProvider>
+    );
+    const button = screen.getByRole('button');
+
+    // Default theme === 'system' → Monitor icon → aria-label "Switch to light theme"
+    expect(button).toHaveAccessibleName('Switch to light theme');
+
+    // Click 1: system → light
+    act(() => {
+      fireEvent.click(button);
+    });
+    expect(button).toHaveAccessibleName('Switch to dark theme');
+
+    // Click 2: light → dark
+    act(() => {
+      fireEvent.click(button);
+    });
+    expect(button).toHaveAccessibleName('Switch to system theme');
+
+    // Click 3: dark → system
+    act(() => {
+      fireEvent.click(button);
+    });
+    expect(button).toHaveAccessibleName('Switch to light theme');
   });
 });

@@ -1,7 +1,28 @@
 'use client';
+import { Monitor, Moon, Sun } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ThemeAdapter } from './types.js';
+
+type Theme = 'light' | 'dark' | 'system';
+
+const NEXT: Record<Theme, Theme> = {
+  light: 'dark',
+  dark: 'system',
+  system: 'light',
+};
+
+const ICON: Record<Theme, typeof Sun> = {
+  light: Sun,
+  dark: Moon,
+  system: Monitor,
+};
+
+const LABEL: Record<Theme, string> = {
+  light: 'Switch to dark theme',
+  dark: 'Switch to system theme',
+  system: 'Switch to light theme',
+};
 
 /** @internal – used by theme adapters; not part of the public API. */
 export const ThemeCtx = createContext<ThemeAdapter | null>(null);
@@ -43,4 +64,14 @@ export function useTheme(): ThemeAdapter {
   const v = useContext(ThemeCtx);
   if (!v) throw new Error('useTheme must be used inside <MedaShellProvider>');
   return v;
+}
+
+export function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  const Icon = ICON[theme];
+  return (
+    <button type="button" aria-label={LABEL[theme]} onClick={() => setTheme(NEXT[theme])}>
+      <Icon aria-hidden="true" />
+    </button>
+  );
 }
