@@ -56,8 +56,12 @@ module.exports = [
     limit: '2 kB',
   },
   {
+    // Bumped from 1 kB → 2 kB: canonical .lib.pen contract adds 6 full color
+    // ramps (brand/neutral/error/info/success/warning, 10–11 stops each) plus
+    // surface primitives, semantic tokens, shell sizing, typography, radii, and
+    // spacing — all required by the design contract. Measured: 1.46 kB brotli.
     name: 'tokens.css',
     path: 'dist/styles/tokens.css',
-    limit: '1 kB',
+    limit: '2 kB',
   },
 ];
