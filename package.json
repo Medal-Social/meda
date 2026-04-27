@@ -73,6 +73,7 @@
     "worker:deploy": "pnpm worker:build && wrangler deploy",
     "test": "vitest run --environment jsdom",
     "test:run": "vitest run --environment jsdom",
+    "test:integration": "vitest run --config vitest.config.integration.ts",
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006 --no-open",
     "storybook:build": "storybook build -o storybook-static",
