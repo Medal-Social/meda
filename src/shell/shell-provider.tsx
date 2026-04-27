@@ -113,6 +113,10 @@ interface MedaShellContextValue {
     open: MobileDrawerKind;
     setOpen: (kind: MobileDrawerKind) => void;
   };
+  commandPalette: {
+    open: boolean;
+    setOpen: (open: boolean) => void;
+  };
   commandPaletteHotkey: string;
   /** Selection bridge between main workspace and right panel views (spec §17). */
   selection: unknown | null;
@@ -183,6 +187,16 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
     [mobileDrawerOpen]
   );
 
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+
+  const commandPalette = useMemo(
+    () => ({
+      open: commandPaletteOpen,
+      setOpen: setCommandPaletteOpen,
+    }),
+    [commandPaletteOpen]
+  );
+
   const [layoutState, setLayoutState] = useShellLayoutState({
     workspaceId: props.workspace.id,
     appId: activeAppId,
@@ -247,6 +261,7 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
       contextRail,
       mobileBottomNav: props.mobileBottomNav ?? defaultMobileBottomNav,
       mobileDrawer,
+      commandPalette,
       commandPaletteHotkey: props.commandPaletteHotkey ?? 'mod+k',
       selection,
       setSelection,
@@ -260,6 +275,7 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
       contextRail,
       props.mobileBottomNav,
       mobileDrawer,
+      commandPalette,
       props.commandPaletteHotkey,
       selection,
     ]

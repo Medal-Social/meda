@@ -430,3 +430,44 @@ describe('MedaShellProvider — mobileDrawer.open / setOpen round-trip', () => {
     expect(result.current.mobileDrawer.open).toBe('custom-drawer');
   });
 });
+
+// ---------------------------------------------------------------------------
+// MedaShellProvider — commandPalette slice
+// ---------------------------------------------------------------------------
+
+describe('MedaShellProvider — commandPalette.open / setOpen round-trip', () => {
+  it('commandPalette.open is false by default', () => {
+    const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+    expect(result.current.commandPalette.open).toBe(false);
+  });
+
+  it('setOpen(true) opens command palette', () => {
+    const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+
+    act(() => {
+      result.current.commandPalette.setOpen(true);
+    });
+    expect(result.current.commandPalette.open).toBe(true);
+  });
+
+  it('setOpen(false) closes command palette', () => {
+    const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+
+    act(() => {
+      result.current.commandPalette.setOpen(true);
+    });
+    expect(result.current.commandPalette.open).toBe(true);
+
+    act(() => {
+      result.current.commandPalette.setOpen(false);
+    });
+    expect(result.current.commandPalette.open).toBe(false);
+  });
+
+  it('commandPalette.setOpen is a stable function reference (memoised)', () => {
+    const { result, rerender } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+    const setOpenRef = result.current.commandPalette.setOpen;
+    rerender();
+    expect(result.current.commandPalette.setOpen).toBe(setOpenRef);
+  });
+});
