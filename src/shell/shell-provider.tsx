@@ -25,6 +25,18 @@ import type {
 } from './types.js';
 
 // ---------------------------------------------------------------------------
+// MobileDrawer types
+// ---------------------------------------------------------------------------
+
+export type MobileDrawerKind =
+  | 'menu-drawer'
+  | 'module-drawer'
+  | 'panels-drawer'
+  | 'ai-drawer'
+  | (string & {})
+  | null;
+
+// ---------------------------------------------------------------------------
 // Theme adapter wiring
 // ---------------------------------------------------------------------------
 
@@ -97,6 +109,10 @@ interface MedaShellContextValue {
     setCollapsed: (c: boolean) => void;
   };
   mobileBottomNav: MobileBottomNavItem[];
+  mobileDrawer: {
+    open: MobileDrawerKind;
+    setOpen: (kind: MobileDrawerKind) => void;
+  };
   commandPaletteHotkey: string;
   /** Selection bridge between main workspace and right panel views (spec §17). */
   selection: unknown | null;
@@ -156,6 +172,16 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
   const [activeAppId, setActiveApp] = useState(props.defaultActiveApp ?? props.apps[0]?.id ?? '');
 
   const [selection, setSelection] = useState<unknown | null>(null);
+
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState<MobileDrawerKind>(null);
+
+  const mobileDrawer = useMemo(
+    () => ({
+      open: mobileDrawerOpen,
+      setOpen: setMobileDrawerOpen,
+    }),
+    [mobileDrawerOpen]
+  );
 
   const [layoutState, setLayoutState] = useShellLayoutState({
     workspaceId: props.workspace.id,
@@ -220,6 +246,7 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
       panel,
       contextRail,
       mobileBottomNav: props.mobileBottomNav ?? defaultMobileBottomNav,
+      mobileDrawer,
       commandPaletteHotkey: props.commandPaletteHotkey ?? 'mod+k',
       selection,
       setSelection,
@@ -232,6 +259,7 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
       panel,
       contextRail,
       props.mobileBottomNav,
+      mobileDrawer,
       props.commandPaletteHotkey,
       selection,
     ]

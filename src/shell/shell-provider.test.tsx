@@ -387,3 +387,46 @@ describe('MedaShellProvider — panel.width / panel.setWidth round-trip via useS
     expect((savedState as { rightPanel: { width: number } }).rightPanel.width).toBe(460);
   });
 });
+
+// ---------------------------------------------------------------------------
+// MedaShellProvider — mobileDrawer slice
+// ---------------------------------------------------------------------------
+
+describe('MedaShellProvider — mobileDrawer.open / setOpen round-trip', () => {
+  it('mobileDrawer.open is null by default', () => {
+    const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+    expect(result.current.mobileDrawer.open).toBeNull();
+  });
+
+  it('setOpen updates mobileDrawer.open', () => {
+    const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+
+    act(() => {
+      result.current.mobileDrawer.setOpen('menu-drawer');
+    });
+    expect(result.current.mobileDrawer.open).toBe('menu-drawer');
+  });
+
+  it('setOpen(null) resets mobileDrawer.open', () => {
+    const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+
+    act(() => {
+      result.current.mobileDrawer.setOpen('ai-drawer');
+    });
+    expect(result.current.mobileDrawer.open).toBe('ai-drawer');
+
+    act(() => {
+      result.current.mobileDrawer.setOpen(null);
+    });
+    expect(result.current.mobileDrawer.open).toBeNull();
+  });
+
+  it('accepts arbitrary string drawer kind', () => {
+    const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+
+    act(() => {
+      result.current.mobileDrawer.setOpen('custom-drawer');
+    });
+    expect(result.current.mobileDrawer.open).toBe('custom-drawer');
+  });
+});
