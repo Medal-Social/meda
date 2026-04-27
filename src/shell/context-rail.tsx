@@ -20,6 +20,7 @@ import { useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import { useMedaShell } from './shell-provider.js';
 import type { ContextModule, ShellLinkRenderArgs } from './types.js';
+import { useShellViewport } from './use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
 // Constants — spec §10 dimensions
@@ -127,6 +128,7 @@ export function ContextRail({
   renderLink,
   className,
 }: ContextRailProps) {
+  const band = useShellViewport();
   const ctx = useMedaShell();
   const collapsed = ctx.contextRail.collapsed;
 
@@ -134,6 +136,8 @@ export function ContextRail({
   // is called on pointerUp to persist via useShellLayoutState.
   const [displayWidth, setDisplayWidth] = useState<number | null>(null);
   const width = displayWidth ?? ctx.contextRail.width;
+
+  if (band === 'mobile') return null;
 
   if (hidden) {
     return <div aria-hidden="true" className="hidden" data-testid="context-rail-hidden" />;

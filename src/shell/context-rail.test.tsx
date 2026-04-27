@@ -8,10 +8,22 @@ import { MedaShellProvider } from './shell-provider.js';
 import type { AppDefinition, ContextItem, ContextModule, WorkspaceDefinition } from './types.js';
 
 // ---------------------------------------------------------------------------
+// Mock useShellViewport — default 'desktop', overridden per-test where needed
+// ---------------------------------------------------------------------------
+
+vi.mock('./use-shell-viewport.js', () => ({
+  useShellViewport: vi.fn(() => 'desktop'),
+}));
+
+import { useShellViewport } from './use-shell-viewport.js';
+
+// ---------------------------------------------------------------------------
 // Browser stubs
 // ---------------------------------------------------------------------------
 
 beforeEach(() => {
+  // biome-ignore lint/suspicious/noExplicitAny: test mock
+  (useShellViewport as any).mockReturnValue('desktop');
   vi.stubGlobal('localStorage', {
     getItem: vi.fn(() => null),
     setItem: vi.fn(),
@@ -342,5 +354,35 @@ describe('ContextRail — width persistence via useShellLayoutState', () => {
     expect(storage.save).toHaveBeenCalled();
     const savedState = storage.save.mock.calls[storage.save.mock.calls.length - 1][1];
     expect((savedState as { contextRail: { width: number } }).contextRail.width).toBe(350);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 13 carry-forward — mobile auto-hide
+// ---------------------------------------------------------------------------
+
+describe('ContextRail — hides on mobile viewport', () => {
+  it('returns null when viewport is mobile', () => {
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
+    (useShellViewport as any).mockReturnValue('mobile');
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+    expect(screen.queryByRole('complementary', { name: 'Mail' })).not.toBeInTheDocument();
+  });
+});
+
+describe('ContextRail — renders on desktop viewport', () => {
+  it('renders the aside element when viewport is desktop', () => {
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
+    (useShellViewport as any).mockReturnValue('desktop');
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+    expect(screen.getByRole('complementary', { name: 'Mail' })).toBeInTheDocument();
   });
 });
