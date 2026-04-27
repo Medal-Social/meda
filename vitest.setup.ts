@@ -1,13 +1,45 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import * as React from 'react';
-import { afterEach, vi } from 'vitest';
+import { afterEach, expect, vi } from 'vitest';
+// Value-side import lives under dist/; the package's matchers.d.ts only re-exports as types.
+import { toHaveNoViolations } from 'vitest-axe/dist/matchers.js';
+
+// vitest-axe matcher — registered globally so per-folder wcag.test.tsx files
+// don't have to repeat the augmentation/extension dance.
+declare module 'vitest' {
+  // Match @testing-library/jest-dom/vitest's signature so TS doesn't conflict.
+  // biome-ignore lint/suspicious/noExplicitAny: must align with jest-dom declaration
+  interface Assertion<T = any> {
+    toHaveNoViolations(): T;
+  }
+  interface AsymmetricMatchersContaining {
+    toHaveNoViolations(): unknown;
+  }
+}
+
+expect.extend({ toHaveNoViolations });
 
 // Tear down rendered DOM between tests so that getByText assertions don't
 // match nodes left behind by previous renders (testing-library doesn't
 // auto-cleanup when vitest is configured with `globals: false`).
 afterEach(() => {
   cleanup();
+});
+
+// vaul (drawer primitive) wraps @radix-ui/react-focus-scope, which schedules
+// a setTimeout-based focus restoration on mount. When a test unmounts the
+// drawer and RTL `cleanup()` tears down the DOM, the pending timer can fire
+// against a detached tree and jsdom's dispatchEvent rejects it as a non-Event.
+// The error is benign — assertions already passed before teardown — but
+// vitest counts it as a job-level unhandled exception (red CI even when all
+// tests pass). Swallow this specific message; rethrow anything else.
+process.on('uncaughtException', (err: unknown) => {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (msg.includes("dispatchEvent' on 'EventTarget': parameter 1 is not of type 'Event'")) {
+    return;
+  }
+  throw err;
 });
 
 // Mock window.matchMedia (not available in jsdom)

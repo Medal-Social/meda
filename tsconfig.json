@@ -14,7 +14,8 @@
       "@/*": ["./src/*"]
     },
     "ignoreDeprecations": "6.0",
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals"],
+    "skipLibCheck": true
   },
   "include": ["src"]
 }

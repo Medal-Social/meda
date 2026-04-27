@@ -1,5 +1,7 @@
+'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
+import { cn } from '../lib/utils.js';
 const BAR_COUNT = 9;
 export function VoiceLevel({ level, variant = 'bars', width = 140, height = 48, className, }) {
     const historyRef = React.useRef(Array(BAR_COUNT).fill(0));
@@ -14,7 +16,7 @@ export function VoiceLevel({ level, variant = 'bars', width = 140, height = 48, 
         force((v) => v + 1);
     }, [level, variant]);
     if (variant === 'bars') {
-        return (_jsx("div", { role: "presentation", className: ['flex items-end gap-1', className ?? ''].join(' '), style: { width, height }, children: historyRef.current.map((v, i) => (_jsx("span", { className: "flex-1 rounded-sm bg-primary", style: { height: `${15 + v * 85}%`, opacity: 0.4 + v * 0.6 } }, i))) }));
+        return (_jsx("div", { role: "presentation", className: cn('flex items-end gap-1', className), style: { width, height }, children: historyRef.current.map((v, i) => (_jsx("span", { className: "flex-1 rounded-sm bg-primary", style: { height: `${15 + v * 85}%`, opacity: 0.4 + v * 0.6 } }, i))) }));
     }
     if (variant === 'ring') {
         const r = Math.min(width, height) / 2 - 4;

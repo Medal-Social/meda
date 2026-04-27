@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { ShellContentLayout, ShellTab } from './types.js';
+import type { ShellContentLayout, ShellTab } from './extras/types.js';
 interface ShellRouteMatchLike {
     handle?: unknown;
     params?: Record<string, string | undefined>;

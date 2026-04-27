@@ -1,0 +1,43 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import * as React from 'react';
+function ShellPanelResizeHandle({ width, onWidthChange, }) {
+    const startXRef = React.useRef(0);
+    const startWidthRef = React.useRef(width);
+    const cleanupRef = React.useRef(null);
+    React.useEffect(() => {
+        return () => {
+            cleanupRef.current?.();
+        };
+    }, []);
+    function handlePointerDown(event) {
+        if (event.button !== 0)
+            return;
+        startXRef.current = event.clientX;
+        startWidthRef.current = width;
+        const handlePointerMove = (moveEvent) => {
+            onWidthChange(startWidthRef.current + (startXRef.current - moveEvent.clientX));
+        };
+        const handlePointerEnd = () => {
+            window.removeEventListener('pointermove', handlePointerMove);
+            window.removeEventListener('pointerup', handlePointerEnd);
+            window.removeEventListener('pointercancel', handlePointerEnd);
+            cleanupRef.current = null;
+        };
+        cleanupRef.current?.();
+        window.addEventListener('pointermove', handlePointerMove);
+        window.addEventListener('pointerup', handlePointerEnd);
+        window.addEventListener('pointercancel', handlePointerEnd);
+        cleanupRef.current = handlePointerEnd;
+    }
+    return (_jsx("button", { type: "button", "aria-label": "Resize panel", onPointerDown: handlePointerDown, className: "absolute inset-y-0 left-0 z-10 flex w-2 shrink-0 cursor-col-resize items-center justify-center bg-transparent transition-colors hover:bg-[var(--primary)]/10", children: _jsx("span", { className: "h-12 w-px rounded-full bg-[var(--border-subtle)]" }) }));
+}
+export function ShellDesktopPanelDock({ defaultView, panelOpen, viewIds, width, onWidthChange, renderPanel, className, }) {
+    return (_jsx("div", { "data-testid": "desktop-panel-dock", "aria-hidden": !panelOpen, "data-state": panelOpen ? 'open' : 'closed', className: panelOpen
+            ? 'pointer-events-auto absolute inset-y-4 right-4 z-20 translate-x-0 opacity-100 transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]'
+            : 'pointer-events-none absolute inset-y-4 right-4 z-20 translate-x-[calc(100%+1.25rem)] opacity-0 transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]', style: { width: `${width}px` }, children: _jsxs("div", { className: "relative h-full w-full", children: [_jsx(ShellPanelResizeHandle, { width: width, onWidthChange: onWidthChange }), renderPanel({
+                    defaultView,
+                    viewIds,
+                    className: className ??
+                        'ml-2 rounded-[var(--radius-4xl)] border border-[var(--border)] bg-[color-mix(in_srgb,var(--shell-panel)_90%,transparent)] shadow-[var(--shell-shadow)] backdrop-blur-xl',
+                })] }) }));
+}

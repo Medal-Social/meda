@@ -1,5 +1,7 @@
+'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { formatClock } from '../lib/format-time.js';
+import { cn } from '../lib/utils.js';
 import { EventCard } from './event-card.js';
 const DEFAULT_PX_PER_SEC = 1.2;
 const DEFAULT_FUTURE_PAD_SEC = 300;
@@ -51,14 +53,11 @@ export function TimelineTape({ now, events, pxPerSec = DEFAULT_PX_PER_SEC, futur
         const height = Math.max(2, Math.abs(endY - startY));
         return { event: e, top, height };
     });
-    return (_jsxs("div", { className: ['relative ml-3.5 mr-3', className ?? ''].join(' '), style: { height: `${canvasHeight}px` }, "data-canvas-height": canvasHeight, children: [ticks.map((t) => t.major ? (_jsxs("div", { children: [_jsx("span", { className: "absolute left-0 w-[30px] -translate-y-[7px] text-right text-[11px] font-medium tabular-nums text-muted-foreground", style: { top: `${t.y}px` }, children: t.label }), _jsx("span", { className: "absolute h-px w-2 bg-border", style: { left: 32, top: `${t.y}px` } })] }, `maj-${t.y}`)) : (_jsx("span", { className: "absolute h-px w-1.5 bg-border/40", style: { left: 35, top: `${t.y}px` } }, `min-${t.y}`))), segments.map(({ event, top, height }) => (_jsx("span", { "aria-hidden": "true", "data-tape-segment-id": event.id, "data-tape-segment-live": String(event.isLive ?? false), className: [
-                    'absolute w-1 rounded-sm',
-                    event.isLive
-                        ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]'
-                        : event.kind === 'error'
-                            ? 'bg-destructive'
-                            : 'bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.35)]',
-                ].join(' '), style: { left: 44, top: `${top}px`, height: `${height}px` } }, `seg-${event.id}`))), events.map((event) => {
+    return (_jsxs("div", { className: cn('relative ml-3.5 mr-3', className), style: { height: `${canvasHeight}px` }, "data-canvas-height": canvasHeight, children: [ticks.map((t) => t.major ? (_jsxs("div", { children: [_jsx("span", { className: "absolute left-0 w-[30px] -translate-y-[7px] text-right text-[11px] font-medium tabular-nums text-muted-foreground", style: { top: `${t.y}px` }, children: t.label }), _jsx("span", { className: "absolute h-px w-2 bg-border", style: { left: 32, top: `${t.y}px` } })] }, `maj-${t.y}`)) : (_jsx("span", { className: "absolute h-px w-1.5 bg-border/40", style: { left: 35, top: `${t.y}px` } }, `min-${t.y}`))), segments.map(({ event, top, height }) => (_jsx("span", { "aria-hidden": "true", "data-tape-segment-id": event.id, "data-tape-segment-live": String(event.isLive ?? false), className: cn('absolute w-1 rounded-sm', event.isLive
+                    ? 'bg-success-600 shadow-[0_0_12px_rgba(16,185,129,0.5)]'
+                    : event.kind === 'error'
+                        ? 'bg-destructive'
+                        : 'bg-info-500 shadow-[0_0_8px_rgba(56,189,248,0.35)]'), style: { left: 44, top: `${top}px`, height: `${height}px` } }, `seg-${event.id}`))), events.map((event) => {
                 const startY = instantToY(event.startedAt, nowMs, pxPerSec, futurePadSec);
                 const isSubEvent = event.kind === 'sub-event';
                 return (_jsx("div", { "data-event-id": event.id, className: "absolute", style: { top: `${startY}px`, left: 56, right: 0 }, children: _jsx(EventCard, { event: event, size: isSubEvent ? 'tiny' : 'default', onSelect: onSelect }) }, event.id));

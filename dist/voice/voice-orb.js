@@ -1,7 +1,9 @@
+'use client';
 import { jsx as _jsx } from "react/jsx-runtime";
 // SPDX-License-Identifier: Apache-2.0
 import { Canvas } from '@react-three/fiber';
 import * as React from 'react';
+import { cn } from '../lib/utils.js';
 import { Scene } from './voice-orb-scene.js';
 // Note: CSS for `.meda-voice-orb` is shipped via @medalsocial/meda/styles.css
 // (re-exported from globals.css). We avoid a JS-side CSS import here so
@@ -9,7 +11,11 @@ import { Scene } from './voice-orb-scene.js';
 // ---------------------------------------------------------------------------
 // Theming helpers
 // ---------------------------------------------------------------------------
-const FALLBACK_COLOR = '#9A6AC2'; // Pilot purple
+// Fallback colors used only if CSS custom properties fail to resolve.
+// Both values are from the canonical brand ramp (.lib.pen):
+//   brand-400 (#9A6AC2) and brand-500 (#7E3FAC).
+// Runtime path reads --primary and --accent first.
+const FALLBACK_COLOR = '#9A6AC2'; // brand-400
 function hslToHex(h, s, l) {
     const sl = s / 100;
     const ll = l / 100;
@@ -70,7 +76,7 @@ function readMedaColors(el) {
     const colorB = accent ? parseColor(accent) : colorA;
     return [colorA, colorB];
 }
-const DEFAULT_COLORS = ['#9A6AC2', '#7B4FAB'];
+const DEFAULT_COLORS = ['#9A6AC2', '#7E3FAC']; // brand-400 → brand-500
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -111,13 +117,5 @@ export const VoiceOrb = React.forwardRef(function VoiceOrb({ pressed, level = 0,
         height: size,
         ...style,
     };
-    return (_jsx("button", { ref: buttonRef, type: "button", "aria-pressed": pressed, "aria-label": label, disabled: disabled, "data-phase": phase, "data-pressed": pressed, className: [
-            'meda-voice-orb',
-            'relative inline-flex items-center justify-center rounded-full',
-            'select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-            'transition-transform duration-200 ease-out',
-            disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
-            pressed ? 'scale-[0.97]' : 'scale-100',
-            className ?? '',
-        ].join(' '), style: btnStyle, ...rest, children: _jsx(Canvas, { gl: { alpha: true, antialias: true, premultipliedAlpha: true }, style: { pointerEvents: 'none' }, children: _jsx(Scene, { level: level, outputLevel: outputLevel, phase: phase, colors: resolvedColors, reducedMotion: reducedMotion, pressed: pressed, variant: variant }) }) }));
+    return (_jsx("button", { ref: buttonRef, type: "button", "aria-pressed": pressed, "aria-label": label, disabled: disabled, "data-phase": phase, "data-pressed": pressed, className: cn('meda-voice-orb', 'relative inline-flex items-center justify-center rounded-full', 'select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', 'transition-transform duration-200 ease-out', disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer', pressed ? 'scale-[0.97]' : 'scale-100', className), style: btnStyle, ...rest, children: _jsx(Canvas, { gl: { alpha: true, antialias: true, premultipliedAlpha: true }, style: { pointerEvents: 'none' }, children: _jsx(Scene, { level: level, outputLevel: outputLevel, phase: phase, colors: resolvedColors, reducedMotion: reducedMotion, pressed: pressed, variant: variant }) }) }));
 });

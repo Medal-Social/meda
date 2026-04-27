@@ -1,0 +1,32 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import { TypographyRamp } from '../foundations';
+
+<Meta title="Foundations/Typography" />
+
+# Typography
+
+Meda uses Geist for sans-serif text and Geist Mono for code and tabular data.
+
+## Ramp
+
+Ten size tokens span display headlines down to overline labels.
+
+<div style={{ marginTop: '24px' }}>
+  <TypographyRamp />
+</div>
+
+## Weights
+
+Four weights are available: 400 regular, 500 medium, 600 semibold, and 700 bold.
+
+## Line height
+
+Five line-height tokens cover tight labels, default body copy, and display headings: `tight`, `snug`, `normal`, `relaxed`, `display`, and `heading`.
+
+## Letter spacing
+
+Default UI text uses normal letter spacing. Reserve wider tracking for compact uppercase labels only.
+
+## Numeric tabular figures
+
+For data tables, use `font-variant-numeric: tabular-nums` so digit columns align.

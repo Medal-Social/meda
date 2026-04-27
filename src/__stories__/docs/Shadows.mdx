@@ -1,0 +1,22 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import { ShadowScale } from '../foundations';
+
+<Meta title="Foundations/Shadows" />
+
+# Shadows
+
+Meda uses elevation sparingly. Most surface separation comes from color and borders rather than depth.
+
+<div style={{ marginTop: '24px' }}>
+  <ShadowScale />
+</div>
+
+## When to use elevation
+
+- Floating panels can use `--shell-shadow`.
+- Popovers, menus, and tooltips should use their component primitives.
+- Static cards inside a panel should rely on surface contrast rather than custom shadows.
+
+## Theme behavior
+
+Dark mode uses a heavier shadow value to maintain depth on dark canvases.

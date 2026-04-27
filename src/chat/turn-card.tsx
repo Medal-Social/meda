@@ -23,11 +23,13 @@ export function TurnCard({ turn, startedAtRef, tz, onPlay, className }: TurnCard
   const label = turn.speakerLabel ?? SPEAKER_LABEL[turn.speaker];
   const offset = turn.startedAt - startedAtRef;
 
+  // amber-700 (not -500) for the 11px system speaker label so it clears
+  // WCAG AA (4.5:1) against the card background.
   const speakerColor =
     turn.speaker === 'assistant'
       ? 'text-primary'
       : turn.speaker === 'system'
-        ? 'text-amber-500'
+        ? 'text-amber-700'
         : 'text-foreground';
 
   return (

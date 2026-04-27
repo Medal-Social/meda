@@ -18,3 +18,6 @@ Two-branch flow: `feat/*` → PR → `dev` → PR → `prod`. `prod` is the defa
 - No NPM_TOKEN — publishing uses OIDC
 - Authoritative source is medal-monorepo/open/meda
 - Pre-commit hook runs `pnpm lint` + `pnpm test` (see `.husky/pre-commit`) — never use `--no-verify`
+
+## Storybook MCP
+The `meda-storybook` MCP server is registered in `.mcp.json` and points at `http://localhost:6006/mcp` (provided by `@storybook/addon-mcp`). When working on UI components, run `pnpm storybook` and use the `meda-storybook` MCP tools to look up existing components, docs, and stories before generating new UI.

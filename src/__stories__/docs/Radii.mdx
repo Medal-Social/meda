@@ -1,0 +1,27 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import { RadiusScale } from '../foundations';
+
+<Meta title="Foundations/Radii" />
+
+# Radii
+
+Eight radius tokens plus `full` cover controls, cards, panels, and circular elements.
+
+<div style={{ marginTop: '24px' }}>
+  <RadiusScale />
+</div>
+
+## Choosing a radius
+
+| Use case | Token |
+| --- | --- |
+| Status dots, circular buttons, pills | `full` |
+| Form controls and badges | `md` (6px) |
+| Default cards and buttons | `lg` (8px) |
+| Larger cards and dialogs | `xl` (12px) |
+| Larger editorial surfaces | `2xl` to `4xl` |
+
+## Guardrails
+
+- Keep repeated surfaces within one radius family.
+- Use `full` only for circular or pill-shaped elements.

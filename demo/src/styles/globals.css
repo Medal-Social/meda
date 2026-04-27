@@ -1,7 +1,10 @@
 @import "tailwindcss";
-@import "./tokens.css";
+@import "@medalsocial/meda/styles.css";
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
+
+@source "../../../src";
+@source inline("h-[var(--shell-header-height)] h-[calc(100vh-var(--shell-header-height))] h-[var(--shell-bottom-nav-height)] w-[var(--shell-rail-width)] max-w-[1280px] min-w-[200px] text-[10px] gap-0.5 gap-1.5 mt-0.5 px-1.5 px-2.5 px-3.5 pl-1.5 pb-2.5 pt-2.5 py-1.5 py-3.5 size-2.5 -bottom-2.5 rounded-[2px] translate-y-[calc(-50%_-_2px)] z-[var(--z-shell-panel)] z-[var(--z-shell-fullscreen)] duration-[var(--motion-panel)] ease-[var(--motion-ease)] transition-[width]");
 
 @custom-variant dark (&:is(.dark *));
 
@@ -45,11 +48,10 @@
   --radius-3xl: var(--radius-3xl);
   --radius-4xl: var(--radius-4xl);
 
-  /* Font families */
+  /* Font families — Geist + Geist Mono only (no Inter) */
   --font-sans:
-    "Geist Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
-    sans-serif;
-  --font-mono: "Geist Mono Variable", "SF Mono", "Fira Code", "Fira Mono", monospace;
+    "Geist Variable", "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono Variable", "Geist Mono", "SF Mono", "Fira Code", monospace;
 }
 
 /* ============================================================

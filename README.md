@@ -52,6 +52,7 @@ See the [demo app](./demo) for a live playground.
 
 - `@medalsocial/meda` — curated public API (components + helpers)
 - `@medalsocial/meda/shell` — shell-only subpath
+- `@medalsocial/meda/marketing` — marketing sections and campaign blocks
 - `@medalsocial/meda/styles.css` — design tokens + base styles
 
 ## Alternative: shadcn registry
@@ -73,9 +74,34 @@ The registry index is at `https://meda.medalsocial.com/registry.json`. Source JS
 pnpm install
 pnpm build             # compile dist/
 pnpm test              # vitest (jsdom)
+pnpm typecheck
+pnpm lint
 pnpm registry:validate
 pnpm demo:dev          # run the playground locally
+pnpm storybook         # http://localhost:6006
+pnpm storybook:build   # storybook-static/
+pnpm size-limit        # bundle-size gate
 ```
+
+## Storybook + Chromatic
+
+Stories are colocated as `Component.stories.tsx` next to each primitive. Build
+the static bundle with:
+
+```bash
+pnpm storybook:build
+```
+
+Visual review runs via **Chromatic**. The `Chromatic` GitHub workflow publishes
+Storybook on pushes and pull requests targeting `dev` or `prod`, using the
+repository secret `CHROMATIC_PROJECT_TOKEN`.
+
+```bash
+pnpm chromatic
+```
+
+Chromatic handles UI diffs and review state, so visual snapshot baselines are
+not committed to this repository.
 
 ## Release
 

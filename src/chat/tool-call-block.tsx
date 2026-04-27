@@ -38,7 +38,10 @@ export function ToolCallBlock({ call, className }: ToolCallBlockProps) {
             <span key={k}>
               {i > 0 && ', '}
               <span className="text-primary">{k}</span>: {''}
-              <span className="text-emerald-500">{safeStringify(v)}</span>
+              {/* emerald-700 instead of -500 so the 12px arg value passes
+                  WCAG AA (4.5:1) on bg-card. The -500 shade was chosen to
+                  echo the badge accent but failed contrast at this size. */}
+              <span className="text-emerald-700">{safeStringify(v)}</span>
             </span>
           )
         )}
