@@ -1,25 +1,34 @@
 /* ============================================================
    Layer 1 — Meda base tokens
    Declared on :root (light) and .dark / [data-theme='dark']
+   Source of truth: 00-design-system.pen (KchEs), 050-meda-ui.pen (JpjGj)
    ============================================================ */
+
+/* Brand-ramp constants — theme-independent */
 :root {
-  --meda-base: #f6f7f9;
+  --meda-brand-deep: #2a114f;
+  --meda-brand-mid: #5f2dbf;
+  --meda-brand-light: #7d4be0;
+}
+
+:root {
+  --meda-base: #f4eeff;
   --meda-surface: #ffffff;
-  --meda-elevated: #eef1f5;
-  --meda-foreground: #1f2530;
-  --meda-muted: #5d677c;
-  --meda-subtle: #8b95a6;
-  --meda-accent: #1a1035;
+  --meda-elevated: #ede4ff;
+  --meda-foreground: #2a114f;
+  --meda-muted: #6d6090;
+  --meda-subtle: #5e4b88;
+  --meda-accent: #5f2dbf;
 }
 .dark,
 [data-theme="dark"] {
-  --meda-base: #07080c;
-  --meda-surface: #0c0e14;
-  --meda-elevated: #11131a;
-  --meda-foreground: #f5f5f7;
-  --meda-muted: #8a94a6;
-  --meda-subtle: #606e89;
-  --meda-accent: #1a1035;
+  --meda-base: #0a0714;
+  --meda-surface: #131022;
+  --meda-elevated: #1f1638;
+  --meda-foreground: #f5f0ff;
+  --meda-muted: #b5a8d9;
+  --meda-subtle: #8c7bb3;
+  --meda-accent: #7d4be0;
 }
 
 /* ============================================================
@@ -33,8 +42,8 @@
   --card-foreground: var(--meda-foreground);
   --popover: var(--meda-surface);
   --popover-foreground: var(--meda-foreground);
-  --primary: var(--meda-accent);
-  --primary-foreground: var(--meda-surface);
+  --primary: var(--meda-brand-mid);
+  --primary-foreground: #ffffff;
   --secondary: var(--meda-elevated);
   --secondary-foreground: var(--meda-foreground);
   --muted: var(--meda-elevated);
@@ -45,7 +54,7 @@
   --destructive-foreground: #ffffff;
   --border: hsl(0 0% 0% / 0.06);
   --input: hsl(0 0% 0% / 0.06);
-  --ring: var(--meda-accent);
+  --ring: var(--meda-brand-mid);
   --radius: 0.5rem;
 }
 .dark,
