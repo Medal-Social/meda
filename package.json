@@ -1,6 +1,6 @@
 {
   "name": "@medalsocial/meda",
-  "version": "0.2.0",
+  "version": "1.0.0-rc.1",
   "description": "Shared Meda UI shell and runtime package.",
   "license": "Apache-2.0",
   "repository": {
@@ -45,8 +45,17 @@
       "types": "./dist/panel/index.d.ts",
       "default": "./dist/panel/index.js"
     },
-    "./styles.css": "./dist/styles.css"
+    "./styles": {
+      "default": "./dist/styles/theme.css"
+    },
+    "./styles/tokens": {
+      "default": "./dist/styles/tokens.css"
+    }
   },
+  "sideEffects": [
+    "**/*.css",
+    "./dist/styles/*.css"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -78,11 +87,16 @@
   },
   "peerDependencies": {
     "@react-three/fiber": "^9.0.0",
+    "lucide-react": "^1.8.0",
+    "next-themes": "^0.4.0",
     "react": ">=19",
     "react-dom": ">=19"
   },
   "peerDependenciesMeta": {
     "@react-three/fiber": {
+      "optional": true
+    },
+    "next-themes": {
       "optional": true
     }
   },
@@ -93,7 +107,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
-    "lucide-react": "^1.8.0",
     "react-resizable-panels": "^4.10.0",
     "tailwind-merge": "^3.5.0",
     "three": "^0.170.0",
@@ -119,6 +132,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "husky": "^9.1.7",
     "jsdom": "^29.0.2",
+    "next-themes": "^0.4.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "size-limit": "^12.1.0",

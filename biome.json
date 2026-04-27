@@ -10,7 +10,9 @@
       "!**/registry/r",
       "!**/storybook-static",
       "!**/tests/visual/report",
-      "!**/test-results"
+      "!**/test-results",
+      "!test/fixtures/**/node_modules",
+      "!test/fixtures/**/.next"
     ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
