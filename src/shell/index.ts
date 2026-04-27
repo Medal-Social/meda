@@ -1,4 +1,8 @@
-'use client';
+// Note: NO 'use client' at the top of this barrel.
+// Next.js 14+'s flight loader rejects `export * as Foo` inside a file with
+// the directive (see test/nextjs-consumer.test.ts). Each underlying component
+// file carries its own 'use client' — Next traces through the barrel and
+// applies them per-component. The barrel itself is just a re-exporter.
 
 // Layout
 export { AppShell, AppShellBody } from './app-shell.js';
