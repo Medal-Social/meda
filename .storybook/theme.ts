@@ -17,10 +17,18 @@ const brand = {
 };
 
 const medaLogoSvg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="32" viewBox="0 0 128 32" fill="none">
-  <circle cx="16" cy="16" r="8" fill="${brand.purple400}"/>
-  <circle cx="16" cy="16" r="3.25" fill="${brand.purple100}"/>
-  <text x="31" y="21" fill="${brand.neutral50}" font-family="Geist, Inter, Arial, sans-serif" font-size="16" font-weight="700">Meda</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="184" height="40" viewBox="0 0 184 40" fill="none">
+  <rect x="1" y="4" width="32" height="32" rx="8" fill="${brand.purple500}"/>
+  <g transform="translate(1 4) scale(0.6667)">
+    <path d="M8 24L24 8L40 24L24 40L8 24Z" stroke="${brand.neutral50}" stroke-width="1.3" fill="none"/>
+    <circle cx="24" cy="8.5" r="2.5" fill="${brand.neutral50}"/>
+    <circle cx="39.5" cy="24" r="2.5" fill="${brand.neutral50}"/>
+    <circle cx="24" cy="39.5" r="2.5" fill="${brand.neutral50}"/>
+    <circle cx="8.5" cy="24" r="2.5" fill="${brand.neutral50}"/>
+    <path d="M21.937 27.5A2 2 0 0 0 20.5 26.063L14.365 24.481a0.5 0.5 0 0 1 0-0.962L20.5 21.936A2 2 0 0 0 21.937 20.5l1.582-6.135a0.5 0.5 0 0 1 0.963 0L26.063 20.5A2 2 0 0 0 27.5 21.937l6.135 1.581a0.5 0.5 0 0 1 0 0.964L27.5 26.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a0.5 0.5 0 0 1-0.963 0z" fill="none" stroke="${brand.neutral50}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="44" y="18" fill="${brand.neutral50}" font-family="Geist, Inter, Arial, sans-serif" font-size="16" font-weight="700">Meda UI</text>
+  <text x="44" y="31" fill="${brand.neutral400}" font-family="Geist, Inter, Arial, sans-serif" font-size="10" font-weight="600">by Medal Social</text>
 </svg>
 `.trim();
 
@@ -28,7 +36,7 @@ const medaBrandImage = `data:image/svg+xml,${encodeURIComponent(medaLogoSvg)}`;
 
 export const medaLight = create({
   base: 'light',
-  brandTitle: 'Meda',
+  brandTitle: 'Meda UI by Medal Social',
   brandImage: medaBrandImage,
   brandUrl: 'https://meda.medalsocial.com',
   brandTarget: '_self',
@@ -54,7 +62,7 @@ export const medaLight = create({
 
 export const medaDark = create({
   base: 'dark',
-  brandTitle: 'Meda',
+  brandTitle: 'Meda UI by Medal Social',
   brandImage: medaBrandImage,
   brandUrl: 'https://meda.medalsocial.com',
   brandTarget: '_self',
@@ -103,8 +111,8 @@ export const medaManagerStyles = `
     border: 1px solid rgba(154, 106, 194, 0.22) !important;
     border-radius: 8px !important;
     display: flex !important;
-    min-height: 48px !important;
-    padding: 8px 10px !important;
+    min-height: 60px !important;
+    padding: 10px 12px !important;
   }
 
   a[href="https://meda.medalsocial.com"]:focus-visible {
@@ -114,10 +122,10 @@ export const medaManagerStyles = `
 
   a[href="https://meda.medalsocial.com"] img {
     display: block !important;
-    height: 32px !important;
-    max-width: 128px !important;
+    height: 40px !important;
+    max-width: 184px !important;
     object-fit: contain !important;
-    width: 128px !important;
+    width: 184px !important;
   }
 
   input[placeholder="Find components"] {
