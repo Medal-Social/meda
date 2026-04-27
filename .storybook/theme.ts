@@ -3,10 +3,12 @@ import { create } from 'storybook/theming';
 const brand = {
   purple100: '#eeeaf5',
   purple200: '#dcd4e8',
+  purple300: '#b8a3d2',
   purple400: '#9a6ac2',
   purple500: '#7e3fac',
   purple600: '#6a2e96',
   purple800: '#2f1552',
+  rose400: '#fb7185',
   medalBackground: 'hsl(0, 0%, 10%)',
   medalMark: 'hsl(0, 0%, 90%)',
   neutral50: '#fafafa',
@@ -46,6 +48,12 @@ export const medaLight = create({
   brandTarget: '_self',
   colorPrimary: brand.purple600,
   colorSecondary: brand.purple500,
+  // Override Storybook's default amber/yellow ambient palette so the sidebar
+  // tree (active component group, expanded indicators) stays purple-forward
+  // rather than leaking warning-tone defaults.
+  colorPositive: brand.purple500,
+  colorWarning: brand.purple400,
+  colorCritical: '#e11d48',
   appBg: brand.neutral50,
   appContentBg: '#ffffff',
   appBorderColor: brand.neutral200,
@@ -72,6 +80,12 @@ export const medaDark = create({
   brandTarget: '_self',
   colorPrimary: brand.purple400,
   colorSecondary: brand.purple200,
+  // Override Storybook's default amber/yellow ambient palette so the sidebar
+  // tree (active component group, expanded indicators) stays purple-forward
+  // rather than leaking warning-tone defaults.
+  colorPositive: brand.purple400,
+  colorWarning: brand.purple300,
+  colorCritical: brand.rose400,
   appBg: brand.neutral950,
   appContentBg: brand.neutral900,
   appBorderColor: '#2e2e33',
@@ -101,7 +115,8 @@ export const medaManagerStyles = `
     --meda-sidebar-text: ${brand.neutral200};
     --meda-sidebar-selected: ${brand.purple800};
     --meda-sidebar-accent: ${brand.purple400};
-    --meda-sidebar-accent-soft: ${brand.purple100};
+    --meda-sidebar-accent-soft: ${brand.purple200};
+    --meda-sidebar-ancestor: ${brand.purple300};
   }
 
   body,
@@ -184,12 +199,25 @@ export const medaManagerStyles = `
   }
 
   #storybook-explorer-menu [data-selected="true"].sidebar-item {
+    /* Stronger gradient base so the selected leaf stays clearly the most
+       prominent row, and so icons rendered at brand-200 keep ≥7:1 against
+       the surface. */
     background:
-      linear-gradient(90deg, rgba(154, 106, 194, 0.34), rgba(47, 21, 82, 0.92)),
+      linear-gradient(90deg, rgba(126, 63, 172, 0.45), rgba(47, 21, 82, 0.95)),
       var(--meda-sidebar-selected) !important;
     box-shadow:
       inset 3px 0 0 var(--meda-sidebar-accent),
-      inset 0 0 0 1px rgba(238, 234, 245, 0.1) !important;
+      inset 0 0 0 1px rgba(238, 234, 245, 0.14) !important;
+    color: ${brand.neutral50} !important;
+  }
+
+  /* Ancestor-of-selected: don't tint the whole row (which used to read as a
+     second selected state at low contrast). Just mark it with a soft purple
+     left rail and slightly brighter text so the hierarchy is obvious. */
+  #storybook-explorer-menu [data-nodetype="component"][data-highlighted="true"]:not([data-selected="true"]),
+  #storybook-explorer-menu [data-nodetype="group"][data-highlighted="true"]:not([data-selected="true"]) {
+    background: transparent !important;
+    box-shadow: inset 2px 0 0 var(--meda-sidebar-ancestor) !important;
     color: ${brand.neutral50} !important;
   }
 
