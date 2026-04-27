@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
+  Activity,
   Bell,
   Building2,
   Calendar,
@@ -7,6 +8,7 @@ import {
   FlaskConical,
   HelpCircle,
   Inbox,
+  Info,
   MessageSquare,
   Send,
   Settings,
@@ -19,10 +21,17 @@ import { AppShell, AppShellBody } from './app-shell.js';
 import { ContextRail } from './context-rail.js';
 import type { IconRailItem } from './icon-rail.js';
 import { IconRail } from './icon-rail.js';
+import { RightPanel } from './right-panel.js';
 import { ShellHeader } from './shell-header.js';
 import { ShellMain } from './shell-main.js';
 import { MedaShellProvider } from './shell-provider.js';
-import type { AppDefinition, ContextItem, ContextModule, WorkspaceDefinition } from './types.js';
+import type {
+  AppDefinition,
+  ContextItem,
+  ContextModule,
+  PanelView,
+  WorkspaceDefinition,
+} from './types.js';
 
 // ---------------------------------------------------------------------------
 // Shared fixtures
@@ -77,12 +86,45 @@ const INBOX_MODULE: ContextModule = {
   items: INBOX_ITEMS,
 };
 
+const PANEL_VIEWS: PanelView[] = [
+  {
+    id: 'inspector',
+    label: 'Inspector',
+    icon: Info,
+    render: () => (
+      <div className="p-4 text-sm text-muted-foreground">
+        <p className="font-medium text-foreground mb-1">Inspector</p>
+        <p>Select an item to inspect its properties.</p>
+      </div>
+    ),
+  },
+  {
+    id: 'activity',
+    label: 'Activity',
+    icon: Activity,
+    render: () => (
+      <div className="p-4 text-sm text-muted-foreground">
+        <p className="font-medium text-foreground mb-1">Activity</p>
+        <p>Recent activity across this workspace.</p>
+      </div>
+    ),
+  },
+];
+
 // ---------------------------------------------------------------------------
 // Memory-backed storage adapter — avoids localStorage bleed between stories
 // ---------------------------------------------------------------------------
 
-function memoryStorage() {
-  const store = new Map<string, unknown>();
+function memoryStorage(panelMode: 'closed' | 'panel' | 'expanded' | 'fullscreen' = 'closed') {
+  const store = new Map<string, unknown>([
+    [
+      'meda:shell:ws-acme:inbox',
+      {
+        contextRail: { width: 300, collapsed: false },
+        rightPanel: { mode: panelMode, activeView: 'inspector', width: 340 },
+      },
+    ],
+  ]);
   return {
     load: (key: string) => store.get(key) ?? null,
     save: (key: string, value: unknown) => store.set(key, value),
@@ -97,14 +139,15 @@ function withProvider(
   workspace: WorkspaceDefinition,
   workspaces: WorkspaceDefinition[],
   apps: AppDefinition[],
-  Story: () => ReactNode
+  Story: () => ReactNode,
+  panelMode: 'closed' | 'panel' | 'expanded' | 'fullscreen' = 'closed'
 ) {
   return (
     <MedaShellProvider
       workspace={workspace}
       workspaces={workspaces}
       apps={apps}
-      storage={memoryStorage()}
+      storage={memoryStorage(panelMode)}
       themeAdapter="default"
     >
       <Story />
@@ -167,14 +210,14 @@ export const WithDarkBackground: Story = {
 };
 
 /**
- * Full combined view: ShellHeader + IconRail + ContextRail + main content area.
- * This is the closest representation of what a real app shell looks like.
- * Hover the rail icons to see tooltips. Click the chevron divider to reposition
- * utility items. Drag the ContextRail right edge to resize it.
+ * Full combined desktop layout: ShellHeader + IconRail + ContextRail + ShellMain + RightPanel.
+ * This is the canonical representation of the complete Meda shell at RC.1.
+ * Hover rail icons for tooltips. Drag the ContextRail right edge to resize it.
+ * Use the panel header controls to cycle modes or close the panel.
  */
 export const Combined: Story = {
   decorators: [
-    (Story) => withProvider(WORKSPACE, [WORKSPACE, WORKSPACE_2, WORKSPACE_3], APPS, Story),
+    (Story) => withProvider(WORKSPACE, [WORKSPACE, WORKSPACE_2, WORKSPACE_3], APPS, Story, 'panel'),
   ],
   render: () => (
     <AppShell>
@@ -195,9 +238,10 @@ export const Combined: Story = {
           <h1 className="text-2xl font-semibold text-foreground mb-2">Inbox</h1>
           <p className="text-muted-foreground">
             Main content area — rendered inside ShellMain with workspace layout (max-w-[1280px],
-            responsive padding).
+            responsive padding). The RightPanel is on the right edge.
           </p>
         </ShellMain>
+        <RightPanel panelViews={PANEL_VIEWS} defaultView="inspector" />
       </AppShellBody>
     </AppShell>
   ),
