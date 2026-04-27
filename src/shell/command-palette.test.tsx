@@ -1,10 +1,15 @@
-import { fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import { Inbox } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { CommandPalette, CommandRegistryContext } from './command-palette.js';
+import {
+  CommandPalette,
+  CommandRegistryContext,
+  useCommandGroup,
+  useCommands,
+} from './command-palette.js';
 import { MedaShellProvider, useMedaShell } from './shell-provider.js';
-import type { AppDefinition, WorkspaceDefinition } from './types.js';
+import type { AppDefinition, CommandDefinition, WorkspaceDefinition } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Browser stubs
@@ -16,6 +21,9 @@ class MockResizeObserver {
   unobserve = vi.fn();
   disconnect = vi.fn();
 }
+
+// cmdk calls scrollIntoView on selected items; jsdom doesn't implement it
+Element.prototype.scrollIntoView = vi.fn();
 
 beforeEach(() => {
   vi.stubGlobal('ResizeObserver', MockResizeObserver);
@@ -329,5 +337,241 @@ describe('matchesHotkey — strict modifier matching', () => {
     // Cmd+Alt+K — should open
     fireEvent.keyDown(window, { key: 'k', metaKey: true, altKey: true });
     expect(screen.getByTestId('palette-open').textContent).toBe('true');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 14.2: useCommands hook
+// ---------------------------------------------------------------------------
+
+describe('useCommands — registers on mount, unregisters on unmount', () => {
+  it('registers commands on mount; they appear in palette', async () => {
+    const cmd: CommandDefinition = {
+      id: 'test-1',
+      label: 'Test One',
+      group: 'tests',
+      run: vi.fn(),
+    };
+
+    function Consumer() {
+      useCommands([cmd]);
+      return null;
+    }
+
+    function Opener() {
+      const ctx = useMedaShell();
+      return (
+        <button type="button" onClick={() => ctx.commandPalette.setOpen(true)} data-testid="open">
+          open
+        </button>
+      );
+    }
+
+    render(
+      <MedaShellProvider workspace={workspace} apps={apps}>
+        <CommandPalette>
+          <Consumer />
+          <Opener />
+        </CommandPalette>
+      </MedaShellProvider>
+    );
+
+    fireEvent.click(screen.getByTestId('open'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Test One')).toBeInTheDocument();
+    });
+  });
+
+  it('unregisters commands on unmount', async () => {
+    const cmd: CommandDefinition = {
+      id: 'unmount-cmd',
+      label: 'Unmount Me',
+      group: 'tests',
+      run: vi.fn(),
+    };
+
+    function Consumer({ show }: { show: boolean }) {
+      const ctx = useMedaShell();
+      return (
+        <>
+          {show && <CommandConsumerChild cmd={cmd} />}
+          <button type="button" onClick={() => ctx.commandPalette.setOpen(true)} data-testid="open">
+            open
+          </button>
+        </>
+      );
+    }
+
+    function CommandConsumerChild({ cmd: c }: { cmd: CommandDefinition }) {
+      useCommands([c]);
+      return null;
+    }
+
+    const { rerender } = render(
+      <MedaShellProvider workspace={workspace} apps={apps}>
+        <CommandPalette>
+          <Consumer show={true} />
+        </CommandPalette>
+      </MedaShellProvider>
+    );
+
+    // Open palette — command should be visible
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    await waitFor(() => {
+      expect(screen.getByText('Unmount Me')).toBeInTheDocument();
+    });
+
+    // Close palette and unmount consumer
+    act(() => {
+      // Force close via Escape
+    });
+
+    rerender(
+      <MedaShellProvider workspace={workspace} apps={apps}>
+        <CommandPalette>
+          <Consumer show={false} />
+        </CommandPalette>
+      </MedaShellProvider>
+    );
+
+    // Open again — command should be gone
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    await waitFor(() => {
+      expect(screen.queryByText('Unmount Me')).toBeNull();
+    });
+  });
+
+  it('multiple components can register commands; all appear in palette', async () => {
+    const cmd1: CommandDefinition = {
+      id: 'multi-1',
+      label: 'Multi Alpha',
+      group: 'tests',
+      run: vi.fn(),
+    };
+    const cmd2: CommandDefinition = {
+      id: 'multi-2',
+      label: 'Multi Beta',
+      group: 'tests',
+      run: vi.fn(),
+    };
+
+    function ConsumerA() {
+      useCommands([cmd1]);
+      return null;
+    }
+
+    function ConsumerB() {
+      useCommands([cmd2]);
+      return null;
+    }
+
+    function Opener() {
+      const ctx = useMedaShell();
+      return (
+        <button type="button" onClick={() => ctx.commandPalette.setOpen(true)} data-testid="open">
+          open
+        </button>
+      );
+    }
+
+    render(
+      <MedaShellProvider workspace={workspace} apps={apps}>
+        <CommandPalette>
+          <ConsumerA />
+          <ConsumerB />
+          <Opener />
+        </CommandPalette>
+      </MedaShellProvider>
+    );
+
+    fireEvent.click(screen.getByTestId('open'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Multi Alpha')).toBeInTheDocument();
+      expect(screen.getByText('Multi Beta')).toBeInTheDocument();
+    });
+  });
+
+  it('throws when used outside CommandPalette', () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(() => {
+      renderHook(() => useCommands([]), {
+        wrapper: ({ children }: { children: ReactNode }) => (
+          <MedaShellProvider workspace={workspace} apps={apps}>
+            {children}
+          </MedaShellProvider>
+        ),
+      });
+    }).toThrow('useCommands must be used inside <CommandPalette>');
+    errSpy.mockRestore();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 14.2: useCommandGroup hook
+// ---------------------------------------------------------------------------
+
+describe('useCommandGroup — orders groups by priority', () => {
+  it('groups are ordered by priority (lower = first)', async () => {
+    const cmdA: CommandDefinition = {
+      id: 'grp-a-cmd',
+      label: 'Alpha Cmd',
+      group: 'group-a',
+      run: vi.fn(),
+    };
+    const cmdB: CommandDefinition = {
+      id: 'grp-b-cmd',
+      label: 'Beta Cmd',
+      group: 'group-b',
+      run: vi.fn(),
+    };
+
+    // group-b has lower priority → should appear first
+    function Setup() {
+      useCommands([cmdA, cmdB]);
+      useCommandGroup({ id: 'group-a', label: 'Group A', priority: 200 });
+      useCommandGroup({ id: 'group-b', label: 'Group B', priority: 100 });
+      const ctx = useMedaShell();
+      return (
+        <button type="button" onClick={() => ctx.commandPalette.setOpen(true)} data-testid="open">
+          open
+        </button>
+      );
+    }
+
+    render(
+      <MedaShellProvider workspace={workspace} apps={apps}>
+        <CommandPalette>
+          <Setup />
+        </CommandPalette>
+      </MedaShellProvider>
+    );
+
+    fireEvent.click(screen.getByTestId('open'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Group A')).toBeInTheDocument();
+      expect(screen.getByText('Group B')).toBeInTheDocument();
+    });
+
+    // Check DOM order — Group B should appear before Group A
+    const headings = screen.getAllByText(/Group [AB]/);
+    expect(headings[0].textContent).toBe('Group B');
+    expect(headings[1].textContent).toBe('Group A');
+  });
+
+  it('throws when used outside CommandPalette', () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(() => {
+      renderHook(() => useCommandGroup({ id: 'test', label: 'Test', priority: 1 }), {
+        wrapper: ({ children }: { children: ReactNode }) => (
+          <MedaShellProvider workspace={workspace} apps={apps}>
+            {children}
+          </MedaShellProvider>
+        ),
+      });
+    }).toThrow('useCommandGroup must be used inside <CommandPalette>');
+    errSpy.mockRestore();
   });
 });
