@@ -44,3 +44,10 @@ storybook-static/
 
 # size-limit cache
 .size-limit-cache/
+
+# Playwright visual regression — keep baseline PNGs (under
+# tests/visual/*.spec.ts-snapshots/), drop the ephemeral report + results.
+tests/visual/report/
+test-results/
+playwright-report/
+.playwright/

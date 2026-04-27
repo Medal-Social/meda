@@ -7,7 +7,6 @@ const meta = {
   tags: ['autodocs'],
   parameters: {
     layout: 'centered',
-    chromatic: { delay: 300 }, // give R3F a moment to mount
   },
 } satisfies Meta<typeof VoiceOrb>;
 

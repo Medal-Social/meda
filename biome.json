@@ -8,7 +8,9 @@
       "!**/node_modules",
       "!**/coverage",
       "!**/registry/r",
-      "!**/storybook-static"
+      "!**/storybook-static",
+      "!**/tests/visual/report",
+      "!**/test-results"
     ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
