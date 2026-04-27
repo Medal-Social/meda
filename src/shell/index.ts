@@ -2,6 +2,7 @@ export * from './app-shell.js';
 export * from './context-rail.js';
 export * from './icon-rail.js';
 export * from './mobile/mobile-bottom-nav.js';
+export * from './mobile/mobile-drawers.js';
 export * from './mobile/mobile-header.js';
 export * from './motion.js';
 export * from './navigation-area.js';
