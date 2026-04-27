@@ -41,7 +41,10 @@ export function VoiceStatusPill({ phase, thinkingForMs, className }: VoiceStatus
         className={cn('size-1.5 rounded-full bg-current', phase === 'thinking' && 'animate-pulse')}
       />
       {PHASE_LABEL[phase]}
-      {phase === 'thinking' && seconds && <span className="opacity-70">· {seconds}s</span>}
+      {/* Drop the opacity entirely — even opacity-80 against bg-muted gave
+          4.33:1 in axe, just under WCAG AA. The seconds suffix already
+          reads as secondary because of the leading "· " bullet. */}
+      {phase === 'thinking' && seconds && <span>· {seconds}s</span>}
     </span>
   );
 }

@@ -102,7 +102,9 @@ function CommandGroup({
     <CommandPrimitive.Group
       data-slot="command-group"
       className={cn(
-        'overflow-hidden text-foreground [&:first-child_[cmdk-group-heading]]:pt-1 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-4 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground/70 [&_[cmdk-group-heading]]:text-xs',
+        // group heading uses solid muted-foreground (not /70) so 12px
+        // labels meet WCAG AA contrast on the popover background.
+        'overflow-hidden text-foreground [&:first-child_[cmdk-group-heading]]:pt-1 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-4 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:text-xs',
         className
       )}
       {...props}

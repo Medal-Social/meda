@@ -339,8 +339,11 @@ describe('MedaShellProvider — themeAdapter prop selects correct provider', () 
       </MedaShellProvider>
     );
 
-    // Children render (may need a tick for Suspense + lazy to resolve)
-    await screen.findByTestId('child');
+    // Children render (may need a tick for Suspense + lazy to resolve).
+    // Bumped timeout from default 1000ms — the next-themes adapter chunk is
+    // lazy-loaded and can miss the default window under heavy concurrent
+    // test load (e.g. the pre-commit hook running the full suite).
+    await screen.findByTestId('child', undefined, { timeout: 5000 });
     expect(screen.getByTestId('child').textContent).toBe('ok');
   });
 });

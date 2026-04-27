@@ -91,8 +91,10 @@ export function DateSwitcher({ value, now, tz, onChange, className }: DateSwitch
       <div className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-sm">
         <Calendar className="size-3.5 text-muted-foreground" />
         <span className="font-medium">{fmtDate(value, tz)}</span>
+        {/* success-800 (vs. -600) on the success/15 pill so the 10px
+            uppercase tracking-wider text clears WCAG AA contrast. */}
         {isToday && (
-          <span className="ml-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-success">
+          <span className="ml-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-success-800">
             today
           </span>
         )}

@@ -44,9 +44,17 @@ const preview: Preview = {
       },
     },
     a11y: {
-      // Run axe checks on every story render in the addon panel.
-      context: '#storybook-root',
+      // Run axe checks on every story render. In vitest browser mode the
+      // story is rendered into the iframe body directly; passing an explicit
+      // `context: '#storybook-root'` selector caused axe to throw
+      // "No elements found for include in frame Context" because that
+      // wrapper element does not exist in that runtime. Letting axe default
+      // to the document scopes the scan to whatever the story actually rendered.
       manual: false,
+      // Strict mode: any axe violation FAILS the story test. Per-story
+      // exemptions live as `parameters.a11y.test = 'todo'` (or rule-level
+      // `disable: true`) on the offending story with a written reason.
+      test: 'error',
     },
   },
   decorators: [
