@@ -21,11 +21,12 @@ export const Default: Story = {
 };
 
 export const PanelToggle: Story = {
-  render: () => {
+  args: { left: <strong style={{ paddingLeft: 12 }}>Meda</strong> },
+  render: (args) => {
     const [open, setOpen] = useState(false);
     return (
       <ShellHeaderFrame
-        left={<strong style={{ paddingLeft: 12 }}>Meda</strong>}
+        {...args}
         right={<ShellPanelToggle panelOpen={open} onToggle={() => setOpen((o) => !o)} />}
       />
     );

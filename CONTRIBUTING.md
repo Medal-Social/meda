@@ -52,6 +52,21 @@ pnpm changeset
 
 Choose `patch` for bug fixes, `minor` for new features, `major` for breaking changes.
 
+## Bundle size
+
+We gate every PR on `pnpm size-limit` — the brotli-compressed size of each
+published entry point must stay under the limits in `.size-limit.cjs`.
+
+If you legitimately need to bump a limit (a new dep, a real feature growth):
+
+1. Run `pnpm size-limit:why` to confirm what changed.
+2. Update the limit in `.size-limit.cjs` to the new measured size + ~15 %
+   headroom — never aspirationally low, never aspirationally high.
+3. Justify the bump in the PR description with one sentence: *what*
+   contributed the bytes, *why* it's worth it.
+
+Reviewers MUST flag a silent limit bump.
+
 ## Reporting Issues
 
 Use [GitHub Issues](https://github.com/Medal-Social/meda/issues) to report bugs or request features.
