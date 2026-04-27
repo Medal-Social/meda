@@ -9,6 +9,7 @@ export * from './shell-desktop-panel-dock.js';
 export * from './shell-frame.js';
 export * from './shell-header.js';
 export * from './shell-layout-utils.js';
+export * from './shell-main.js';
 export * from './shell-module-nav.js';
 export * from './shell-panel-rail.js';
 export * from './shell-provider.js';
