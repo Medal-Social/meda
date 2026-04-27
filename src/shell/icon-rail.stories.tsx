@@ -6,16 +6,14 @@ import {
   FlaskConical,
   HelpCircle,
   Inbox,
-  MessageSquare,
+  Mail,
   Settings,
   Users,
   Zap,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { AppShell, AppShellBody } from './app-shell.js';
 import type { IconRailItem } from './icon-rail.js';
 import { IconRail } from './icon-rail.js';
-import { ShellHeader } from './shell-header.js';
 import { MedaShellProvider } from './shell-provider.js';
 import type { AppDefinition, WorkspaceDefinition } from './types.js';
 
@@ -43,17 +41,18 @@ const WORKSPACE_3: WorkspaceDefinition = {
 
 const APPS: AppDefinition[] = [
   { id: 'inbox', label: 'Inbox', icon: Inbox },
-  { id: 'messages', label: 'Messages', icon: MessageSquare },
+  { id: 'messages', label: 'Messages', icon: Mail },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-const RAIL_MAIN_ITEMS: IconRailItem[] = [
+const MAIN_ITEMS: IconRailItem[] = [
   { id: 'inbox', label: 'Inbox', to: '/inbox', icon: Inbox },
+  { id: 'mail', label: 'Mail', to: '/mail', icon: Mail },
   { id: 'calendar', label: 'Calendar', to: '/calendar', icon: Calendar },
   { id: 'users', label: 'People', to: '/people', icon: Users },
 ];
 
-const RAIL_UTILITY_ITEMS: IconRailItem[] = [
+const UTILITY_ITEMS: IconRailItem[] = [
   { id: 'bell', label: 'Notifications', to: '/notifications', icon: Bell },
   { id: 'help', label: 'Help', to: '/help', icon: HelpCircle },
 ];
@@ -88,7 +87,10 @@ function withProvider(
       storage={memoryStorage()}
       themeAdapter="default"
     >
-      <Story />
+      {/* Constrain height so the rail renders in a realistic shell height */}
+      <div className="flex h-screen bg-background">
+        <Story />
+      </div>
     </MedaShellProvider>
   );
 }
@@ -98,11 +100,11 @@ function withProvider(
 // ---------------------------------------------------------------------------
 
 const meta = {
-  title: 'Shell v2/AppShell',
-  component: AppShell,
+  title: 'Shell v2/IconRail',
+  component: IconRail,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },
-} satisfies Meta<typeof AppShell>;
+} satisfies Meta<typeof IconRail>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -112,69 +114,76 @@ type Story = StoryObj<typeof meta>;
 // ---------------------------------------------------------------------------
 
 /**
- * Bare layout container — proves the 100vh shell with a placeholder body works.
+ * Default: four main items, two utility items, no footer.
+ * The rail is 60px wide and never expands. Hover an icon to see its label tooltip.
  */
 export const Default: Story = {
   decorators: [(Story) => withProvider(WORKSPACE, [WORKSPACE], APPS, Story)],
-  render: () => (
-    <AppShell>
-      <AppShellBody>
-        <div className="flex flex-1 items-center justify-center text-muted-foreground">
-          AppShell body content
-        </div>
-      </AppShellBody>
-    </AppShell>
-  ),
+  render: () => <IconRail mainItems={MAIN_ITEMS} utilityItems={UTILITY_ITEMS} />,
 };
 
 /**
- * Same as Default but with Storybook's dark-theme decorator active.
- * Toggle via the toolbar or select this story to verify dark tokens render.
+ * Dark-theme variant.
  */
-export const WithDarkBackground: Story = {
+export const DarkTheme: Story = {
   parameters: {
     themes: { themeOverride: 'dark' },
   },
   decorators: [(Story) => withProvider(WORKSPACE, [WORKSPACE], APPS, Story)],
+  render: () => <IconRail mainItems={MAIN_ITEMS} utilityItems={UTILITY_ITEMS} />,
+};
+
+/**
+ * WithFooter: same as Default plus a placeholder avatar button at the bottom.
+ */
+export const WithFooter: Story = {
+  decorators: [(Story) => withProvider(WORKSPACE, [WORKSPACE], APPS, Story)],
   render: () => (
-    <AppShell>
-      <AppShellBody>
-        <div className="flex flex-1 items-center justify-center text-muted-foreground">
-          AppShell body content — dark theme
-        </div>
-      </AppShellBody>
-    </AppShell>
+    <IconRail
+      mainItems={MAIN_ITEMS}
+      utilityItems={UTILITY_ITEMS}
+      footer={
+        <button
+          type="button"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/12 text-primary text-sm font-semibold"
+          aria-label="User menu"
+        >
+          A
+        </button>
+      }
+    />
   ),
 };
 
 /**
- * Full combined view: ShellHeader + IconRail + main content area.
- * This is the closest representation of what a real app shell looks like.
- * Hover the rail icons to see tooltips. Click the chevron divider to reposition
- * utility items.
+ * WithActiveItem: Inbox is highlighted with bg-primary/12 + primary-tinted icon.
  */
-export const Combined: Story = {
+export const WithActiveItem: Story = {
   decorators: [
     (Story) => withProvider(WORKSPACE, [WORKSPACE, WORKSPACE_2, WORKSPACE_3], APPS, Story),
   ],
-  render: () => (
-    <AppShell>
-      <ShellHeader
-        globalActions={
-          <button
-            type="button"
-            className="text-sm px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90"
-          >
-            + New
-          </button>
-        }
-      />
-      <AppShellBody>
-        <IconRail mainItems={RAIL_MAIN_ITEMS} utilityItems={RAIL_UTILITY_ITEMS} activeId="inbox" />
-        <div className="flex flex-1 items-center justify-center text-muted-foreground">
-          AppShell main content
-        </div>
-      </AppShellBody>
-    </AppShell>
-  ),
+  render: () => <IconRail mainItems={MAIN_ITEMS} utilityItems={UTILITY_ITEMS} activeId="inbox" />,
+};
+
+/**
+ * EmptyUtility: only main items — no RailDivider rendered.
+ */
+export const EmptyUtility: Story = {
+  decorators: [(Story) => withProvider(WORKSPACE, [WORKSPACE], APPS, Story)],
+  render: () => <IconRail mainItems={MAIN_ITEMS} />,
+};
+
+/**
+ * RailDividerPushedUp: click the chevron button to push utility items
+ * directly under the divider instead of pinning them to the bottom.
+ * Use the play function or click the divider button interactively.
+ */
+export const RailDividerPushedUp: Story = {
+  decorators: [(Story) => withProvider(WORKSPACE, [WORKSPACE], APPS, Story)],
+  render: () => <IconRail mainItems={MAIN_ITEMS} utilityItems={UTILITY_ITEMS} />,
+  play: async ({ canvasElement }) => {
+    // Click the divider button once to push utility items up
+    const divider = canvasElement.querySelector('[data-testid="rail-divider"]') as HTMLElement;
+    if (divider) divider.click();
+  },
 };
