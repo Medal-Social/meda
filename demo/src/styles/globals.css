@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "./tokens.css";
+@import "@medalsocial/meda/styles.css";
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
 
@@ -45,11 +45,10 @@
   --radius-3xl: var(--radius-3xl);
   --radius-4xl: var(--radius-4xl);
 
-  /* Font families */
+  /* Font families — Geist + Geist Mono only (no Inter) */
   --font-sans:
-    "Geist Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
-    sans-serif;
-  --font-mono: "Geist Mono Variable", "SF Mono", "Fira Code", "Fira Mono", monospace;
+    "Geist Variable", "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono Variable", "Geist Mono", "SF Mono", "Fira Code", monospace;
 }
 
 /* ============================================================

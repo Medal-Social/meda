@@ -4,10 +4,9 @@ import { fileURLToPath } from 'node:url';
 
 const currentDirectory = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(currentDirectory, '..');
-const sourceStyles = resolve(packageRoot, 'src/styles/globals.css');
-const distDirectory = resolve(packageRoot, 'dist');
-const distStyles = resolve(distDirectory, 'styles.css');
+const sourceStyles = resolve(packageRoot, 'src/styles');
+const distStyles = resolve(packageRoot, 'dist/styles');
 
-await mkdir(distDirectory, { recursive: true });
-await rm(distStyles, { force: true });
-await cp(sourceStyles, distStyles);
+await rm(distStyles, { recursive: true, force: true });
+await mkdir(distStyles, { recursive: true });
+await cp(sourceStyles, distStyles, { recursive: true });

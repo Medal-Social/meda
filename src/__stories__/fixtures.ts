@@ -6,7 +6,7 @@ import type {
   ShellPanelDefinition,
   ShellRailItem,
   ShellTab,
-} from '../shell/types.js';
+} from '../shell/extras/types.js';
 import type { ScrubMark, TimelineEvent } from '../timeline/types.js';
 
 // Frozen instant used everywhere — keeps visual snapshots stable.

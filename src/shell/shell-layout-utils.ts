@@ -1,4 +1,4 @@
-import type { ShellContentLayout, ShellViewportBand } from './types.js';
+import type { ShellContentLayout, ShellViewportBand } from './extras/types.js';
 
 const DESKTOP_APP_RAIL_WIDTH = 80;
 const DESKTOP_SECTION_SIDEBAR_TOGGLE_WIDTH = 20;

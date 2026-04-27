@@ -620,6 +620,6 @@ a {
    inside a preview — force them to fill the preview box instead of 100vh. */
 .preview-canvas--shell [data-testid="shell-frame"],
 .preview-canvas--shell [data-testid="workbench-layout"] {
-  height: 100% !important;
-  max-height: 100% !important;
+  height: 100%;
+  max-height: 100%;
 }

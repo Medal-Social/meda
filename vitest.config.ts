@@ -6,6 +6,7 @@ export default defineConfig({
     globals: false,
     setupFiles: ['./vitest.setup.ts'],
     // Visual regression specs are Playwright-only — vitest must not collect them.
-    exclude: ['**/node_modules/**', '**/dist/**', 'tests/**'],
+    // Integration tests (test/**) require pnpm build first; run via pnpm test:integration.
+    exclude: ['**/node_modules/**', '**/dist/**', 'tests/**', 'test/**'],
   },
 });

@@ -1,3 +1,6 @@
+'use client';
+
+import { cn } from '../lib/utils.js';
 import type { TurnPhase } from './types.js';
 
 export interface VoiceStatusPillProps {
@@ -19,7 +22,7 @@ export function VoiceStatusPill({ phase, thinkingForMs, className }: VoiceStatus
     phase === 'listening'
       ? 'bg-primary text-primary-foreground'
       : phase === 'speaking'
-        ? 'bg-emerald-500 text-white'
+        ? 'bg-success text-success-foreground'
         : phase === 'error'
           ? 'bg-destructive text-destructive-foreground'
           : 'bg-muted text-muted-foreground';
@@ -28,17 +31,14 @@ export function VoiceStatusPill({ phase, thinkingForMs, className }: VoiceStatus
     <span
       role="status"
       data-phase={phase}
-      className={[
+      className={cn(
         'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium',
         tone,
-        className ?? '',
-      ].join(' ')}
+        className
+      )}
     >
       <span
-        className={[
-          'size-1.5 rounded-full bg-current',
-          phase === 'thinking' ? 'animate-pulse' : '',
-        ].join(' ')}
+        className={cn('size-1.5 rounded-full bg-current', phase === 'thinking' && 'animate-pulse')}
       />
       {PHASE_LABEL[phase]}
       {phase === 'thinking' && seconds && <span className="opacity-70">· {seconds}s</span>}
