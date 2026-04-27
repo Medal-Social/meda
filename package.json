@@ -126,7 +126,6 @@
     "@biomejs/biome": "^2.4.12",
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.0",
-    "@chromatic-com/storybook": "^5.1.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.0",
     "@size-limit/preset-small-lib": "^12.1.0",
