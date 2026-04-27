@@ -104,6 +104,11 @@ const meta = {
   component: IconRail,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },
+  // mainItems is required; provide defaults so Story type inference is satisfied
+  args: {
+    mainItems: MAIN_ITEMS,
+    utilityItems: UTILITY_ITEMS,
+  },
 } satisfies Meta<typeof IconRail>;
 
 export default meta;
