@@ -1,7 +1,24 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import * as React from 'react';
-import { afterEach, vi } from 'vitest';
+import { afterEach, expect, vi } from 'vitest';
+// Value-side import lives under dist/; the package's matchers.d.ts only re-exports as types.
+import { toHaveNoViolations } from 'vitest-axe/dist/matchers.js';
+
+// vitest-axe matcher — registered globally so per-folder wcag.test.tsx files
+// don't have to repeat the augmentation/extension dance.
+declare module 'vitest' {
+  // Match @testing-library/jest-dom/vitest's signature so TS doesn't conflict.
+  // biome-ignore lint/suspicious/noExplicitAny: must align with jest-dom declaration
+  interface Assertion<T = any> {
+    toHaveNoViolations(): T;
+  }
+  interface AsymmetricMatchersContaining {
+    toHaveNoViolations(): unknown;
+  }
+}
+
+expect.extend({ toHaveNoViolations });
 
 // Tear down rendered DOM between tests so that getByText assertions don't
 // match nodes left behind by previous renders (testing-library doesn't
