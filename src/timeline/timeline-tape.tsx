@@ -1,4 +1,5 @@
 import { formatClock } from '../lib/format-time.js';
+import { cn } from '../lib/utils.js';
 import { EventCard } from './event-card.js';
 import type { TimelineEvent } from './types.js';
 
@@ -89,7 +90,7 @@ export function TimelineTape({
 
   return (
     <div
-      className={['relative ml-3.5 mr-3', className ?? ''].join(' ')}
+      className={cn('relative ml-3.5 mr-3', className)}
       style={{ height: `${canvasHeight}px` }}
       data-canvas-height={canvasHeight}
     >
@@ -121,14 +122,14 @@ export function TimelineTape({
           aria-hidden="true"
           data-tape-segment-id={event.id}
           data-tape-segment-live={String(event.isLive ?? false)}
-          className={[
+          className={cn(
             'absolute w-1 rounded-sm',
             event.isLive
               ? 'bg-success-600 shadow-[0_0_12px_rgba(16,185,129,0.5)]'
               : event.kind === 'error'
                 ? 'bg-destructive'
-                : 'bg-info-500 shadow-[0_0_8px_rgba(56,189,248,0.35)]',
-          ].join(' ')}
+                : 'bg-info-500 shadow-[0_0_8px_rgba(56,189,248,0.35)]'
+          )}
           style={{ left: 44, top: `${top}px`, height: `${height}px` }}
         />
       ))}

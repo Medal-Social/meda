@@ -2,6 +2,7 @@
 
 import { Canvas } from '@react-three/fiber';
 import * as React from 'react';
+import { cn } from '../lib/utils.js';
 import type { TurnPhase } from './types.js';
 import { Scene, type VoiceOrbVariant } from './voice-orb-scene.js';
 
@@ -197,15 +198,15 @@ export const VoiceOrb = React.forwardRef<HTMLButtonElement, VoiceOrbProps>(funct
       disabled={disabled}
       data-phase={phase}
       data-pressed={pressed}
-      className={[
+      className={cn(
         'meda-voice-orb',
         'relative inline-flex items-center justify-center rounded-full',
         'select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         'transition-transform duration-200 ease-out',
         disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
         pressed ? 'scale-[0.97]' : 'scale-100',
-        className ?? '',
-      ].join(' ')}
+        className
+      )}
       style={btnStyle}
       {...rest}
     >

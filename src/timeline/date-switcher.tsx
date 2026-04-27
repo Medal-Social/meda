@@ -1,4 +1,5 @@
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '../lib/utils.js';
 
 export interface DateSwitcherProps {
   /** Currently selected date. */
@@ -75,7 +76,7 @@ export function DateSwitcher({ value, now, tz, onChange, className }: DateSwitch
   const goNext = () => onChange(addDays(value, 1, tz));
 
   return (
-    <div className={['flex items-center gap-2', className ?? ''].join(' ')}>
+    <div className={cn('flex items-center gap-2', className)}>
       <button
         type="button"
         aria-label="Previous day"

@@ -1,5 +1,6 @@
 import { Archive } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { cn } from '../lib/utils.js';
 import { DateSwitcher } from './date-switcher.js';
 import { LiveIndicator } from './live-indicator.js';
 import { TimelineTape } from './timeline-tape.js';
@@ -89,10 +90,10 @@ export function TimelineRail({
 
   return (
     <aside
-      className={[
+      className={cn(
         'relative flex h-full flex-col border-r border-border bg-card text-sm',
-        className ?? '',
-      ].join(' ')}
+        className
+      )}
       data-meda-component="timeline-rail"
     >
       <div className="px-3.5 pb-2.5 pt-3.5">

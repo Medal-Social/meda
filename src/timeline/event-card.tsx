@@ -1,3 +1,4 @@
+import { cn } from '../lib/utils.js';
 import type { TimelineEvent } from './types.js';
 
 export type EventCardSize = 'default' | 'tiny';
@@ -29,15 +30,15 @@ export function EventCard({ event, size = 'default', onSelect, className }: Even
       data-selected={String(isSelected)}
       data-kind={event.kind}
       onClick={() => onSelect?.(event)}
-      className={[
+      className={cn(
         'relative w-full cursor-pointer rounded-md border border-border bg-card text-left transition-[border-color,transform] duration-100',
         'hover:translate-x-px hover:border-primary/40',
         sizeClasses,
         liveClasses,
         errorClasses,
         selectedClasses,
-        className ?? '',
-      ].join(' ')}
+        className
+      )}
     >
       {/* Tail line that connects card to the tape */}
       <span aria-hidden="true" className="absolute -left-2.5 top-1/2 h-px w-2.5 bg-border" />

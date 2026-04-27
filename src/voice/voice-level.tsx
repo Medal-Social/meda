@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { cn } from '../lib/utils.js';
 
 export interface VoiceLevelProps {
   level: number;
@@ -32,7 +33,7 @@ export function VoiceLevel({
     return (
       <div
         role="presentation"
-        className={['flex items-end gap-1', className ?? ''].join(' ')}
+        className={cn('flex items-end gap-1', className)}
         style={{ width, height }}
       >
         {historyRef.current.map((v, i) => (
