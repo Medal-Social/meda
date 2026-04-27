@@ -17,9 +17,9 @@ const brand = {
 };
 
 const medaLogoSvg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="184" height="40" viewBox="0 0 184 40" fill="none">
-  <rect x="1" y="4" width="32" height="32" rx="8" fill="${brand.purple500}"/>
-  <g transform="translate(1 4) scale(0.6667)">
+<svg xmlns="http://www.w3.org/2000/svg" width="154" height="30" viewBox="0 0 154 30" fill="none">
+  <rect x="1" y="3" width="24" height="24" rx="6" fill="#8b5cf6"/>
+  <g transform="translate(1 3) scale(0.5)">
     <path d="M8 24L24 8L40 24L24 40L8 24Z" stroke="${brand.neutral50}" stroke-width="1.3" fill="none"/>
     <circle cx="24" cy="8.5" r="2.5" fill="${brand.neutral50}"/>
     <circle cx="39.5" cy="24" r="2.5" fill="${brand.neutral50}"/>
@@ -27,8 +27,8 @@ const medaLogoSvg = `
     <circle cx="8.5" cy="24" r="2.5" fill="${brand.neutral50}"/>
     <path d="M21.937 27.5A2 2 0 0 0 20.5 26.063L14.365 24.481a0.5 0.5 0 0 1 0-0.962L20.5 21.936A2 2 0 0 0 21.937 20.5l1.582-6.135a0.5 0.5 0 0 1 0.963 0L26.063 20.5A2 2 0 0 0 27.5 21.937l6.135 1.581a0.5 0.5 0 0 1 0 0.964L27.5 26.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a0.5 0.5 0 0 1-0.963 0z" fill="none" stroke="${brand.neutral50}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
-  <text x="44" y="18" fill="${brand.neutral50}" font-family="Geist, Inter, Arial, sans-serif" font-size="16" font-weight="700">Meda UI</text>
-  <text x="44" y="31" fill="${brand.neutral400}" font-family="Geist, Inter, Arial, sans-serif" font-size="10" font-weight="600">by Medal Social</text>
+  <text x="34" y="14.5" fill="${brand.neutral50}" font-family="Geist, Inter, Arial, sans-serif" font-size="13.5" font-weight="700">Meda UI</text>
+  <text x="34" y="24" fill="${brand.neutral400}" font-family="Geist, Inter, Arial, sans-serif" font-size="9" font-weight="600">by Medal Social</text>
 </svg>
 `.trim();
 
@@ -107,25 +107,34 @@ export const medaManagerStyles = `
 
   a[href="https://meda.medalsocial.com"] {
     align-items: center !important;
-    background: linear-gradient(180deg, rgba(154, 106, 194, 0.14), rgba(24, 24, 27, 0.72)) !important;
-    border: 1px solid rgba(154, 106, 194, 0.22) !important;
-    border-radius: 8px !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 6px !important;
     display: flex !important;
-    min-height: 60px !important;
-    padding: 10px 12px !important;
+    min-height: 42px !important;
+    padding: 6px 8px !important;
+    transition:
+      background-color 140ms ease,
+      border-color 140ms ease,
+      box-shadow 140ms ease !important;
+  }
+
+  a[href="https://meda.medalsocial.com"]:hover {
+    background: rgba(250, 250, 250, 0.04) !important;
+    border-color: rgba(250, 250, 250, 0.06) !important;
   }
 
   a[href="https://meda.medalsocial.com"]:focus-visible {
-    box-shadow: 0 0 0 2px rgba(154, 106, 194, 0.42) !important;
+    box-shadow: 0 0 0 2px rgba(154, 106, 194, 0.32) !important;
     outline: none !important;
   }
 
   a[href="https://meda.medalsocial.com"] img {
     display: block !important;
-    height: 40px !important;
-    max-width: 184px !important;
+    height: 30px !important;
+    max-width: 154px !important;
     object-fit: contain !important;
-    width: 184px !important;
+    width: 154px !important;
   }
 
   input[placeholder="Find components"] {
