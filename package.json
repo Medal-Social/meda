@@ -25,6 +25,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./brand": {
+      "types": "./dist/brand/index.d.ts",
+      "default": "./dist/brand/index.js"
+    },
     "./shell": {
       "types": "./dist/shell/index.d.ts",
       "default": "./dist/shell/index.js"

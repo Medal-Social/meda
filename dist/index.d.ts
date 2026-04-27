@@ -1,3 +1,4 @@
+export * from './brand/public.js';
 export * from './chat/public.js';
 export * from './marketing/public.js';
 export * from './panel/public.js';

@@ -7,6 +7,8 @@ const brand = {
   purple500: '#7e3fac',
   purple600: '#6a2e96',
   purple800: '#2f1552',
+  medalBackground: 'hsl(0, 0%, 10%)',
+  medalMark: 'hsl(0, 0%, 90%)',
   neutral50: '#fafafa',
   neutral200: '#e4e4e7',
   neutral400: '#a1a1aa',
@@ -18,14 +20,16 @@ const brand = {
 
 const medaLogoSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="154" height="30" viewBox="0 0 154 30" fill="none">
-  <rect x="1" y="3" width="24" height="24" rx="6" fill="#8b5cf6"/>
   <g transform="translate(1 3) scale(0.5)">
-    <path d="M8 24L24 8L40 24L24 40L8 24Z" stroke="${brand.neutral50}" stroke-width="1.3" fill="none"/>
-    <circle cx="24" cy="8.5" r="2.5" fill="${brand.neutral50}"/>
-    <circle cx="39.5" cy="24" r="2.5" fill="${brand.neutral50}"/>
-    <circle cx="24" cy="39.5" r="2.5" fill="${brand.neutral50}"/>
-    <circle cx="8.5" cy="24" r="2.5" fill="${brand.neutral50}"/>
-    <path d="M21.937 27.5A2 2 0 0 0 20.5 26.063L14.365 24.481a0.5 0.5 0 0 1 0-0.962L20.5 21.936A2 2 0 0 0 21.937 20.5l1.582-6.135a0.5 0.5 0 0 1 0.963 0L26.063 20.5A2 2 0 0 0 27.5 21.937l6.135 1.581a0.5 0.5 0 0 1 0 0.964L27.5 26.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a0.5 0.5 0 0 1-0.963 0z" fill="none" stroke="${brand.neutral50}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="24" cy="24" r="23" fill="${brand.medalBackground}"/>
+    <path d="M8 24L24 8L40 24L24 40L8 24Z" stroke="${brand.medalMark}" stroke-width="1.3" fill="none"/>
+    <circle cx="24" cy="8.5" r="2.5" fill="${brand.medalMark}"/>
+    <circle cx="39.5" cy="24" r="2.5" fill="${brand.medalMark}"/>
+    <circle cx="24" cy="39.5" r="2.5" fill="${brand.medalMark}"/>
+    <circle cx="8.5" cy="24" r="2.5" fill="${brand.medalMark}"/>
+    <g transform="translate(12, 12) scale(1)">
+      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a0.5 0.5 0 0 1 0-0.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a0.5 0.5 0 0 1 0.963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a0.5 0.5 0 0 1 0 0.964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a0.5 0.5 0 0 1-0.963 0z" fill="none" stroke="${brand.medalMark}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
   </g>
   <text x="34" y="14.5" fill="${brand.neutral50}" font-family="Geist, Inter, Arial, sans-serif" font-size="13.5" font-weight="700">Meda UI</text>
   <text x="34" y="24" fill="${brand.neutral400}" font-family="Geist, Inter, Arial, sans-serif" font-size="9" font-weight="600">by Medal Social</text>

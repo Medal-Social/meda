@@ -13,6 +13,10 @@ export default defineConfig({
         replacement: resolve(__dirname, 'src/styles/theme.css'),
       },
       {
+        find: '@medalsocial/meda/brand',
+        replacement: resolve(__dirname, 'src/brand/index.ts'),
+      },
+      {
         find: '@medalsocial/meda/timeline',
         replacement: resolve(__dirname, 'src/timeline/index.ts'),
       },

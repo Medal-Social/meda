@@ -127,27 +127,6 @@ select {
   display: block;
 }
 
-.footer-mark-line {
-  stroke: var(--color-brand-50);
-}
-
-.footer-mark-fill {
-  fill: var(--color-brand-50);
-}
-
-.site-workspace-mark .footer-mark-bg,
-.site-rail-mark .footer-mark-bg {
-  fill: var(--color-brand-500);
-}
-
-.site-workspace-mark .footer-mark-line,
-.site-workspace-mark .footer-mark-fill,
-.site-rail-mark .footer-mark-line,
-.site-rail-mark .footer-mark-fill {
-  stroke: var(--color-brand-50);
-  fill: var(--color-brand-50);
-}
-
 .site-rail-mark {
   width: 2rem;
   height: 2rem;
@@ -646,14 +625,6 @@ select {
   width: clamp(2.75rem, 6vw, 3.5rem);
   height: clamp(2.75rem, 6vw, 3.5rem);
   flex: 0 0 auto;
-}
-
-.footer-mark--meda .footer-mark-bg {
-  fill: var(--color-brand-400);
-}
-
-.footer-mark--medal .footer-mark-bg {
-  fill: var(--color-brand-500);
 }
 
 .footer-lockup-copy {
