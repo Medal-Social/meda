@@ -15,6 +15,11 @@ interface MedaShellContextValue {
         setMode: (m: PanelMode) => void;
         setActiveView: (v: string | null) => void;
         setWidth: (w: number) => void;
+        /** Opens panel + switches to viewId in one call.
+         * Sugar for app keyboard shortcuts (e.g. Cmd+J → panel.focus('ai')).
+         * If already open in 'panel', 'expanded', or 'fullscreen', the existing
+         * mode is preserved — only flips closed → panel. */
+        focus: (viewId: string) => void;
     };
     contextRail: {
         width: number;

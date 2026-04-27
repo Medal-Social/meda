@@ -1,6 +1,6 @@
 @import "./tokens.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
 
 @theme inline {
   /* Color primitives — exposed as Tailwind color scales */

@@ -103,6 +103,15 @@ export function MedaShellProvider(props) {
             ...layoutState,
             rightPanel: { ...layoutState.rightPanel, width },
         }),
+        // focus(viewId) — opens panel + switches to view in one call.
+        // Only flips closed → panel; preserves expanded / fullscreen modes.
+        focus: (viewId) => {
+            const nextMode = layoutState.rightPanel.mode === 'closed' ? 'panel' : layoutState.rightPanel.mode;
+            setLayoutState({
+                ...layoutState,
+                rightPanel: { ...layoutState.rightPanel, mode: nextMode, activeView: viewId },
+            });
+        },
     }), [layoutState, setLayoutState]);
     const contextRail = useMemo(() => ({
         width: layoutState.contextRail.width,
