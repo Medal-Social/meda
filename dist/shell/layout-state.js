@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 export function createLocalStorageAdapter() {
     let timer = null;
     let pending = {};
@@ -71,6 +71,9 @@ function isShellLayoutState(value) {
 export function useShellLayoutState({ workspaceId, appId, storage, }) {
     const key = `meda:shell:${workspaceId}:${appId}`;
     const [state, setStateInternal] = useState(DEFAULTS);
+    const [persistRevision, setPersistRevision] = useState(0);
+    const persistedRevisionRef = useRef(0);
+    const pendingSaveKeyRef = useRef(key);
     // Hydrate after mount. Effect re-runs when key changes (workspace/app switch).
     useEffect(() => {
         const stored = storage.load(key);
@@ -79,11 +82,17 @@ export function useShellLayoutState({ workspaceId, appId, storage, }) {
         }
     }, [key, storage]);
     const setState = useCallback((next) => {
+        pendingSaveKeyRef.current = key;
         setStateInternal((prev) => {
-            const resolved = typeof next === 'function' ? next(prev) : next;
-            storage.save(key, resolved);
-            return resolved;
+            return typeof next === 'function' ? next(prev) : next;
         });
-    }, [key, storage]);
+        setPersistRevision((revision) => revision + 1);
+    }, [key]);
+    useEffect(() => {
+        if (persistedRevisionRef.current === persistRevision)
+            return;
+        persistedRevisionRef.current = persistRevision;
+        storage.save(pendingSaveKeyRef.current, state);
+    }, [persistRevision, state, storage]);
     return [state, setState];
 }

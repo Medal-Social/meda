@@ -31,13 +31,20 @@ This pulls in:
 ## Use a component
 
 ```tsx
-import { ShellFrame, ShellHeader } from '@medalsocial/meda/shell';
+import { AppShell, AppShellBody, MedaShellProvider, ShellHeader } from '@medalsocial/meda/shell';
+import { Inbox } from 'lucide-react';
+
+const workspace = { id: 'workspace', name: 'Workspace' };
+const apps = [{ id: 'inbox', label: 'Inbox', icon: Inbox }];
 
 export function App() {
   return (
-    <ShellFrame>
-      <ShellHeader />
-    </ShellFrame>
+    <MedaShellProvider workspace={workspace} apps={apps}>
+      <AppShell>
+        <ShellHeader />
+        <AppShellBody>{/* app content */}</AppShellBody>
+      </AppShell>
+    </MedaShellProvider>
   );
 }
 ```

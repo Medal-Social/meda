@@ -54,7 +54,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
-import { type ComponentProps, useEffect, useState } from 'react';
+import { type ComponentProps, useEffect, useRef, useState } from 'react';
 import { ComponentDoc } from './ComponentDoc';
 
 /* ─────────────────────────────────────────────────────────────────────────── *
@@ -268,6 +268,41 @@ const SITE_PANEL_VIEWS: PanelView[] = [
       </div>
     ),
   },
+  {
+    id: 'ai',
+    label: 'Links',
+    icon: Sparkles,
+    render: () => (
+      <div className="site-panel-stack">
+        <div>
+          <p className="site-panel-kicker">Shortcuts</p>
+          <h3 className="site-panel-title">Meda resources</h3>
+          <p className="site-panel-copy">
+            Jump to package docs, source, and install surfaces without leaving the mobile shell.
+          </p>
+        </div>
+        <a className="site-panel-link" href="/storybook/">
+          Storybook
+        </a>
+        <a
+          className="site-panel-link"
+          href="https://github.com/Medal-Social/meda"
+          target="_blank"
+          rel="noreferrer"
+        >
+          GitHub repository
+        </a>
+        <a
+          className="site-panel-link"
+          href="https://www.npmjs.com/package/@medalsocial/meda"
+          target="_blank"
+          rel="noreferrer"
+        >
+          npm package
+        </a>
+      </div>
+    ),
+  },
 ];
 
 const SITE_MOBILE_NAV: ComponentProps<typeof MobileBottomNav>['items'] = [
@@ -331,6 +366,7 @@ export function App() {
 function SiteWorkspace() {
   const { activeAppId, setActiveApp } = useMedaShell();
   const [activeSection, setActiveSection] = useState<SiteSectionId>(getInitialSiteSection);
+  const previousActiveAppRef = useRef(activeAppId);
 
   const navigateToSection = (sectionId: string, replace = false) => {
     if (!isSiteSection(sectionId)) return;
@@ -366,7 +402,10 @@ function SiteWorkspace() {
   }, []);
 
   useEffect(() => {
+    if (previousActiveAppRef.current === activeAppId) return;
+    previousActiveAppRef.current = activeAppId;
     const sectionId = SITE_APP_TO_SECTION[activeAppId as SiteAppId];
+    if (SITE_SECTION_TO_APP[activeSection] === activeAppId) return;
     if (!sectionId || sectionId === activeSection) return;
     setActiveSection(sectionId);
     window.history.replaceState(null, '', `#${sectionId}`);

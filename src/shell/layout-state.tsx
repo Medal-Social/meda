@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PanelMode } from './types.js';
 
 export interface ShellStorageAdapter {
@@ -99,6 +99,9 @@ export function useShellLayoutState({
 }: UseShellLayoutStateArgs): readonly [ShellLayoutState, (next: ShellLayoutStateUpdater) => void] {
   const key = `meda:shell:${workspaceId}:${appId}`;
   const [state, setStateInternal] = useState<ShellLayoutState>(DEFAULTS);
+  const [persistRevision, setPersistRevision] = useState(0);
+  const persistedRevisionRef = useRef(0);
+  const pendingSaveKeyRef = useRef(key);
 
   // Hydrate after mount. Effect re-runs when key changes (workspace/app switch).
   useEffect(() => {
@@ -110,14 +113,20 @@ export function useShellLayoutState({
 
   const setState = useCallback(
     (next: ShellLayoutStateUpdater) => {
+      pendingSaveKeyRef.current = key;
       setStateInternal((prev) => {
-        const resolved = typeof next === 'function' ? next(prev) : next;
-        storage.save(key, resolved);
-        return resolved;
+        return typeof next === 'function' ? next(prev) : next;
       });
+      setPersistRevision((revision) => revision + 1);
     },
-    [key, storage]
+    [key]
   );
+
+  useEffect(() => {
+    if (persistedRevisionRef.current === persistRevision) return;
+    persistedRevisionRef.current = persistRevision;
+    storage.save(pendingSaveKeyRef.current, state);
+  }, [persistRevision, state, storage]);
 
   return [state, setState] as const;
 }
