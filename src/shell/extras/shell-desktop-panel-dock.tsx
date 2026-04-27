@@ -93,7 +93,7 @@ export function ShellDesktopPanelDock({
           viewIds,
           className:
             className ??
-            'ml-2 rounded-[var(--meda-shell-panel-dock-radius)] border border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--side-panel)_90%,transparent)] shadow-[var(--meda-shell-panel-dock-shadow)] backdrop-blur-xl',
+            'ml-2 rounded-[var(--radius-4xl)] border border-[var(--border)] bg-[color-mix(in_srgb,var(--shell-panel)_90%,transparent)] shadow-[var(--shell-shadow)] backdrop-blur-xl',
         })}
       </div>
     </div>

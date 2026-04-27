@@ -84,7 +84,9 @@
     "size-limit:why": "size-limit --why",
     "version": "changeset version",
     "release": "pnpm build && changeset publish",
-    "registry:validate": "node ./registry/scripts/validate-registry.mjs"
+    "registry:validate": "node ./registry/scripts/validate-registry.mjs",
+    "lint:tokens": "node scripts/lint-tokens.mjs",
+    "quality": "pnpm lint && pnpm typecheck && pnpm lint:tokens && pnpm test"
   },
   "peerDependencies": {
     "@react-three/fiber": "^9.0.0",
