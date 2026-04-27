@@ -3,21 +3,25 @@ import {
   Bell,
   Building2,
   Calendar,
+  FileText,
   FlaskConical,
   HelpCircle,
   Inbox,
   MessageSquare,
+  Send,
   Settings,
+  Star,
   Users,
   Zap,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { AppShell, AppShellBody } from './app-shell.js';
+import { ContextRail } from './context-rail.js';
 import type { IconRailItem } from './icon-rail.js';
 import { IconRail } from './icon-rail.js';
 import { ShellHeader } from './shell-header.js';
 import { MedaShellProvider } from './shell-provider.js';
-import type { AppDefinition, WorkspaceDefinition } from './types.js';
+import type { AppDefinition, ContextItem, ContextModule, WorkspaceDefinition } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Shared fixtures
@@ -57,6 +61,20 @@ const RAIL_UTILITY_ITEMS: IconRailItem[] = [
   { id: 'bell', label: 'Notifications', to: '/notifications', icon: Bell },
   { id: 'help', label: 'Help', to: '/help', icon: HelpCircle },
 ];
+
+const INBOX_ITEMS: ContextItem[] = [
+  { id: 'inbox', label: 'Inbox', icon: Inbox, to: '/inbox', shortcut: '⌘1' },
+  { id: 'sent', label: 'Sent', icon: Send, to: '/sent', shortcut: '⌘2' },
+  { id: 'drafts', label: 'Drafts', icon: FileText, to: '/drafts' },
+  { id: 'starred', label: 'Starred', icon: Star, to: '/starred' },
+];
+
+const INBOX_MODULE: ContextModule = {
+  id: 'inbox',
+  label: 'Inbox',
+  description: 'Mail + drafts',
+  items: INBOX_ITEMS,
+};
 
 // ---------------------------------------------------------------------------
 // Memory-backed storage adapter — avoids localStorage bleed between stories
@@ -148,10 +166,10 @@ export const WithDarkBackground: Story = {
 };
 
 /**
- * Full combined view: ShellHeader + IconRail + main content area.
+ * Full combined view: ShellHeader + IconRail + ContextRail + main content area.
  * This is the closest representation of what a real app shell looks like.
  * Hover the rail icons to see tooltips. Click the chevron divider to reposition
- * utility items.
+ * utility items. Drag the ContextRail right edge to resize it.
  */
 export const Combined: Story = {
   decorators: [
@@ -163,7 +181,7 @@ export const Combined: Story = {
         globalActions={
           <button
             type="button"
-            className="text-sm px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90"
+            className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90"
           >
             + New
           </button>
@@ -171,8 +189,9 @@ export const Combined: Story = {
       />
       <AppShellBody>
         <IconRail mainItems={RAIL_MAIN_ITEMS} utilityItems={RAIL_UTILITY_ITEMS} activeId="inbox" />
+        <ContextRail appId="inbox" module={INBOX_MODULE} activeItemId="inbox" />
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
-          AppShell main content
+          Main content area
         </div>
       </AppShellBody>
     </AppShell>
