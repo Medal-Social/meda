@@ -2,8 +2,8 @@
  * Integration test: Next.js 14 App Router consumption of @medalsocial/meda/shell.
  *
  * Rationale: This test runs `next build` against a hermetic fixture app that
- * imports ShellFrame from @medalsocial/meda/shell. If the 'use client' directive
- * is missing from dist/shell/index.js, Next.js will error because ShellFrame
+ * imports AppShell from @medalsocial/meda/shell. If the 'use client' directive
+ * is missing from dist/shell/index.js, Next.js will error because AppShell
  * uses hooks internally. Exit code 0 + absence of known error strings = R6 closed.
  *
  * Strategy: env-gated via SKIP_NEXTJS_FIXTURE. Run with `pnpm test:integration`.

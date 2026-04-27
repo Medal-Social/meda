@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { ShellContentLayout } from '../types.js';
+import type { ShellContentLayout } from './types.js';
 
 export interface ShellScrollableContentProps {
   children: ReactNode;

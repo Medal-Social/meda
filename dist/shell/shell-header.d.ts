@@ -19,4 +19,4 @@ export interface ShellHeaderProps {
     globalActions?: ReactNode;
     className?: string;
 }
-export declare function ShellHeader({ globalActions, className }?: ShellHeaderProps): import("react/jsx-runtime").JSX.Element;
+export declare function ShellHeader({ globalActions, className }?: ShellHeaderProps): import("react/jsx-runtime").JSX.Element | null;

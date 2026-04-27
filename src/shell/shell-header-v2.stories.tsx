@@ -1,10 +1,6 @@
 /**
- * Storybook stories for the v2 ShellHeader and its sub-components:
+ * Storybook stories for ShellHeader and its sub-components:
  *   WorkspaceSwitcher, AppTabs, PanelToggle.
- *
- * The legacy ShellHeaderFrame stories live in shell-header.stories.tsx under
- * 'Shell/ShellHeader'. These v2 stories use 'Shell v2/ShellHeader' to avoid a
- * title collision.
  */
 
 import type { Meta, StoryObj } from '@storybook/react-vite';

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import type { ShellRouteContext } from './extras/types';
 import {
   getShellActionsFromMatches,
   getShellContentLayoutFromMatches,
   getShellPanelViewsFromMatches,
   getShellTabsFromMatches,
 } from './shell-route-utils';
-import type { ShellRouteContext } from './types';
 
 describe('shell-route-utils', () => {
   it('resolves content layout from the last route handle', () => {

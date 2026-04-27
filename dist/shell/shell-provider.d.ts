@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
 import { type ShellStorageAdapter } from './layout-state.js';
 import type { AppDefinition, MobileBottomNavItem, PanelMode, ThemeAdapter, WorkspaceDefinition } from './types.js';
+export type MobileDrawerKind = 'menu-drawer' | 'module-drawer' | 'panels-drawer' | 'ai-drawer' | (string & {}) | null;
 interface MedaShellContextValue {
     workspace: WorkspaceDefinition;
     workspaces: WorkspaceDefinition[];
@@ -10,8 +11,10 @@ interface MedaShellContextValue {
     panel: {
         mode: PanelMode;
         activeView: string | null;
+        width: number;
         setMode: (m: PanelMode) => void;
         setActiveView: (v: string | null) => void;
+        setWidth: (w: number) => void;
     };
     contextRail: {
         width: number;
@@ -20,6 +23,14 @@ interface MedaShellContextValue {
         setCollapsed: (c: boolean) => void;
     };
     mobileBottomNav: MobileBottomNavItem[];
+    mobileDrawer: {
+        open: MobileDrawerKind;
+        setOpen: (kind: MobileDrawerKind) => void;
+    };
+    commandPalette: {
+        open: boolean;
+        setOpen: (open: boolean) => void;
+    };
     commandPaletteHotkey: string;
     /** Selection bridge between main workspace and right panel views (spec §17). */
     selection: unknown | null;

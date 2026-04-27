@@ -15,66 +15,7 @@ import { ThemeToggle } from './theme.js';
 import { useShellViewport } from './use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
-// Legacy components — preserved for back-compat
-// ---------------------------------------------------------------------------
-
-export function ShellHeaderFrame({
-  left,
-  center,
-  right,
-  className,
-}: {
-  left: ReactNode;
-  center?: ReactNode;
-  right?: ReactNode;
-  className?: string;
-}) {
-  return (
-    <header
-      className={[
-        'relative z-[var(--z-sticky)] grid h-[var(--header-height)] w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 bg-[var(--header)] px-3 shadow-[var(--shadow-header)] sm:px-4',
-        className,
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    >
-      {left}
-      <div className="min-w-0">{center}</div>
-      <div
-        data-testid="shell-header-actions"
-        className="hidden items-center justify-end gap-2 md:flex"
-      >
-        {right}
-      </div>
-    </header>
-  );
-}
-
-export function ShellPanelToggle({
-  panelOpen,
-  onToggle,
-}: {
-  panelOpen: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={panelOpen ? 'Close panel' : 'Open panel'}
-      onClick={onToggle}
-      className={
-        panelOpen
-          ? 'inline-flex h-9 items-center justify-center rounded-xl border border-[var(--primary)]/30 bg-[var(--primary)]/12 px-2.5 text-[var(--primary)] transition-[background-color,color,border-color] duration-200 hover:bg-[var(--primary)]/18'
-          : 'inline-flex h-9 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-1)] px-2.5 text-[var(--muted-foreground)] transition-[background-color,color,border-color] duration-200 hover:bg-[var(--sidebar-accent)] hover:text-[var(--foreground)]'
-      }
-    >
-      {panelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
-    </button>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Task 7.3 — WorkspaceSwitcher
+// WorkspaceSwitcher
 // ---------------------------------------------------------------------------
 
 export interface WorkspaceSwitcherProps {
@@ -109,7 +50,7 @@ export function WorkspaceSwitcher({ workspaceMenuFooter }: WorkspaceSwitcherProp
           <>
             {workspaces.map((ws) => (
               <DropdownMenuItem key={ws.id}>
-                {/* TODO: wire setWorkspace once the provider exposes it (out of scope for Task 7.3.1). */}
+                {/* TODO: wire setWorkspace once the provider exposes it. */}
                 {ws.icon != null && <span aria-hidden="true">{ws.icon}</span>}
                 {ws.name}
               </DropdownMenuItem>
@@ -125,7 +66,7 @@ export function WorkspaceSwitcher({ workspaceMenuFooter }: WorkspaceSwitcherProp
         <DropdownMenuItem>Settings</DropdownMenuItem>
         <DropdownMenuItem>Profile</DropdownMenuItem>
 
-        {/* ThemeToggle inline per spec §22a — rendered in a non-interactive wrapper
+        {/* ThemeToggle inline — rendered in a non-interactive wrapper
             because nesting a button inside MenuPrimitive.Item is invalid HTML. */}
         <div role="none" className="flex items-center px-1.5 py-1">
           <ThemeToggle />
@@ -142,7 +83,7 @@ export function WorkspaceSwitcher({ workspaceMenuFooter }: WorkspaceSwitcherProp
 }
 
 // ---------------------------------------------------------------------------
-// Task 7.4 — AppTabs
+// AppTabs
 // ---------------------------------------------------------------------------
 
 export function AppTabs() {
@@ -183,7 +124,7 @@ export function AppTabs() {
 }
 
 // ---------------------------------------------------------------------------
-// Task 7.5 — PanelToggle
+// PanelToggle
 // ---------------------------------------------------------------------------
 
 export function PanelToggle() {
@@ -214,7 +155,7 @@ export function PanelToggle() {
 }
 
 // ---------------------------------------------------------------------------
-// Task 7.2 — ShellHeader (opinionated 56px header, spec §8)
+// ShellHeader — opinionated 56px header
 // ---------------------------------------------------------------------------
 
 export interface ShellHeaderProps {

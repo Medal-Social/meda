@@ -5,6 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { cn } from '../lib/utils.js';
 import { useMedaShell } from './shell-provider.js';
 import { ThemeToggle } from './theme.js';
+import { useShellViewport } from './use-shell-viewport.js';
 // ---------------------------------------------------------------------------
 // Legacy components — preserved for back-compat
 // ---------------------------------------------------------------------------
@@ -54,5 +55,8 @@ export function PanelToggle() {
     return (_jsx("button", { type: "button", "aria-label": isOpen ? 'Close right panel' : 'Open right panel', onClick: handleClick, className: cn('inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors', isOpen ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-accent'), children: isOpen ? (_jsx(PanelRightClose, { size: 18, "aria-hidden": "true" })) : (_jsx(PanelRightOpen, { size: 18, "aria-hidden": "true" })) }));
 }
 export function ShellHeader({ globalActions, className } = {}) {
+    const band = useShellViewport();
+    if (band === 'mobile')
+        return null;
     return (_jsxs("header", { className: cn('flex h-[var(--shell-header-height)] w-full items-center justify-between', 'border-b border-border bg-background px-3', className), children: [_jsxs("div", { className: "flex items-center", children: [_jsx(WorkspaceSwitcher, {}), _jsx(AppTabs, {})] }), _jsxs("div", { className: "flex items-center gap-2", children: [globalActions, _jsx(PanelToggle, {})] })] }));
 }

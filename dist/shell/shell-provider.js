@@ -68,6 +68,16 @@ export function MedaShellProvider(props) {
     const storage = useMemo(() => props.storage ?? createLocalStorageAdapter(), [props.storage]);
     const [activeAppId, setActiveApp] = useState(props.defaultActiveApp ?? props.apps[0]?.id ?? '');
     const [selection, setSelection] = useState(null);
+    const [mobileDrawerOpen, setMobileDrawerOpen] = useState(null);
+    const mobileDrawer = useMemo(() => ({
+        open: mobileDrawerOpen,
+        setOpen: setMobileDrawerOpen,
+    }), [mobileDrawerOpen]);
+    const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+    const commandPalette = useMemo(() => ({
+        open: commandPaletteOpen,
+        setOpen: setCommandPaletteOpen,
+    }), [commandPaletteOpen]);
     const [layoutState, setLayoutState] = useShellLayoutState({
         workspaceId: props.workspace.id,
         appId: activeAppId,
@@ -80,6 +90,7 @@ export function MedaShellProvider(props) {
     const panel = useMemo(() => ({
         mode: layoutState.rightPanel.mode,
         activeView: layoutState.rightPanel.activeView,
+        width: layoutState.rightPanel.width,
         setMode: (mode) => setLayoutState({
             ...layoutState,
             rightPanel: { ...layoutState.rightPanel, mode },
@@ -87,6 +98,10 @@ export function MedaShellProvider(props) {
         setActiveView: (activeView) => setLayoutState({
             ...layoutState,
             rightPanel: { ...layoutState.rightPanel, activeView },
+        }),
+        setWidth: (width) => setLayoutState({
+            ...layoutState,
+            rightPanel: { ...layoutState.rightPanel, width },
         }),
     }), [layoutState, setLayoutState]);
     const contextRail = useMemo(() => ({
@@ -110,6 +125,8 @@ export function MedaShellProvider(props) {
         panel,
         contextRail,
         mobileBottomNav: props.mobileBottomNav ?? defaultMobileBottomNav,
+        mobileDrawer,
+        commandPalette,
         commandPaletteHotkey: props.commandPaletteHotkey ?? 'mod+k',
         selection,
         setSelection,
@@ -121,6 +138,8 @@ export function MedaShellProvider(props) {
         panel,
         contextRail,
         props.mobileBottomNav,
+        mobileDrawer,
+        commandPalette,
         props.commandPaletteHotkey,
         selection,
     ]);

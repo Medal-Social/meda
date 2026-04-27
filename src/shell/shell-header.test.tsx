@@ -2,14 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Menu } from 'lucide-react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  AppTabs,
-  PanelToggle,
-  ShellHeader,
-  ShellHeaderFrame,
-  ShellPanelToggle,
-  WorkspaceSwitcher,
-} from './shell-header.js';
+import { AppTabs, PanelToggle, ShellHeader, WorkspaceSwitcher } from './shell-header.js';
 import { MedaShellProvider } from './shell-provider.js';
 import type { AppDefinition, WorkspaceDefinition } from './types.js';
 
@@ -86,47 +79,7 @@ function renderWithProvider(
 }
 
 // ---------------------------------------------------------------------------
-// Legacy components (preserved for back-compat)
-// ---------------------------------------------------------------------------
-
-describe('ShellHeaderFrame', () => {
-  it('renders left, center, and right header slots', () => {
-    render(
-      <ShellHeaderFrame
-        left={<div>Workspace</div>}
-        center={<nav>Tabs</nav>}
-        right={<button type="button">Action</button>}
-      />
-    );
-
-    expect(screen.getByRole('banner')).toBeInTheDocument();
-    expect(screen.getByText('Workspace')).toBeInTheDocument();
-    expect(screen.getByText('Tabs')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Action' })).toBeInTheDocument();
-    expect(screen.getByTestId('shell-header-actions')).toBeInTheDocument();
-  });
-});
-
-describe('ShellPanelToggle', () => {
-  it('renders the open state label and fires toggle', () => {
-    const onToggle = vi.fn();
-
-    render(<ShellPanelToggle panelOpen onToggle={onToggle} />);
-
-    fireEvent.click(screen.getByLabelText('Close panel'));
-
-    expect(onToggle).toHaveBeenCalledTimes(1);
-  });
-
-  it('renders the closed state label', () => {
-    render(<ShellPanelToggle panelOpen={false} onToggle={vi.fn()} />);
-
-    expect(screen.getByLabelText('Open panel')).toBeInTheDocument();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Task 7.2 — ShellHeader skeleton
+// ShellHeader
 // ---------------------------------------------------------------------------
 
 describe('ShellHeader — renders WorkspaceSwitcher and PanelToggle from context', () => {
@@ -175,7 +128,7 @@ describe('ShellHeader — has no center slot', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Task 7.3 — WorkspaceSwitcher
+// WorkspaceSwitcher
 // ---------------------------------------------------------------------------
 
 describe('WorkspaceSwitcher — renders icon, name, chevron', () => {
@@ -255,7 +208,7 @@ describe('WorkspaceSwitcher — outside click closes the menu', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Task 7.4 — AppTabs
+// AppTabs
 // ---------------------------------------------------------------------------
 
 describe('AppTabs — renders one button per app inside a nav', () => {
@@ -301,7 +254,7 @@ describe('AppTabs — clicking inactive tab calls setActiveApp(id)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Task 7.5 — PanelToggle
+// PanelToggle
 // ---------------------------------------------------------------------------
 
 describe('PanelToggle — toggles panel mode closed → panel', () => {
