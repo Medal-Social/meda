@@ -44,7 +44,7 @@ const preview: Preview = {
     },
     a11y: {
       // Run axe checks on every story render in the addon panel.
-      element: '#storybook-root',
+      context: '#storybook-root',
       manual: false,
     },
   },
