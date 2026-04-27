@@ -1,4 +1,5 @@
 export * from './app-shell.js';
+export * from './icon-rail.js';
 export * from './motion.js';
 export * from './navigation-area.js';
 export * from './shell-app-rail.js';
