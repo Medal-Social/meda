@@ -14,9 +14,7 @@ export function EventCard({ event, size = 'default', onSelect, className }: Even
   const isSelected = event.selected ?? false;
   const isError = event.kind === 'error';
 
-  const liveClasses = isLive
-    ? 'border-emerald-500/40 bg-gradient-to-b from-emerald-500/10 to-card'
-    : '';
+  const liveClasses = isLive ? 'border-success/40 bg-gradient-to-b from-success/10 to-card' : '';
   const errorClasses = isError ? 'border-destructive/40' : '';
   const selectedClasses = isSelected
     ? 'border-primary/60 bg-primary/[0.10] shadow-[0_4px_12px_rgba(0,0,0,0.15)]'
@@ -60,7 +58,7 @@ function LiveDot() {
   return (
     <span
       aria-hidden="true"
-      className="inline-block size-1.5 shrink-0 animate-pulse rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.20)]"
+      className="inline-block size-1.5 shrink-0 animate-pulse rounded-full bg-success shadow-[0_0_0_3px_rgba(16,185,129,0.20)]"
     />
   );
 }

@@ -19,7 +19,7 @@ export function VoiceStatusPill({ phase, thinkingForMs, className }: VoiceStatus
     phase === 'listening'
       ? 'bg-primary text-primary-foreground'
       : phase === 'speaking'
-        ? 'bg-emerald-500 text-white'
+        ? 'bg-success text-success-foreground'
         : phase === 'error'
           ? 'bg-destructive text-destructive-foreground'
           : 'bg-muted text-muted-foreground';

@@ -89,7 +89,7 @@ export function DateSwitcher({ value, now, tz, onChange, className }: DateSwitch
         <Calendar className="size-3.5 text-muted-foreground" />
         <span className="font-medium">{fmtDate(value, tz)}</span>
         {isToday && (
-          <span className="ml-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-500">
+          <span className="ml-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-success">
             today
           </span>
         )}

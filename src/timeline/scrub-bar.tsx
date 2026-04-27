@@ -18,8 +18,8 @@ export interface ScrubBarProps {
 
 const KIND_COLOR: Record<ScrubMark['kind'], string> = {
   turn: 'bg-primary',
-  tool: 'bg-amber-500',
-  barge: 'bg-emerald-500',
+  tool: 'bg-warning',
+  barge: 'bg-success',
   error: 'bg-destructive',
 };
 

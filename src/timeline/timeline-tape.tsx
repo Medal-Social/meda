@@ -124,10 +124,10 @@ export function TimelineTape({
           className={[
             'absolute w-1 rounded-sm',
             event.isLive
-              ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]'
+              ? 'bg-success-600 shadow-[0_0_12px_rgba(16,185,129,0.5)]'
               : event.kind === 'error'
                 ? 'bg-destructive'
-                : 'bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.35)]',
+                : 'bg-info-500 shadow-[0_0_8px_rgba(56,189,248,0.35)]',
           ].join(' ')}
           style={{ left: 44, top: `${top}px`, height: `${height}px` }}
         />
