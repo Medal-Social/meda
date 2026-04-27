@@ -312,8 +312,39 @@ export function App() {
         </section>
 
         <footer className="footer">
+          <div className="footer-showcase">
+            <div className="footer-brand-block">
+              <div className="footer-kicker">Open-source UI software</div>
+              <div className="footer-lockup">
+                <MedalSocialMark className="footer-mark footer-mark--meda" />
+                <div className="footer-lockup-copy">
+                  <div className="footer-logo-title">Meda UI</div>
+                  <p>The interface shell, primitives, and design tokens behind Medal.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="footer-divider" aria-hidden="true" />
+
+            <div className="footer-brand-block">
+              <div className="footer-kicker">Maintained by</div>
+              <a
+                className="footer-lockup footer-lockup--link"
+                href="https://medalsocial.com"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <MedalSocialMark className="footer-mark footer-mark--medal" />
+                <div className="footer-lockup-copy">
+                  <div className="footer-logo-title">Medal Social</div>
+                  <p>Designed, shipped, and battle-tested by the team building Medal.</p>
+                </div>
+              </a>
+            </div>
+          </div>
+
           <div className="footer-inner">
-            <div className="footer-meta">© 2026 Medal Social · Apache-2.0</div>
+            <div className="footer-meta">© 2026 Medal Social · Apache-2.0 · React 19</div>
             <div className="footer-links">
               <a
                 href="https://github.com/Medal-Social/meda/blob/prod/LICENSE"
@@ -344,6 +375,26 @@ export function App() {
         </footer>
       </div>
     </div>
+  );
+}
+
+function MedalSocialMark({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" fill="none" aria-hidden="true" focusable="false">
+      <rect className="footer-mark-bg" width="48" height="48" rx="10" />
+      <path className="footer-mark-line" d="M8 24L24 8L40 24L24 40L8 24Z" strokeWidth="1.3" />
+      <circle className="footer-mark-fill" cx="24" cy="8.5" r="2.5" />
+      <circle className="footer-mark-fill" cx="39.5" cy="24" r="2.5" />
+      <circle className="footer-mark-fill" cx="24" cy="39.5" r="2.5" />
+      <circle className="footer-mark-fill" cx="8.5" cy="24" r="2.5" />
+      <path
+        className="footer-mark-line"
+        d="M21.937 27.5A2 2 0 0 0 20.5 26.063l-6.135-1.582a0.5 0.5 0 0 1 0-0.962l6.135-1.583A2 2 0 0 0 21.937 20.5l1.582-6.135a0.5 0.5 0 0 1 0.963 0l1.581 6.135A2 2 0 0 0 27.5 21.937l6.135 1.581a0.5 0.5 0 0 1 0 0.964L27.5 26.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a0.5 0.5 0 0 1-0.963 0z"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
