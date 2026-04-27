@@ -432,6 +432,63 @@ describe('MedaShellProvider — mobileDrawer.open / setOpen round-trip', () => {
 });
 
 // ---------------------------------------------------------------------------
+// MedaShellProvider — panel.focus sugar method
+// ---------------------------------------------------------------------------
+
+describe('MedaShellProvider — panel.focus', () => {
+  function makePanelWrapper(initialMode: 'closed' | 'panel' | 'expanded' | 'fullscreen') {
+    const storage = makeStubStorage({
+      rightPanel: { mode: initialMode, activeView: null, width: 340 },
+      contextRail: { width: 240, collapsed: false },
+    });
+    return ({ children }: { children: ReactNode }) => (
+      <MedaShellProvider workspace={workspace} apps={apps} storage={storage}>
+        {children}
+      </MedaShellProvider>
+    );
+  }
+
+  it('panel.focus — opens panel from closed and sets activeView', () => {
+    const { result } = renderHook(() => useMedaShell(), {
+      wrapper: makePanelWrapper('closed'),
+    });
+
+    act(() => {
+      result.current.panel.focus('ai');
+    });
+
+    expect(result.current.panel.mode).toBe('panel');
+    expect(result.current.panel.activeView).toBe('ai');
+  });
+
+  it('panel.focus — preserves expanded mode when already open', () => {
+    const { result } = renderHook(() => useMedaShell(), {
+      wrapper: makePanelWrapper('expanded'),
+    });
+
+    act(() => {
+      result.current.panel.focus('inspector');
+    });
+
+    expect(result.current.panel.mode).toBe('expanded');
+    expect(result.current.panel.activeView).toBe('inspector');
+  });
+
+  it('panel.focus — preserves fullscreen mode when already open', () => {
+    const { result } = renderHook(() => useMedaShell(), {
+      wrapper: makePanelWrapper('fullscreen'),
+    });
+
+    act(() => {
+      result.current.panel.focus('notes');
+    });
+
+    expect(result.current.panel.mode).toBe('fullscreen');
+    expect(result.current.panel.activeView).toBe('notes');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // MedaShellProvider — commandPalette slice
 // ---------------------------------------------------------------------------
 

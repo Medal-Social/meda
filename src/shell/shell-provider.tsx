@@ -101,6 +101,11 @@ interface MedaShellContextValue {
     setMode: (m: PanelMode) => void;
     setActiveView: (v: string | null) => void;
     setWidth: (w: number) => void;
+    /** Opens panel + switches to viewId in one call.
+     * Sugar for app keyboard shortcuts (e.g. Cmd+J → panel.focus('ai')).
+     * If already open in 'panel', 'expanded', or 'fullscreen', the existing
+     * mode is preserved — only flips closed → panel. */
+    focus: (viewId: string) => void;
   };
   contextRail: {
     width: number;
@@ -228,6 +233,16 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
           ...layoutState,
           rightPanel: { ...layoutState.rightPanel, width },
         }),
+      // focus(viewId) — opens panel + switches to view in one call.
+      // Only flips closed → panel; preserves expanded / fullscreen modes.
+      focus: (viewId: string) => {
+        const nextMode: PanelMode =
+          layoutState.rightPanel.mode === 'closed' ? 'panel' : layoutState.rightPanel.mode;
+        setLayoutState({
+          ...layoutState,
+          rightPanel: { ...layoutState.rightPanel, mode: nextMode, activeView: viewId },
+        });
+      },
     }),
     [layoutState, setLayoutState]
   );
