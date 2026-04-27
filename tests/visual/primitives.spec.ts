@@ -52,7 +52,18 @@ test.describe('Storybook primitives — visual snapshots', () => {
 
   test('snapshots every non-WebGL story', async ({ page }) => {
     test.setTimeout(180_000);
+    // Default desktop viewport for most stories; mobile stories override below.
+    const DESKTOP = { width: 1280, height: 720 };
+    const MOBILE = { width: 375, height: 667 };
     for (const story of stories) {
+      // Mobile-only components (MobileHeader / MobileBottomNav / MobileDrawers)
+      // gate their render on useShellViewport() === 'mobile' which reads
+      // matchMedia from the actual window. Resize Playwright for these
+      // stories so the components actually render; otherwise they return
+      // null and #storybook-root stays empty.
+      const isMobileStory = story.id.includes('mobile-mobile');
+      await page.setViewportSize(isMobileStory ? MOBILE : DESKTOP);
+
       const url = `/iframe.html?id=${encodeURIComponent(story.id)}&viewMode=story`;
       await page.goto(url, { waitUntil: 'networkidle' });
       // Storybook renders into #storybook-root and removes the `hidden`
