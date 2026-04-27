@@ -4,6 +4,7 @@ import { Menu } from 'lucide-react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   AppTabs,
+  PanelToggle,
   ShellHeader,
   ShellHeaderFrame,
   ShellPanelToggle,
@@ -246,5 +247,59 @@ describe('AppTabs — clicking inactive tab calls setActiveApp(id)', () => {
     // After click, Billing should have active styles
     expect(billingTab.className).toContain('border-b-2');
     expect(billingTab.className).toContain('border-primary');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 7.5 — PanelToggle
+// ---------------------------------------------------------------------------
+
+describe('PanelToggle — toggles panel mode closed → panel', () => {
+  it('clicking while closed sets mode to panel (aria-label flips)', () => {
+    renderWithProvider(<PanelToggle />);
+
+    const btn = screen.getByRole('button', { name: 'Open right panel' });
+    fireEvent.click(btn);
+
+    expect(screen.getByRole('button', { name: 'Close right panel' })).toBeInTheDocument();
+  });
+});
+
+describe('PanelToggle — toggles panel mode panel → closed', () => {
+  it('clicking while open sets mode to closed (aria-label flips back)', () => {
+    renderWithProvider(<PanelToggle />);
+
+    const openBtn = screen.getByRole('button', { name: 'Open right panel' });
+    fireEvent.click(openBtn);
+
+    const closeBtn = screen.getByRole('button', { name: 'Close right panel' });
+    fireEvent.click(closeBtn);
+
+    expect(screen.getByRole('button', { name: 'Open right panel' })).toBeInTheDocument();
+  });
+});
+
+describe('PanelToggle — active state styled when panel is open', () => {
+  it('button has bg-accent class when panel mode is not closed', () => {
+    renderWithProvider(<PanelToggle />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open right panel' }));
+
+    const btn = screen.getByRole('button', { name: 'Close right panel' });
+    expect(btn.className).toContain('bg-accent');
+  });
+});
+
+describe('PanelToggle — renders PanelRightOpen icon when closed, PanelRightClose when open', () => {
+  it('aria-label reflects the next action correctly', () => {
+    renderWithProvider(<PanelToggle />);
+
+    // Closed → label says "Open right panel"
+    expect(screen.getByRole('button', { name: 'Open right panel' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open right panel' }));
+
+    // Open → label says "Close right panel"
+    expect(screen.getByRole('button', { name: 'Close right panel' })).toBeInTheDocument();
   });
 });

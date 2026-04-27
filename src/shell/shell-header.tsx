@@ -220,17 +220,26 @@ export function AppTabs() {
 }
 
 // ---------------------------------------------------------------------------
-// Task 7.5 stub — PanelToggle (stub; full implementation in next commit)
+// Task 7.5 — PanelToggle
 // ---------------------------------------------------------------------------
 
 export function PanelToggle() {
   const { panel } = useMedaShell();
   const isOpen = panel.mode !== 'closed';
+
+  const handleClick = () => {
+    panel.setMode(isOpen ? 'closed' : 'panel');
+  };
+
   return (
     <button
       type="button"
       aria-label={isOpen ? 'Close right panel' : 'Open right panel'}
-      className="inline-flex h-8 w-8 items-center justify-center rounded-md"
+      onClick={handleClick}
+      className={cn(
+        'inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors',
+        isOpen ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-accent'
+      )}
     >
       {isOpen ? (
         <PanelRightClose size={18} aria-hidden="true" />
