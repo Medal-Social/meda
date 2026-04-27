@@ -47,6 +47,10 @@ const preview: Preview = {
       // Run axe checks on every story render in the addon panel.
       context: '#storybook-root',
       manual: false,
+      // In vitest browser mode, surface a11y violations as todos rather than
+      // failing the test run — the dedicated `pnpm test` (jsdom) and
+      // Chromatic a11y reports are the source of truth.
+      test: 'off',
     },
   },
   decorators: [
