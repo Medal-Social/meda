@@ -213,6 +213,35 @@ describe('WorkspaceSwitcher — workspaceMenuFooter slot renders extra items', (
   });
 });
 
+describe('WorkspaceSwitcher — Escape closes the menu', () => {
+  it('pressing Escape after opening removes menu items from DOM', () => {
+    renderWithProvider(<WorkspaceSwitcher />);
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+    expect(screen.getByText('Sign out')).toBeInTheDocument();
+
+    fireEvent.keyDown(document.activeElement ?? document.body, {
+      key: 'Escape',
+      code: 'Escape',
+    });
+
+    expect(screen.queryByText('Sign out')).not.toBeInTheDocument();
+  });
+});
+
+describe('WorkspaceSwitcher — outside click closes the menu', () => {
+  it('clicking outside the menu hides menu items', () => {
+    renderWithProvider(<WorkspaceSwitcher />);
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+    expect(screen.getByText('Sign out')).toBeInTheDocument();
+
+    fireEvent.pointerDown(document.body);
+
+    expect(screen.queryByText('Sign out')).not.toBeInTheDocument();
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Task 7.4 — AppTabs
 // ---------------------------------------------------------------------------

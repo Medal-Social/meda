@@ -1,7 +1,14 @@
 'use client';
 
 import { ChevronDown, PanelRightClose, PanelRightOpen } from 'lucide-react';
-import { type ReactNode, useState } from 'react';
+import type { ReactNode } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu.js';
 import { cn } from '../lib/utils.js';
 import { useMedaShell } from './shell-provider.js';
 import { ThemeToggle } from './theme.js';
@@ -76,21 +83,15 @@ export interface WorkspaceSwitcherProps {
 export function WorkspaceSwitcher({ workspaceMenuFooter }: WorkspaceSwitcherProps = {}) {
   const { workspace, workspaces } = useMedaShell();
 
-  // Controlled open state — avoids portal/jsdom issues with @base-ui/react Menu.Portal.
-  // The menu popup renders inline in the component tree for full test coverage.
-  const [open, setOpen] = useState(false);
-
-  const toggle = () => setOpen((o) => !o);
-  const close = () => setOpen(false);
-
   return (
-    <div className="relative">
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-haspopup="menu"
-        onClick={toggle}
-        className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium hover:bg-accent"
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <button
+            type="button"
+            className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium hover:bg-accent"
+          />
+        }
       >
         {workspace.icon != null && (
           <span className="shrink-0" aria-hidden="true">
@@ -99,86 +100,43 @@ export function WorkspaceSwitcher({ workspaceMenuFooter }: WorkspaceSwitcherProp
         )}
         <span>{workspace.name}</span>
         <ChevronDown size={14} aria-hidden="true" />
-      </button>
+      </DropdownMenuTrigger>
 
-      {/* Backdrop to dismiss on outside click */}
-      {open && <div role="none" className="fixed inset-0 z-40" onClick={close} />}
+      <DropdownMenuContent className="min-w-[200px]">
+        {/* Workspace list */}
+        {workspaces.length > 0 && (
+          <>
+            {workspaces.map((ws) => (
+              <DropdownMenuItem key={ws.id}>
+                {/* TODO: wire setWorkspace once the provider exposes it (out of scope for Task 7.3.1). */}
+                {ws.icon != null && <span aria-hidden="true">{ws.icon}</span>}
+                {ws.name}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+          </>
+        )}
 
-      {open && (
-        <div
-          role="menu"
-          className={cn(
-            'absolute left-0 top-full z-50 mt-1 min-w-[200px] rounded-md border border-border',
-            'bg-popover py-1 shadow-md'
-          )}
-        >
-          {/* Workspace list */}
-          {workspaces.length > 0 && (
-            <>
-              {workspaces.map((ws) => (
-                <button
-                  key={ws.id}
-                  type="button"
-                  role="menuitem"
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent"
-                  onClick={close}
-                >
-                  {ws.icon != null && <span aria-hidden="true">{ws.icon}</span>}
-                  {ws.name}
-                </button>
-              ))}
-              <hr className="my-1 border-border" />
-            </>
-          )}
+        <DropdownMenuItem>Manage workspaces</DropdownMenuItem>
 
-          <button
-            type="button"
-            role="menuitem"
-            className="flex w-full items-center px-3 py-1.5 text-sm hover:bg-accent"
-            onClick={close}
-          >
-            Manage workspaces
-          </button>
+        <DropdownMenuSeparator />
 
-          <hr className="my-1 border-border" />
+        <DropdownMenuItem>Settings</DropdownMenuItem>
+        <DropdownMenuItem>Profile</DropdownMenuItem>
 
-          <button
-            type="button"
-            role="menuitem"
-            className="flex w-full items-center px-3 py-1.5 text-sm hover:bg-accent"
-            onClick={close}
-          >
-            Settings
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            className="flex w-full items-center px-3 py-1.5 text-sm hover:bg-accent"
-            onClick={close}
-          >
-            Profile
-          </button>
-
-          {/* Theme toggle inline per spec §22a */}
-          <div className="flex items-center px-3 py-1.5">
-            <ThemeToggle />
-          </div>
-
-          <hr className="my-1 border-border" />
-
-          <button
-            type="button"
-            role="menuitem"
-            className="flex w-full items-center px-3 py-1.5 text-sm hover:bg-accent"
-            onClick={close}
-          >
-            Sign out
-          </button>
-
-          {workspaceMenuFooter}
+        {/* ThemeToggle inline per spec §22a — rendered in a non-interactive wrapper
+            because nesting a button inside MenuPrimitive.Item is invalid HTML. */}
+        <div role="none" className="flex items-center px-1.5 py-1">
+          <ThemeToggle />
         </div>
-      )}
-    </div>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem>Sign out</DropdownMenuItem>
+
+        {workspaceMenuFooter}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
