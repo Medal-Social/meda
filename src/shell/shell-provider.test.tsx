@@ -47,6 +47,19 @@ describe('useMedaShell', () => {
 });
 
 describe('MedaShellProvider', () => {
+  it('throws when apps is empty', () => {
+    // suppress React's expected error log noise
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(() =>
+      render(
+        <MedaShellProvider workspace={workspace} apps={[]}>
+          <div />
+        </MedaShellProvider>
+      )
+    ).toThrow(/at least one AppDefinition/);
+    errSpy.mockRestore();
+  });
+
   it('exposes workspace, apps, activeApp, panel state via useMedaShell', () => {
     const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
     const ctx = result.current;
@@ -117,7 +130,7 @@ describe('MedaShellProvider', () => {
 
     // useShellLayoutState calls storage.load exactly once after mount
     expect(storage.load).toHaveBeenCalledTimes(1);
-    expect(storage.load).toHaveBeenCalledWith(expect.stringContaining('meda:shell:'));
+    expect(storage.load).toHaveBeenCalledWith('meda:shell:ws1:app-a');
   });
 
   it('accepts custom mobileBottomNav array', () => {

@@ -1,0 +1,94 @@
+/* ============================================================
+   Layer 1 — Meda base tokens
+   Declared on :root (light) and .dark
+   ============================================================ */
+:root {
+  --meda-base: #f6f7f9;
+  --meda-surface: #ffffff;
+  --meda-elevated: #eef1f5;
+  --meda-foreground: #1f2530;
+  --meda-muted: #5d677c;
+  --meda-subtle: #8b95a6;
+  --meda-accent: #1a1035;
+}
+.dark {
+  --meda-base: #07080c;
+  --meda-surface: #0c0e14;
+  --meda-elevated: #11131a;
+  --meda-foreground: #f5f5f7;
+  --meda-muted: #8a94a6;
+  --meda-subtle: #606e89;
+  --meda-accent: #1a1035;
+}
+
+/* ============================================================
+   Layer 2 — shadcn semantic tokens
+   Expressed as references to Layer 1
+   ============================================================ */
+:root {
+  --background: var(--meda-base);
+  --foreground: var(--meda-foreground);
+  --card: var(--meda-surface);
+  --card-foreground: var(--meda-foreground);
+  --popover: var(--meda-surface);
+  --popover-foreground: var(--meda-foreground);
+  --primary: var(--meda-accent);
+  --primary-foreground: var(--meda-surface);
+  --secondary: var(--meda-elevated);
+  --secondary-foreground: var(--meda-foreground);
+  --muted: var(--meda-elevated);
+  --muted-foreground: var(--meda-muted);
+  --accent: var(--meda-elevated);
+  --accent-foreground: var(--meda-foreground);
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: hsl(0 0% 0% / 0.06);
+  --input: hsl(0 0% 0% / 0.06);
+  --ring: var(--meda-accent);
+  --radius: 0.5rem;
+}
+.dark {
+  --border: hsl(0 0% 100% / 0.06);
+  --input: hsl(0 0% 100% / 0.06);
+}
+
+/* ============================================================
+   Layer 3 — Shell semantic surface + sizing tokens
+   ============================================================ */
+:root {
+  --shell-header: var(--meda-surface);
+  --shell-rail: var(--meda-surface);
+  --shell-context: var(--meda-surface);
+  --shell-main: var(--meda-base);
+  --shell-panel: var(--meda-elevated);
+  --shell-border: hsl(0 0% 0% / 0.06);
+  --shell-shadow: 0 4px 12px hsl(0 0% 0% / 0.04);
+  --shell-header-height: 56px;
+  --shell-rail-width: 60px;
+  --shell-context-default: 300px;
+  --shell-context-min: 240px;
+  --shell-context-max: 420px;
+  --shell-panel-default: 340px;
+  --shell-panel-min: 300px;
+  --shell-panel-max: 520px;
+  --shell-bottom-nav-height: 56px;
+  --z-shell-header: 40;
+  --z-shell-panel: 45;
+  --z-shell-fullscreen: 60;
+}
+.dark {
+  --shell-border: hsl(0 0% 100% / 0.06);
+  --shell-shadow: 0 4px 12px hsl(0 0% 0% / 0.45);
+}
+
+/* ============================================================
+   Motion tokens — theme-independent timing and easing
+   Mirror of motion.ts (Phase 5)
+   ============================================================ */
+:root {
+  --motion-fast: 140ms;
+  --motion-default: 200ms;
+  --motion-panel: 240ms;
+  --motion-fullscreen: 280ms;
+  --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}

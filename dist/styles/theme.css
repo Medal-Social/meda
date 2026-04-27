@@ -1,0 +1,47 @@
+@import "./tokens.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* Shadcn semantic colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Shell semantic colors → bg-shell-header, etc. */
+  --color-shell-header: var(--shell-header);
+  --color-shell-rail: var(--shell-rail);
+  --color-shell-context: var(--shell-context);
+  --color-shell-main: var(--shell-main);
+  --color-shell-panel: var(--shell-panel);
+  --color-shell-border: var(--shell-border);
+
+  /* Shell sizing → h-shell-header, w-shell-rail, etc. */
+  --spacing-shell-header: var(--shell-header-height);
+  --spacing-shell-rail: var(--shell-rail-width);
+  --spacing-shell-context: var(--shell-context-default);
+  --spacing-shell-panel: var(--shell-panel-default);
+  --spacing-shell-bottom-nav: var(--shell-bottom-nav-height);
+
+  /* Font families → font-sans, font-mono */
+  --font-sans:
+    "Geist Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  --font-mono: "Geist Mono Variable", "SF Mono", "Fira Code", "Fira Mono", monospace;
+}

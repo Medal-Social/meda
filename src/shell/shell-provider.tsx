@@ -86,13 +86,14 @@ export interface MedaShellProviderProps {
 // ---------------------------------------------------------------------------
 
 export function MedaShellProvider(props: MedaShellProviderProps) {
+  // Guard: apps array must not be empty
+  if (props.apps.length === 0) {
+    throw new Error('MedaShellProvider: apps must contain at least one AppDefinition');
+  }
+
   // Stable storage reference — prevents useShellLayoutState's hydration
   // effect from looping when an inline adapter would change identity each render.
-  const storage = useMemo(
-    () => props.storage ?? createLocalStorageAdapter(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [props.storage]
-  );
+  const storage = useMemo(() => props.storage ?? createLocalStorageAdapter(), [props.storage]);
 
   const [activeAppId, setActiveApp] = useState(props.defaultActiveApp ?? props.apps[0]?.id ?? '');
 
