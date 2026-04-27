@@ -9,7 +9,9 @@ import {
   HelpCircle,
   Inbox,
   Info,
+  LogOut,
   MessageSquare,
+  Plus,
   Send,
   Settings,
   Star,
@@ -18,9 +20,13 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { AppShell, AppShellBody } from './app-shell.js';
+import { CommandPalette, useCommands } from './command-palette.js';
 import { ContextRail } from './context-rail.js';
 import type { IconRailItem } from './icon-rail.js';
 import { IconRail } from './icon-rail.js';
+import { MobileBottomNav } from './mobile/mobile-bottom-nav.js';
+import { MobileDrawers } from './mobile/mobile-drawers.js';
+import { MobileHeader } from './mobile/mobile-header.js';
 import { RightPanel } from './right-panel.js';
 import { ShellHeader } from './shell-header.js';
 import { ShellMain } from './shell-main.js';
@@ -156,6 +162,45 @@ function withProvider(
 }
 
 // ---------------------------------------------------------------------------
+// DemoCommands — registers demo commands inside <CommandPalette>
+// ---------------------------------------------------------------------------
+
+function DemoCommands() {
+  useCommands([
+    {
+      id: 'nav-inbox',
+      label: 'Go to Inbox',
+      icon: Inbox,
+      group: 'Navigation',
+      run: async () => alert('Navigate to Inbox'),
+    },
+    {
+      id: 'action-new-email',
+      label: 'New email',
+      icon: Plus,
+      group: 'Actions',
+      shortcut: 'C',
+      run: async () => alert('New email'),
+    },
+    {
+      id: 'nav-settings',
+      label: 'Settings',
+      icon: Settings,
+      group: 'Navigation',
+      run: async () => alert('Navigate to Settings'),
+    },
+    {
+      id: 'account-sign-out',
+      label: 'Sign out',
+      icon: LogOut,
+      group: 'Account',
+      run: async () => alert('Sign out'),
+    },
+  ]);
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Meta
 // ---------------------------------------------------------------------------
 
@@ -211,6 +256,7 @@ export const WithDarkBackground: Story = {
 
 /**
  * Full combined desktop layout: ShellHeader + IconRail + ContextRail + ShellMain + RightPanel.
+ * Wrapped in <CommandPalette> — press ⌘K to open the palette with demo commands.
  * This is the canonical representation of the complete Meda shell at RC.1.
  * Hover rail icons for tooltips. Drag the ContextRail right edge to resize it.
  * Use the panel header controls to cycle modes or close the panel.
@@ -220,29 +266,85 @@ export const Combined: Story = {
     (Story) => withProvider(WORKSPACE, [WORKSPACE, WORKSPACE_2, WORKSPACE_3], APPS, Story, 'panel'),
   ],
   render: () => (
-    <AppShell>
-      <ShellHeader
-        globalActions={
-          <button
-            type="button"
-            className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90"
-          >
-            + New
-          </button>
-        }
-      />
-      <AppShellBody>
-        <IconRail mainItems={RAIL_MAIN_ITEMS} utilityItems={RAIL_UTILITY_ITEMS} activeId="inbox" />
-        <ContextRail appId="inbox" module={INBOX_MODULE} activeItemId="inbox" />
-        <ShellMain layout="workspace">
-          <h1 className="text-2xl font-semibold text-foreground mb-2">Inbox</h1>
-          <p className="text-muted-foreground">
-            Main content area — rendered inside ShellMain with workspace layout (max-w-[1280px],
-            responsive padding). The RightPanel is on the right edge.
-          </p>
-        </ShellMain>
-        <RightPanel panelViews={PANEL_VIEWS} defaultView="inspector" />
-      </AppShellBody>
-    </AppShell>
+    <CommandPalette>
+      <DemoCommands />
+      <AppShell>
+        <ShellHeader
+          globalActions={
+            <button
+              type="button"
+              className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90"
+            >
+              + New
+            </button>
+          }
+        />
+        <AppShellBody>
+          <IconRail
+            mainItems={RAIL_MAIN_ITEMS}
+            utilityItems={RAIL_UTILITY_ITEMS}
+            activeId="inbox"
+          />
+          <ContextRail appId="inbox" module={INBOX_MODULE} activeItemId="inbox" />
+          <ShellMain layout="workspace">
+            <h1 className="text-2xl font-semibold text-foreground mb-2">Inbox</h1>
+            <p className="text-muted-foreground">
+              Main content area — rendered inside ShellMain with workspace layout (max-w-[1280px],
+              responsive padding). Press ⌘K to open the command palette.
+            </p>
+          </ShellMain>
+          <RightPanel panelViews={PANEL_VIEWS} defaultView="inspector" />
+        </AppShellBody>
+      </AppShell>
+    </CommandPalette>
+  ),
+};
+
+/**
+ * Mobile combined layout — demonstrates the Phase 13 auto-hide wiring.
+ *
+ * On a mobile viewport:
+ * - <ShellHeader>, <IconRail>, <ContextRail>, <RightPanel> all return null (auto-hidden).
+ * - <MobileHeader> and <MobileBottomNav> render instead.
+ * - <MobileDrawers> mounts the drawer slots (menu / module / panels / ai).
+ *
+ * Set the Storybook viewport to "Mobile" to see this in action.
+ */
+export const MobileCombined: Story = {
+  parameters: { viewport: { defaultViewport: 'mobile1' } },
+  decorators: [
+    (Story) => withProvider(WORKSPACE, [WORKSPACE, WORKSPACE_2, WORKSPACE_3], APPS, Story, 'panel'),
+  ],
+  render: () => (
+    <CommandPalette>
+      <DemoCommands />
+      <AppShell>
+        {/* Desktop chrome — auto-hides on mobile */}
+        <ShellHeader />
+        {/* Mobile chrome — only visible on mobile */}
+        <MobileHeader />
+        <AppShellBody>
+          {/* Desktop chrome — auto-hides on mobile */}
+          <IconRail
+            mainItems={RAIL_MAIN_ITEMS}
+            utilityItems={RAIL_UTILITY_ITEMS}
+            activeId="inbox"
+          />
+          <ContextRail appId="inbox" module={INBOX_MODULE} activeItemId="inbox" />
+          <ShellMain layout="workspace">
+            <h1 className="text-2xl font-semibold text-foreground mb-2">Mobile main content</h1>
+            <p className="text-muted-foreground">
+              On mobile: only MobileHeader + MobileBottomNav are visible. Desktop chrome
+              (ShellHeader, IconRail, ContextRail, RightPanel) auto-hides via useShellViewport().
+            </p>
+          </ShellMain>
+          {/* Desktop chrome — auto-hides on mobile */}
+          <RightPanel panelViews={PANEL_VIEWS} defaultView="inspector" />
+        </AppShellBody>
+        {/* Mobile chrome — only visible on mobile */}
+        <MobileBottomNav />
+        <MobileDrawers menuItems={RAIL_MAIN_ITEMS} module={INBOX_MODULE} panelViews={PANEL_VIEWS} />
+      </AppShell>
+    </CommandPalette>
   ),
 };
