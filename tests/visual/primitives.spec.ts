@@ -28,9 +28,11 @@ interface StoryIndex {
 
 // VoiceOrb stories use react-three-fiber / WebGL — Playwright's headless
 // chromium can't reliably render WebGL identically across CI runners, so we
-// skip these from the visual baseline. (The a11y suite still covers them.)
+// skip those specific stories from the visual baseline. (The a11y suite
+// still covers them.) Other Voice/* stories (VoiceLevel, VoiceStatusPill)
+// are pure DOM and DO get visual coverage.
+const SKIP_STORY_TITLES = new Set<string>(['Voice/VoiceOrb']);
 const SKIP_STORY_IDS = new Set<string>();
-const SKIP_TITLE_PREFIXES = ['Voice/'];
 
 test.describe('Storybook primitives — visual snapshots', () => {
   let stories: StoryEntry[] = [];
@@ -42,7 +44,7 @@ test.describe('Storybook primitives — visual snapshots', () => {
     stories = Object.values(index.entries).filter((entry) => {
       if (entry.type && entry.type !== 'story') return false;
       if (SKIP_STORY_IDS.has(entry.id)) return false;
-      if (SKIP_TITLE_PREFIXES.some((p) => entry.title.startsWith(p))) return false;
+      if (SKIP_STORY_TITLES.has(entry.title)) return false;
       return true;
     });
     expect(stories.length, 'expected at least one story to snapshot').toBeGreaterThan(0);
