@@ -1,3 +1,4 @@
+export * from './motion.js';
 export * from './navigation-area.js';
 export * from './shell-app-rail.js';
 export * from './shell-desktop-panel-dock.js';
