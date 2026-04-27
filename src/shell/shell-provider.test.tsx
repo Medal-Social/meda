@@ -381,7 +381,9 @@ describe('MedaShellProvider — panel.width / panel.setWidth round-trip via useS
     });
 
     expect(storage.save).toHaveBeenCalled();
-    const savedState = storage.save.mock.calls[storage.save.mock.calls.length - 1][1];
+    // biome-ignore lint/suspicious/noExplicitAny: accessing vi.fn().mock in test
+    const saveSpy = storage.save as any;
+    const savedState = saveSpy.mock.calls[saveSpy.mock.calls.length - 1][1];
     expect((savedState as { rightPanel: { width: number } }).rightPanel.width).toBe(460);
   });
 });
