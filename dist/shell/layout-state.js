@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 export function createLocalStorageAdapter() {
     let timer = null;
     let pending = {};
@@ -78,9 +78,12 @@ export function useShellLayoutState({ workspaceId, appId, storage, }) {
             setStateInternal(stored);
         }
     }, [key, storage]);
-    const setState = (next) => {
-        setStateInternal(next);
-        storage.save(key, next);
-    };
+    const setState = useCallback((next) => {
+        setStateInternal((prev) => {
+            const resolved = typeof next === 'function' ? next(prev) : next;
+            storage.save(key, resolved);
+            return resolved;
+        });
+    }, [key, storage]);
     return [state, setState];
 }

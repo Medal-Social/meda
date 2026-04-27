@@ -83,47 +83,43 @@ export function MedaShellProvider(props) {
         appId: activeAppId,
         storage,
     });
-    // NOTE: The narrower setters read the closure-captured `layoutState`.
-    // Calling two setters in the same tick means only the last write wins.
-    // This is acceptable for RC.1; add updater-form support to
-    // useShellLayoutState as a follow-up if needed.
     const panel = useMemo(() => ({
         mode: layoutState.rightPanel.mode,
         activeView: layoutState.rightPanel.activeView,
         width: layoutState.rightPanel.width,
-        setMode: (mode) => setLayoutState({
-            ...layoutState,
-            rightPanel: { ...layoutState.rightPanel, mode },
-        }),
-        setActiveView: (activeView) => setLayoutState({
-            ...layoutState,
-            rightPanel: { ...layoutState.rightPanel, activeView },
-        }),
-        setWidth: (width) => setLayoutState({
-            ...layoutState,
-            rightPanel: { ...layoutState.rightPanel, width },
-        }),
+        setMode: (mode) => setLayoutState((prev) => ({
+            ...prev,
+            rightPanel: { ...prev.rightPanel, mode },
+        })),
+        setActiveView: (activeView) => setLayoutState((prev) => ({
+            ...prev,
+            rightPanel: { ...prev.rightPanel, activeView },
+        })),
+        setWidth: (width) => setLayoutState((prev) => ({
+            ...prev,
+            rightPanel: { ...prev.rightPanel, width },
+        })),
         // focus(viewId) — opens panel + switches to view in one call.
         // Only flips closed → panel; preserves expanded / fullscreen modes.
-        focus: (viewId) => {
-            const nextMode = layoutState.rightPanel.mode === 'closed' ? 'panel' : layoutState.rightPanel.mode;
-            setLayoutState({
-                ...layoutState,
-                rightPanel: { ...layoutState.rightPanel, mode: nextMode, activeView: viewId },
-            });
-        },
+        focus: (viewId) => setLayoutState((prev) => {
+            const nextMode = prev.rightPanel.mode === 'closed' ? 'panel' : prev.rightPanel.mode;
+            return {
+                ...prev,
+                rightPanel: { ...prev.rightPanel, mode: nextMode, activeView: viewId },
+            };
+        }),
     }), [layoutState, setLayoutState]);
     const contextRail = useMemo(() => ({
         width: layoutState.contextRail.width,
         collapsed: layoutState.contextRail.collapsed,
-        setWidth: (width) => setLayoutState({
-            ...layoutState,
-            contextRail: { ...layoutState.contextRail, width },
-        }),
-        setCollapsed: (collapsed) => setLayoutState({
-            ...layoutState,
-            contextRail: { ...layoutState.contextRail, collapsed },
-        }),
+        setWidth: (width) => setLayoutState((prev) => ({
+            ...prev,
+            contextRail: { ...prev.contextRail, width },
+        })),
+        setCollapsed: (collapsed) => setLayoutState((prev) => ({
+            ...prev,
+            contextRail: { ...prev.contextRail, collapsed },
+        })),
     }), [layoutState, setLayoutState]);
     const value = useMemo(() => ({
         workspace: props.workspace,
