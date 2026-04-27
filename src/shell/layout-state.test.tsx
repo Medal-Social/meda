@@ -1,5 +1,7 @@
+import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createLocalStorageAdapter } from './layout-state';
+import type { ShellStorageAdapter } from './layout-state';
+import { createLocalStorageAdapter, useShellLayoutState } from './layout-state';
 
 function createStorageMock() {
   const store = new Map<string, string>();
@@ -88,5 +90,98 @@ describe('storage adapter', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// useShellLayoutState
+// ---------------------------------------------------------------------------
+
+const _DEFAULTS = {
+  contextRail: { width: 300, collapsed: false },
+  rightPanel: { mode: 'closed', activeView: null, width: 340 },
+};
+
+function makeStubStorage(loadReturn: unknown = null): ShellStorageAdapter {
+  return {
+    load: vi.fn(() => loadReturn),
+    save: vi.fn(),
+  };
+}
+
+describe('useShellLayoutState', () => {
+  it('hydrates from storage in useEffect (initial render uses defaults)', async () => {
+    const stored = {
+      contextRail: { width: 260, collapsed: true },
+      rightPanel: { mode: 'panel', activeView: 'chat', width: 380 },
+    };
+    const storage = makeStubStorage(stored);
+
+    const { result } = renderHook(() =>
+      useShellLayoutState({ workspaceId: 'w1', appId: 'a1', storage })
+    );
+
+    // storage.load must have been called (inside useEffect, after mount)
+    expect(storage.load).toHaveBeenCalledTimes(1);
+
+    // After effects settle, state should equal the stored value
+    expect(result.current[0]).toEqual(stored);
+  });
+
+  it('writes through to adapter on update', () => {
+    const storage = makeStubStorage(null);
+
+    const { result } = renderHook(() =>
+      useShellLayoutState({ workspaceId: 'w1', appId: 'a1', storage })
+    );
+
+    const next = {
+      contextRail: { width: 250, collapsed: false },
+      rightPanel: { mode: 'closed' as const, activeView: null, width: 340 },
+    };
+
+    act(() => {
+      result.current[1](next);
+    });
+
+    expect(storage.save).toHaveBeenCalledTimes(1);
+    expect(storage.save).toHaveBeenCalledWith('meda:shell:w1:a1', next);
+    expect(result.current[0]).toEqual(next);
+  });
+
+  it('keys by (workspaceId, appId)', () => {
+    const storage = makeStubStorage(null);
+
+    // First hook instance: app a1
+    const { result: r1 } = renderHook(() =>
+      useShellLayoutState({ workspaceId: 'w1', appId: 'a1', storage })
+    );
+
+    const stateA1 = {
+      contextRail: { width: 280, collapsed: false },
+      rightPanel: { mode: 'closed' as const, activeView: null, width: 340 },
+    };
+
+    act(() => {
+      r1.current[1](stateA1);
+    });
+
+    expect(storage.save).toHaveBeenLastCalledWith('meda:shell:w1:a1', stateA1);
+
+    // Second hook instance: same workspace, different app a2
+    const { result: r2 } = renderHook(() =>
+      useShellLayoutState({ workspaceId: 'w1', appId: 'a2', storage })
+    );
+
+    const stateA2 = {
+      contextRail: { width: 300, collapsed: false },
+      rightPanel: { mode: 'panel' as const, activeView: 'notes', width: 360 },
+    };
+
+    act(() => {
+      r2.current[1](stateA2);
+    });
+
+    expect(storage.save).toHaveBeenLastCalledWith('meda:shell:w1:a2', stateA2);
   });
 });
