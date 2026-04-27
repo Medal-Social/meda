@@ -7,15 +7,18 @@
 // recursively, so these track the real cost a consumer pays when they
 // `import { ... } from '@medalsocial/meda/<entry>'`.
 //
-// Shell v2 ships an opinionated header + 4-mode panel + command palette +
-// mobile drawers as one cohesive surface. The pre-Shell-v2 budget of 6.5 kB
-// was set against the v0.x partial-shell. Task 7.3.1 introduced @base-ui/react/menu
-// for WorkspaceSwitcher which pulls in @floating-ui/* (~45 kB new dep). Measured
-// post-7.3.1 size is 59.7 kB; 68 kB = measured + ~15% headroom. Reassess
-// split-into-sub-entries for v1.1+ once consumer adoption proves which slices
-// apps actually need. Future phases (cmdk, vaul, react-resizable-panels) are
-// already partially shared via @base-ui's floating-ui dep so marginal cost
-// for those phases should be smaller than this jump.
+// shell — Forward-looking 150 kB budget for Phase 7-14 RC.1 build-out.
+// Current measurement: ~60 kB (Phase 7 — header + base-ui menu).
+// Projection through Phase 14 (~125 kB):
+//   + Tooltip primitive (IconRail)            ~+15 kB
+//   + react-resizable-panels (ResizableShell) ~+12 kB
+//   + Mobile drawers (vaul)                   ~+15 kB
+//   + Command palette (cmdk)                  ~+12 kB
+// 150 kB = ~125 kB projection + ~15% headroom.
+//
+// Sub-entry split (provider / desktop / mobile / palette) is deferred
+// to v1.x — decision pinned to real consumer adoption data, not
+// upfront speculation. See plan file Decision C history for context.
 module.exports = [
   {
     name: 'main barrel',
@@ -35,7 +38,7 @@ module.exports = [
   {
     name: 'shell',
     path: 'dist/shell/index.js',
-    limit: '68 kB',
+    limit: '150 kB',
   },
   {
     name: 'timeline',
