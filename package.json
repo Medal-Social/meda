@@ -1,6 +1,6 @@
 {
   "name": "@medalsocial/meda",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0",
   "description": "Shared Meda UI shell and runtime package.",
   "license": "Apache-2.0",
   "repository": {
