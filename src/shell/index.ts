@@ -4,6 +4,7 @@ export * from './icon-rail.js';
 export * from './motion.js';
 export * from './navigation-area.js';
 export * from './resizable-shell.js';
+export * from './right-panel.js';
 export * from './shell-app-rail.js';
 export * from './shell-desktop-panel-dock.js';
 export * from './shell-frame.js';
