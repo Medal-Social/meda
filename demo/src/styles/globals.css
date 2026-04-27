@@ -45,12 +45,10 @@
   --radius-3xl: var(--radius-3xl);
   --radius-4xl: var(--radius-4xl);
 
-  /* Font families */
+  /* Font families — Geist + Geist Mono only (no Inter) */
   --font-sans:
-    "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif;
-  --font-mono: "Geist Mono Variable", "Geist Mono", "SF Mono", "Fira Code", "Fira Mono", monospace;
-  --font-display: "Geist Variable", "Geist", "Inter Variable", "Inter", -apple-system, sans-serif;
+    "Geist Variable", "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono Variable", "Geist Mono", "SF Mono", "Fira Code", monospace;
 }
 
 /* ============================================================
