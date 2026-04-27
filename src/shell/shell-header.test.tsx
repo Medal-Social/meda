@@ -246,23 +246,31 @@ describe('WorkspaceSwitcher — outside click closes the menu', () => {
 // Task 7.4 — AppTabs
 // ---------------------------------------------------------------------------
 
-describe('AppTabs — renders one tab per app from context', () => {
-  it('shows a tab for each app', () => {
-    renderWithProvider(<AppTabs />);
+describe('AppTabs — renders one button per app inside a nav', () => {
+  it('shows a button for each app inside nav[aria-label="Applications"]', () => {
+    const { container } = renderWithProvider(<AppTabs />);
 
-    expect(screen.getByRole('tab', { name: /analytics/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /billing/i })).toBeInTheDocument();
+    const nav = container.querySelector('nav[aria-label="Applications"]');
+    expect(nav).toBeInTheDocument();
+
+    // Plain buttons — NOT role="tab"
+    expect(screen.getByRole('button', { name: /analytics/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /billing/i })).toBeInTheDocument();
+
+    // Must NOT have role="tab"
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
   });
 });
 
-describe('AppTabs — active tab has border-b-2 border-primary and text-foreground', () => {
-  it('first app tab has active styles by default', () => {
+describe('AppTabs — active tab has border-b-2 border-primary and aria-current="page"', () => {
+  it('first app button has active styles and aria-current="page" by default', () => {
     renderWithProvider(<AppTabs />, { defaultActiveApp: 'app-a' });
 
-    const activeTab = screen.getByRole('tab', { name: /analytics/i });
-    expect(activeTab.className).toContain('border-b-2');
-    expect(activeTab.className).toContain('border-primary');
-    expect(activeTab.className).toContain('text-foreground');
+    const activeBtn = screen.getByRole('button', { name: /analytics/i });
+    expect(activeBtn).toHaveAttribute('aria-current', 'page');
+    expect(activeBtn.className).toContain('border-b-2');
+    expect(activeBtn.className).toContain('border-primary');
+    expect(activeBtn.className).toContain('text-foreground');
   });
 });
 
@@ -270,12 +278,13 @@ describe('AppTabs — clicking inactive tab calls setActiveApp(id)', () => {
   it('clicking Billing tab activates it', () => {
     renderWithProvider(<AppTabs />, { defaultActiveApp: 'app-a' });
 
-    const billingTab = screen.getByRole('tab', { name: /billing/i });
-    fireEvent.click(billingTab);
+    const billingBtn = screen.getByRole('button', { name: /billing/i });
+    fireEvent.click(billingBtn);
 
     // After click, Billing should have active styles
-    expect(billingTab.className).toContain('border-b-2');
-    expect(billingTab.className).toContain('border-primary');
+    expect(billingBtn.className).toContain('border-b-2');
+    expect(billingBtn.className).toContain('border-primary');
+    expect(billingBtn).toHaveAttribute('aria-current', 'page');
   });
 });
 

@@ -148,7 +148,9 @@ export function AppTabs() {
   const { apps, activeAppId, setActiveApp } = useMedaShell();
 
   return (
-    <div className="flex items-center" role="tablist" aria-label="Applications">
+    // WAI-ARIA: apps are routes, not tab-panels — use nav + aria-current="page"
+    // instead of role="tablist" / role="tab" / aria-selected.
+    <nav aria-label="Applications" className="flex items-center">
       {apps.map((app) => {
         const isActive = app.id === activeAppId;
         const Icon = app.icon;
@@ -156,10 +158,12 @@ export function AppTabs() {
           <button
             key={app.id}
             type="button"
-            role="tab"
-            aria-selected={isActive}
-            onClick={() => setActiveApp(app.id)}
-            // TODO(Phase 18): usePrefetch(app.to)
+            aria-current={isActive ? 'page' : undefined}
+            onClick={() => {
+              setActiveApp(app.id);
+              // TODO(Phase 18.x): renderLink integration so clicking a tab also navigates
+              // the consumer's router; setActiveApp alone updates context.
+            }}
             onMouseEnter={() => {}}
             className={cn(
               'flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors',
@@ -173,7 +177,7 @@ export function AppTabs() {
           </button>
         );
       })}
-    </div>
+    </nav>
   );
 }
 
