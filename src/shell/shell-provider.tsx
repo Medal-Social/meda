@@ -1,13 +1,21 @@
 'use client';
 
 import { LayoutGrid, Menu, PanelTop, Sparkles } from 'lucide-react';
-import type { ReactNode } from 'react';
-import { createContext, useContext, useMemo, useState } from 'react';
+import {
+  createContext,
+  lazy,
+  type ReactNode,
+  Suspense,
+  useContext,
+  useMemo,
+  useState,
+} from 'react';
 import {
   createLocalStorageAdapter,
   type ShellStorageAdapter,
   useShellLayoutState,
 } from './layout-state.js';
+import { DefaultThemeProvider, ThemeCtx } from './theme.js';
 import type {
   AppDefinition,
   MobileBottomNavItem,
@@ -15,6 +23,40 @@ import type {
   ThemeAdapter,
   WorkspaceDefinition,
 } from './types.js';
+
+// ---------------------------------------------------------------------------
+// Theme adapter wiring
+// ---------------------------------------------------------------------------
+
+// Lazy-loaded so that importing next-themes only happens when the consumer
+// passes themeAdapter='next-themes'. Default-adapter consumers never trigger
+// the import.
+const NextThemesAdapter = lazy(() =>
+  import('./theme-next-themes.js').then((m) => ({ default: m.NextThemesAdapter }))
+);
+
+function CustomThemeBridge({ adapter, children }: { adapter: ThemeAdapter; children: ReactNode }) {
+  return <ThemeCtx.Provider value={adapter}>{children}</ThemeCtx.Provider>;
+}
+
+function pickTheme(
+  themeAdapter: 'default' | 'next-themes' | ThemeAdapter | undefined,
+  children: ReactNode
+): ReactNode {
+  const adapter = themeAdapter ?? 'default';
+  if (adapter === 'default') {
+    return <DefaultThemeProvider>{children}</DefaultThemeProvider>;
+  }
+  if (adapter === 'next-themes') {
+    return (
+      <Suspense fallback={null}>
+        <NextThemesAdapter>{children}</NextThemesAdapter>
+      </Suspense>
+    );
+  }
+  // Custom ThemeAdapter object
+  return <CustomThemeBridge adapter={adapter}>{children}</CustomThemeBridge>;
+}
 
 // ---------------------------------------------------------------------------
 // Default mobile bottom nav (canonical 4-item set, per spec §16)
@@ -91,7 +133,6 @@ export interface MedaShellProviderProps {
   storage?: ShellStorageAdapter;
   mobileBottomNav?: MobileBottomNavItem[];
   commandPaletteHotkey?: string;
-  /** Placeholder — theme wiring ships in Phase 11. */
   themeAdapter?: 'default' | 'next-themes' | ThemeAdapter;
   children: ReactNode;
 }
@@ -188,5 +229,5 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
     ]
   );
 
-  return <Ctx.Provider value={value}>{props.children}</Ctx.Provider>;
+  return <Ctx.Provider value={value}>{pickTheme(props.themeAdapter, props.children)}</Ctx.Provider>;
 }

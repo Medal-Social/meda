@@ -1,10 +1,45 @@
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { LayoutGrid, Menu } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ShellStorageAdapter } from './layout-state.js';
 import { MedaShellProvider, useMedaShell, useShellSelection } from './shell-provider.js';
-import type { AppDefinition, MobileBottomNavItem, WorkspaceDefinition } from './types.js';
+import { useTheme } from './theme.js';
+import type {
+  AppDefinition,
+  MobileBottomNavItem,
+  ThemeAdapter,
+  WorkspaceDefinition,
+} from './types.js';
+
+// ---------------------------------------------------------------------------
+// Global browser stubs — DefaultThemeProvider reads localStorage + matchMedia
+// ---------------------------------------------------------------------------
+
+beforeEach(() => {
+  vi.stubGlobal('localStorage', {
+    getItem: vi.fn(() => null),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+  });
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }))
+  );
+});
+
+afterEach(() => {
+  document.documentElement.classList.remove('dark');
+  vi.unstubAllGlobals();
+});
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -231,5 +266,79 @@ describe('useShellSelection', () => {
 
     expect(screen.getByTestId('a').textContent).toBe(JSON.stringify({ id: 'x' }));
     expect(screen.getByTestId('b').textContent).toBe(JSON.stringify({ id: 'x' }));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MedaShellProvider — themeAdapter prop
+// ---------------------------------------------------------------------------
+
+describe('MedaShellProvider — themeAdapter prop selects correct provider', () => {
+  const baseProps = { workspace, apps };
+
+  it('themeAdapter prop selects correct provider', () => {
+    // Case 1: undefined (no themeAdapter) — DefaultThemeProvider, initial theme is 'system'
+    const { result: defaultResult } = renderHook(() => useTheme(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <MedaShellProvider {...baseProps}>{children}</MedaShellProvider>
+      ),
+    });
+    act(() => {});
+    expect(defaultResult.current.theme).toBe('system');
+
+    // Case 2: explicit 'default' — same behavior
+    const { result: explicitDefaultResult } = renderHook(() => useTheme(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <MedaShellProvider {...baseProps} themeAdapter="default">
+          {children}
+        </MedaShellProvider>
+      ),
+    });
+    act(() => {});
+    expect(explicitDefaultResult.current.theme).toBe('system');
+
+    // Case 3: custom adapter object — useTheme returns the custom values
+    const customAdapter: ThemeAdapter = {
+      theme: 'dark',
+      setTheme: vi.fn(),
+      resolvedTheme: 'dark',
+    };
+    const { result: customResult } = renderHook(() => useTheme(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <MedaShellProvider {...baseProps} themeAdapter={customAdapter}>
+          {children}
+        </MedaShellProvider>
+      ),
+    });
+    act(() => {});
+    expect(customResult.current.theme).toBe('dark');
+    expect(customResult.current.resolvedTheme).toBe('dark');
+  });
+
+  it("themeAdapter='next-themes' renders children without crashing", async () => {
+    // next-themes uses the deprecated addListener/removeListener matchMedia API
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockImplementation((query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }))
+    );
+
+    render(
+      <MedaShellProvider {...baseProps} themeAdapter="next-themes">
+        <span data-testid="child">ok</span>
+      </MedaShellProvider>
+    );
+
+    // Children render (may need a tick for Suspense + lazy to resolve)
+    await screen.findByTestId('child');
+    expect(screen.getByTestId('child').textContent).toBe('ok');
   });
 });
