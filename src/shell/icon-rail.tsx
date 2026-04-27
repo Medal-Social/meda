@@ -11,6 +11,7 @@ import {
   TooltipTrigger,
 } from '../components/ui/tooltip.js';
 import { cn } from '../lib/utils.js';
+import { useShellViewport } from './use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -97,7 +98,10 @@ export function IconRail({
   renderLink,
   className,
 }: IconRailProps) {
+  const band = useShellViewport();
   const [pinnedBottom, setPinnedBottom] = useState(true);
+
+  if (band === 'mobile') return null;
 
   const renderItem = (item: IconRailItem) => {
     const isActive = item.id === activeId;

@@ -9,10 +9,22 @@ import { MedaShellProvider } from './shell-provider.js';
 import type { AppDefinition, WorkspaceDefinition } from './types.js';
 
 // ---------------------------------------------------------------------------
+// Mock useShellViewport — default 'desktop', overridden per-test where needed
+// ---------------------------------------------------------------------------
+
+vi.mock('./use-shell-viewport.js', () => ({
+  useShellViewport: vi.fn(() => 'desktop'),
+}));
+
+import { useShellViewport } from './use-shell-viewport.js';
+
+// ---------------------------------------------------------------------------
 // Browser stubs
 // ---------------------------------------------------------------------------
 
 beforeEach(() => {
+  // biome-ignore lint/suspicious/noExplicitAny: test mock
+  (useShellViewport as any).mockReturnValue('desktop');
   vi.stubGlobal('localStorage', {
     getItem: vi.fn(() => null),
     setItem: vi.fn(),
@@ -270,5 +282,35 @@ describe('RailDivider', () => {
 
     expect(btn1).toHaveAttribute('aria-label', 'Push utility items down');
     expect(btn2).toHaveAttribute('aria-label', 'Pull utility items up');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 13 carry-forward — mobile auto-hide
+// ---------------------------------------------------------------------------
+
+describe('IconRail — hides on mobile viewport', () => {
+  it('returns null when viewport is mobile', () => {
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
+    (useShellViewport as any).mockReturnValue('mobile');
+    render(
+      <Wrapper>
+        <IconRail mainItems={mainItems} />
+      </Wrapper>
+    );
+    expect(screen.queryByRole('navigation', { name: 'Primary' })).not.toBeInTheDocument();
+  });
+});
+
+describe('IconRail — renders on desktop viewport', () => {
+  it('renders the nav element when viewport is desktop', () => {
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
+    (useShellViewport as any).mockReturnValue('desktop');
+    render(
+      <Wrapper>
+        <IconRail mainItems={mainItems} />
+      </Wrapper>
+    );
+    expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument();
   });
 });
