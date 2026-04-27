@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Menu } from 'lucide-react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  AppTabs,
   ShellHeader,
   ShellHeaderFrame,
   ShellPanelToggle,
@@ -208,5 +209,42 @@ describe('WorkspaceSwitcher — workspaceMenuFooter slot renders extra items', (
     fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
 
     expect(screen.getByText('Footer Item')).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 7.4 — AppTabs
+// ---------------------------------------------------------------------------
+
+describe('AppTabs — renders one tab per app from context', () => {
+  it('shows a tab for each app', () => {
+    renderWithProvider(<AppTabs />);
+
+    expect(screen.getByRole('tab', { name: /analytics/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /billing/i })).toBeInTheDocument();
+  });
+});
+
+describe('AppTabs — active tab has border-b-2 border-primary and text-foreground', () => {
+  it('first app tab has active styles by default', () => {
+    renderWithProvider(<AppTabs />, { defaultActiveApp: 'app-a' });
+
+    const activeTab = screen.getByRole('tab', { name: /analytics/i });
+    expect(activeTab.className).toContain('border-b-2');
+    expect(activeTab.className).toContain('border-primary');
+    expect(activeTab.className).toContain('text-foreground');
+  });
+});
+
+describe('AppTabs — clicking inactive tab calls setActiveApp(id)', () => {
+  it('clicking Billing tab activates it', () => {
+    renderWithProvider(<AppTabs />, { defaultActiveApp: 'app-a' });
+
+    const billingTab = screen.getByRole('tab', { name: /billing/i });
+    fireEvent.click(billingTab);
+
+    // After click, Billing should have active styles
+    expect(billingTab.className).toContain('border-b-2');
+    expect(billingTab.className).toContain('border-primary');
   });
 });

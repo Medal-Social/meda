@@ -183,18 +183,38 @@ export function WorkspaceSwitcher({ workspaceMenuFooter }: WorkspaceSwitcherProp
 }
 
 // ---------------------------------------------------------------------------
-// Task 7.4 stub — AppTabs (stub; full implementation in next commit)
+// Task 7.4 — AppTabs
 // ---------------------------------------------------------------------------
 
 export function AppTabs() {
-  const { apps } = useMedaShell();
+  const { apps, activeAppId, setActiveApp } = useMedaShell();
+
   return (
-    <div className="flex items-center">
-      {apps.map((app) => (
-        <button key={app.id} type="button" className="px-3 py-2 text-sm">
-          {app.label}
-        </button>
-      ))}
+    <div className="flex items-center" role="tablist" aria-label="Applications">
+      {apps.map((app) => {
+        const isActive = app.id === activeAppId;
+        const Icon = app.icon;
+        return (
+          <button
+            key={app.id}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => setActiveApp(app.id)}
+            // TODO(Phase 18): usePrefetch(app.to)
+            onMouseEnter={() => {}}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors',
+              isActive
+                ? 'border-b-2 border-primary text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Icon size={16} aria-hidden="true" />
+            {app.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
