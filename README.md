@@ -73,9 +73,29 @@ The registry index is at `https://meda.medalsocial.com/registry.json`. Source JS
 pnpm install
 pnpm build             # compile dist/
 pnpm test              # vitest (jsdom)
+pnpm typecheck
+pnpm lint
 pnpm registry:validate
 pnpm demo:dev          # run the playground locally
+pnpm storybook         # http://localhost:6006
+pnpm storybook:build   # storybook-static/
+pnpm size-limit        # bundle-size gate
 ```
+
+## Storybook + visual regression
+
+Stories are colocated as `Component.stories.tsx` next to each primitive. Build
+the static bundle with:
+
+```bash
+pnpm storybook:build
+```
+
+Visual regression runs via [Chromatic](https://www.chromatic.com/) on every PR.
+The `chromatic` workflow uploads the Storybook build, runs snapshot diffs, and
+posts a status check with a link to review changes. The job requires a
+`CHROMATIC_PROJECT_TOKEN` repo secret — until it's set, the job exits cleanly
+with a "missing token" message and PRs remain mergeable.
 
 ## Release
 
