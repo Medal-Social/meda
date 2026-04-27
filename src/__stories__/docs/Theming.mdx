@@ -1,0 +1,41 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Get Started/Theming" />
+
+# Theming
+
+Meda ships light mode as the default and dark mode as a selector-based override. Both modes share token names; values change.
+
+## How themes work
+
+The token contract has three layers, defined in `src/styles/tokens.css`:
+
+1. **Layer 0: Color primitives.** Brand, neutral, error, info, success, and warning ramps. These are constant across themes.
+2. **Layer 1: Semantic tokens.** `--background`, `--foreground`, `--card`, `--primary`, `--border`, `--ring`, and related tokens. These flip between light and dark.
+3. **Layer 2: Shell tokens.** `--shell-header`, `--shell-rail`, `--shell-context`, and panel tokens for application chrome.
+
+## Switching themes
+
+Add the `dark` class or `data-theme="dark"` to a parent element:
+
+```html
+<html class="dark">
+  ...
+</html>
+```
+
+Storybook uses `data-theme`, while host apps can use either selector.
+
+## Tailwind dark utilities
+
+Meda's Tailwind v4 theme bridge registers a dark variant for both selectors:
+
+```css
+@custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
+```
+
+Use `dark:bg-card`, `dark:text-foreground`, and related utilities without extra configuration.
+
+## Checking canonical values
+
+The [Foundations / Color](/?path=/docs/foundations-color--docs) page shows the full primitive ramp and semantic mapping. Use it as the source of truth.

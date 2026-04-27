@@ -1,0 +1,45 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Get Started/Installation" />
+
+# Installation
+
+Meda is published to npm as `@medalsocial/meda`. It supports React 19+ and ships ESM-only.
+
+## Install
+
+```bash
+pnpm add @medalsocial/meda lucide-react
+```
+
+`lucide-react` is a peer dependency.
+
+## Import the runtime CSS
+
+In your app root entry, import the packaged stylesheet:
+
+```ts
+import '@medalsocial/meda/styles';
+```
+
+This pulls in:
+
+1. Canonical design tokens from `tokens.css`
+2. Tailwind v4 theme mappings from `theme.css`
+3. Meda's base component styles
+
+## Use a component
+
+```tsx
+import { ShellFrame, ShellHeader } from '@medalsocial/meda/shell';
+
+export function App() {
+  return (
+    <ShellFrame>
+      <ShellHeader />
+    </ShellFrame>
+  );
+}
+```
+
+Subpath imports such as `@medalsocial/meda/shell`, `/chat`, `/voice`, `/timeline`, and `/panel` keep the bundle focused.

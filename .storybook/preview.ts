@@ -10,6 +10,32 @@ const preview: Preview = {
   parameters: {
     layout: 'padded',
     backgrounds: { disable: true }, // theme decorator drives background
+    options: {
+      storySort: {
+        order: [
+          'Get Started',
+          ['Introduction', 'Installation', 'Theming'],
+          'Foundations',
+          [
+            'Color',
+            'Typography',
+            'Spacing',
+            'Radii',
+            'Shadows',
+            'Motion',
+            'Z-Index',
+            'Iconography',
+          ],
+          'Shell v2',
+          'Chat',
+          'Timeline',
+          'Voice',
+          'Panel',
+          'Inbox',
+          '*',
+        ],
+      },
+    },
     controls: {
       matchers: {
         color: /(background|color)$/i,

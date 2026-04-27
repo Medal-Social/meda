@@ -1,0 +1,31 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Get Started/Introduction" />
+
+# Meda
+
+Meda is the shared UI shell and runtime package powering [Medal Social](https://medalsocial.com). It ships shell layouts, chat surfaces, voice primitives, timeline components, and inspector panels built on a single design-token contract derived from the Pencil design library.
+
+This Storybook is the canonical reference for components, tokens, and interaction patterns.
+
+## What's inside
+
+- **Foundations**: colors, typography, spacing, radii, shadows, motion, z-index, and iconography. Values are sourced from `src/styles/tokens.css`, which mirrors `00-design-system.lib.pen`.
+- **Shell v2**: frame, header, rails, panels, command palette, and mobile surfaces.
+- **Chat**: turn cards, transcript stream, latency badges, and tool-call blocks.
+- **Timeline**: event cards, tape, scrub bar, and live indicator.
+- **Voice**: orb, level meter, and status pill.
+- **Panel**: inspector and inspector fields.
+
+## Where to start
+
+1. [Installation](/?path=/docs/get-started-installation--docs): pull the package into a host app.
+2. [Theming](/?path=/docs/get-started-theming--docs): wire up canonical tokens.
+3. [Foundations / Color](/?path=/docs/foundations-color--docs): review the brand ramp and semantic mapping.
+
+## Conventions
+
+- **Icons**: Meda uses [Lucide](https://lucide.dev) via `lucide-react`.
+- **Fonts**: Geist and Geist Mono.
+- **Themes**: light is the runtime default. Dark mode is opt-in via `.dark` or `[data-theme="dark"]` on a parent element.
+- **Tokens**: every visual decision routes through a CSS custom property.

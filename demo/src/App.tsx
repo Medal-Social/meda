@@ -155,6 +155,7 @@ export function App() {
             <a href="#shell">Shell v2</a>
             <a href="#components">Components</a>
             <a href="#registry">Registry</a>
+            <a href="/storybook/">Storybook</a>
             <a
               href="https://www.npmjs.com/package/@medalsocial/meda"
               target="_blank"
