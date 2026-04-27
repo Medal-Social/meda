@@ -1,5 +1,8 @@
-<!-- Geist font tokens -->
+<!-- Font stack tokens — Inter for UI, Geist for display, Geist Mono for code -->
 <style>
-  :root { --font-sans: 'Geist Variable', system-ui, sans-serif; }
+  :root {
+    --font-sans: 'Inter Variable', 'Inter', system-ui, sans-serif;
+    --font-display: 'Geist Variable', 'Geist', 'Inter Variable', 'Inter', system-ui, sans-serif;
+  }
   html, body, #storybook-root { font-family: var(--font-sans); }
 </style>
