@@ -14,10 +14,22 @@ import { MedaShellProvider } from './shell-provider.js';
 import type { AppDefinition, WorkspaceDefinition } from './types.js';
 
 // ---------------------------------------------------------------------------
+// Mock useShellViewport — default 'desktop', overridden per-test where needed
+// ---------------------------------------------------------------------------
+
+vi.mock('./use-shell-viewport.js', () => ({
+  useShellViewport: vi.fn(() => 'desktop'),
+}));
+
+import { useShellViewport } from './use-shell-viewport.js';
+
+// ---------------------------------------------------------------------------
 // Browser stubs — DefaultThemeProvider reads localStorage + matchMedia
 // ---------------------------------------------------------------------------
 
 beforeEach(() => {
+  // biome-ignore lint/suspicious/noExplicitAny: test mock
+  (useShellViewport as any).mockReturnValue('desktop');
   vi.stubGlobal('localStorage', {
     getItem: vi.fn(() => null),
     setItem: vi.fn(),
@@ -339,5 +351,27 @@ describe('PanelToggle — renders PanelRightOpen icon when closed, PanelRightClo
 
     // Open → label says "Close right panel"
     expect(screen.getByRole('button', { name: 'Close right panel' })).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 13 carry-forward — mobile auto-hide
+// ---------------------------------------------------------------------------
+
+describe('ShellHeader — hides on mobile viewport', () => {
+  it('returns null when viewport is mobile', () => {
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
+    (useShellViewport as any).mockReturnValue('mobile');
+    renderWithProvider(<ShellHeader />);
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument();
+  });
+});
+
+describe('ShellHeader — renders on desktop viewport', () => {
+  it('renders the header element when viewport is desktop', () => {
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
+    (useShellViewport as any).mockReturnValue('desktop');
+    renderWithProvider(<ShellHeader />);
+    expect(screen.getByRole('banner')).toBeInTheDocument();
   });
 });

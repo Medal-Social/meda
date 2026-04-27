@@ -12,6 +12,7 @@ import {
 import { cn } from '../lib/utils.js';
 import { useMedaShell } from './shell-provider.js';
 import { ThemeToggle } from './theme.js';
+import { useShellViewport } from './use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
 // Legacy components — preserved for back-compat
@@ -222,6 +223,9 @@ export interface ShellHeaderProps {
 }
 
 export function ShellHeader({ globalActions, className }: ShellHeaderProps = {}) {
+  const band = useShellViewport();
+  if (band === 'mobile') return null;
+
   return (
     <header
       className={cn(
