@@ -1,4 +1,12 @@
+import { Bell, Calendar, Home, Inbox, Settings, Users } from 'lucide-react';
 import type { Turn } from '../chat/types.js';
+import type {
+  ShellModuleDefinition,
+  ShellNavItem,
+  ShellPanelDefinition,
+  ShellRailItem,
+  ShellTab,
+} from '../shell/types.js';
 import type { ScrubMark, TimelineEvent } from '../timeline/types.js';
 
 // Frozen instant used everywhere — keeps Chromatic snapshots stable.
@@ -86,4 +94,40 @@ export const SAMPLE_MARKS: ScrubMark[] = [
   { id: 'm2', positionPct: 35, kind: 'tool', label: 'cancel_event' },
   { id: 'm3', positionPct: 62, kind: 'barge', label: 'barge-in' },
   { id: 'm4', positionPct: 84, kind: 'error', label: 'mic dropout' },
+];
+
+export const SHELL_RAIL_MAIN: ShellRailItem[] = [
+  { to: '/home', label: 'Home', icon: Home },
+  { to: '/inbox', label: 'Inbox', icon: Inbox },
+  { to: '/calendar', label: 'Calendar', icon: Calendar },
+  { to: '/people', label: 'People', icon: Users },
+];
+
+export const SHELL_RAIL_UTIL: ShellRailItem[] = [
+  { to: '/notifications', label: 'Alerts', icon: Bell },
+  { to: '/settings', label: 'Settings', icon: Settings },
+];
+
+export const SHELL_NAV_ITEMS: ShellNavItem[] = [
+  { to: '/inbox', label: 'Inbox', description: '12 unread', icon: Inbox, shortcut: 'I' },
+  { to: '/sent', label: 'Sent', icon: Calendar },
+  { to: '/archive', label: 'Archive', icon: Settings, shortcut: 'A' },
+];
+
+export const SHELL_MODULE: ShellModuleDefinition = {
+  id: 'mail',
+  label: 'Mail',
+  description: 'Inbox and threads',
+  items: SHELL_NAV_ITEMS,
+};
+
+export const SHELL_PANELS: ShellPanelDefinition[] = [
+  { id: 'details', label: 'Details', icon: Inbox },
+  { id: 'history', label: 'History', icon: Calendar },
+];
+
+export const SHELL_TABS: ShellTab[] = [
+  { id: 'all', label: 'All' },
+  { id: 'unread', label: 'Unread' },
+  { id: 'flagged', label: 'Flagged' },
 ];
