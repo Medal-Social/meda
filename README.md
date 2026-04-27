@@ -73,9 +73,41 @@ The registry index is at `https://meda.medalsocial.com/registry.json`. Source JS
 pnpm install
 pnpm build             # compile dist/
 pnpm test              # vitest (jsdom)
+pnpm typecheck
+pnpm lint
 pnpm registry:validate
 pnpm demo:dev          # run the playground locally
+pnpm storybook         # http://localhost:6006
+pnpm storybook:build   # storybook-static/
+pnpm size-limit        # bundle-size gate
 ```
+
+## Storybook + visual regression
+
+Stories are colocated as `Component.stories.tsx` next to each primitive. Build
+the static bundle with:
+
+```bash
+pnpm storybook:build
+```
+
+Visual regression runs via **Playwright** snapshots on every PR. The
+`tests/visual/primitives.spec.ts` spec discovers every story from Storybook's
+`index.json`, navigates to each iframe URL, and compares a screenshot of
+`#storybook-root` against committed PNG baselines under
+`tests/visual/primitives.spec.ts-snapshots/`.
+
+```bash
+pnpm visual          # run the diff locally (boots Storybook automatically)
+pnpm visual:update   # regenerate baselines after an intentional change
+pnpm visual:report   # open the last HTML report
+```
+
+The `Visual regression` GitHub workflow runs the same command in CI; on a
+failed diff it uploads the Playwright HTML report as a `playwright-visual-report`
+artifact for side-by-side review. No SaaS or secret required — baselines
+live in the repo and are reviewed via `git diff` of the PNG files (or the
+artifact viewer for a richer side-by-side).
 
 ## Release
 
