@@ -38,3 +38,9 @@ demo/dist/
 
 # NOTE: dist/ is intentionally committed — this is a published library
 # and downstream consumers (e.g. pilot-talk via pnpm link) read from dist.
+
+# Storybook build artifact
+storybook-static/
+
+# size-limit cache
+.size-limit-cache/
