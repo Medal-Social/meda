@@ -1,2 +1,16 @@
-export type { ShellCommandDefinition, ShellContentLayout, ShellHostAdapter, ShellModuleDefinition, ShellNavItem, ShellPanelDefinition, ShellRailItem, ShellRenderContext, ShellRouteContext, ShellSearchParamsAdapter, ShellStateContextValue, ShellTab, ShellViewDefinition, ShellViewportBand, } from './index.js';
-export { buildShellSectionCommands, buildShellShortcutMap, getDefaultShellPanelView, getResolvedShellPanelWidth, getShellActionsFromMatches, getShellContentLayoutFromMatches, getShellContentMaxWidth, getShellPanelCollection, getShellPanelView, getShellPanelViewsFromMatches, getShellTabsFromMatches, isShellPanelViewAvailable, NavigationArea, resolveShellPanelView, ShellAppRail, ShellDesktopPanelDock, ShellFrame, ShellHeaderFrame, ShellModuleNav, ShellPanelRail, ShellPanelToggle, ShellScrollableContent, ShellStateProvider, ShellTabBar, useShellState, WorkbenchLayout, } from './index.js';
+export { ShellDesktopPanelDock } from './extras/shell-desktop-panel-dock.js';
+export { ShellScrollableContent } from './extras/shell-scrollable-content.js';
+export { ShellTabBar } from './extras/shell-tab-bar.js';
+export { WorkbenchLayout } from './extras/workbench-layout.js';
+export { NavigationArea } from './navigation-area.js';
+export { ShellAppRail } from './shell-app-rail.js';
+export { ShellFrame } from './shell-frame.js';
+export { ShellHeaderFrame, ShellPanelToggle } from './shell-header.js';
+export { getResolvedShellPanelWidth, getShellContentMaxWidth, } from './shell-layout-utils.js';
+export { ShellModuleNav } from './shell-module-nav.js';
+export { ShellPanelRail } from './shell-panel-rail.js';
+export { getShellActionsFromMatches, getShellContentLayoutFromMatches, getShellPanelViewsFromMatches, getShellTabsFromMatches, } from './shell-route-utils.js';
+export type { ShellSearchParamsAdapter, ShellStateContextValue, } from './shell-state.js';
+export { ShellStateProvider, useShellState } from './shell-state.js';
+export type { ShellCommandDefinition, ShellContentLayout, ShellHostAdapter, ShellModuleDefinition, ShellNavItem, ShellPanelDefinition, ShellPanelRenderContext, ShellRailItem, ShellRouteContext, ShellTab, ShellViewDefinition, ShellViewportBand, } from './types.js';
+export { buildShellSectionCommands, buildShellShortcutMap, getDefaultShellPanelView, getShellPanelCollection, getShellPanelView, isShellPanelViewAvailable, resolveShellPanelView, } from './utils.js';

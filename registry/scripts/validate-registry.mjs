@@ -10,6 +10,10 @@ const files = [
   'r/meda-shell.json',
   'r/meda-shell-state.json',
   'r/meda-workbench-layout.json',
+  'r/meda-marketing.json',
+  'r/meda-marketing-callout.json',
+  'r/meda-marketing-contact.json',
+  'r/meda-marketing-lead-magnet.json',
 ];
 
 function assert(condition, message) {

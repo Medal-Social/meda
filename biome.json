@@ -7,7 +7,10 @@
       "!**/demo/dist",
       "!**/node_modules",
       "!**/coverage",
-      "!**/registry/r"
+      "!**/registry/r",
+      "!**/storybook-static",
+      "!test/fixtures/**/node_modules",
+      "!test/fixtures/**/.next"
     ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },

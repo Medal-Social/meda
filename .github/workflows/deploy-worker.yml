@@ -20,6 +20,8 @@ on:
       - 'pnpm-workspace.yaml'
       # This workflow itself
       - '.github/workflows/deploy-worker.yml'
+      # Storybook config and manager chrome
+      - '.storybook/**'
 
 permissions: {}
 
@@ -39,7 +41,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Build worker bundle (demo + registry)
+      - name: Build worker bundle (demo + registry + Storybook)
         run: pnpm worker:build
 
       - name: Deploy to Cloudflare

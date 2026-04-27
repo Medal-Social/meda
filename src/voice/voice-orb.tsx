@@ -1,7 +1,10 @@
+'use client';
+
 // SPDX-License-Identifier: Apache-2.0
 
 import { Canvas } from '@react-three/fiber';
 import * as React from 'react';
+import { cn } from '../lib/utils.js';
 import type { TurnPhase } from './types.js';
 import { Scene, type VoiceOrbVariant } from './voice-orb-scene.js';
 
@@ -15,7 +18,11 @@ export type { VoiceOrbVariant } from './voice-orb-scene.js';
 // Theming helpers
 // ---------------------------------------------------------------------------
 
-const FALLBACK_COLOR = '#9A6AC2'; // Pilot purple
+// Fallback colors used only if CSS custom properties fail to resolve.
+// Both values are from the canonical brand ramp (.lib.pen):
+//   brand-400 (#9A6AC2) and brand-500 (#7E3FAC).
+// Runtime path reads --primary and --accent first.
+const FALLBACK_COLOR = '#9A6AC2'; // brand-400
 
 function hslToHex(h: number, s: number, l: number): string {
   const sl = s / 100;
@@ -82,7 +89,7 @@ function readMedaColors(el: HTMLElement): [string, string] {
   return [colorA, colorB];
 }
 
-const DEFAULT_COLORS: [string, string] = ['#9A6AC2', '#7B4FAB'];
+const DEFAULT_COLORS: [string, string] = ['#9A6AC2', '#7E3FAC']; // brand-400 → brand-500
 
 // ---------------------------------------------------------------------------
 // Props
@@ -197,15 +204,15 @@ export const VoiceOrb = React.forwardRef<HTMLButtonElement, VoiceOrbProps>(funct
       disabled={disabled}
       data-phase={phase}
       data-pressed={pressed}
-      className={[
+      className={cn(
         'meda-voice-orb',
         'relative inline-flex items-center justify-center rounded-full',
         'select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         'transition-transform duration-200 ease-out',
         disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
         pressed ? 'scale-[0.97]' : 'scale-100',
-        className ?? '',
-      ].join(' ')}
+        className
+      )}
       style={btnStyle}
       {...rest}
     >

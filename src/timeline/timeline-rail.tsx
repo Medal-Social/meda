@@ -1,5 +1,8 @@
+'use client';
+
 import { Archive } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { cn } from '../lib/utils.js';
 import { DateSwitcher } from './date-switcher.js';
 import { LiveIndicator } from './live-indicator.js';
 import { TimelineTape } from './timeline-tape.js';
@@ -89,10 +92,10 @@ export function TimelineRail({
 
   return (
     <aside
-      className={[
+      className={cn(
         'relative flex h-full flex-col border-r border-border bg-card text-sm',
-        className ?? '',
-      ].join(' ')}
+        className
+      )}
       data-meda-component="timeline-rail"
     >
       <div className="px-3.5 pb-2.5 pt-3.5">
@@ -109,8 +112,8 @@ export function TimelineRail({
       {/* Status row */}
       <div className="flex items-center gap-2 border-b border-border px-3.5 pb-2.5 text-[11px] tabular-nums text-muted-foreground">
         {liveCount > 0 && (
-          <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-500">
-            <span className="size-1.5 animate-pulse rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.18)]" />
+          <span className="inline-flex items-center gap-1.5 font-semibold text-success">
+            <span className="size-1.5 animate-pulse rounded-full bg-success shadow-[0_0_0_3px_rgba(16,185,129,0.18)]" />
             {liveCount} live
           </span>
         )}
@@ -140,7 +143,7 @@ export function TimelineRail({
         <button
           type="button"
           onClick={jumpToLive}
-          className="absolute right-3 top-32 z-20 inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-semibold text-white shadow-md hover:bg-emerald-600"
+          className="absolute right-3 top-32 z-20 inline-flex items-center gap-1.5 rounded-full bg-success-600 px-3 py-1 text-[11px] font-semibold text-white shadow-md hover:bg-success-700"
         >
           Jump to live
         </button>

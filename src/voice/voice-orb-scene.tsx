@@ -1,3 +1,5 @@
+'use client';
+
 // SPDX-License-Identifier: Apache-2.0
 // Portions adapted from ElevenLabs UI's Orb component (MIT):
 // https://github.com/elevenlabs/ui/blob/main/apps/www/registry/elevenlabs-ui/ui/orb.tsx

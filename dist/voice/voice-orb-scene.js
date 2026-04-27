@@ -1,3 +1,4 @@
+'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 // SPDX-License-Identifier: Apache-2.0
 // Portions adapted from ElevenLabs UI's Orb component (MIT):

@@ -1,0 +1,61 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import { ColorScale, SemanticTokenTable } from '../foundations';
+
+<Meta title="Foundations/Color" />
+
+# Color
+
+Meda's color system has three layers. Layer 0 primitives are constant; Layer 1 semantic tokens flip between light and dark; Layer 2 shell tokens specialize the application chrome.
+
+## When to use which
+
+- Use semantic tokens such as `bg-card`, `text-foreground`, and `border-border` for product UI.
+- Use primitive ramps only when the exact stop matters, such as brand moments or chart series.
+- Avoid raw hex values in component code.
+
+## Layer 0: Primitives
+
+The brand ramp is the spine of the system. Every ramp uses the same stop convention where the source tokens define it.
+
+<div style={{ display: 'flex', flexDirection: 'column', gap: '32px', marginTop: '24px' }}>
+  <ColorScale ramp="brand" />
+  <ColorScale ramp="neutral" />
+  <ColorScale ramp="error" />
+  <ColorScale ramp="info" />
+  <ColorScale ramp="success" />
+  <ColorScale ramp="warning" />
+</div>
+
+## Layer 1: Semantic shape
+
+<div style={{ marginTop: '24px' }}>
+  <SemanticTokenTable group="shape" />
+</div>
+
+## Layer 1: Status
+
+<div style={{ marginTop: '24px' }}>
+  <SemanticTokenTable group="status" />
+</div>
+
+## Layer 1: Sidebar
+
+<div style={{ marginTop: '24px' }}>
+  <SemanticTokenTable group="sidebar" />
+</div>
+
+## Layer 1: Chart
+
+<div style={{ marginTop: '24px' }}>
+  <SemanticTokenTable group="chart" />
+</div>
+
+## Layer 1: Text
+
+<div style={{ marginTop: '24px' }}>
+  <SemanticTokenTable group="text" />
+</div>
+
+## Switching themes
+
+Toggle the theme control in the toolbar to see semantic tokens change. Primitive ramps stay constant.

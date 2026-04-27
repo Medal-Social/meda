@@ -1,6 +1,9 @@
+'use client';
+
 import { Pause, Play, SkipBack, SkipForward } from 'lucide-react';
 import { useRef } from 'react';
 import { formatDuration } from '../lib/format-time.js';
+import { cn } from '../lib/utils.js';
 import type { ScrubMark } from './types.js';
 
 export interface ScrubBarProps {
@@ -18,8 +21,8 @@ export interface ScrubBarProps {
 
 const KIND_COLOR: Record<ScrubMark['kind'], string> = {
   turn: 'bg-primary',
-  tool: 'bg-amber-500',
-  barge: 'bg-emerald-500',
+  tool: 'bg-warning',
+  barge: 'bg-success',
   error: 'bg-destructive',
 };
 
@@ -61,7 +64,7 @@ export function ScrubBar({
   };
 
   return (
-    <div className={['rounded-2xl border border-border bg-card p-3.5', className ?? ''].join(' ')}>
+    <div className={cn('rounded-2xl border border-border bg-card p-3.5', className)}>
       <div className="mb-2.5 flex items-center justify-between">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Timeline · this call
@@ -115,7 +118,7 @@ export function ScrubBar({
             key={m.id}
             data-mark-kind={m.kind}
             title={m.label ?? m.kind}
-            className={['absolute inset-y-1 w-0.5 rounded-sm', KIND_COLOR[m.kind]].join(' ')}
+            className={cn('absolute inset-y-1 w-0.5 rounded-sm', KIND_COLOR[m.kind])}
             style={{ left: `${m.positionPct}%` }}
           />
         ))}
@@ -150,12 +153,12 @@ function TransportBtn({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className={[
+      className={cn(
         'inline-flex size-6 items-center justify-center rounded',
         variant === 'primary'
           ? 'bg-primary text-primary-foreground'
-          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-      ].join(' ')}
+          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+      )}
     >
       {children}
     </button>

@@ -1,0 +1,338 @@
+/* ============================================================
+   Meda design tokens — canonical from 00-design-system.lib.pen
+   Source: /Users/ali/Library/CloudStorage/GoogleDrive-ali@medalsocial.com/
+           Delte disker/03 Product/Pencil Design/00-design-system.lib.pen
+   Retrieved via mcp__pencil__get_variables 2026-04-27.
+
+   NOTE: 00-design-system.pen and 050-meda-ui.pen are illustrative
+   companion boards — not normative. This file is derived from the
+   .lib.pen (library file) which is the sole canonical contract.
+   ============================================================ */
+
+/* ============================================================
+   Layer 0 — Color primitives (theme: brand, constant)
+   ============================================================ */
+:root {
+  /* Brand (purple) — 11 stops */
+  --color-brand-50: #fafafd;
+  --color-brand-100: #eeeaf5;
+  --color-brand-200: #dcd4e8;
+  --color-brand-300: #b8a3d2;
+  --color-brand-400: #9a6ac2;
+  --color-brand-500: #7e3fac;
+  --color-brand-600: #6a2e96;
+  --color-brand-700: #482070;
+  --color-brand-800: #2f1552;
+  --color-brand-900: #1c0e38;
+  --color-brand-950: #120a24;
+
+  /* Neutral (zinc-aligned) — 11 stops */
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f4f4f5;
+  --color-neutral-200: #e4e4e7;
+  --color-neutral-300: #a1a1aa;
+  --color-neutral-400: #71717a;
+  --color-neutral-500: #52525b;
+  --color-neutral-600: #3f3f46;
+  --color-neutral-700: #27272a;
+  --color-neutral-800: #18181b;
+  --color-neutral-900: #111113;
+  --color-neutral-950: #09090b;
+
+  /* Error (rose) — 10 stops */
+  --color-error-50: #fff1f2;
+  --color-error-100: #ffe4e6;
+  --color-error-200: #fecdd3;
+  --color-error-300: #fda4af;
+  --color-error-400: #fb7185;
+  --color-error-500: #f43f5e;
+  --color-error-600: #e11d48;
+  --color-error-700: #be123c;
+  --color-error-800: #9f1239;
+  --color-error-900: #881337;
+
+  /* Info (blue) — 10 stops */
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-200: #bfdbfe;
+  --color-info-300: #93c5fd;
+  --color-info-400: #60a5fa;
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+  --color-info-700: #1d4ed8;
+  --color-info-800: #1e3a8a;
+  --color-info-900: #172554;
+
+  /* Success (teal) — 10 stops */
+  --color-success-50: #f0fdfa;
+  --color-success-100: #ccfbf1;
+  --color-success-200: #99f6e4;
+  --color-success-300: #5eead4;
+  --color-success-400: #2dd4bf;
+  --color-success-500: #14b8a6;
+  --color-success-600: #0d9488;
+  --color-success-700: #0f766e;
+  --color-success-800: #115e59;
+  --color-success-900: #134e4a;
+
+  /* Warning (amber) — 10 stops */
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+
+  /* Surface primitives (dark-mode only) */
+  --color-surface-bg: #09090b;
+  --color-surface-card: #18181b;
+  --color-surface-muted: #27272a;
+  --color-surface-border: #2e2e33;
+  --color-surface-sidebar: #0f0f12;
+}
+
+/* ============================================================
+   Layer 1 — shadcn semantic + status + sidebar + chart + text
+   Light mode (default on :root)
+   ============================================================ */
+:root {
+  /* shadcn shape */
+  --background: var(--color-neutral-50);
+  --foreground: var(--color-neutral-950);
+  --card: var(--color-neutral-50);
+  --card-foreground: var(--color-neutral-950);
+  --popover: var(--color-neutral-50);
+  --popover-foreground: var(--color-neutral-950);
+  --primary: var(--color-brand-800);
+  --primary-foreground: var(--color-brand-50);
+  --secondary: var(--color-neutral-200);
+  --secondary-foreground: var(--color-neutral-950);
+  --muted: var(--color-neutral-100);
+  --muted-foreground: var(--color-neutral-500);
+  --muted-foreground-strong: var(--color-neutral-600);
+  --accent: var(--color-neutral-200);
+  --accent-foreground: var(--color-neutral-950);
+  --destructive: var(--color-error-600);
+  --destructive-foreground: var(--color-neutral-50);
+  --destructive-bg: var(--color-error-50);
+  --danger: var(--color-error-600);
+  --border: var(--color-neutral-200);
+  --input: var(--color-neutral-200);
+  --ring: var(--color-brand-600);
+
+  /* Status */
+  --success: var(--color-success-600);
+  --success-foreground: var(--color-neutral-950);
+  --success-text: var(--color-success-700);
+  --warning: var(--color-warning-600);
+  --warning-foreground: var(--color-neutral-950);
+  --warning-text: var(--color-warning-800);
+  --info: var(--color-info-600);
+  --info-foreground: var(--color-neutral-50);
+
+  /* Sidebar */
+  --sidebar: var(--color-neutral-100);
+  --sidebar-foreground: var(--color-neutral-950);
+  --sidebar-primary: var(--color-brand-700);
+  --sidebar-primary-foreground: var(--color-neutral-50);
+  --sidebar-accent: var(--color-neutral-50);
+  --sidebar-accent-foreground: var(--color-neutral-950);
+  --sidebar-border: var(--color-neutral-200);
+  --sidebar-ring: var(--color-brand-500);
+
+  /* Chart */
+  --chart-1: var(--color-brand-600);
+  --chart-2: var(--color-info-600);
+  --chart-3: var(--color-success-600);
+  --chart-4: var(--color-warning-600);
+  --chart-5: var(--color-error-600);
+
+  /* Text */
+  --text: var(--color-neutral-950);
+  --text-foreground: var(--color-neutral-950);
+  --text-muted: var(--color-neutral-500);
+  --text-link: var(--color-brand-600);
+  --text-primary: var(--color-neutral-950);
+  --text-secondary: var(--color-neutral-600);
+  --highlight-foreground: var(--color-brand-500);
+}
+
+/* Dark mode overrides — class AND data-theme to support both runtime + Storybook */
+.dark,
+[data-theme="dark"] {
+  /* shadcn shape */
+  --background: var(--color-surface-bg);
+  --foreground: var(--color-neutral-50);
+  --card: var(--color-surface-card);
+  --card-foreground: var(--color-neutral-50);
+  --popover: var(--color-surface-card);
+  --popover-foreground: var(--color-neutral-50);
+  --primary: var(--color-brand-100);
+  --primary-foreground: var(--color-brand-900);
+  --secondary: var(--color-surface-muted);
+  --secondary-foreground: var(--color-neutral-50);
+  --muted: var(--color-surface-muted);
+  --muted-foreground: var(--color-neutral-300);
+  --muted-foreground-strong: var(--color-neutral-300);
+  --accent: var(--color-surface-muted);
+  --accent-foreground: var(--color-neutral-50);
+  --destructive: var(--color-error-400);
+  --destructive-foreground: var(--color-neutral-950);
+  --destructive-bg: var(--color-error-900);
+  --danger: var(--color-error-400);
+  --border: var(--color-surface-border);
+  --input: var(--color-surface-muted);
+  --ring: var(--color-brand-400);
+
+  /* Status */
+  --success: var(--color-success-400);
+  --success-foreground: var(--color-neutral-950);
+  --success-text: var(--color-success-400);
+  --warning: var(--color-warning-400);
+  --warning-foreground: var(--color-neutral-950);
+  --warning-text: var(--color-warning-400);
+  --info: var(--color-info-400);
+  --info-foreground: var(--color-neutral-950);
+
+  /* Sidebar */
+  --sidebar: var(--color-surface-sidebar);
+  --sidebar-foreground: var(--color-neutral-50);
+  --sidebar-primary: var(--color-brand-400);
+  --sidebar-primary-foreground: var(--color-neutral-950);
+  --sidebar-accent: var(--color-surface-card);
+  --sidebar-accent-foreground: var(--color-neutral-50);
+  --sidebar-border: var(--color-surface-border);
+  --sidebar-ring: var(--color-brand-400);
+
+  /* Chart */
+  --chart-1: var(--color-brand-500);
+  --chart-2: var(--color-info-500);
+  --chart-3: var(--color-success-400);
+  --chart-4: var(--color-warning-500);
+  --chart-5: var(--color-error-400);
+
+  /* Text */
+  --text: var(--color-neutral-50);
+  --text-foreground: var(--color-neutral-50);
+  --text-muted: var(--color-neutral-300);
+  --text-link: var(--color-brand-400);
+  --text-primary: var(--color-neutral-100);
+  --text-secondary: var(--color-neutral-300);
+  --highlight-foreground: var(--color-brand-200);
+}
+
+/* ============================================================
+   Layer 2 — Shell semantic + sizing
+   ============================================================ */
+:root {
+  --shell-header: var(--color-neutral-50);
+  --shell-rail: var(--color-neutral-50);
+  --shell-context: var(--color-neutral-50);
+  --shell-main: var(--color-neutral-100);
+  --shell-panel: var(--color-neutral-50);
+  --shell-border: var(--color-neutral-200);
+  --shell-shadow: 0 4px 12px hsl(0 0% 0% / 0.04);
+  --shell-header-height: 56px;
+  --shell-rail-width: 60px;
+  --shell-context-default: 300px;
+  --shell-context-min: 240px;
+  --shell-context-max: 420px;
+  --shell-panel-default: 340px;
+  --shell-panel-min: 300px;
+  --shell-panel-max: 520px;
+  --shell-bottom-nav-height: 56px;
+  --z-shell-header: 40;
+  --z-shell-panel: 45;
+  --z-shell-fullscreen: 60;
+}
+
+.dark,
+[data-theme="dark"] {
+  --shell-header: var(--color-surface-card);
+  --shell-rail: var(--color-surface-sidebar);
+  --shell-context: var(--color-surface-sidebar);
+  --shell-main: var(--color-surface-bg);
+  --shell-panel: var(--color-surface-card);
+  --shell-border: var(--color-surface-border);
+  --shell-shadow: 0 4px 12px hsl(0 0% 0% / 0.45);
+}
+
+/* ============================================================
+   Motion (theme: base, constant)
+   Mirror of motion.ts (Phase 5)
+   ============================================================ */
+:root {
+  --motion-fast: 140ms;
+  --motion-default: 200ms;
+  --motion-panel: 240ms;
+  --motion-fullscreen: 280ms;
+  --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ============================================================
+   Typography (theme: base, constant)
+   Font family: Geist + Geist Mono only. No Inter.
+   ============================================================ */
+:root {
+  --font-family-sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-family-mono: "Geist Mono", "SF Mono", "Fira Code", monospace;
+  --font-size-display: 36px;
+  --font-size-h1: 30px;
+  --font-size-h2: 24px;
+  --font-size-h3: 20px;
+  --font-size-h4: 18px;
+  --font-size-body-lg: 16px;
+  --font-size-body: 14px;
+  --font-size-body-sm: 13px;
+  --font-size-caption: 11px;
+  --font-size-overline: 10px;
+  --font-size-mono-data: 12px;
+  --font-size-mono-caption: 10px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height-display: 1.1;
+  --line-height-heading: 1.15;
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.6;
+  --letter-spacing-tighter: -0.5px;
+  --letter-spacing-tight: -0.2px;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 1.2px;
+}
+
+/* ============================================================
+   Radii (theme: base, constant)
+   ============================================================ */
+:root {
+  --radius: 8px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 20px;
+  --radius-4xl: 24px;
+  --radius-full: 9999px;
+}
+
+/* ============================================================
+   Spacing scale (theme: base, constant)
+   ============================================================ */
+:root {
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+  --spacing-4xl: 64px;
+}

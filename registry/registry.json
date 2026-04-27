@@ -47,6 +47,66 @@
           "target": "components/meda/meda-workbench-layout.tsx"
         }
       ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "meda-marketing",
+      "type": "registry:block",
+      "title": "Meda Marketing",
+      "description": "Install the complete Meda marketing component set.",
+      "dependencies": ["@medalsocial/meda"],
+      "files": [
+        {
+          "path": "registry/meda/meda-marketing/meda-marketing.tsx",
+          "type": "registry:block",
+          "target": "components/meda/meda-marketing.tsx"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "meda-marketing-callout",
+      "type": "registry:component",
+      "title": "Meda Marketing Callout",
+      "description": "Install the Meda marketing callout component.",
+      "dependencies": ["@medalsocial/meda"],
+      "files": [
+        {
+          "path": "registry/meda/meda-marketing-callout/meda-marketing-callout.tsx",
+          "type": "registry:component",
+          "target": "components/meda/meda-marketing-callout.tsx"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "meda-marketing-contact",
+      "type": "registry:component",
+      "title": "Meda Marketing Contact",
+      "description": "Install the Meda marketing contact section.",
+      "dependencies": ["@medalsocial/meda"],
+      "files": [
+        {
+          "path": "registry/meda/meda-marketing-contact/meda-marketing-contact.tsx",
+          "type": "registry:component",
+          "target": "components/meda/meda-marketing-contact.tsx"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "meda-marketing-lead-magnet",
+      "type": "registry:component",
+      "title": "Meda Marketing Lead Magnet",
+      "description": "Install the Meda marketing lead magnet component.",
+      "dependencies": ["@medalsocial/meda"],
+      "files": [
+        {
+          "path": "registry/meda/meda-marketing-lead-magnet/meda-marketing-lead-magnet.tsx",
+          "type": "registry:component",
+          "target": "components/meda/meda-marketing-lead-magnet.tsx"
+        }
+      ]
     }
   ]
 }

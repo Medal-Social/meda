@@ -1,4 +1,7 @@
+'use client';
+
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '../lib/utils.js';
 
 export interface DateSwitcherProps {
   /** Currently selected date. */
@@ -75,7 +78,7 @@ export function DateSwitcher({ value, now, tz, onChange, className }: DateSwitch
   const goNext = () => onChange(addDays(value, 1, tz));
 
   return (
-    <div className={['flex items-center gap-2', className ?? ''].join(' ')}>
+    <div className={cn('flex items-center gap-2', className)}>
       <button
         type="button"
         aria-label="Previous day"
@@ -89,7 +92,7 @@ export function DateSwitcher({ value, now, tz, onChange, className }: DateSwitch
         <Calendar className="size-3.5 text-muted-foreground" />
         <span className="font-medium">{fmtDate(value, tz)}</span>
         {isToday && (
-          <span className="ml-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-500">
+          <span className="ml-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-success">
             today
           </span>
         )}

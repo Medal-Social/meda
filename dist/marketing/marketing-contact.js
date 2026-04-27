@@ -1,0 +1,19 @@
+'use client';
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Clock, Mail, MapPin, Phone, Smartphone } from 'lucide-react';
+import { cx, toTelHref } from './utils.js';
+function InfoRow({ icon: Icon, label, children }) {
+    return (_jsxs("div", { className: "flex items-start gap-3", children: [_jsx("span", { className: "mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary", children: _jsx(Icon, { className: "size-4", "aria-hidden": true }) }), _jsxs("div", { className: "min-w-0", children: [_jsx("p", { className: "mb-1 text-sm font-semibold text-foreground", children: label }), _jsx("div", { className: "text-sm leading-6 text-muted-foreground", children: children })] })] }));
+}
+function DetailCard({ title, children }) {
+    return (_jsxs("section", { className: "rounded-lg border border-border bg-card p-6 text-card-foreground shadow-sm", children: [title && _jsx("h3", { className: "mb-5 text-lg font-semibold text-foreground", children: title }), children] }));
+}
+function OfficeInfo({ office }) {
+    return (_jsx(DetailCard, { title: office.title ?? 'Office', children: _jsxs("div", { className: "space-y-5", children: [office.address && (_jsx(InfoRow, { icon: MapPin, label: "Address", children: office.address })), office.email && (_jsx(InfoRow, { icon: Mail, label: "Email", children: _jsx("a", { className: "hover:text-foreground", href: `mailto:${office.email}`, children: office.email }) })), office.phone && (_jsx(InfoRow, { icon: Phone, label: "Phone", children: _jsx("a", { className: "hover:text-foreground", href: toTelHref(office.phone), children: office.phone }) })), office.hours && (_jsx(InfoRow, { icon: Clock, label: "Opening hours", children: office.hours }))] }) }));
+}
+function ContactPerson({ person }) {
+    return (_jsx(DetailCard, { title: person.title ?? 'Direct contact', children: _jsxs("div", { className: "flex flex-col gap-5 sm:flex-row", children: [person.image && _jsx("div", { className: "shrink-0 overflow-hidden rounded-lg", children: person.image }), _jsxs("div", { className: "min-w-0 flex-1", children: [_jsx("h4", { className: "text-lg font-semibold text-foreground", children: person.name }), person.role && _jsx("p", { className: "mt-1 text-sm font-semibold text-primary", children: person.role }), person.description && (_jsx("p", { className: "mt-3 text-sm leading-6 text-muted-foreground", children: person.description })), (person.email || person.phone) && (_jsxs("div", { className: "mt-4 space-y-2 text-sm text-muted-foreground", children: [person.email && (_jsxs("a", { className: "flex items-center gap-2 hover:text-foreground", href: `mailto:${person.email}`, children: [_jsx(Mail, { className: "size-4", "aria-hidden": true }), person.email] })), person.phone && (_jsxs("a", { className: "flex items-center gap-2 hover:text-foreground", href: toTelHref(person.phone), children: [_jsx(Smartphone, { className: "size-4", "aria-hidden": true }), person.phone] }))] }))] })] }) }));
+}
+export function MarketingContact({ intro, form, office, contactPerson, compact = false, className, }) {
+    return (_jsx("section", { className: cx('bg-background px-6 py-12 text-foreground sm:px-8', className), children: _jsxs("div", { className: "mx-auto max-w-6xl", children: [intro && (_jsx("div", { className: cx('mx-auto max-w-3xl text-center', compact ? 'mb-8' : 'mb-12'), children: _jsx("div", { className: "text-base leading-7 text-muted-foreground sm:text-lg", children: intro }) })), _jsxs("div", { className: cx('grid items-start gap-6', compact ? 'grid-cols-1' : 'lg:grid-cols-[minmax(0,1fr)_420px]'), children: [_jsx("div", { className: "rounded-lg border border-border bg-card p-6 shadow-sm", children: form }), (office || contactPerson) && (_jsxs("div", { className: "space-y-6", children: [office && _jsx(OfficeInfo, { office: office }), contactPerson && _jsx(ContactPerson, { person: contactPerson })] }))] })] }) }));
+}
