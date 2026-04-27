@@ -6,6 +6,7 @@ export * from './shell-header.js';
 export * from './shell-layout-utils.js';
 export * from './shell-module-nav.js';
 export * from './shell-panel-rail.js';
+export * from './shell-provider.js';
 export * from './shell-route-utils.js';
 export * from './shell-scrollable-content.js';
 export * from './shell-state.js';
