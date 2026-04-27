@@ -27,6 +27,21 @@ afterEach(() => {
   cleanup();
 });
 
+// vaul (drawer primitive) wraps @radix-ui/react-focus-scope, which schedules
+// a setTimeout-based focus restoration on mount. When a test unmounts the
+// drawer and RTL `cleanup()` tears down the DOM, the pending timer can fire
+// against a detached tree and jsdom's dispatchEvent rejects it as a non-Event.
+// The error is benign — assertions already passed before teardown — but
+// vitest counts it as a job-level unhandled exception (red CI even when all
+// tests pass). Swallow this specific message; rethrow anything else.
+process.on('uncaughtException', (err: unknown) => {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (msg.includes("dispatchEvent' on 'EventTarget': parameter 1 is not of type 'Event'")) {
+    return;
+  }
+  throw err;
+});
+
 // Mock window.matchMedia (not available in jsdom)
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
