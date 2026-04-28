@@ -79,6 +79,7 @@ function KanbanBoardInner<TItem extends KanbanItem, TStatus extends string = str
   onHiddenColumnIdsChange,
   emptyColumnContent,
   labels,
+  headless = false,
 }: KanbanBoardProps<TItem, TStatus>) {
   const resolvedLabels: KanbanLabels = { ...defaultKanbanLabels, ...(labels ?? {}) };
 
@@ -185,10 +186,18 @@ function KanbanBoardInner<TItem extends KanbanItem, TStatus extends string = str
   // Always monitor the active DndContext (either the kanban's own in non-headless
   // mode, or the consumer's outer context in headless mode). This is safe because
   // KanbanBoardInner is always rendered inside a DndContext.
+  //
+  // In headless mode the consumer's outer onDragEnd is the single owner of drop
+  // routing — only update local UI state here to avoid double-firing handleKanbanColumnDrop.
   useDndMonitor({
     onDragStart: handleDragStart,
     onDragOver: handleDragOver,
-    onDragEnd: handleDragEnd,
+    onDragEnd: headless
+      ? () => {
+          setActiveId(null);
+          setOverColumnId(null);
+        }
+      : handleDragEnd,
     onDragCancel: () => {
       setActiveId(null);
       setOverColumnId(null);
