@@ -82,7 +82,7 @@ function Wrapper({
 // ---------------------------------------------------------------------------
 
 describe('ContextRail — layout + visibility', () => {
-  it('default width 300px applied as inline style on aside', () => {
+  it('default width 260px applied as inline style on aside', () => {
     render(
       <Wrapper>
         <ContextRail appId="mail" module={MODULE} />
@@ -90,8 +90,8 @@ describe('ContextRail — layout + visibility', () => {
     );
 
     const aside = screen.getByRole('complementary', { name: 'Mail' });
-    // Default layout state sets contextRail.width = 300
-    expect(aside).toHaveStyle({ width: '300px' });
+    // Default layout state sets contextRail.width = 260
+    expect(aside).toHaveStyle({ width: '260px' });
   });
 
   it('hidden=true renders nothing visible (aria-hidden div, no aside)', () => {
@@ -174,7 +174,7 @@ describe('ContextRail — resize clamping', () => {
     const aside = screen.getByRole('complementary', { name: 'Mail' });
     const handle = screen.getByRole('separator', { name: 'Resize context rail' });
 
-    // Simulate drag that would bring width below min (300 - 200 = 100, clamped to 240)
+    // Simulate drag that would bring width below min (260 - 200 = 60, clamped to 240)
     act(() => {
       fireEvent.pointerDown(handle, { clientX: 300, pointerId: 1 });
       fireEvent.pointerMove(handle, { clientX: 100, pointerId: 1 });
@@ -193,7 +193,7 @@ describe('ContextRail — resize clamping', () => {
     const aside = screen.getByRole('complementary', { name: 'Mail' });
     const handle = screen.getByRole('separator', { name: 'Resize context rail' });
 
-    // Simulate drag that would bring width above max (300 + 200 = 500, clamped to 420)
+    // Simulate drag that would bring width above max (260 + 200 = 460, clamped to 420)
     act(() => {
       fireEvent.pointerDown(handle, { clientX: 300, pointerId: 1 });
       fireEvent.pointerMove(handle, { clientX: 500, pointerId: 1 });
@@ -212,13 +212,13 @@ describe('ContextRail — resize clamping', () => {
     const aside = screen.getByRole('complementary', { name: 'Mail' });
     const handle = screen.getByRole('separator', { name: 'Resize context rail' });
 
-    // Simulate drag: start at x=300, move to x=350 → width goes from 300 to 350
+    // Simulate drag: start at x=300, move to x=350 → delta +50, width goes from 260 to 310
     act(() => {
       fireEvent.pointerDown(handle, { clientX: 300, pointerId: 1 });
       fireEvent.pointerMove(handle, { clientX: 350, pointerId: 1 });
     });
 
-    expect(aside).toHaveStyle({ width: '350px' });
+    expect(aside).toHaveStyle({ width: '310px' });
   });
 });
 
@@ -350,10 +350,10 @@ describe('ContextRail — width persistence via useShellLayoutState', () => {
     });
 
     // storage.save should have been called with the layout state containing
-    // contextRail.width = 350
+    // contextRail.width = 310 (260 default + 50 drag delta)
     expect(storage.save).toHaveBeenCalled();
     const savedState = storage.save.mock.calls[storage.save.mock.calls.length - 1][1];
-    expect((savedState as { contextRail: { width: number } }).contextRail.width).toBe(350);
+    expect((savedState as { contextRail: { width: number } }).contextRail.width).toBe(310);
   });
 });
 
