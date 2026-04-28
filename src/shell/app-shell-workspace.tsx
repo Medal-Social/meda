@@ -35,6 +35,7 @@ export function AppShellWorkspace({
   const isMobile = viewport === 'mobile';
 
   if (isMobile) {
+    const hasDrawerContent = Boolean(iconRail || contextRail || rightPanel);
     return (
       <>
         <MobileHeaderInternal globalActions={globalActions} />
@@ -42,11 +43,13 @@ export function AppShellWorkspace({
           <ShellMain layout="workspace">{children}</ShellMain>
         </AppShellBody>
         <MobileBottomNavInternal />
-        <MobileDrawersInternal
-          menuItems={iconRail?.mainItems ?? []}
-          module={contextRail?.module}
-          panelViews={rightPanel?.panelViews ?? []}
-        />
+        {hasDrawerContent && (
+          <MobileDrawersInternal
+            menuItems={iconRail?.mainItems ?? []}
+            module={contextRail?.module}
+            panelViews={rightPanel?.panelViews ?? []}
+          />
+        )}
       </>
     );
   }
