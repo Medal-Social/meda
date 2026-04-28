@@ -7,7 +7,17 @@ export function LaneRow({ lane, windowStart, windowEnd, labelGutterPx, selectedB
                     if (!placement)
                         return null;
                     const selected = selectedBarId === bar.id;
-                    return (_jsx("button", { type: "button", onClick: () => onSelectBar?.(bar, lane), "data-selected": selected || undefined, className: cn('absolute top-0 flex h-full items-center overflow-hidden rounded-md px-2 text-left text-xs text-white', bar.fillClass, bar.accentClass, 'data-[selected]:ring-2 data-[selected]:ring-primary data-[selected]:ring-offset-1 data-[selected]:ring-offset-background', 'hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'), style: { left: `${placement.left}%`, width: `${placement.width}%` }, "aria-label": `${lane.label} — ${bar.label}`, children: _jsx("span", { "aria-hidden": "true", className: "truncate", children: bar.label }) }, bar.id));
+                    const isSelectable = !!onSelectBar;
+                    const barClassName = cn('absolute top-0 flex h-full items-center overflow-hidden rounded-md px-2 text-left text-xs text-white', bar.fillClass, bar.accentClass, isSelectable && [
+                        'data-[selected]:ring-2 data-[selected]:ring-primary data-[selected]:ring-offset-1 data-[selected]:ring-offset-background',
+                        'hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    ]);
+                    const barStyle = { left: `${placement.left}%`, width: `${placement.width}%` };
+                    const ariaLabel = `${lane.label} — ${bar.label}`;
+                    if (!isSelectable) {
+                        return (_jsx("div", { role: "img", "aria-label": ariaLabel, className: barClassName, style: barStyle, children: _jsx("span", { "aria-hidden": "true", className: "truncate", children: bar.label }) }, bar.id));
+                    }
+                    return (_jsx("button", { type: "button", onClick: () => onSelectBar(bar, lane), "data-selected": selected || undefined, className: barClassName, style: barStyle, "aria-label": ariaLabel, children: _jsx("span", { "aria-hidden": "true", className: "truncate", children: bar.label }) }, bar.id));
                 }) })] }));
 }
 function placeBar(bar, windowStart, windowEnd) {
@@ -18,8 +28,8 @@ function placeBar(bar, windowStart, windowEnd) {
         return null;
     const bs = bar.start.getTime();
     const be = bar.end.getTime();
-    // Bar entirely outside the window — skip.
-    if (be < ws || bs > we)
+    // Bar entirely outside the window (or exactly touching boundary) — skip.
+    if (be <= ws || bs >= we)
         return null;
     const clampedStart = Math.max(bs, ws);
     const clampedEnd = Math.min(be, we);

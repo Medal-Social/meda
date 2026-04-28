@@ -28,7 +28,7 @@ function resolveOverColumnStatus(overId, columns, items) {
  * `useDndMonitor` is always safe to call here, enabling the DragOverlay to
  * track external drags when `headless={true}`.
  */
-function KanbanBoardInner({ columns, items, renderCard, onReorder, onCardMove, canDropCard, onAddItem, showEmptyColumns = false, hiddenColumnIds = [], onHiddenColumnIdsChange, emptyColumnContent, labels, }) {
+function KanbanBoardInner({ columns, items, renderCard, onReorder, onCardMove, canDropCard, onAddItem, showEmptyColumns = false, hiddenColumnIds = [], onHiddenColumnIdsChange, emptyColumnContent, labels, headless = false, }) {
     const resolvedLabels = { ...defaultKanbanLabels, ...(labels ?? {}) };
     const [activeId, setActiveId] = useState(null);
     const [overColumnId, setOverColumnId] = useState(null);
@@ -103,10 +103,18 @@ function KanbanBoardInner({ columns, items, renderCard, onReorder, onCardMove, c
     // Always monitor the active DndContext (either the kanban's own in non-headless
     // mode, or the consumer's outer context in headless mode). This is safe because
     // KanbanBoardInner is always rendered inside a DndContext.
+    //
+    // In headless mode the consumer's outer onDragEnd is the single owner of drop
+    // routing — only update local UI state here to avoid double-firing handleKanbanColumnDrop.
     useDndMonitor({
         onDragStart: handleDragStart,
         onDragOver: handleDragOver,
-        onDragEnd: handleDragEnd,
+        onDragEnd: headless
+            ? () => {
+                setActiveId(null);
+                setOverColumnId(null);
+            }
+            : handleDragEnd,
         onDragCancel: () => {
             setActiveId(null);
             setOverColumnId(null);
