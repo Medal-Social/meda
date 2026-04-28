@@ -15,6 +15,7 @@
  * once <AppShellBody> ships as a ResizableShell Group.
  */
 
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ReactNode, PointerEvent as ReactPointerEvent } from 'react';
 import { useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
@@ -116,6 +117,34 @@ function ResizeHandle({ currentWidth, onResize, onCommit }: ResizeHandleProps) {
 }
 
 // ---------------------------------------------------------------------------
+// ContextRailToggle — chevron button that flips ctx.contextRail.collapsed
+// ---------------------------------------------------------------------------
+
+function ContextRailToggle() {
+  const ctx = useMedaShell();
+  const collapsed = ctx.contextRail.collapsed;
+  const Icon = collapsed ? ChevronRight : ChevronLeft;
+  return (
+    <button
+      type="button"
+      onClick={() => ctx.contextRail.setCollapsed(!collapsed)}
+      aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      aria-expanded={!collapsed}
+      aria-controls="meda-context-rail"
+      data-testid="context-rail-toggle"
+      className={cn(
+        'absolute top-3 -right-2.5 z-20 inline-flex h-5 w-5 items-center justify-center',
+        'rounded-md border border-border bg-card text-muted-foreground shadow-sm',
+        'hover:bg-accent hover:text-foreground',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+      )}
+    >
+      <Icon size={14} aria-hidden />
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // ContextRail
 // ---------------------------------------------------------------------------
 
@@ -158,64 +187,78 @@ export function ContextRail({
 
   return (
     <aside
+      id="meda-context-rail"
       data-testid="context-rail"
       aria-label={module.label}
       className={cn(
-        'relative h-full shrink-0 overflow-hidden border-r border-shell-border bg-shell-context',
+        'relative h-full shrink-0 border-r border-shell-border bg-shell-context',
+        'transition-[width] duration-200 ease-in-out motion-reduce:transition-none',
         collapsed && 'w-0',
         className
       )}
       style={{ width: collapsed ? 0 : width }}
     >
-      {/* Header */}
-      <div className="border-b border-shell-border px-4 py-3">
-        <h2 className="text-sm font-semibold text-foreground">{module.label}</h2>
-        {module.description && (
-          <p className="mt-0.5 text-xs text-muted-foreground">{module.description}</p>
-        )}
+      {/* Toggle: absolute, sits half on the rail's right edge. Stays visible
+          even when the inner content shrinks to width 0 — when collapsed, the
+          outer aside is also w-0 and the toggle anchors at the IconRail's
+          right edge by virtue of -right-2.5. */}
+      <ContextRailToggle />
+
+      {/* Inner overflow wrapper so the rail content clips cleanly during the
+          width animation without clipping the absolute toggle above. */}
+      <div className="h-full overflow-hidden">
+        {/* Header */}
+        <div className="border-b border-shell-border px-4 py-3">
+          <h2 className="text-sm font-semibold text-foreground">{module.label}</h2>
+          {module.description && (
+            <p className="mt-0.5 text-xs text-muted-foreground">{module.description}</p>
+          )}
+        </div>
+
+        {/* Items list — fleshed out in Phase 9.2 (Commit 3) */}
+        <nav aria-label={`${module.label} navigation`} className="flex flex-col gap-0.5 p-2">
+          {module.items.map((item) => {
+            const isActive = item.id === activeItemId;
+            const klass = cn(
+              'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
+              isActive
+                ? 'bg-primary/10 text-primary'
+                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+            );
+            const IconComp = item.icon;
+            const inner = (
+              <>
+                <IconComp size={16} aria-hidden="true" className="shrink-0" />
+                <span className="truncate">{item.label}</span>
+                {item.shortcut && (
+                  <kbd className="ml-auto font-mono text-[10px] text-muted-foreground">
+                    {item.shortcut}
+                  </kbd>
+                )}
+              </>
+            );
+
+            if (renderLink) {
+              return renderLink({ item, isActive, className: klass, children: inner });
+            }
+            return (
+              <a
+                key={item.id}
+                href={item.to}
+                aria-current={isActive ? 'page' : undefined}
+                className={klass}
+              >
+                {inner}
+              </a>
+            );
+          })}
+        </nav>
       </div>
 
-      {/* Items list — fleshed out in Phase 9.2 (Commit 3) */}
-      <nav aria-label={`${module.label} navigation`} className="flex flex-col gap-0.5 p-2">
-        {module.items.map((item) => {
-          const isActive = item.id === activeItemId;
-          const klass = cn(
-            'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
-            isActive
-              ? 'bg-primary/10 text-primary'
-              : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-          );
-          const IconComp = item.icon;
-          const inner = (
-            <>
-              <IconComp size={16} aria-hidden="true" className="shrink-0" />
-              <span className="truncate">{item.label}</span>
-              {item.shortcut && (
-                <kbd className="ml-auto font-mono text-[10px] text-muted-foreground">
-                  {item.shortcut}
-                </kbd>
-              )}
-            </>
-          );
-
-          if (renderLink) {
-            return renderLink({ item, isActive, className: klass, children: inner });
-          }
-          return (
-            <a
-              key={item.id}
-              href={item.to}
-              aria-current={isActive ? 'page' : undefined}
-              className={klass}
-            >
-              {inner}
-            </a>
-          );
-        })}
-      </nav>
-
-      {/* Right-edge resize handle */}
-      <ResizeHandle currentWidth={width} onResize={handleResize} onCommit={handleCommit} />
+      {/* Right-edge resize handle — only when expanded (no rail edge to grab when collapsed) */}
+      {!collapsed && (
+        <ResizeHandle currentWidth={width} onResize={handleResize} onCommit={handleCommit} />
+      )}
     </aside>
   );
 }

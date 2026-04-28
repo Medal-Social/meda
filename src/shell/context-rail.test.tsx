@@ -386,3 +386,92 @@ describe('ContextRail — renders on desktop viewport', () => {
     expect(screen.getByRole('complementary', { name: 'Mail' })).toBeInTheDocument();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Collapse toggle — chevron button on the rail's right edge
+// ---------------------------------------------------------------------------
+
+describe('collapse toggle', () => {
+  it('renders the toggle button when expanded', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+    const btn = screen.getByTestId('context-rail-toggle');
+    expect(btn).toBeInTheDocument();
+    expect(btn).toHaveAttribute('aria-label', 'Collapse sidebar');
+    expect(btn).toHaveAttribute('aria-expanded', 'true');
+    expect(btn).toHaveAttribute('aria-controls', 'meda-context-rail');
+  });
+
+  it('renders the toggle button when collapsed (and reflects collapsed state)', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+    // Click the toggle to enter collapsed state (Wrapper doesn't expose initialLayout)
+    act(() => {
+      fireEvent.click(screen.getByTestId('context-rail-toggle'));
+    });
+    const btn = screen.getByTestId('context-rail-toggle');
+    expect(btn).toHaveAttribute('aria-label', 'Expand sidebar');
+    expect(btn).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('clicking the toggle flips ctx.contextRail.collapsed', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+    const btn = screen.getByTestId('context-rail-toggle');
+    expect(btn).toHaveAttribute('aria-expanded', 'true');
+    act(() => {
+      fireEvent.click(btn);
+    });
+    expect(btn).toHaveAttribute('aria-expanded', 'false');
+    act(() => {
+      fireEvent.click(btn);
+    });
+    expect(btn).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('does not render the resize handle when collapsed', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+    expect(screen.queryByRole('separator', { name: /resize context rail/i })).toBeInTheDocument();
+
+    // Collapse via the toggle
+    act(() => {
+      fireEvent.click(screen.getByTestId('context-rail-toggle'));
+    });
+    expect(
+      screen.queryByRole('separator', { name: /resize context rail/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not render the toggle on mobile viewport', () => {
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
+    (useShellViewport as any).mockReturnValue('mobile');
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+    expect(screen.queryByTestId('context-rail-toggle')).not.toBeInTheDocument();
+  });
+
+  it('outer aside has id="meda-context-rail" so aria-controls resolves', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+    expect(document.getElementById('meda-context-rail')).toBeInTheDocument();
+  });
+});
