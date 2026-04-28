@@ -32,6 +32,6 @@ export function ListRow({ selected, selectionActive, onSelect, onClick, onMouseE
                         : 'opacity-0 group-hover:opacity-100 data-[state=checked]:opacity-100') }) })), children] }));
 }
 export function ListCell({ width = 'flex-1', shrink = true, align = 'left', children, className, }) {
-    return (_jsx("div", { className: cn(width, shrink && 'flex-shrink-0', align === 'center' && 'text-center', align === 'right' && 'text-right', 'min-w-0', // Allow truncation
+    return (_jsx("div", { className: cn(width, shrink === false && 'flex-shrink-0', align === 'center' && 'text-center', align === 'right' && 'text-right', 'min-w-0', // Allow truncation
         className), children: children }));
 }
