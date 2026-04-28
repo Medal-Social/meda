@@ -405,16 +405,24 @@ describe('collapse toggle', () => {
     expect(btn).toHaveAttribute('aria-controls', 'meda-context-rail');
   });
 
-  it('renders the toggle button when collapsed (and reflects collapsed state)', () => {
+  it('renders the toggle button when collapsed (seeded via storage)', () => {
+    // Seed initial layout state via the storage adapter so we exercise the
+    // first-render path (catches bugs that wouldn't manifest via click-to-collapse).
+    const seededStorage = {
+      load: (key: string) =>
+        key.startsWith('meda:shell:')
+          ? {
+              contextRail: { width: 300, collapsed: true },
+              rightPanel: { mode: 'closed', activeView: null, width: 340 },
+            }
+          : null,
+      save: () => {},
+    };
     render(
-      <Wrapper>
+      <Wrapper storage={seededStorage}>
         <ContextRail appId="mail" module={MODULE} />
       </Wrapper>
     );
-    // Click the toggle to enter collapsed state (Wrapper doesn't expose initialLayout)
-    act(() => {
-      fireEvent.click(screen.getByTestId('context-rail-toggle'));
-    });
     const btn = screen.getByTestId('context-rail-toggle');
     expect(btn).toHaveAttribute('aria-label', 'Expand sidebar');
     expect(btn).toHaveAttribute('aria-expanded', 'false');

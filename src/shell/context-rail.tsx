@@ -133,7 +133,10 @@ function ContextRailToggle() {
       aria-controls="meda-context-rail"
       data-testid="context-rail-toggle"
       className={cn(
+        // 20×20 visual size; before:* expands the touch hit area to ~36×36
+        // without changing the visible footprint (free UX win for touch).
         'absolute top-3 -right-2.5 z-20 inline-flex h-5 w-5 items-center justify-center',
+        'before:absolute before:-inset-2 before:content-[""]',
         'rounded-md border border-border bg-card text-muted-foreground shadow-sm',
         'hover:bg-accent hover:text-foreground',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
@@ -205,8 +208,14 @@ export function ContextRail({
       <ContextRailToggle />
 
       {/* Inner overflow wrapper so the rail content clips cleanly during the
-          width animation without clipping the absolute toggle above. */}
-      <div className="h-full overflow-hidden">
+          width animation without clipping the absolute toggle above.
+          aria-hidden + inert when collapsed so AT and keyboard users don't
+          land in zero-width content. */}
+      <div
+        className="h-full overflow-hidden"
+        aria-hidden={collapsed}
+        inert={collapsed || undefined}
+      >
         {/* Header */}
         <div className="border-b border-shell-border px-4 py-3">
           <h2 className="text-sm font-semibold text-foreground">{module.label}</h2>
