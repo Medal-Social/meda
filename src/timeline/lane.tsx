@@ -48,21 +48,46 @@ export function LaneRow({
           const placement = placeBar(bar, windowStart, windowEnd);
           if (!placement) return null;
           const selected = selectedBarId === bar.id;
+          const isSelectable = !!onSelectBar;
+
+          const barClassName = cn(
+            'absolute top-0 flex h-full items-center overflow-hidden rounded-md px-2 text-left text-xs text-white',
+            bar.fillClass,
+            bar.accentClass,
+            isSelectable && [
+              'data-[selected]:ring-2 data-[selected]:ring-primary data-[selected]:ring-offset-1 data-[selected]:ring-offset-background',
+              'hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            ]
+          );
+          const barStyle = { left: `${placement.left}%`, width: `${placement.width}%` };
+          const ariaLabel = `${lane.label} — ${bar.label}`;
+
+          if (!isSelectable) {
+            return (
+              <div
+                key={bar.id}
+                role="img"
+                aria-label={ariaLabel}
+                className={barClassName}
+                style={barStyle}
+              >
+                {/* aria-hidden: label text is decorative; accessible name comes from aria-label above */}
+                <span aria-hidden="true" className="truncate">
+                  {bar.label}
+                </span>
+              </div>
+            );
+          }
+
           return (
             <button
               key={bar.id}
               type="button"
-              onClick={() => onSelectBar?.(bar, lane)}
+              onClick={() => onSelectBar(bar, lane)}
               data-selected={selected || undefined}
-              className={cn(
-                'absolute top-0 flex h-full items-center overflow-hidden rounded-md px-2 text-left text-xs text-white',
-                bar.fillClass,
-                bar.accentClass,
-                'data-[selected]:ring-2 data-[selected]:ring-primary data-[selected]:ring-offset-1 data-[selected]:ring-offset-background',
-                'hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-              )}
-              style={{ left: `${placement.left}%`, width: `${placement.width}%` }}
-              aria-label={`${lane.label} — ${bar.label}`}
+              className={barClassName}
+              style={barStyle}
+              aria-label={ariaLabel}
             >
               {/* aria-hidden: label text is decorative; accessible name comes from aria-label above */}
               <span aria-hidden="true" className="truncate">
@@ -88,8 +113,8 @@ function placeBar(bar: LaneBar, windowStart: Date, windowEnd: Date): BarPlacemen
   if (span <= 0) return null;
   const bs = bar.start.getTime();
   const be = bar.end.getTime();
-  // Bar entirely outside the window — skip.
-  if (be < ws || bs > we) return null;
+  // Bar entirely outside the window (or exactly touching boundary) — skip.
+  if (be <= ws || bs >= we) return null;
   const clampedStart = Math.max(bs, ws);
   const clampedEnd = Math.min(be, we);
   const left = ((clampedStart - ws) / span) * 100;
