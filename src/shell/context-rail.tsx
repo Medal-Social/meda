@@ -136,18 +136,19 @@ function ContextRailToggle({ railId }: { railId: string }) {
       aria-controls={railId}
       data-testid="context-rail-toggle"
       className={cn(
-        // Pull-tab: 14w × 32h, flat left edge attached to the rail (no left
-        // border), rounded right. Sticks out of the rail's outer edge so the
-        // separation reads clearly. before:* gives a ~36×36 touch hit area.
-        'absolute top-3.5 -right-3.5 z-20 inline-flex h-8 w-3.5 items-center justify-center',
-        'before:absolute before:-inset-2 before:content-[""]',
+        // Pull-tab: 28w × 40h. Big enough to read the icon at a glance and to
+        // grab confidently — matches Unifi's reference. Flat left edge
+        // attached to the rail (no left border), rounded right. The whole tab
+        // sticks fully out of the rail's outer edge.
+        'absolute top-3 -right-7 z-20 inline-flex h-10 w-7 items-center justify-center',
+        'before:absolute before:-inset-1 before:content-[""]',
         'rounded-r-md border border-l-0 border-border bg-card text-muted-foreground',
-        'shadow-[1px_0_3px_rgb(0_0_0_/_0.06)]',
+        'shadow-[2px_0_4px_rgb(0_0_0_/_0.08)]',
         'hover:bg-accent hover:text-foreground',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
       )}
     >
-      <Icon size={12} aria-hidden />
+      <Icon size={18} aria-hidden />
     </button>
   );
 }
