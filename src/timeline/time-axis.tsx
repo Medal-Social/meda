@@ -46,17 +46,12 @@ export function TimeAxis({
     <div className="flex flex-col gap-3 border-border border-b pb-3">
       <div className="flex items-center gap-3">
         {title && <div className="font-medium text-sm">{title}</div>}
-        <div
-          role="tablist"
-          aria-label="Time range"
-          className="flex items-center gap-1 rounded-md bg-muted p-0.5"
-        >
+        <div className="flex items-center gap-1 rounded-md bg-muted p-0.5">
           {RANGES.map((r) => (
             <button
               key={r}
               type="button"
-              role="tab"
-              aria-selected={r === range}
+              aria-pressed={r === range}
               onClick={() => onRangeChange(r)}
               data-active={r === range || undefined}
               className={cn(

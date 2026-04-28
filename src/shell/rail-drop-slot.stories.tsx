@@ -200,7 +200,7 @@ export const DropZonesDemo: StoryObj = {
       if (over.data?.current?.type === 'rail-drop-slot') {
         const machineId = String(over.id).replace(/^machine:/, '');
         const machine = MACHINES.find((m) => m.id === machineId);
-        if (!machine || !machine.online) return;
+        if (!machine?.online) return;
         setTasks((prev) =>
           prev.map((t) =>
             t.id === active.id ? { ...t, status: 'assigned', assignedMachine: machine.hostname } : t
@@ -320,7 +320,7 @@ export const DragTaskToMachine: StoryObj = {
         const slotId = String(over.id);
         const machineId = slotId.replace(/^machine:/, '');
         const machine = legacyMachines.find((m) => m.id === machineId);
-        if (!machine || !machine.online) return;
+        if (!machine?.online) return;
         setTasks((prev) =>
           prev.map((t) =>
             t.id === active.id ? { ...t, status: 'assigned', assignedMachine: machine.hostname } : t

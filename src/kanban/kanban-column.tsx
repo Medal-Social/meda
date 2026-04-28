@@ -126,7 +126,7 @@ export function KanbanColumn<TItem extends KanbanItem>({
             type="button"
             onClick={onAddItem}
             className={cn(
-              'flex w-full items-center justify-center gap-1.5 rounded-md border border-transparent border-dashed p-2 text-muted-foreground text-sm opacity-0 transition-[color,opacity,background-color,border-color] hover:border-muted-foreground/30 hover:bg-accent/50 hover:text-foreground group-hover/column:opacity-100',
+              'flex w-full items-center justify-center gap-1.5 rounded-md border border-transparent border-dashed p-2 text-muted-foreground text-sm opacity-0 transition-[color,opacity,background-color,border-color] hover:border-muted-foreground/30 hover:bg-accent/50 hover:text-foreground focus-visible:opacity-100 group-hover/column:opacity-100',
               count > 0 && 'mt-2'
             )}
             aria-label={interpolate(labels.addItemTo, { column: column.label })}
