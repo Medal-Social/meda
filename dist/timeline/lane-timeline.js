@@ -15,7 +15,7 @@ const RANGE_MS = {
 export function LaneTimeline({ lanes, now, defaultRange = '6h', range: controlledRange, onRangeChange, selectedDate: controlledDate, onDateChange, title, groupChip, activeCount, legend, selectedBarId, onSelectBar, labels, className, }) {
     const resolvedLabels = { ...defaultLaneTimelineLabels, ...(labels ?? {}) };
     const [internalRange, setInternalRange] = useState(defaultRange);
-    const [internalDate, setInternalDate] = useState(() => new Date());
+    const [internalDate, setInternalDate] = useState(() => now ?? new Date());
     const range = controlledRange ?? internalRange;
     const selectedDate = controlledDate ?? internalDate;
     const referenceNow = now ?? new Date();

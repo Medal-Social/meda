@@ -1,3 +1,4 @@
+'use client';
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, PointerSensor, useSensor, useSensors, } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -133,11 +134,13 @@ export function KanbanBoard({ columns, items, renderCard, onReorder, onCardMove,
                             activeItem?.status === column.id ||
                             canDropCard(activeId, column.id);
                         const isOver = overColumnId === column.id && canDropInColumn;
-                        return (_jsx(SortableContext, { items: columnItems.map((item) => item.id), strategy: verticalListSortingStrategy, children: _jsx(KanbanColumn, { column: column, items: columnItems, count: columnItems.length, isOver: isOver, onAddItem: onAddItem ? () => onAddItem(column.id) : undefined, onHideColumn: onHiddenColumnIdsChange ? () => handleHideColumn(column.id) : undefined, labels: resolvedLabels, children: columnItems.length === 0 ? (
+                        return (_jsx(SortableContext, { items: columnItems.map((item) => item.id), strategy: verticalListSortingStrategy, children: _jsx(KanbanColumn, { column: column, items: columnItems, count: columnItems.length, isOver: isOver, onAddItem: onAddItem && column.canAdd !== false
+                                    ? () => onAddItem(column.id)
+                                    : undefined, onHideColumn: onHiddenColumnIdsChange ? () => handleHideColumn(column.id) : undefined, labels: resolvedLabels, children: columnItems.length === 0 ? (
                                 // If onAddItem is provided, show nothing (add button appears on hover)
                                 // Otherwise show custom empty content or default "No items" message
                                 (() => {
-                                    if (onAddItem)
+                                    if (onAddItem && column.canAdd !== false)
                                         return null;
                                     return (emptyColumnContent || (_jsx("div", { className: "py-8 text-center text-muted-foreground text-sm", children: resolvedLabels.noItems })));
                                 })()) : (_jsx("div", { className: "space-y-2", children: columnItems.map((item) => (_jsx(KanbanCardWrapper, { id: item.id, isDragging: activeId === item.id, children: renderCard(item) }, item.id))) })) }) }, column.id));

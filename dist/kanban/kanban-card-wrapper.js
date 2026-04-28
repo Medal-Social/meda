@@ -1,3 +1,4 @@
+'use client';
 import { jsx as _jsx } from "react/jsx-runtime";
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
