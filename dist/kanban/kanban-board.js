@@ -1,6 +1,6 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import { DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, PointerSensor, useSensor, useSensors, } from '@dnd-kit/core';
+import { DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, PointerSensor, useDndMonitor, useSensor, useSensors, } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { ChevronRight, EyeOff, MoreHorizontal } from 'lucide-react';
 import { useCallback, useDeferredValue, useMemo, useState } from 'react';
@@ -23,12 +23,12 @@ function resolveOverColumnStatus(overId, columns, items) {
     return targetItem?.status ?? null;
 }
 /**
- * Generic Kanban Board Component
- *
- * A reusable drag-and-drop kanban board that can be used across
- * different features (Deals, Ideas, etc.)
+ * Inner component that always renders inside a DndContext — either the kanban's
+ * own (non-headless) or the consumer's outer context (headless). This means
+ * `useDndMonitor` is always safe to call here, enabling the DragOverlay to
+ * track external drags when `headless={true}`.
  */
-export function KanbanBoard({ columns, items, renderCard, onReorder, onCardMove, canDropCard, onAddItem, showEmptyColumns = false, hiddenColumnIds = [], onHiddenColumnIdsChange, isLoading = false, emptyColumnContent, labels, headless = false, }) {
+function KanbanBoardInner({ columns, items, renderCard, onReorder, onCardMove, canDropCard, onAddItem, showEmptyColumns = false, hiddenColumnIds = [], onHiddenColumnIdsChange, emptyColumnContent, labels, }) {
     const resolvedLabels = { ...defaultKanbanLabels, ...(labels ?? {}) };
     const [activeId, setActiveId] = useState(null);
     const [overColumnId, setOverColumnId] = useState(null);
@@ -74,19 +74,7 @@ export function KanbanBoard({ columns, items, renderCard, onReorder, onCardMove,
             return columnItems && columnItems.length > 0;
         });
     }, [explicitlyVisibleColumns, itemsByStatus, showEmptyColumns]);
-    // Setup sensors for drag detection (only when drag is enabled)
-    const dragSensors = useSensors(useSensor(PointerSensor, {
-        activationConstraint: {
-            distance: 5, // Keep drag responsive while avoiding accidental drags
-        },
-    }), useSensor(KeyboardSensor));
-    // Only use sensors if onReorder or onCardMove is provided
-    const sensors = onReorder || onCardMove ? dragSensors : [];
-    // Handle drag start
-    const handleDragStart = useCallback((event) => {
-        setActiveId(event.active.id);
-    }, []);
-    // Handle drag over (for preview)
+    // Handle drag over (for preview) — used both by own DndContext and via useDndMonitor
     const handleDragOver = useCallback((event) => {
         const { over } = event;
         if (!over) {
@@ -95,6 +83,10 @@ export function KanbanBoard({ columns, items, renderCard, onReorder, onCardMove,
         }
         setOverColumnId(resolveOverColumnStatus(String(over.id), visibleColumns, items));
     }, [items, visibleColumns]);
+    // Handle drag start
+    const handleDragStart = useCallback((event) => {
+        setActiveId(event.active.id);
+    }, []);
     // Handle drag end
     const handleDragEnd = useCallback((event) => {
         setActiveId(null);
@@ -108,6 +100,18 @@ export function KanbanBoard({ columns, items, renderCard, onReorder, onCardMove,
             canDropCard,
         });
     }, [items, visibleColumns, canDropCard, onReorder, onCardMove]);
+    // Always monitor the active DndContext (either the kanban's own in non-headless
+    // mode, or the consumer's outer context in headless mode). This is safe because
+    // KanbanBoardInner is always rendered inside a DndContext.
+    useDndMonitor({
+        onDragStart: handleDragStart,
+        onDragOver: handleDragOver,
+        onDragEnd: handleDragEnd,
+        onDragCancel: () => {
+            setActiveId(null);
+            setOverColumnId(null);
+        },
+    });
     const handleHideColumn = useCallback((columnId) => {
         if (!onHiddenColumnIdsChange)
             return;
@@ -122,12 +126,7 @@ export function KanbanBoard({ columns, items, renderCard, onReorder, onCardMove,
             return;
         onHiddenColumnIdsChange(hiddenColumnIds.filter((hiddenColumnId) => hiddenColumnId !== columnId));
     }, [hiddenColumnIds, onHiddenColumnIdsChange]);
-    // Loading skeleton
-    if (isLoading) {
-        const loadingColumns = explicitlyVisibleColumns.length > 0 ? explicitlyVisibleColumns : columns;
-        return (_jsx("div", { className: "flex gap-4 pb-4", children: loadingColumns.map((column) => (_jsxs("div", { className: "w-72 flex-shrink-0 animate-pulse rounded-lg bg-muted/50 p-4", children: [_jsx("div", { className: "mb-4 h-6 w-24 rounded bg-muted" }), _jsxs("div", { className: "space-y-3", children: [_jsx("div", { className: "h-24 rounded bg-muted" }), _jsx("div", { className: "h-24 rounded bg-muted" })] })] }, column.id))) }));
-    }
-    const boardContent = (_jsxs(_Fragment, { children: [_jsxs("div", { "data-slot": "kanban-board", className: "flex h-full gap-4 pb-4", children: [visibleColumns.map((column) => {
+    return (_jsxs(_Fragment, { children: [_jsxs("div", { "data-slot": "kanban-board", className: "flex h-full gap-4 pb-4", children: [visibleColumns.map((column) => {
                         const columnItems = itemsByStatus.get(column.id) ?? [];
                         const canDropInColumn = !activeId ||
                             !canDropCard ||
@@ -147,14 +146,40 @@ export function KanbanBoard({ columns, items, renderCard, onReorder, onCardMove,
                     }), hiddenColumns.length > 0 && (_jsx(HiddenColumnsRail, { hiddenColumns: hiddenColumns, itemsByStatus: itemsByStatus, onShowColumn: handleShowColumn, labels: resolvedLabels }))] }), typeof document !== 'undefined'
                 ? createPortal(_jsx(DragOverlay, { dropAnimation: null, children: activeItem ? (_jsx("div", { className: "cursor-grabbing opacity-95 shadow-xl", children: renderCard(activeItem) })) : null }), document.body)
                 : null] }));
-    if (headless) {
-        return boardContent;
+}
+/**
+ * Generic Kanban Board Component
+ *
+ * A reusable drag-and-drop kanban board that can be used across
+ * different features (Deals, Ideas, etc.)
+ */
+export function KanbanBoard(props) {
+    const { columns, onReorder, onCardMove, hiddenColumnIds = [], isLoading = false, headless = false, } = props;
+    // Setup sensors for drag detection (only when drag is enabled)
+    const dragSensors = useSensors(useSensor(PointerSensor, {
+        activationConstraint: {
+            distance: 5, // Keep drag responsive while avoiding accidental drags
+        },
+    }), useSensor(KeyboardSensor));
+    // Only use sensors if onReorder or onCardMove is provided
+    const sensors = onReorder || onCardMove ? dragSensors : [];
+    const hiddenColumnIdSet = useMemo(() => new Set(hiddenColumnIds.map((columnId) => String(columnId))), [hiddenColumnIds]);
+    const explicitlyVisibleColumns = useMemo(() => columns.filter((column) => !hiddenColumnIdSet.has(String(column.id))), [columns, hiddenColumnIdSet]);
+    // Loading skeleton
+    if (isLoading) {
+        const loadingColumns = explicitlyVisibleColumns.length > 0 ? explicitlyVisibleColumns : columns;
+        return (_jsx("div", { className: "flex gap-4 pb-4", children: loadingColumns.map((column) => (_jsxs("div", { className: "w-72 flex-shrink-0 animate-pulse rounded-lg bg-muted/50 p-4", children: [_jsx("div", { className: "mb-4 h-6 w-24 rounded bg-muted" }), _jsxs("div", { className: "space-y-3", children: [_jsx("div", { className: "h-24 rounded bg-muted" }), _jsx("div", { className: "h-24 rounded bg-muted" })] })] }, column.id))) }));
     }
-    return (_jsx(DndContext, { sensors: sensors, collisionDetection: kanbanCollisionDetection, onDragStart: handleDragStart, onDragOver: handleDragOver, onDragEnd: handleDragEnd, measuring: {
+    // In headless mode the consumer supplies the DndContext — KanbanBoardInner
+    // uses useDndMonitor to listen to it from inside the same tree.
+    if (headless) {
+        return _jsx(KanbanBoardInner, { ...props, headless: true });
+    }
+    return (_jsx(DndContext, { sensors: sensors, collisionDetection: kanbanCollisionDetection, measuring: {
             droppable: {
                 strategy: MeasuringStrategy.Always,
             },
-        }, children: boardContent }));
+        }, children: _jsx(KanbanBoardInner, { ...props, headless: false }) }));
 }
 function HiddenColumnsRail({ hiddenColumns, itemsByStatus, onShowColumn, labels, }) {
     return (_jsx("aside", { "data-slot": "kanban-hidden-columns-rail", className: "flex w-64 flex-shrink-0 flex-col gap-3 self-start rounded-lg border border-border/60 bg-background/95 p-3 shadow-sm backdrop-blur", children: _jsxs(Collapsible, { defaultOpen: true, children: [_jsxs(CollapsibleTrigger, { "data-slot": "kanban-hidden-columns-trigger", className: "flex w-full items-center gap-2 rounded-md p-1 text-left transition-colors hover:bg-accent/50", children: [_jsx(ChevronRight, { className: "h-4 w-4 text-muted-foreground transition-transform duration-200 [[data-open]>&]:rotate-90" }), _jsx(EyeOff, { className: "h-4 w-4 text-muted-foreground" }), _jsx("h3", { className: "font-medium text-sm", children: labels.hiddenColumns }), _jsx("span", { className: "ml-auto rounded-full bg-muted px-1.5 py-0.5 text-muted-foreground text-xs", children: hiddenColumns.length })] }), _jsx(CollapsibleContent, { "data-slot": "kanban-hidden-columns-content", className: "pt-3", children: _jsx("div", { className: "space-y-2", children: hiddenColumns.map((column) => {

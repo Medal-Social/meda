@@ -8,6 +8,8 @@ export { AppShell, AppShellBody } from './app-shell.js';
 // Command palette
 export { CommandPalette, useCommandGroup, useCommands } from './command-palette.js';
 export { ContextRail } from './context-rail.js';
+// Drag-and-drop utilities
+export { DragModeBanner } from './drag-mode-banner.js';
 // Extras (legacy components ported during Phase 15 — opt-in for apps that need them)
 export * as Extras from './extras/index.js';
 // Rails + main + panel
@@ -18,6 +20,7 @@ export { createLocalStorageAdapter } from './layout-state.js';
 export { motion } from './motion.js';
 // Resize primitives
 export { RailDropSlot } from './rail-drop-slot.js';
+export { RailDropZones } from './rail-drop-zones.js';
 export { ResizableHandle, ResizableShell, ResizableShellPanel } from './resizable-shell.js';
 export { RightPanel } from './right-panel.js';
 // Header (and its individual children for advanced composition)
