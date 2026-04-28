@@ -5,6 +5,8 @@ export interface TimeAxisProps {
     onRangeChange: (range: LaneTimelineRange) => void;
     selectedDate: Date;
     onDateChange: (date: Date) => void;
+    /** Reference time used to determine whether `selectedDate` is "today" in the header label. */
+    now: Date;
     title?: ReactNode;
     groupChip?: ReactNode;
     activeCount?: number;
@@ -13,4 +15,4 @@ export interface TimeAxisProps {
     /** Width of the lane-label gutter on the left, in px (matches Lane component). */
     labelGutterPx: number;
 }
-export declare function TimeAxis({ range, onRangeChange, selectedDate, onDateChange, title, groupChip, activeCount, labels, ticks, labelGutterPx, }: TimeAxisProps): import("react/jsx-runtime").JSX.Element;
+export declare function TimeAxis({ range, onRangeChange, selectedDate, onDateChange, now, title, groupChip, activeCount, labels, ticks, labelGutterPx, }: TimeAxisProps): import("react/jsx-runtime").JSX.Element;
