@@ -11,11 +11,8 @@ import {
   UsersRound,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { cn } from '../lib/utils.js';
 import type { AppShellAuthConfig } from './types.js';
-
-function cx(...values: Array<string | false | null | undefined>) {
-  return values.filter(Boolean).join(' ');
-}
 
 function DefaultBrandMark() {
   return (
@@ -40,9 +37,7 @@ export function AppShellAuth({
   return (
     <section
       data-testid="app-shell-auth"
-      className={cx(
-        'grid min-h-screen overflow-hidden bg-background text-foreground lg:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)]'
-      )}
+      className="grid min-h-screen overflow-hidden bg-background text-foreground lg:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)]"
     >
       <div className="relative flex min-h-[24rem] flex-col overflow-hidden bg-[radial-gradient(circle_at_24%_18%,var(--color-info-500)_0,transparent_25%),radial-gradient(circle_at_84%_24%,var(--color-brand-400)_0,transparent_28%),linear-gradient(135deg,var(--color-brand-800),var(--color-brand-700)_42%,var(--color-brand-500))] px-6 py-6 text-white sm:min-h-[30rem] sm:px-8 lg:min-h-screen lg:px-10 lg:py-8">
         <div
@@ -119,7 +114,7 @@ function DefaultAuthPreview() {
               {PREVIEW_TABS.map((tab) => (
                 <span
                   key={tab}
-                  className={cx(
+                  className={cn(
                     'rounded-full px-2 py-1 text-[10px] font-medium',
                     tab === 'Inbox'
                       ? 'bg-background text-foreground shadow-sm'
@@ -257,7 +252,7 @@ function PreviewRailItem({
 }) {
   return (
     <span
-      className={cx(
+      className={cn(
         'relative inline-flex size-8 items-center justify-center rounded-lg transition-colors',
         active ? 'bg-primary/12 text-primary' : 'text-muted-foreground'
       )}
@@ -282,7 +277,7 @@ function PreviewContextItem({
 }) {
   return (
     <span
-      className={cx(
+      className={cn(
         'flex items-center gap-2 rounded-md px-2 py-1.5 text-[10px] transition-colors',
         active ? 'bg-primary/10 font-semibold text-primary' : 'text-muted-foreground'
       )}
