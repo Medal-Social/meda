@@ -2025,9 +2025,33 @@ git commit -m "chore(changeset): major bump for storybook cleanup + AppShell uni
 
 ---
 
-### Task 19: Open PR and accept Chromatic baselines
+### Task 19: Re-enable Chromatic auto-runs and accept new baselines
 
-- [ ] **Step 1: Push the branch and open a PR to `dev`**
+Auto-runs were disabled at the start of the cleanup (in the Phase 1 PR) so we wouldn't burn credits on intermediate baselines. This task re-enables them and accepts the new baselines as the canonical look.
+
+- [ ] **Step 1: Re-enable the Chromatic workflow triggers**
+
+Open `.github/workflows/chromatic.yml`. Restore the `push` and `pull_request` triggers that were commented out. Final `on:` block:
+
+```yaml
+on:
+  push:
+    branches: [dev, prod]
+  pull_request:
+    branches: [dev, prod]
+  workflow_dispatch:
+```
+
+Remove the "TEMPORARY" comment block above it.
+
+Commit:
+
+```bash
+git add .github/workflows/chromatic.yml
+git commit -m "ci(chromatic): re-enable auto-runs after storybook cleanup"
+```
+
+- [ ] **Step 3: Push the branch and open a PR to `dev`**
 
 Run:
 
@@ -2052,11 +2076,11 @@ EOF
 )"
 ```
 
-- [ ] **Step 2: Wait for Chromatic to finish, then accept baselines**
+- [ ] **Step 4: Wait for Chromatic to finish, then accept baselines**
 
 Open the Chromatic build linked from the PR. Most snapshots are net-new (iPad and mobile at the new viewports). Visually review each new baseline and accept.
 
-- [ ] **Step 3: After review, merge to `dev`, then open the dev → prod release PR per the standard release flow**
+- [ ] **Step 5: After review, merge to `dev`, then open the dev → prod release PR per the standard release flow**
 
 Per the package's release pipeline (`release.yml` + Changesets), merging to `prod` will open the Changesets "Release PR." Merging that PR triggers the npm publish via OIDC.
 
