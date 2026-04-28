@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import type { Lane, LaneBar, LaneLegendItem } from './index.js';
 import { LaneTimeline } from './index.js';
