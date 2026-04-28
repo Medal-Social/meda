@@ -38,7 +38,7 @@ const preview: Preview = {
           'Marketing',
           'Chat',
           'Timeline',
-          'Voice',
+          'Audio',
           'Panel',
           'Inbox',
           '*',
