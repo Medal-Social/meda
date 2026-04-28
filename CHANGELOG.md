@@ -1,5 +1,15 @@
 # @medalsocial/meda
 
+## 1.2.0
+
+### Minor Changes
+
+- [#60](https://github.com/Medal-Social/meda/pull/60) [`801df78`](https://github.com/Medal-Social/meda/commit/801df78fc6aed9d851a6ac2ee897dad5813b3cd4) Thanks [@alioftech](https://github.com/alioftech)! - Add `KanbanBoard` (kanban subpath), `ListRow` (list subpath), `RailDropSlot` (shell), and `LaneTimeline` (timeline). New primitives `Checkbox` and `Collapsible` in `components/ui/`. Kanban accepts a `labels` prop for i18n and per-column `accentClass` + `icon` (no shared status registry). `LaneTimeline` is a swimlane Gantt with built-in time-window math, range selector (1h/6h/24h/7d), date switcher, now-line, and legend; consumer passes pre-grouped `Lane[]`. Adds `@dnd-kit/{core,sortable,utilities}` peer deps.
+
+### Patch Changes
+
+- [#63](https://github.com/Medal-Social/meda/pull/63) [`d588262`](https://github.com/Medal-Social/meda/commit/d58826288d7ec66cfa216eb549b379167a27f6af) Thanks [@alioftech](https://github.com/alioftech)! - Fix `KanbanBoardProps.className` not being applied to the board wrapper. Fix `ListCell.shrink` flag being inverted from its documented behavior — `shrink={true}` now correctly allows shrinking; `shrink={false}` adds `flex-shrink-0`. Backwards-compatible for default usage.
+
 ## 1.1.2
 
 ### Patch Changes
