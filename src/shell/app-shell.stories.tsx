@@ -104,6 +104,31 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof AppShell>;
 
+export const Workspace: Story = {
+  parameters: { chromatic: { modes: ALL_VIEWPORTS } },
+  render: () => (
+    <AppShell
+      variant="workspace"
+      iconRail={{ mainItems: RAIL_MAIN, utilityItems: RAIL_UTILITY, activeId: 'inbox' }}
+      contextRail={{ appId: 'inbox', module: INBOX_MODULE, activeItemId: 'inbox' }}
+      rightPanel={{ panelViews: PANEL_VIEWS, defaultView: 'inspector' }}
+      globalActions={
+        <button
+          type="button"
+          className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground"
+        >
+          + New
+        </button>
+      }
+    >
+      <h1 className="text-2xl font-semibold text-foreground mb-2">Inbox</h1>
+      <p className="text-muted-foreground">
+        Workspace shell — desktop renders rails + panel; mobile renders header + bottom nav.
+      </p>
+    </AppShell>
+  ),
+};
+
 export const Auth: Story = {
   parameters: {
     chromatic: { modes: ALL_VIEWPORTS },
@@ -146,31 +171,6 @@ export const Auth: Story = {
           Continue
         </button>
       </form>
-    </AppShell>
-  ),
-};
-
-export const Workspace: Story = {
-  parameters: { chromatic: { modes: ALL_VIEWPORTS } },
-  render: () => (
-    <AppShell
-      variant="workspace"
-      iconRail={{ mainItems: RAIL_MAIN, utilityItems: RAIL_UTILITY, activeId: 'inbox' }}
-      contextRail={{ appId: 'inbox', module: INBOX_MODULE, activeItemId: 'inbox' }}
-      rightPanel={{ panelViews: PANEL_VIEWS, defaultView: 'inspector' }}
-      globalActions={
-        <button
-          type="button"
-          className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground"
-        >
-          + New
-        </button>
-      }
-    >
-      <h1 className="text-2xl font-semibold text-foreground mb-2">Inbox</h1>
-      <p className="text-muted-foreground">
-        Workspace shell — desktop renders rails + panel; mobile renders header + bottom nav.
-      </p>
     </AppShell>
   ),
 };

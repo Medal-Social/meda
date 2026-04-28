@@ -212,7 +212,7 @@ const SITE_CONTEXT_MODULE: ContextModule = {
   items: [
     { id: 'overview', label: 'Overview', icon: BookOpen, to: '#overview', shortcut: '1' },
     { id: 'install', label: 'Install', icon: Zap, to: '#install', shortcut: '2' },
-    { id: 'shell', label: 'Shell v2', icon: LayoutDashboard, to: '#shell', shortcut: '3' },
+    { id: 'shell', label: 'AppShell', icon: LayoutDashboard, to: '#shell', shortcut: '3' },
     { id: 'components', label: 'Components', icon: Sparkles, to: '#components', shortcut: '4' },
     { id: 'registry', label: 'Registry', icon: FolderOpen, to: '#registry', shortcut: '5' },
   ],
@@ -571,7 +571,7 @@ function SiteWorkspace() {
 
               <section id="shell" className="section">
                 <div className="section-header section-header--left">
-                  <div className="eyebrow">Shell v2</div>
+                  <div className="eyebrow">AppShell</div>
                   <h2 className="section-title">Full shell live demo</h2>
                   <p className="section-sub">
                     <code>MedaShellProvider</code> wraps <code>AppShell</code> and its regions. Use
@@ -696,7 +696,7 @@ function SiteFooter() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Shell v2 full demo
+   AppShell full demo
    ═══════════════════════════════════════════════════════════════ */
 
 function ShellV2Demo() {
