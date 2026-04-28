@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom/vitest';
+import { DndContext } from '@dnd-kit/core';
 import { act, render } from '@testing-library/react';
 import { Bell, Calendar, FileText, Inbox, Mail, Settings, Sparkles, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -14,6 +15,7 @@ import { MobileBottomNav } from './internal/mobile-bottom-nav.js';
 import { MobileDrawers } from './internal/mobile-drawers.js';
 import { MobileHeader } from './internal/mobile-header.js';
 import type { ShellStorageAdapter } from './layout-state.js';
+import { RailDropSlot } from './rail-drop-slot.js';
 import { RightPanel } from './right-panel.js';
 import { AppTabs, PanelToggle, ShellHeader, WorkspaceSwitcher } from './shell-header.js';
 import { ShellMain } from './shell-main.js';
@@ -626,5 +628,35 @@ describe('shell a11y', () => {
         },
       })
     ).toHaveNoViolations();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RailDropSlot a11y
+// ---------------------------------------------------------------------------
+
+describe('RailDropSlot a11y', () => {
+  it('has no axe violations in idle state', async () => {
+    const { container } = render(
+      <DndContext>
+        <RailDropSlot id="m1" ariaLabel="Assign to studio.local">
+          <div>studio.local</div>
+        </RailDropSlot>
+      </DndContext>
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it('has no axe violations when disabled', async () => {
+    const { container } = render(
+      <DndContext>
+        <RailDropSlot id="m2" ariaLabel="Assign to laptop.local" disabled>
+          <div>laptop.local</div>
+        </RailDropSlot>
+      </DndContext>
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 });
