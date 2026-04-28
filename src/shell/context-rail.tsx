@@ -168,7 +168,11 @@ export function ContextRail({
 }: ContextRailProps) {
   const band = useShellViewport();
   const ctx = useMedaShell();
-  const collapsed = ctx.contextRail.collapsed;
+  // collapsible={false} means the rail must always render expanded — even if
+  // the persisted layout state has collapsed: true (e.g. user collapsed the
+  // rail before the prop flipped). Without this guard, the rail would stay
+  // hidden forever with no in-component way to recover.
+  const collapsed = collapsible ? ctx.contextRail.collapsed : false;
   // Per-instance id so multiple <ContextRail>s in one document don't clash on
   // duplicate `id="..."` (HTML invalid + breaks aria-controls relationships).
   const reactId = useId();

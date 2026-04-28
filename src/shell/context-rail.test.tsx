@@ -505,4 +505,30 @@ describe('collapse toggle', () => {
     // The aside still renders (collapsible=false just removes the affordance)
     expect(screen.getByRole('complementary', { name: 'Mail' })).toBeInTheDocument();
   });
+
+  it('collapsible={false} forces expanded render even when persisted state is collapsed', () => {
+    // Seed collapsed: true via storage to simulate a user who collapsed the
+    // rail before the consumer flipped collapsible to false. Without the
+    // override, the rail would render at width 0 with no way to recover.
+    const seededCollapsed = {
+      load: (key: string) =>
+        key.startsWith('meda:shell:')
+          ? {
+              contextRail: { width: 260, collapsed: true },
+              rightPanel: { mode: 'closed', activeView: null, width: 340 },
+            }
+          : null,
+      save: () => {},
+    };
+    render(
+      <Wrapper storage={seededCollapsed}>
+        <ContextRail appId="mail" module={MODULE} collapsible={false} />
+      </Wrapper>
+    );
+    // No toggle (collapsible=false)
+    expect(screen.queryByTestId('context-rail-toggle')).not.toBeInTheDocument();
+    // Aside renders at the persisted width, NOT at width 0
+    const aside = screen.getByRole('complementary', { name: 'Mail' });
+    expect(aside).toHaveStyle({ width: '260px' });
+  });
 });
