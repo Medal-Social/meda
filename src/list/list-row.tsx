@@ -147,7 +147,7 @@ export function ListCell({
     <div
       className={cn(
         width,
-        shrink && 'flex-shrink-0',
+        shrink === false && 'flex-shrink-0',
         align === 'center' && 'text-center',
         align === 'right' && 'text-right',
         'min-w-0', // Allow truncation
