@@ -52,8 +52,13 @@ export function AppShellWorkspace({
   // in its parent's children array so React preserves its subtree (and the
   // user's `children` state) when useShellViewport flips after mount or on
   // rotation. Conditional siblings render as `false` rather than disappearing.
+  //
+  // h-screen (not h-full) so this stays a bounded scroll container even when
+  // rendered without an explicit-height ancestor (tests, direct imports). The
+  // <AppShell> wrapper already enforces h-screen for the workspace variant, so
+  // nested viewport-height divs collapse cleanly — no double-scroll.
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-screen flex-col">
       {isMobile ? (
         <MobileHeader globalActions={globalActions} />
       ) : (
