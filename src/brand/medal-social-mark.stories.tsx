@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { MedalSocialMark } from './medal-social-mark.js';
 
 const meta = {
-  title: 'Brand/MedalSocialMark',
+  title: 'Foundations/Mark',
   component: MedalSocialMark,
   tags: ['autodocs'],
   parameters: { layout: 'centered' },

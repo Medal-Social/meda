@@ -32,6 +32,7 @@ const preview: Preview = {
             'Motion',
             'Z-Index',
             'Iconography',
+            'Mark',
           ],
           'Shell v2',
           'Marketing',
