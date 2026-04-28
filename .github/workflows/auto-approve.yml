@@ -19,8 +19,13 @@ name: Auto-approve trusted bot PRs
 # write-access user can push to a bot-created branch; without the
 # `github.actor` gate, those commits would also get auto-approved.
 
+# Use `pull_request` (NOT `pull_request_target`) so the workflow does not
+# run with secret-rich base-repo context. All trusted bots above push
+# same-repo branches (not forks), so `pull_request` triggers normally for
+# them and we keep secret exposure scoped to a context that can't be
+# hijacked by a future `actions/checkout` of PR code.
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
 
 permissions: {}
@@ -32,8 +37,10 @@ jobs:
       contains(fromJson('["medal-social-release-bot[bot]", "dependabot[bot]", "changeset-bot[bot]"]'), github.event.pull_request.user.login) &&
       contains(fromJson('["medal-social-release-bot[bot]", "dependabot[bot]", "changeset-bot[bot]"]'), github.actor)
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
+    # GITHUB_TOKEN needs no privileges in this job — the only step that
+    # writes to PRs uses the Medal Approvals App token. Empty `permissions`
+    # leaves the default token with zero rights.
+    permissions: {}
     steps:
       - name: Generate Medal Approvals token
         id: app-token

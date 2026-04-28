@@ -11,9 +11,12 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: npm
+    # GITHUB_TOKEN gets only what the npm OIDC + provenance steps need.
+    # All git/PR writes (checkout, push, PR open) use the Medal Social
+    # Release Bot App token, not GITHUB_TOKEN — so contents: write and
+    # pull-requests: write would only widen the blast radius of a
+    # compromised action.
     permissions:
-      contents: write
-      pull-requests: write
       id-token: write
       attestations: write
     steps:
