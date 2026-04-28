@@ -41,6 +41,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
         if: steps.chromatic-token.outputs.available == 'true'
 
+      - name: Lint stories
+        if: steps.chromatic-token.outputs.available == 'true'
+        run: pnpm check:stories
+
       - name: Publish to Chromatic
         if: steps.chromatic-token.outputs.available == 'true'
         run: pnpm chromatic
