@@ -1,5 +1,57 @@
 # @medalsocial/meda
 
+## 1.1.0
+
+### Minor Changes
+
+- [#40](https://github.com/Medal-Social/meda/pull/40) [`b52f514`](https://github.com/Medal-Social/meda/commit/b52f514633e7a404ccf1681fb9067af1259bbff4) Thanks [@alioftech](https://github.com/alioftech)! - Storybook cleanup and AppShell unification. The package is on `1.0.0-rc.1` with no real-world consumers yet, so the API reshape below ships as a `minor` to land before `1.0.0` rather than as a `major`. Treat this as part of the original `1.0.0` API surface — the components removed below were never depended on by any external app.
+
+  **API surface changes (rolled into the `1.0.0` release):**
+
+  - `<AppShell>` now requires a `variant` prop: `"auth" | "workspace" | "chat"`. Composition is config-driven via `iconRail`, `contextRail`, `rightPanel`, `globalActions`, and `auth` props.
+  - `MobileHeader`, `MobileBottomNav`, `MobileDrawers`, `ShellAuthFrame`, and `ShellAuthThemeToggle` are removed. Their behavior is now internal to `<AppShell variant="auth">` and `<AppShell variant="workspace">`. The viewport switch is automatic.
+
+  **New:**
+
+  - Chromatic viewport modes (`desktop`, `ipad`, `mobile`) configured in `.storybook/preview.ts`.
+  - `pnpm check:stories` lint script enforces story authoring conventions (banned export names, banned parameter shapes, story budget per file).
+  - `docs/STORIES.md` authoring guide.
+
+  **Migration:**
+  Replace hand-composed shells with the new variant API:
+
+  ```tsx
+  <AppShell>
+    <ShellHeader />
+    <MobileHeader />
+    <AppShellBody>
+      <IconRail mainItems={items} />
+      <ContextRail module={module} />
+      <ShellMain>{children}</ShellMain>
+      <RightPanel panelViews={views} />
+    </AppShellBody>
+    <MobileBottomNav />
+    <MobileDrawers menuItems={items} module={module} panelViews={views} />
+  </AppShell>
+  ```
+
+  ```tsx
+  <AppShell
+    variant="workspace"
+    iconRail={{ mainItems: items }}
+    contextRail={{ appId: "inbox", module }}
+    rightPanel={{ panelViews: views }}
+  >
+    {children}
+  </AppShell>
+  ```
+
+### Patch Changes
+
+- [#39](https://github.com/Medal-Social/meda/pull/39) [`28be52b`](https://github.com/Medal-Social/meda/commit/28be52bcef5f198fb0eb917a3e8e94da3e5212ae) Thanks [@alioftech](https://github.com/alioftech)! - Adds Storybook authoring conventions ahead of the larger story-tree cleanup: Chromatic viewport modes (`desktop` 1280, `ipad` 768, `mobile` 390), `pnpm check:stories` lint script (warn-only initially), and `docs/STORIES.md` authoring guide. Declares `engines.node >= 22` since the lint script uses `fs.globSync`. No runtime behavior, exports, or rendered components changed.
+
+- [#41](https://github.com/Medal-Social/meda/pull/41) [`2775ad9`](https://github.com/Medal-Social/meda/commit/2775ad9c6f4ed028d74970251d44ad98759a8921) Thanks [@alioftech](https://github.com/alioftech)! - Storybook navigation polish: AppShell now sits directly under Foundations to match its centrality, and its child stories render in Workspace → Auth → Chat → Docs order. Drops the dead `Shell v2` and `Chat` top-level entries from the storySort and updates the Get Started introduction + demo navigation labels to match the new IA. No runtime or API change.
+
 ## 1.0.0
 
 ### Major Changes
