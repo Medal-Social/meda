@@ -4,41 +4,15 @@ import {
   BarChart3,
   CheckCircle2,
   Mail,
-  Moon,
   PanelRightOpen,
   Search,
   Send,
   Sparkles,
-  Sun,
   UsersRound,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-
-export type ShellAuthTheme = 'light' | 'dark';
-
-export interface ShellAuthFrameProps {
-  children: ReactNode;
-  title: ReactNode;
-  description?: ReactNode;
-  brandName?: ReactNode;
-  brandMark?: ReactNode;
-  eyebrow?: ReactNode;
-  preview?: ReactNode;
-  actions?: ReactNode;
-  className?: string;
-}
-
-export interface ShellAuthThemeToggleProps {
-  value: ShellAuthTheme;
-  onValueChange: (value: ShellAuthTheme) => void;
-  className?: string;
-  lightLabel?: string;
-  darkLabel?: string;
-}
-
-function cx(...values: Array<string | false | null | undefined>) {
-  return values.filter(Boolean).join(' ');
-}
+import { cn } from '../lib/utils.js';
+import type { AppShellAuthConfig } from './types.js';
 
 function DefaultBrandMark() {
   return (
@@ -48,7 +22,7 @@ function DefaultBrandMark() {
   );
 }
 
-export function ShellAuthFrame({
+export function AppShellAuth({
   children,
   title,
   description,
@@ -57,17 +31,13 @@ export function ShellAuthFrame({
   eyebrow,
   preview,
   actions,
-  className,
-}: ShellAuthFrameProps) {
+}: AppShellAuthConfig & { children: ReactNode }) {
   const resolvedBrandMark = brandMark ?? <DefaultBrandMark />;
 
   return (
     <section
-      data-testid="shell-auth-frame"
-      className={cx(
-        'grid min-h-screen overflow-hidden bg-background text-foreground lg:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)]',
-        className
-      )}
+      data-testid="app-shell-auth"
+      className="grid min-h-screen overflow-hidden bg-background text-foreground lg:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)]"
     >
       <div className="relative flex min-h-[24rem] flex-col overflow-hidden bg-[radial-gradient(circle_at_24%_18%,var(--color-info-500)_0,transparent_25%),radial-gradient(circle_at_84%_24%,var(--color-brand-400)_0,transparent_28%),linear-gradient(135deg,var(--color-brand-800),var(--color-brand-700)_42%,var(--color-brand-500))] px-6 py-6 text-white sm:min-h-[30rem] sm:px-8 lg:min-h-screen lg:px-10 lg:py-8">
         <div
@@ -113,58 +83,10 @@ export function ShellAuthFrame({
   );
 }
 
-export function ShellAuthThemeToggle({
-  value,
-  onValueChange,
-  className,
-  lightLabel = 'Light theme',
-  darkLabel = 'Dark theme',
-}: ShellAuthThemeToggleProps) {
-  return (
-    <fieldset
-      className={cx(
-        'inline-flex items-center gap-1 rounded-md border border-border bg-card p-1 text-card-foreground shadow-sm',
-        className
-      )}
-    >
-      <legend className="sr-only">Theme</legend>
-      <button
-        type="button"
-        aria-label={lightLabel}
-        aria-pressed={value === 'light'}
-        title={lightLabel}
-        onClick={() => onValueChange('light')}
-        className={themeButtonClass(value === 'light')}
-      >
-        <Sun className="size-4" aria-hidden />
-      </button>
-      <button
-        type="button"
-        aria-label={darkLabel}
-        aria-pressed={value === 'dark'}
-        title={darkLabel}
-        onClick={() => onValueChange('dark')}
-        className={themeButtonClass(value === 'dark')}
-      >
-        <Moon className="size-4" aria-hidden />
-      </button>
-    </fieldset>
-  );
-}
-
-function themeButtonClass(active: boolean) {
-  return cx(
-    'inline-flex size-8 items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-    active
-      ? 'bg-primary text-primary-foreground shadow-sm'
-      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-  );
-}
-
 function DefaultAuthPreview() {
   return (
     <div
-      data-testid="shell-auth-default-preview"
+      data-testid="app-shell-auth-default-preview"
       className="relative overflow-hidden rounded-[1.5rem] border border-white/16 bg-[color-mix(in_srgb,var(--background)_88%,transparent)] p-2 text-foreground shadow-2xl shadow-black/30 backdrop-blur"
       aria-hidden
     >
@@ -180,7 +102,7 @@ function DefaultAuthPreview() {
           </span>
         </div>
         <div
-          data-testid="shell-auth-preview-shell-header"
+          data-testid="app-shell-auth-preview-shell-header"
           className="flex h-12 items-center justify-between border-shell-border border-t border-b bg-shell-header px-3"
         >
           <div className="flex min-w-0 items-center gap-2">
@@ -192,7 +114,7 @@ function DefaultAuthPreview() {
               {PREVIEW_TABS.map((tab) => (
                 <span
                   key={tab}
-                  className={cx(
+                  className={cn(
                     'rounded-full px-2 py-1 text-[10px] font-medium',
                     tab === 'Inbox'
                       ? 'bg-background text-foreground shadow-sm'
@@ -209,7 +131,7 @@ function DefaultAuthPreview() {
               + New
             </span>
             <span
-              data-testid="shell-auth-preview-panel-toggle"
+              data-testid="app-shell-auth-preview-panel-toggle"
               className="inline-flex size-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-sm"
             >
               <PanelRightOpen className="size-3.5" aria-hidden="true" />
@@ -219,7 +141,7 @@ function DefaultAuthPreview() {
 
         <div className="grid min-h-[19.75rem] grid-cols-[44px_minmax(0,1fr)] gap-2 bg-shell-main p-2 sm:grid-cols-[48px_138px_minmax(0,1fr)] lg:grid-cols-[52px_156px_minmax(0,1fr)]">
           <aside
-            data-testid="shell-auth-preview-icon-rail"
+            data-testid="app-shell-auth-preview-icon-rail"
             className="flex flex-col items-center gap-1 rounded-2xl bg-shell-rail p-1.5 shadow-sm ring-1 ring-border/70"
           >
             {PREVIEW_RAIL_ITEMS.map((item) => (
@@ -237,7 +159,7 @@ function DefaultAuthPreview() {
           </aside>
 
           <aside
-            data-testid="shell-auth-preview-context-rail"
+            data-testid="app-shell-auth-preview-context-rail"
             className="hidden overflow-hidden rounded-2xl bg-shell-context shadow-sm ring-1 ring-border/70 sm:flex sm:flex-col"
           >
             <div className="border-shell-border border-b px-3 py-3">
@@ -330,7 +252,7 @@ function PreviewRailItem({
 }) {
   return (
     <span
-      className={cx(
+      className={cn(
         'relative inline-flex size-8 items-center justify-center rounded-lg transition-colors',
         active ? 'bg-primary/12 text-primary' : 'text-muted-foreground'
       )}
@@ -355,7 +277,7 @@ function PreviewContextItem({
 }) {
   return (
     <span
-      className={cx(
+      className={cn(
         'flex items-center gap-2 rounded-md px-2 py-1.5 text-[10px] transition-colors',
         active ? 'bg-primary/10 font-semibold text-primary' : 'text-muted-foreground'
       )}

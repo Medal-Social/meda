@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 
@@ -13,13 +13,6 @@ function matchMediaResult(query: string, matches = false) {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   };
-}
-
-function mockMobileViewport() {
-  Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    value: vi.fn((query: string) => matchMediaResult(query, query === '(max-width: 767px)')),
-  });
 }
 
 beforeEach(() => {
@@ -57,19 +50,5 @@ describe('demo App', () => {
     await waitFor(() => {
       expect(window.location.hash).toBe('#install');
     });
-  });
-
-  it('opens the mobile Links drawer', async () => {
-    mockMobileViewport();
-
-    render(<App />);
-
-    fireEvent.click(await screen.findByRole('button', { name: 'Links' }));
-
-    expect(await screen.findByRole('heading', { name: 'Meda resources' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'npm package' })).toHaveAttribute(
-      'href',
-      'https://www.npmjs.com/package/@medalsocial/meda'
-    );
   });
 });

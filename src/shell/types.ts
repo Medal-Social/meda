@@ -79,3 +79,33 @@ export interface ThemeAdapter {
   setTheme: (t: 'light' | 'dark' | 'system') => void;
   resolvedTheme: 'light' | 'dark';
 }
+
+export type AppShellVariant = 'auth' | 'workspace' | 'chat';
+
+export interface AppShellIconRailConfig {
+  mainItems: import('./icon-rail.js').IconRailItem[];
+  utilityItems?: import('./icon-rail.js').IconRailItem[];
+  footer?: ReactNode;
+  activeId?: string;
+}
+
+export interface AppShellContextRailConfig {
+  appId: string;
+  module: ContextModule;
+  activeItemId?: string;
+}
+
+export interface AppShellRightPanelConfig {
+  panelViews: PanelView[];
+  defaultView?: string;
+}
+
+export interface AppShellAuthConfig {
+  title: ReactNode;
+  description?: ReactNode;
+  brandName?: ReactNode;
+  brandMark?: ReactNode;
+  eyebrow?: ReactNode;
+  preview?: ReactNode;
+  actions?: ReactNode;
+}

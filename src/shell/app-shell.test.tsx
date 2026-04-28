@@ -50,6 +50,10 @@ const apps: AppDefinition[] = [{ id: 'app-a', label: 'A', icon: Menu }];
 /** Get the AppShell / AppShellBody root div via its child sentinel. */
 function getRootDiv(testId = 'x'): HTMLElement {
   const child = screen.getByTestId(testId);
+  // Prefer the outer AppShell wrapper (data-meda-variant); fall back to the
+  // nearest classed div ancestor for AppShellBody-only tests.
+  const variantRoot = child.closest('div[data-meda-variant]');
+  if (variantRoot) return variantRoot as HTMLElement;
   const root = child.closest('div[class]');
   if (!root) throw new Error('Could not find root div');
   return root as HTMLElement;
@@ -63,7 +67,7 @@ describe('AppShell', () => {
   it('writes data-meda-app and data-meda-workspace to root div', () => {
     render(
       <MedaShellProvider workspace={ws} apps={apps}>
-        <AppShell>
+        <AppShell variant="workspace">
           <div data-testid="x" />
         </AppShell>
       </MedaShellProvider>
@@ -77,7 +81,7 @@ describe('AppShell', () => {
   it('applies bg-background text-foreground classes', () => {
     render(
       <MedaShellProvider workspace={ws} apps={apps}>
-        <AppShell>
+        <AppShell variant="workspace">
           <div data-testid="x" />
         </AppShell>
       </MedaShellProvider>
@@ -91,7 +95,7 @@ describe('AppShell', () => {
   it('appends consumer className without replacing base classes', () => {
     render(
       <MedaShellProvider workspace={ws} apps={apps}>
-        <AppShell className="custom-extra">
+        <AppShell variant="workspace" className="custom-extra">
           <div data-testid="x" />
         </AppShell>
       </MedaShellProvider>

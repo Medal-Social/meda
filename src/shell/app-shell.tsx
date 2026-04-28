@@ -2,19 +2,79 @@
 
 import type { ReactNode } from 'react';
 import { cn } from '../lib/utils.js';
+import { AppShellAuth } from './app-shell-auth.js';
+import { AppShellChat } from './app-shell-chat.js';
+import { AppShellWorkspace } from './app-shell-workspace.js';
 import { useMedaShell } from './shell-provider.js';
+import type {
+  AppShellAuthConfig,
+  AppShellContextRailConfig,
+  AppShellIconRailConfig,
+  AppShellRightPanelConfig,
+} from './types.js';
 
-export function AppShell({ children, className }: { children: ReactNode; className?: string }) {
+interface AppShellBaseProps {
+  children: ReactNode;
+  className?: string;
+}
+
+export type AppShellProps = AppShellBaseProps &
+  (
+    | {
+        variant: 'auth';
+        auth: AppShellAuthConfig;
+      }
+    | {
+        variant: 'workspace';
+        iconRail?: AppShellIconRailConfig;
+        contextRail?: AppShellContextRailConfig;
+        rightPanel?: AppShellRightPanelConfig;
+        globalActions?: ReactNode;
+      }
+    | {
+        variant: 'chat';
+        globalActions?: ReactNode;
+      }
+  );
+
+export function AppShell(props: AppShellProps) {
   const { workspace, activeAppId } = useMedaShell();
-  return (
+
+  // Auth lets the form scroll past viewport (signup, dense forms, high zoom);
+  // workspace and chat fix the chrome to viewport height and let inner regions
+  // scroll independently.
+  const heightClass = props.variant === 'auth' ? 'min-h-screen' : 'h-screen overflow-hidden';
+
+  const wrapper = (content: ReactNode) => (
     <div
       data-meda-app={activeAppId}
       data-meda-workspace={workspace.id}
-      className={cn('h-screen overflow-hidden bg-background text-foreground', className)}
+      data-meda-variant={props.variant}
+      className={cn(heightClass, 'bg-background text-foreground', props.className)}
     >
-      {children}
+      {content}
     </div>
   );
+
+  switch (props.variant) {
+    case 'auth':
+      return wrapper(<AppShellAuth {...props.auth}>{props.children}</AppShellAuth>);
+    case 'workspace':
+      return wrapper(
+        <AppShellWorkspace
+          iconRail={props.iconRail}
+          contextRail={props.contextRail}
+          rightPanel={props.rightPanel}
+          globalActions={props.globalActions}
+        >
+          {props.children}
+        </AppShellWorkspace>
+      );
+    case 'chat':
+      return wrapper(
+        <AppShellChat globalActions={props.globalActions}>{props.children}</AppShellChat>
+      );
+  }
 }
 
 export function AppShellBody({ children, className }: { children: ReactNode; className?: string }) {

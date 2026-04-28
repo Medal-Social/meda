@@ -25,7 +25,10 @@ function DemoForm() {
 const meta = {
   title: 'Marketing/LeadMagnet',
   component: MarketingLeadMagnet,
-  parameters: { layout: 'padded' },
+  parameters: {
+    layout: 'padded',
+    chromatic: { modes: { desktop: { viewport: 1280 }, mobile: { viewport: 390 } } },
+  },
   args: {
     title: 'Get the launch checklist',
     description:
@@ -45,18 +48,4 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Featured: Story = {};
-
-export const Sidebar: Story = {
-  args: {
-    variant: 'sidebar',
-    image: undefined,
-  },
-  decorators: [
-    (Story) => (
-      <div className="max-w-sm">
-        <Story />
-      </div>
-    ),
-  ],
-};
+export const Default: Story = {};

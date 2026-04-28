@@ -124,6 +124,7 @@ export function ScrubBar({
         ))}
         <span
           aria-hidden="true"
+          data-chromatic="ignore"
           className="absolute -inset-y-0.5 w-0.5 bg-foreground"
           style={{ left: `${fillPct}%` }}
         />
