@@ -28,7 +28,7 @@ function resolveOverColumnStatus(overId, columns, items) {
  * `useDndMonitor` is always safe to call here, enabling the DragOverlay to
  * track external drags when `headless={true}`.
  */
-function KanbanBoardInner({ columns, items, renderCard, onReorder, onCardMove, canDropCard, onAddItem, showEmptyColumns = false, hiddenColumnIds = [], onHiddenColumnIdsChange, emptyColumnContent, labels, headless = false, }) {
+function KanbanBoardInner({ columns, items, renderCard, onReorder, onCardMove, canDropCard, onAddItem, showEmptyColumns = false, hiddenColumnIds = [], onHiddenColumnIdsChange, emptyColumnContent, labels, headless = false, className, }) {
     const resolvedLabels = { ...defaultKanbanLabels, ...(labels ?? {}) };
     const [activeId, setActiveId] = useState(null);
     const [overColumnId, setOverColumnId] = useState(null);
@@ -134,7 +134,7 @@ function KanbanBoardInner({ columns, items, renderCard, onReorder, onCardMove, c
             return;
         onHiddenColumnIdsChange(hiddenColumnIds.filter((hiddenColumnId) => hiddenColumnId !== columnId));
     }, [hiddenColumnIds, onHiddenColumnIdsChange]);
-    return (_jsxs(_Fragment, { children: [_jsxs("div", { "data-slot": "kanban-board", className: "flex h-full gap-4 pb-4", children: [visibleColumns.map((column) => {
+    return (_jsxs(_Fragment, { children: [_jsxs("div", { "data-slot": "kanban-board", className: cn('flex h-full gap-4 pb-4', className), children: [visibleColumns.map((column) => {
                         const columnItems = itemsByStatus.get(column.id) ?? [];
                         const canDropInColumn = !activeId ||
                             !canDropCard ||
