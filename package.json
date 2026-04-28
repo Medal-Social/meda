@@ -99,7 +99,7 @@
     "release": "pnpm build && changeset publish",
     "registry:validate": "node ./registry/scripts/validate-registry.mjs",
     "lint:tokens": "node scripts/lint-tokens.mjs",
-    "check:stories": "node scripts/check-stories.mjs --warn",
+    "check:stories": "node scripts/check-stories.mjs",
     "quality": "pnpm lint && pnpm typecheck && pnpm lint:tokens && pnpm test"
   },
   "peerDependencies": {
