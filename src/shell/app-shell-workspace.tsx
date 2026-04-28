@@ -35,6 +35,9 @@ export function AppShellWorkspace({
   const isMobile = viewport === 'mobile';
 
   if (isMobile) {
+    // MobileBottomNav opens the drawers via shell context state, so it has
+    // nothing to do when no drawer content is configured. Gating both keeps
+    // taps from setting state into the void.
     const hasDrawerContent = Boolean(iconRail || contextRail || rightPanel);
     return (
       <>
@@ -42,13 +45,15 @@ export function AppShellWorkspace({
         <AppShellBody>
           <ShellMain layout="workspace">{children}</ShellMain>
         </AppShellBody>
-        <MobileBottomNav />
         {hasDrawerContent && (
-          <MobileDrawers
-            menuItems={iconRail?.mainItems ?? []}
-            module={contextRail?.module}
-            panelViews={rightPanel?.panelViews ?? []}
-          />
+          <>
+            <MobileBottomNav />
+            <MobileDrawers
+              menuItems={iconRail?.mainItems ?? []}
+              module={contextRail?.module}
+              panelViews={rightPanel?.panelViews ?? []}
+            />
+          </>
         )}
       </>
     );
