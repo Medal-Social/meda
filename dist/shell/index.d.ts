@@ -7,6 +7,8 @@ export { IconRail, RailDivider } from './icon-rail.js';
 export type { ShellStorageAdapter } from './layout-state.js';
 export { createLocalStorageAdapter } from './layout-state.js';
 export { motion } from './motion.js';
+export type { RailDropSlotProps } from './rail-drop-slot.js';
+export { RailDropSlot } from './rail-drop-slot.js';
 export { ResizableHandle, ResizableShell, ResizableShellPanel } from './resizable-shell.js';
 export { RightPanel } from './right-panel.js';
 export { AppTabs, PanelToggle, ShellHeader, WorkspaceSwitcher } from './shell-header.js';
