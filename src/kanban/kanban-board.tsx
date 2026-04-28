@@ -27,8 +27,9 @@ import {
 } from '../components/ui/dropdown-menu.js';
 import { cn } from '../lib/utils.js';
 import { KanbanCardWrapper } from './kanban-card-wrapper.js';
-import { isKanbanCardDropAllowed, kanbanCollisionDetection } from './kanban-collision.js';
+import { kanbanCollisionDetection } from './kanban-collision.js';
 import { KanbanColumn } from './kanban-column.js';
+import { handleKanbanColumnDrop } from './kanban-drop-handler.js';
 import {
   defaultKanbanLabels,
   type KanbanBoardProps,
@@ -56,45 +57,6 @@ function resolveOverColumnStatus<TItem extends KanbanItem, TStatus extends strin
   return (targetItem?.status as TStatus | undefined) ?? null;
 }
 
-function resolveDropTarget<TItem extends KanbanItem, TStatus extends string>({
-  overId,
-  items,
-  columns,
-  itemsByStatus,
-}: {
-  overId: string;
-  items: TItem[];
-  columns: KanbanBoardProps<TItem, TStatus>['columns'];
-  itemsByStatus: Map<TStatus, TItem[]>;
-}): { targetStatus: TStatus; targetPosition: number } | null {
-  const targetColumn = columns.find((column) => column.id === overId);
-  if (targetColumn) {
-    const targetStatus = targetColumn.id as TStatus;
-    const columnItems = itemsByStatus.get(targetStatus) ?? [];
-    return {
-      targetStatus,
-      targetPosition: columnItems.length,
-    };
-  }
-
-  const targetItem = items.find((item) => item.id === overId);
-  if (!targetItem) {
-    return null;
-  }
-
-  const targetStatus = targetItem.status as TStatus;
-  const columnItems = itemsByStatus.get(targetStatus) ?? [];
-  const targetIndex = columnItems.findIndex((item) => item.id === overId);
-  if (targetIndex === -1) {
-    return null;
-  }
-  const targetPosition = targetIndex;
-
-  return {
-    targetStatus,
-    targetPosition,
-  };
-}
 /**
  * Generic Kanban Board Component
  *
@@ -115,6 +77,7 @@ export function KanbanBoard<TItem extends KanbanItem, TStatus extends string = s
   isLoading = false,
   emptyColumnContent,
   labels,
+  headless = false,
 }: KanbanBoardProps<TItem, TStatus>) {
   const resolvedLabels: KanbanLabels = { ...defaultKanbanLabels, ...(labels ?? {}) };
 
@@ -216,55 +179,19 @@ export function KanbanBoard<TItem extends KanbanItem, TStatus extends string = s
   // Handle drag end
   const handleDragEnd = useCallback(
     (event: DndKitDragEndEvent) => {
-      const { active, over } = event;
-
       setActiveId(null);
       setOverColumnId(null);
 
-      if (!over) return;
-
-      const activeItemId = active.id as string;
-      const overId = over.id as string;
-
-      // Find the item being dragged
-      const draggedItem = items.find((item) => item.id === activeItemId);
-      if (!draggedItem) return;
-
-      const dropTarget = resolveDropTarget({
-        overId,
+      handleKanbanColumnDrop({
+        event,
         items,
         columns: visibleColumns,
-        itemsByStatus,
+        onCardMove,
+        onReorder,
+        canDropCard,
       });
-      if (!dropTarget) return;
-
-      const { targetStatus, targetPosition } = dropTarget;
-
-      // Only trigger callback if something changed and handler exists
-      if (draggedItem.status !== targetStatus || draggedItem.position !== targetPosition) {
-        if (
-          !isKanbanCardDropAllowed({
-            itemId: activeItemId,
-            sourceStatus: draggedItem.status as TStatus,
-            targetStatus,
-            canDropCard,
-          })
-        ) {
-          return;
-        }
-
-        if (onReorder) {
-          onReorder(activeItemId, targetStatus, targetPosition);
-        }
-        // Also call onCardMove if status changed
-        if (onCardMove && draggedItem.status !== targetStatus) {
-          void Promise.resolve(onCardMove(activeItemId, targetStatus)).catch(() => {
-            // Mutation handlers handle toast + rollback on failure.
-          });
-        }
-      }
     },
-    [items, visibleColumns, itemsByStatus, canDropCard, onReorder, onCardMove]
+    [items, visibleColumns, canDropCard, onReorder, onCardMove]
   );
 
   const handleHideColumn = useCallback(
@@ -310,19 +237,8 @@ export function KanbanBoard<TItem extends KanbanItem, TStatus extends string = s
     );
   }
 
-  return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={kanbanCollisionDetection}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-      measuring={{
-        droppable: {
-          strategy: MeasuringStrategy.Always,
-        },
-      }}
-    >
+  const boardContent = (
+    <>
       <div data-slot="kanban-board" className="flex h-full gap-4 pb-4">
         {visibleColumns.map((column) => {
           const columnItems = itemsByStatus.get(column.id as TStatus) ?? [];
@@ -400,6 +316,27 @@ export function KanbanBoard<TItem extends KanbanItem, TStatus extends string = s
             document.body
           )
         : null}
+    </>
+  );
+
+  if (headless) {
+    return boardContent;
+  }
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={kanbanCollisionDetection}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+      measuring={{
+        droppable: {
+          strategy: MeasuringStrategy.Always,
+        },
+      }}
+    >
+      {boardContent}
     </DndContext>
   );
 }
