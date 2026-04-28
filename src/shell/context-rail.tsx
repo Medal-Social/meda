@@ -202,6 +202,12 @@ export function ContextRail({
     ctx.contextRail.setWidth(w);
   };
 
+  // Only animate width during collapse/expand toggles, not during manual
+  // pointer drag on the ResizeHandle. displayWidth is non-null only while
+  // the user is mid-drag — using it as the drag signal suppresses the
+  // transition then so the rail snaps to the cursor instead of lagging
+  // behind it.
+  const isDragging = displayWidth !== null;
   return (
     <aside
       id={railId}
@@ -209,7 +215,7 @@ export function ContextRail({
       aria-label={module.label}
       className={cn(
         'relative h-full shrink-0 border-r border-shell-border bg-shell-context',
-        'transition-[width] duration-200 ease-in-out motion-reduce:transition-none',
+        !isDragging && 'transition-[width] duration-200 ease-in-out motion-reduce:transition-none',
         collapsed && 'w-0',
         className
       )}
