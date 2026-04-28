@@ -19,7 +19,9 @@ export type { ShellStorageAdapter } from './layout-state.js';
 export { createLocalStorageAdapter } from './layout-state.js';
 // Hooks + tokens
 export { motion } from './motion.js';
+export type { RailDropSlotProps } from './rail-drop-slot.js';
 // Resize primitives
+export { RailDropSlot } from './rail-drop-slot.js';
 export { ResizableHandle, ResizableShell, ResizableShellPanel } from './resizable-shell.js';
 export { RightPanel } from './right-panel.js';
 // Header (and its individual children for advanced composition)
