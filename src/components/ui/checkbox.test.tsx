@@ -10,6 +10,11 @@ describe('Checkbox', () => {
     expect(screen.getByRole('checkbox', { name: 'Select row' })).toBeInTheDocument();
   });
 
+  it('forwards indeterminate to ARIA state', () => {
+    render(<Checkbox aria-label="Select" indeterminate />);
+    expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'mixed');
+  });
+
   it('toggles when clicked', async () => {
     const onChange = vi.fn();
     render(<Checkbox aria-label="Select" onCheckedChange={onChange} />);
