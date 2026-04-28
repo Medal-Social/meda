@@ -245,5 +245,3 @@ function AiDrawer({
     </Drawer>
   );
 }
-
-export { MobileDrawers as MobileDrawersInternal };

@@ -115,5 +115,3 @@ function MobileBottomNavButton({ item }: { item: MobileBottomNavItem }) {
     </button>
   );
 }
-
-export { MobileBottomNav as MobileBottomNavInternal };

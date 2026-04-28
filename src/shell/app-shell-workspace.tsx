@@ -3,9 +3,9 @@ import type { ReactNode } from 'react';
 import { AppShellBody } from './app-shell.js';
 import { ContextRail } from './context-rail.js';
 import { IconRail } from './icon-rail.js';
-import { MobileBottomNavInternal } from './mobile/mobile-bottom-nav.js';
-import { MobileDrawersInternal } from './mobile/mobile-drawers.js';
-import { MobileHeaderInternal } from './mobile/mobile-header.js';
+import { MobileBottomNav } from './internal/mobile-bottom-nav.js';
+import { MobileDrawers } from './internal/mobile-drawers.js';
+import { MobileHeader } from './internal/mobile-header.js';
 import { RightPanel } from './right-panel.js';
 import { ShellHeader } from './shell-header.js';
 import { ShellMain } from './shell-main.js';
@@ -38,13 +38,13 @@ export function AppShellWorkspace({
     const hasDrawerContent = Boolean(iconRail || contextRail || rightPanel);
     return (
       <>
-        <MobileHeaderInternal globalActions={globalActions} />
+        <MobileHeader globalActions={globalActions} />
         <AppShellBody>
           <ShellMain layout="workspace">{children}</ShellMain>
         </AppShellBody>
-        <MobileBottomNavInternal />
+        <MobileBottomNav />
         {hasDrawerContent && (
-          <MobileDrawersInternal
+          <MobileDrawers
             menuItems={iconRail?.mainItems ?? []}
             module={contextRail?.module}
             panelViews={rightPanel?.panelViews ?? []}

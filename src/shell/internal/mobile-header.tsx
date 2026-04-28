@@ -81,5 +81,3 @@ export function MobileHeader({
     </header>
   );
 }
-
-export { MobileHeader as MobileHeaderInternal };
