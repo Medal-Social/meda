@@ -39,12 +39,16 @@ export function AppShellWorkspace({
     // nothing to do when no drawer content is configured. Gating both keeps
     // taps from setting state into the void.
     const hasDrawerContent = Boolean(iconRail || contextRail || rightPanel);
+    // Mobile uses a flex column so the body fits between MobileHeader and
+    // MobileBottomNav. AppShellBody's fixed `100vh - headerHeight` only
+    // accounts for the desktop header — using it here would push the bottom
+    // nav past the wrapper's `h-screen overflow-hidden` and clip it off.
     return (
-      <>
+      <div className="flex h-full flex-col">
         <MobileHeader globalActions={globalActions} />
-        <AppShellBody>
+        <div className="relative flex flex-1 overflow-hidden">
           <ShellMain layout="workspace">{children}</ShellMain>
-        </AppShellBody>
+        </div>
         {hasDrawerContent && (
           <>
             <MobileBottomNav />
@@ -55,7 +59,7 @@ export function AppShellWorkspace({
             />
           </>
         )}
-      </>
+      </div>
     );
   }
 
