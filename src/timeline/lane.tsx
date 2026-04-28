@@ -25,10 +25,19 @@ export function LaneRow({
       className="grid items-center gap-0 border-border/40 border-b py-3"
       style={{ gridTemplateColumns: `${labelGutterPx}px 1fr` }}
     >
-      <div className={cn('flex flex-col gap-0.5 pr-3', lane.muted && 'opacity-50')}>
-        <div className="flex items-center gap-2 text-sm">
+      {/* muted: dim only the status dot; keep label text at full contrast */}
+      <div className="flex flex-col gap-0.5 pr-3">
+        <div
+          className={cn('flex items-center gap-2 text-sm', lane.muted && 'text-muted-foreground')}
+        >
           {lane.statusDotClass && (
-            <span className={cn('inline-block size-2 rounded-full', lane.statusDotClass)} />
+            <span
+              className={cn(
+                'inline-block size-2 rounded-full',
+                lane.statusDotClass,
+                lane.muted && 'opacity-40'
+              )}
+            />
           )}
           <span className="font-medium">{lane.label}</span>
         </div>
@@ -46,7 +55,7 @@ export function LaneRow({
               onClick={() => onSelectBar?.(bar, lane)}
               data-selected={selected || undefined}
               className={cn(
-                'absolute top-0 flex h-full items-center overflow-hidden rounded-md px-2 text-left text-xs',
+                'absolute top-0 flex h-full items-center overflow-hidden rounded-md px-2 text-left text-xs text-white',
                 bar.fillClass,
                 bar.accentClass,
                 'data-[selected]:ring-2 data-[selected]:ring-primary data-[selected]:ring-offset-1 data-[selected]:ring-offset-background',
@@ -55,7 +64,10 @@ export function LaneRow({
               style={{ left: `${placement.left}%`, width: `${placement.width}%` }}
               aria-label={`${lane.label} — ${bar.label}`}
             >
-              <span className="truncate">{bar.label}</span>
+              {/* aria-hidden: label text is decorative; accessible name comes from aria-label above */}
+              <span aria-hidden="true" className="truncate">
+                {bar.label}
+              </span>
             </button>
           );
         })}
