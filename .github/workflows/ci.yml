@@ -27,6 +27,8 @@ jobs:
 
       - run: pnpm typecheck
 
+      - run: pnpm check:stories
+
   test:
     runs-on: ubuntu-latest
     steps:
