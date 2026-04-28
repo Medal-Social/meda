@@ -10,6 +10,9 @@ export type { CommandGroupDefinition } from './command-palette.js';
 // Command palette
 export { CommandPalette, useCommandGroup, useCommands } from './command-palette.js';
 export { ContextRail } from './context-rail.js';
+export type { DragModeBannerProps } from './drag-mode-banner.js';
+// Drag-and-drop utilities
+export { DragModeBanner } from './drag-mode-banner.js';
 // Extras (legacy components ported during Phase 15 — opt-in for apps that need them)
 export * as Extras from './extras/index.js';
 // Rails + main + panel
@@ -19,7 +22,11 @@ export type { ShellStorageAdapter } from './layout-state.js';
 export { createLocalStorageAdapter } from './layout-state.js';
 // Hooks + tokens
 export { motion } from './motion.js';
+export type { RailDropSlotProps, RailDropSlotState } from './rail-drop-slot.js';
 // Resize primitives
+export { RailDropSlot } from './rail-drop-slot.js';
+export type { RailDropZonesProps } from './rail-drop-zones.js';
+export { RailDropZones } from './rail-drop-zones.js';
 export { ResizableHandle, ResizableShell, ResizableShellPanel } from './resizable-shell.js';
 export { RightPanel } from './right-panel.js';
 // Header (and its individual children for advanced composition)
