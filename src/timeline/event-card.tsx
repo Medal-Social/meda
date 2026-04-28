@@ -61,6 +61,7 @@ function LiveDot() {
   return (
     <span
       aria-hidden="true"
+      data-chromatic="ignore"
       className="inline-block size-1.5 shrink-0 animate-pulse rounded-full bg-success shadow-[0_0_0_3px_rgba(16,185,129,0.20)]"
     />
   );
