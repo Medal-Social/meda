@@ -1,4 +1,12 @@
+import type { MobileBottomNavItem } from '../types.js';
 export interface MobileBottomNavProps {
+    /**
+     * Override the items to render. When omitted, falls back to
+     * `ctx.mobileBottomNav` from the provider. AppShellWorkspace passes a
+     * derived list filtered to drawers that actually have content, so taps
+     * never dispatch into the void.
+     */
+    items?: MobileBottomNavItem[];
     className?: string;
 }
 /**
@@ -12,4 +20,4 @@ export interface MobileBottomNavProps {
  *
  * Hidden on non-mobile viewports and when the right panel is in fullscreen mode.
  */
-export declare function MobileBottomNav({ className }: MobileBottomNavProps): import("react/jsx-runtime").JSX.Element | null;
+export declare function MobileBottomNav({ items, className }: MobileBottomNavProps): import("react/jsx-runtime").JSX.Element | null;

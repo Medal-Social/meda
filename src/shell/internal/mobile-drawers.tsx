@@ -180,6 +180,18 @@ function PanelsDrawer({
 }) {
   const ctx = useMedaShell();
   const activeView = ctx.panel.activeView;
+  const setActiveView = ctx.panel.setActiveView;
+
+  // Hydrate ctx.panel.activeView from defaultView when the drawer opens — matches
+  // desktop RightPanel behavior so the tab highlight (aria-current) and provider
+  // state stay in sync across viewports. Without this, mobile shows the right
+  // content but no tab is marked active.
+  useEffect(() => {
+    if (open && activeView == null && defaultView && panelViews.some((v) => v.id === defaultView)) {
+      setActiveView(defaultView);
+    }
+  }, [open, activeView, defaultView, panelViews, setActiveView]);
+
   // Resolution order: explicit user selection → consumer-provided defaultView
   // → first view. Keeps mobile parity with desktop where defaultView is honored.
   const active =

@@ -15,14 +15,17 @@ import { useShellViewport } from '../use-shell-viewport.js';
  *
  * Hidden on non-mobile viewports and when the right panel is in fullscreen mode.
  */
-export function MobileBottomNav({ className }) {
+export function MobileBottomNav({ items, className }) {
     const ctx = useMedaShell();
     const band = useShellViewport();
     if (band !== 'mobile')
         return null;
     if (ctx.panel.mode === 'fullscreen')
         return null;
-    return (_jsx("nav", { "aria-label": "Mobile navigation", className: cn('flex h-[var(--shell-bottom-nav-height)] items-center justify-around border-t border-border bg-card', className), children: ctx.mobileBottomNav.map((item) => (_jsx(MobileBottomNavButton, { item: item }, item.id))) }));
+    const resolvedItems = items ?? ctx.mobileBottomNav;
+    if (resolvedItems.length === 0)
+        return null;
+    return (_jsx("nav", { "data-testid": "mobile-bottom-nav", "aria-label": "Mobile navigation", className: cn('flex h-[var(--shell-bottom-nav-height)] items-center justify-around border-t border-border bg-card', className), children: resolvedItems.map((item) => (_jsx(MobileBottomNavButton, { item: item }, item.id))) }));
 }
 /** Long-press threshold in milliseconds */
 const LONG_PRESS_DURATION = 500;

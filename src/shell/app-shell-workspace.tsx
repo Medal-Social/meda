@@ -110,7 +110,9 @@ function buildMobileNavItems(
   if (contextRail?.module) {
     items.push({ id: 'module', label: 'Module', icon: LayoutGrid, opens: 'module-drawer' });
   }
-  if (rightPanel) {
+  // Panels button only when there's an actual view to render — empty
+  // panelViews would open an empty drawer (dead-end tap).
+  if (rightPanel && rightPanel.panelViews.length > 0) {
     items.push({ id: 'panels', label: 'Panels', icon: PanelTop, opens: 'panels-drawer' });
     if (rightPanel.panelViews.some((v) => v.id === 'ai')) {
       items.push({ id: 'ai', label: 'AI', icon: Sparkles, opens: 'ai-drawer' });
