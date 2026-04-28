@@ -12,7 +12,7 @@ A story exists if and only if it shows you something you cannot reach by togglin
 
 - Soft cap: 3 stories per file. Above this, the lint script warns.
 - Hard cap: 5 stories per file. Above this, the lint script fails.
-- AppShell is the one exception (3 variants × 3 viewports — but still 3 story exports).
+- AppShell is the one exception (3 variants × 3 viewports, but still 3 story exports).
 
 ## Mode budget (Chromatic)
 
@@ -80,4 +80,4 @@ Consumers compose one `<AppShell>` with a config:
 </AppShell>
 ```
 
-The variant decides which chrome renders. The viewport decides whether desktop or mobile chrome is used internally. Consumers do not import `MobileHeader`, `MobileBottomNav`, or `MobileDrawers` directly — those are no longer exported.
+The variant decides which chrome renders. The viewport decides whether desktop or mobile chrome is used internally. Consumers do not import `MobileHeader`, `MobileBottomNav`, or `MobileDrawers` directly. Those are no longer exported.
