@@ -12,6 +12,12 @@ name: Auto-approve trusted bot PRs
 #   - changeset-bot[bot]              → first-party Changesets bot (if installed)
 #
 # Add more actors as needed in the `if:` below.
+#
+# Security note: the `if:` below checks BOTH `pull_request.user.login`
+# (the PR opener — never changes) AND `github.actor` (whoever pushed the
+# latest commit that fired this workflow). On `synchronize` events any
+# write-access user can push to a bot-created branch; without the
+# `github.actor` gate, those commits would also get auto-approved.
 
 on:
   pull_request_target:
@@ -23,7 +29,8 @@ jobs:
   auto-approve:
     if: >
       github.event.pull_request.user.type == 'Bot' &&
-      contains(fromJson('["medal-social-release-bot[bot]", "dependabot[bot]", "changeset-bot[bot]"]'), github.event.pull_request.user.login)
+      contains(fromJson('["medal-social-release-bot[bot]", "dependabot[bot]", "changeset-bot[bot]"]'), github.event.pull_request.user.login) &&
+      contains(fromJson('["medal-social-release-bot[bot]", "dependabot[bot]", "changeset-bot[bot]"]'), github.actor)
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
