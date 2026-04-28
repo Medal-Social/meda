@@ -158,6 +158,7 @@ export function ContextRail({
 
   return (
     <aside
+      data-testid="context-rail"
       aria-label={module.label}
       className={cn(
         'relative h-full shrink-0 overflow-hidden border-r border-shell-border bg-shell-context',

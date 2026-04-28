@@ -71,7 +71,11 @@ export function TurnCard({ turn, startedAtRef, tz, onPlay, className }: TurnCard
         >
           {turn.text}
           {turn.streaming && (
-            <span aria-hidden="true" className="ml-0.5 animate-pulse text-primary">
+            <span
+              aria-hidden="true"
+              data-chromatic="ignore"
+              className="ml-0.5 animate-pulse text-primary"
+            >
               ▍
             </span>
           )}

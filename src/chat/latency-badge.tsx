@@ -33,7 +33,7 @@ export function LatencyBadge({ kind, ms, className }: LatencyBadgeProps) {
       ].join(' ')}
     >
       <span aria-hidden="true" className="size-1 rounded-full bg-current" />
-      {meta.label} {fmt(ms)}
+      {meta.label} <span data-chromatic="ignore">{fmt(ms)}</span>
     </span>
   );
 }

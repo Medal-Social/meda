@@ -22,7 +22,10 @@ export function LatencyBreakdown({
 
   return (
     <div className={className}>
-      <div className="flex h-1.5 gap-0.5 overflow-hidden rounded-sm bg-muted">
+      <div
+        data-chromatic="ignore"
+        className="flex h-1.5 gap-0.5 overflow-hidden rounded-sm bg-muted"
+      >
         <span data-segment="stt" className="block bg-sky-400" style={{ width: `${sttPct}%` }} />
         <span
           data-segment="claude"

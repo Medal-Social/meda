@@ -2,19 +2,16 @@
 import type {
   AppDefinition,
   ContextModule,
+  MobileBottomNavItem,
   PanelView,
   WorkspaceDefinition,
 } from '@medalsocial/meda';
 import {
-  AppShell,
   AppShellBody,
   CommandPalette,
   ContextRail,
   IconRail,
   MedaShellProvider,
-  MobileBottomNav,
-  MobileDrawers,
-  MobileHeader,
   RightPanel,
   ShellHeader,
   ShellMain,
@@ -50,7 +47,6 @@ import {
   LayoutDashboard,
   MessageSquare,
   PanelRight,
-  Search,
   Sparkles,
   Users,
   Zap,
@@ -216,7 +212,7 @@ const SITE_CONTEXT_MODULE: ContextModule = {
   items: [
     { id: 'overview', label: 'Overview', icon: BookOpen, to: '#overview', shortcut: '1' },
     { id: 'install', label: 'Install', icon: Zap, to: '#install', shortcut: '2' },
-    { id: 'shell', label: 'Shell v2', icon: LayoutDashboard, to: '#shell', shortcut: '3' },
+    { id: 'shell', label: 'AppShell', icon: LayoutDashboard, to: '#shell', shortcut: '3' },
     { id: 'components', label: 'Components', icon: Sparkles, to: '#components', shortcut: '4' },
     { id: 'registry', label: 'Registry', icon: FolderOpen, to: '#registry', shortcut: '5' },
   ],
@@ -306,7 +302,7 @@ const SITE_PANEL_VIEWS: PanelView[] = [
   },
 ];
 
-const SITE_MOBILE_NAV: ComponentProps<typeof MobileBottomNav>['items'] = [
+const SITE_MOBILE_NAV: MobileBottomNavItem[] = [
   { id: 'menu', label: 'Menu', icon: LayoutDashboard, opens: 'menu-drawer' },
   { id: 'module', label: 'Docs', icon: BookOpen, opens: 'module-drawer' },
   { id: 'panels', label: 'Panel', icon: PanelRight, opens: 'panels-drawer' },
@@ -416,7 +412,7 @@ function SiteWorkspace() {
   return (
     <>
       <CommandPalette />
-      <AppShell className="site-app-shell">
+      <div className="site-app-shell h-screen overflow-hidden bg-background text-foreground">
         <ShellHeader
           className="site-shell-header"
           globalActions={
@@ -433,13 +429,6 @@ function SiteWorkspace() {
                 GitHub
               </a>
             </div>
-          }
-        />
-        <MobileHeader
-          globalActions={
-            <a className="site-header-link" href="/storybook/">
-              Storybook
-            </a>
           }
         />
         <AppShellBody className="site-app-body">
@@ -582,7 +571,7 @@ function SiteWorkspace() {
 
               <section id="shell" className="section">
                 <div className="section-header section-header--left">
-                  <div className="eyebrow">Shell v2</div>
+                  <div className="eyebrow">AppShell</div>
                   <h2 className="section-title">Full shell live demo</h2>
                   <p className="section-sub">
                     <code>MedaShellProvider</code> wraps <code>AppShell</code> and its regions. Use
@@ -634,13 +623,7 @@ function SiteWorkspace() {
           </ShellMain>
           <RightPanel panelViews={SITE_PANEL_VIEWS} defaultView="usage" />
         </AppShellBody>
-        <MobileDrawers
-          menuItems={SITE_RAIL_ITEMS}
-          module={SITE_CONTEXT_MODULE}
-          panelViews={SITE_PANEL_VIEWS}
-        />
-        <MobileBottomNav items={SITE_MOBILE_NAV} />
-      </AppShell>
+      </div>
     </>
   );
 }
@@ -713,7 +696,7 @@ function SiteFooter() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Shell v2 full demo
+   AppShell full demo
    ═══════════════════════════════════════════════════════════════ */
 
 function ShellV2Demo() {
@@ -725,25 +708,18 @@ function ShellV2Demo() {
       description="The v2 shell composition. MedaShellProvider manages all state. AppShell + AppShellBody define the layout grid. Regions slot in as children."
       registryItem="meda-shell"
       code={`import {
-  AppShell, AppShellBody, CommandPalette, ContextRail,
-  IconRail, MedaShellProvider, MobileBottomNav, MobileDrawers,
-  MobileHeader, RightPanel, ShellHeader, ShellMain,
+  AppShell, CommandPalette, MedaShellProvider,
 } from '@medalsocial/meda';
 
 <MedaShellProvider workspace={ws} apps={apps} panelViews={panels}>
   <CommandPalette />
-  <AppShell>
-    <ShellHeader />
-    <AppShellBody>
-      <IconRail mainItems={railItems} activeId="inbox" />
-      <ContextRail appId="inbox" module={module} activeItemId={id} />
-      <ShellMain><YourPage /></ShellMain>
-      <RightPanel />
-    </AppShellBody>
-    {/* Mobile */}
-    <MobileHeader />
-    <MobileDrawers menuItems={railItems} module={module} panelViews={panels} />
-    <MobileBottomNav items={bottomNavItems} />
+  <AppShell
+    variant="workspace"
+    iconRail={{ mainItems: railItems, activeId: 'inbox' }}
+    contextRail={{ appId: 'inbox', module, activeItemId: id }}
+    rightPanel={{ panelViews: panels }}
+  >
+    <YourPage />
   </AppShell>
 </MedaShellProvider>`}
     >
@@ -757,7 +733,7 @@ function ShellV2Demo() {
           themeAdapter="default"
         >
           <CommandPalette />
-          <AppShell>
+          <div className="h-screen overflow-hidden bg-background text-foreground">
             <ShellHeader />
             <AppShellBody>
               <IconRail mainItems={ICON_RAIL_ITEMS} activeId="inbox" />
@@ -796,21 +772,7 @@ function ShellV2Demo() {
               </ShellMain>
               <RightPanel />
             </AppShellBody>
-            <MobileHeader />
-            <MobileDrawers
-              menuItems={ICON_RAIL_ITEMS}
-              module={CONTEXT_MODULE}
-              panelViews={PANEL_VIEWS}
-            />
-            <MobileBottomNav
-              items={[
-                { id: 'menu', label: 'Menu', icon: LayoutDashboard, opens: 'menu-drawer' },
-                { id: 'search', label: 'Search', icon: Search, opens: 'module-drawer' },
-                { id: 'panels', label: 'Panels', icon: PanelRight, opens: 'panels-drawer' },
-                { id: 'ai', label: 'AI', icon: Sparkles, opens: 'ai-drawer' },
-              ]}
-            />
-          </AppShell>
+          </div>
         </MedaShellProvider>
       </div>
     </ComponentDoc>

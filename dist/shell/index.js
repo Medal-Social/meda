@@ -14,16 +14,11 @@ export * as Extras from './extras/index.js';
 export { IconRail, RailDivider } from './icon-rail.js';
 // Storage adapter (consumers may want to provide their own)
 export { createLocalStorageAdapter } from './layout-state.js';
-export { MobileBottomNav } from './mobile/mobile-bottom-nav.js';
-export { MobileDrawers } from './mobile/mobile-drawers.js';
-// Mobile (individual exports + namespaced fallback)
-export { MobileHeader } from './mobile/mobile-header.js';
 // Hooks + tokens
 export { motion } from './motion.js';
 // Resize primitives
 export { ResizableHandle, ResizableShell, ResizableShellPanel } from './resizable-shell.js';
 export { RightPanel } from './right-panel.js';
-export { ShellAuthFrame, ShellAuthThemeToggle } from './shell-auth-frame.js';
 // Header (and its individual children for advanced composition)
 export { AppTabs, PanelToggle, ShellHeader, WorkspaceSwitcher } from './shell-header.js';
 export { ShellMain } from './shell-main.js';

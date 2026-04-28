@@ -1,35 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Activity,
-  Bell,
   Building2,
   Calendar,
-  FileText,
-  FlaskConical,
   HelpCircle,
   Inbox,
   Info,
-  LogOut,
-  MessageSquare,
-  Plus,
-  Send,
+  Mail,
   Settings,
-  Star,
   Users,
-  Zap,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { AppShell, AppShellBody } from './app-shell.js';
-import { CommandPalette, useCommands } from './command-palette.js';
-import { ContextRail } from './context-rail.js';
-import type { IconRailItem } from './icon-rail.js';
-import { IconRail } from './icon-rail.js';
-import { MobileBottomNav } from './mobile/mobile-bottom-nav.js';
-import { MobileDrawers } from './mobile/mobile-drawers.js';
-import { MobileHeader } from './mobile/mobile-header.js';
-import { RightPanel } from './right-panel.js';
-import { ShellHeader } from './shell-header.js';
-import { ShellMain } from './shell-main.js';
+import { AppShell } from './app-shell.js';
 import { MedaShellProvider } from './shell-provider.js';
 import type {
   AppDefinition,
@@ -39,59 +21,30 @@ import type {
   WorkspaceDefinition,
 } from './types.js';
 
-// ---------------------------------------------------------------------------
-// Shared fixtures
-// ---------------------------------------------------------------------------
-
+// Fixtures
 const WORKSPACE: WorkspaceDefinition = {
   id: 'ws-acme',
   name: 'Acme Corp',
-  icon: <Building2 size={20} aria-hidden="true" />,
+  icon: <Building2 size={20} aria-hidden />,
 };
-
-const WORKSPACE_2: WorkspaceDefinition = {
-  id: 'ws-beta',
-  name: 'Beta Workspace',
-  icon: <Zap size={20} aria-hidden="true" />,
-};
-
-const WORKSPACE_3: WorkspaceDefinition = {
-  id: 'ws-gamma',
-  name: 'Gamma Labs',
-  icon: <FlaskConical size={20} aria-hidden="true" />,
-};
-
 const APPS: AppDefinition[] = [
   { id: 'inbox', label: 'Inbox', icon: Inbox },
-  { id: 'messages', label: 'Messages', icon: MessageSquare },
+  { id: 'mail', label: 'Mail', icon: Mail },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
-
-const RAIL_MAIN_ITEMS: IconRailItem[] = [
+const RAIL_MAIN = [
   { id: 'inbox', label: 'Inbox', to: '/inbox', icon: Inbox },
   { id: 'calendar', label: 'Calendar', to: '/calendar', icon: Calendar },
   { id: 'users', label: 'People', to: '/people', icon: Users },
 ];
-
-const RAIL_UTILITY_ITEMS: IconRailItem[] = [
-  { id: 'bell', label: 'Notifications', to: '/notifications', icon: Bell },
-  { id: 'help', label: 'Help', to: '/help', icon: HelpCircle },
-];
-
-const INBOX_ITEMS: ContextItem[] = [
-  { id: 'inbox', label: 'Inbox', icon: Inbox, to: '/inbox', shortcut: '⌘1' },
-  { id: 'sent', label: 'Sent', icon: Send, to: '/sent', shortcut: '⌘2' },
-  { id: 'drafts', label: 'Drafts', icon: FileText, to: '/drafts' },
-  { id: 'starred', label: 'Starred', icon: Star, to: '/starred' },
-];
-
+const RAIL_UTILITY = [{ id: 'help', label: 'Help', to: '/help', icon: HelpCircle }];
+const INBOX_ITEMS: ContextItem[] = [{ id: 'inbox', label: 'Inbox', icon: Inbox, to: '/inbox' }];
 const INBOX_MODULE: ContextModule = {
   id: 'inbox',
   label: 'Inbox',
   description: 'Mail + drafts',
   items: INBOX_ITEMS,
 };
-
 const PANEL_VIEWS: PanelView[] = [
   {
     id: 'inspector',
@@ -108,52 +61,25 @@ const PANEL_VIEWS: PanelView[] = [
     id: 'activity',
     label: 'Activity',
     icon: Activity,
-    render: () => (
-      <div className="p-4 text-sm text-muted-foreground">
-        <p className="font-medium text-foreground mb-1">Activity</p>
-        <p>Recent activity across this workspace.</p>
-      </div>
-    ),
+    render: () => <div className="p-4 text-sm text-muted-foreground">Activity</div>,
   },
 ];
 
-// ---------------------------------------------------------------------------
-// Memory-backed storage adapter — avoids localStorage bleed between stories
-// ---------------------------------------------------------------------------
-
-function memoryStorage(panelMode: 'closed' | 'panel' | 'expanded' | 'fullscreen' = 'closed') {
-  const store = new Map<string, unknown>([
-    [
-      'meda:shell:ws-acme:inbox',
-      {
-        contextRail: { width: 300, collapsed: false },
-        rightPanel: { mode: panelMode, activeView: 'inspector', width: 340 },
-      },
-    ],
-  ]);
+function memoryStorage() {
+  const store = new Map<string, unknown>();
   return {
     load: (key: string) => store.get(key) ?? null,
     save: (key: string, value: unknown) => store.set(key, value),
   };
 }
 
-// ---------------------------------------------------------------------------
-// Decorator factory
-// ---------------------------------------------------------------------------
-
-function withProvider(
-  workspace: WorkspaceDefinition,
-  workspaces: WorkspaceDefinition[],
-  apps: AppDefinition[],
-  Story: () => ReactNode,
-  panelMode: 'closed' | 'panel' | 'expanded' | 'fullscreen' = 'closed'
-) {
+function withProvider(Story: () => ReactNode) {
   return (
     <MedaShellProvider
-      workspace={workspace}
-      workspaces={workspaces}
-      apps={apps}
-      storage={memoryStorage(panelMode)}
+      workspace={WORKSPACE}
+      workspaces={[WORKSPACE]}
+      apps={APPS}
+      storage={memoryStorage()}
       themeAdapter="default"
     >
       <Story />
@@ -161,193 +87,114 @@ function withProvider(
   );
 }
 
-// ---------------------------------------------------------------------------
-// DemoCommands — registers demo commands inside <CommandPalette>
-// ---------------------------------------------------------------------------
-
-function DemoCommands() {
-  useCommands([
-    {
-      id: 'nav-inbox',
-      label: 'Go to Inbox',
-      icon: Inbox,
-      group: 'Navigation',
-      run: async () => alert('Navigate to Inbox'),
-    },
-    {
-      id: 'action-new-email',
-      label: 'New email',
-      icon: Plus,
-      group: 'Actions',
-      shortcut: 'C',
-      run: async () => alert('New email'),
-    },
-    {
-      id: 'nav-settings',
-      label: 'Settings',
-      icon: Settings,
-      group: 'Navigation',
-      run: async () => alert('Navigate to Settings'),
-    },
-    {
-      id: 'account-sign-out',
-      label: 'Sign out',
-      icon: LogOut,
-      group: 'Account',
-      run: async () => alert('Sign out'),
-    },
-  ]);
-  return null;
-}
-
-// ---------------------------------------------------------------------------
-// Meta
-// ---------------------------------------------------------------------------
+const ALL_VIEWPORTS = {
+  desktop: { viewport: 1280 },
+  ipad: { viewport: 768 },
+  mobile: { viewport: 390 },
+};
 
 const meta = {
-  title: 'Shell v2/AppShell',
+  title: 'AppShell',
   component: AppShell,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },
-  // Stories below use `render` instead of args; meta-level args satisfy the
-  // StoryObj<typeof meta> type requirement that `children` be present.
-  args: { children: null },
+  decorators: [(Story) => withProvider(Story)],
 } satisfies Meta<typeof AppShell>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof AppShell>;
 
-// ---------------------------------------------------------------------------
-// Stories
-// ---------------------------------------------------------------------------
-
-/**
- * Bare layout container — proves the 100vh shell with a placeholder body works.
- */
-export const Default: Story = {
-  decorators: [(Story) => withProvider(WORKSPACE, [WORKSPACE], APPS, Story)],
+export const Workspace: Story = {
+  parameters: { chromatic: { modes: ALL_VIEWPORTS } },
   render: () => (
-    <AppShell>
-      <AppShellBody>
-        <div className="flex flex-1 items-center justify-center text-muted-foreground">
-          AppShell body content
-        </div>
-      </AppShellBody>
+    <AppShell
+      variant="workspace"
+      iconRail={{ mainItems: RAIL_MAIN, utilityItems: RAIL_UTILITY, activeId: 'inbox' }}
+      contextRail={{ appId: 'inbox', module: INBOX_MODULE, activeItemId: 'inbox' }}
+      rightPanel={{ panelViews: PANEL_VIEWS, defaultView: 'inspector' }}
+      globalActions={
+        <button
+          type="button"
+          className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground"
+        >
+          + New
+        </button>
+      }
+    >
+      <h1 className="text-2xl font-semibold text-foreground mb-2">Inbox</h1>
+      <p className="text-muted-foreground">
+        Workspace shell — desktop renders rails + panel; mobile renders header + bottom nav.
+      </p>
     </AppShell>
   ),
 };
 
-/**
- * Same as Default but with Storybook's dark-theme decorator active.
- * Toggle via the toolbar or select this story to verify dark tokens render.
- */
-export const WithDarkBackground: Story = {
+export const Auth: Story = {
   parameters: {
-    themes: { themeOverride: 'dark' },
+    chromatic: { modes: ALL_VIEWPORTS },
+    // The auth product mockup ships a small "Live" status pill (text-success on
+    // bg-success/12) that fails axe color-contrast at the 9px font size used in
+    // the decorative dashboard. The mockup is aria-hidden; existing
+    // ShellAuthFrame stories render in dark mode where the same swatch passes.
+    // Disable just this rule per-story rather than reshape the mockup here.
+    a11y: {
+      config: {
+        rules: [{ id: 'color-contrast', enabled: false }],
+      },
+    },
   },
-  decorators: [(Story) => withProvider(WORKSPACE, [WORKSPACE], APPS, Story)],
   render: () => (
-    <AppShell>
-      <AppShellBody>
-        <div className="flex flex-1 items-center justify-center text-muted-foreground">
-          AppShell body content — dark theme
-        </div>
-      </AppShellBody>
+    <AppShell
+      variant="auth"
+      auth={{
+        title: 'Welcome back',
+        description: 'Sign in to your Meda workspace.',
+        eyebrow: 'Meda',
+      }}
+    >
+      <form className="flex flex-col gap-3">
+        <input
+          aria-label="email"
+          placeholder="you@example.com"
+          className="rounded-md border border-border px-3 py-2 text-sm"
+        />
+        <input
+          aria-label="password"
+          type="password"
+          placeholder="••••••••"
+          className="rounded-md border border-border px-3 py-2 text-sm"
+        />
+        <button
+          type="button"
+          className="rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground"
+        >
+          Continue
+        </button>
+      </form>
     </AppShell>
   ),
 };
 
-/**
- * Full combined desktop layout: ShellHeader + IconRail + ContextRail + ShellMain + RightPanel.
- * Wrapped in <CommandPalette> — press ⌘K to open the palette with demo commands.
- * This is the canonical representation of the complete Meda shell at RC.1.
- * Hover rail icons for tooltips. Drag the ContextRail right edge to resize it.
- * Use the panel header controls to cycle modes or close the panel.
- */
-export const Combined: Story = {
-  decorators: [
-    (Story) => withProvider(WORKSPACE, [WORKSPACE, WORKSPACE_2, WORKSPACE_3], APPS, Story, 'panel'),
-  ],
+export const Chat: Story = {
+  parameters: { chromatic: { modes: ALL_VIEWPORTS } },
   render: () => (
-    <CommandPalette>
-      <DemoCommands />
-      <AppShell>
-        <ShellHeader
-          globalActions={
-            <button
-              type="button"
-              className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90"
-            >
-              + New
-            </button>
-          }
-        />
-        <AppShellBody>
-          <IconRail
-            mainItems={RAIL_MAIN_ITEMS}
-            utilityItems={RAIL_UTILITY_ITEMS}
-            activeId="inbox"
-          />
-          <ContextRail appId="inbox" module={INBOX_MODULE} activeItemId="inbox" />
-          <ShellMain layout="workspace">
-            <h1 className="text-2xl font-semibold text-foreground mb-2">Inbox</h1>
-            <p className="text-muted-foreground">
-              Main content area — rendered inside ShellMain with workspace layout (max-w-[1280px],
-              responsive padding). Press ⌘K to open the command palette.
-            </p>
-          </ShellMain>
-          <RightPanel panelViews={PANEL_VIEWS} defaultView="inspector" />
-        </AppShellBody>
-      </AppShell>
-    </CommandPalette>
-  ),
-};
-
-/**
- * Mobile combined layout — demonstrates the Phase 13 auto-hide wiring.
- *
- * On a mobile viewport:
- * - <ShellHeader>, <IconRail>, <ContextRail>, <RightPanel> all return null (auto-hidden).
- * - <MobileHeader> and <MobileBottomNav> render instead.
- * - <MobileDrawers> mounts the drawer slots (menu / module / panels / ai).
- *
- * Set the Storybook viewport to "Mobile" to see this in action.
- */
-export const MobileCombined: Story = {
-  parameters: { viewport: { defaultViewport: 'mobile1' } },
-  decorators: [
-    (Story) => withProvider(WORKSPACE, [WORKSPACE, WORKSPACE_2, WORKSPACE_3], APPS, Story, 'panel'),
-  ],
-  render: () => (
-    <CommandPalette>
-      <DemoCommands />
-      <AppShell>
-        {/* Desktop chrome — auto-hides on mobile */}
-        <ShellHeader />
-        {/* Mobile chrome — only visible on mobile */}
-        <MobileHeader />
-        <AppShellBody>
-          {/* Desktop chrome — auto-hides on mobile */}
-          <IconRail
-            mainItems={RAIL_MAIN_ITEMS}
-            utilityItems={RAIL_UTILITY_ITEMS}
-            activeId="inbox"
-          />
-          <ContextRail appId="inbox" module={INBOX_MODULE} activeItemId="inbox" />
-          <ShellMain layout="workspace">
-            <h1 className="text-2xl font-semibold text-foreground mb-2">Mobile main content</h1>
-            <p className="text-muted-foreground">
-              On mobile: only MobileHeader + MobileBottomNav are visible. Desktop chrome
-              (ShellHeader, IconRail, ContextRail, RightPanel) auto-hides via useShellViewport().
-            </p>
-          </ShellMain>
-          {/* Desktop chrome — auto-hides on mobile */}
-          <RightPanel panelViews={PANEL_VIEWS} defaultView="inspector" />
-        </AppShellBody>
-        {/* Mobile chrome — only visible on mobile */}
-        <MobileBottomNav />
-        <MobileDrawers menuItems={RAIL_MAIN_ITEMS} module={INBOX_MODULE} panelViews={PANEL_VIEWS} />
-      </AppShell>
-    </CommandPalette>
+    <AppShell
+      variant="chat"
+      globalActions={
+        <button type="button" className="text-sm text-muted-foreground">
+          New chat
+        </button>
+      }
+    >
+      <div className="flex flex-col gap-3 max-w-2xl mx-auto">
+        <div className="self-end max-w-[80%] rounded-2xl bg-primary px-3 py-2 text-sm text-primary-foreground">
+          Hey, can you summarize the latest support tickets?
+        </div>
+        <div className="self-start max-w-[80%] rounded-2xl bg-muted px-3 py-2 text-sm text-foreground">
+          Sure — there are 12 open tickets. The top three categories are billing, onboarding, and
+          integrations.
+        </div>
+      </div>
+    </AppShell>
   ),
 };

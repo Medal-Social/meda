@@ -17,22 +17,11 @@ export { IconRail, RailDivider } from './icon-rail.js';
 export type { ShellStorageAdapter } from './layout-state.js';
 // Storage adapter (consumers may want to provide their own)
 export { createLocalStorageAdapter } from './layout-state.js';
-export { MobileBottomNav } from './mobile/mobile-bottom-nav.js';
-export { MobileDrawers } from './mobile/mobile-drawers.js';
-// Mobile (individual exports + namespaced fallback)
-export { MobileHeader } from './mobile/mobile-header.js';
 // Hooks + tokens
 export { motion } from './motion.js';
 // Resize primitives
 export { ResizableHandle, ResizableShell, ResizableShellPanel } from './resizable-shell.js';
 export { RightPanel } from './right-panel.js';
-// Auth
-export type {
-  ShellAuthFrameProps,
-  ShellAuthTheme,
-  ShellAuthThemeToggleProps,
-} from './shell-auth-frame.js';
-export { ShellAuthFrame, ShellAuthThemeToggle } from './shell-auth-frame.js';
 // Header (and its individual children for advanced composition)
 export { AppTabs, PanelToggle, ShellHeader, WorkspaceSwitcher } from './shell-header.js';
 export { ShellMain } from './shell-main.js';
@@ -45,6 +34,11 @@ export { NextThemesAdapter } from './theme-next-themes.js';
 // Types
 export type {
   AppDefinition,
+  AppShellAuthConfig,
+  AppShellContextRailConfig,
+  AppShellIconRailConfig,
+  AppShellRightPanelConfig,
+  AppShellVariant,
   CommandDefinition,
   ContextItem,
   ContextModule,

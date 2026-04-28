@@ -10,10 +10,10 @@ import { CommandPalette } from './command-palette.js';
 import { ContextRail } from './context-rail.js';
 import type { IconRailItem } from './icon-rail.js';
 import { IconRail, RailDivider } from './icon-rail.js';
+import { MobileBottomNav } from './internal/mobile-bottom-nav.js';
+import { MobileDrawers } from './internal/mobile-drawers.js';
+import { MobileHeader } from './internal/mobile-header.js';
 import type { ShellStorageAdapter } from './layout-state.js';
-import { MobileBottomNav } from './mobile/mobile-bottom-nav.js';
-import { MobileDrawers } from './mobile/mobile-drawers.js';
-import { MobileHeader } from './mobile/mobile-header.js';
 import { RightPanel } from './right-panel.js';
 import { AppTabs, PanelToggle, ShellHeader, WorkspaceSwitcher } from './shell-header.js';
 import { ShellMain } from './shell-main.js';
@@ -191,7 +191,7 @@ describe('shell a11y', () => {
   it('AppShell + AppShellBody — no violations', async () => {
     const { container } = render(
       withProvider(
-        <AppShell>
+        <AppShell variant="workspace">
           <AppShellBody>
             <p>Body content</p>
           </AppShellBody>

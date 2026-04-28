@@ -4,7 +4,10 @@ import { MarketingCallout } from './marketing-callout.js';
 const meta = {
   title: 'Marketing/Callout',
   component: MarketingCallout,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+    chromatic: { modes: { desktop: { viewport: 1280 }, mobile: { viewport: 390 } } },
+  },
   args: {
     eyebrow: 'Launch campaign',
     title: 'Turn every product update into pipeline',
@@ -20,19 +23,4 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Band: Story = {};
-
-export const Card: Story = {
-  args: {
-    variant: 'card',
-    align: 'start',
-    title: 'Capture demand before it goes cold',
-  },
-  decorators: [
-    (Story) => (
-      <div className="max-w-xl">
-        <Story />
-      </div>
-    ),
-  ],
-};
+export const Default: Story = {};

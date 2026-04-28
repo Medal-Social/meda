@@ -27,7 +27,10 @@ export function LiveIndicator({ now, tz, className }: LiveIndicatorProps) {
       />
       {/* success-700 (vs. success/600) so the 10px clock label clears
           WCAG AA on the white card. */}
-      <span className="absolute right-1.5 top-[-2px] text-[10px] font-semibold tabular-nums text-success-700">
+      <span
+        data-chromatic="ignore"
+        className="absolute right-1.5 top-[-2px] text-[10px] font-semibold tabular-nums text-success-700"
+      >
         {formatClock(now, { tz })}
       </span>
     </div>

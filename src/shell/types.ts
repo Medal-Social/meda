@@ -79,3 +79,43 @@ export interface ThemeAdapter {
   setTheme: (t: 'light' | 'dark' | 'system') => void;
   resolvedTheme: 'light' | 'dark';
 }
+
+/**
+ * AppShell renders one of three shell modes:
+ * - `auth` — split-screen marketing + form (signed-out)
+ * - `workspace` — header + rails + main + panel (signed-in work surface;
+ *   collapses to mobile header + bottom nav + drawers on mobile)
+ * - `chat` — transcript-dominant layout (conversational AI)
+ */
+export type AppShellVariant = 'auth' | 'workspace' | 'chat';
+
+/** IconRail configuration for `<AppShell variant="workspace">`. */
+export interface AppShellIconRailConfig {
+  mainItems: import('./icon-rail.js').IconRailItem[];
+  utilityItems?: import('./icon-rail.js').IconRailItem[];
+  footer?: ReactNode;
+  activeId?: string;
+}
+
+/** ContextRail configuration for `<AppShell variant="workspace">`. */
+export interface AppShellContextRailConfig {
+  appId: string;
+  module: ContextModule;
+  activeItemId?: string;
+}
+
+/** RightPanel configuration for `<AppShell variant="workspace">`. */
+export interface AppShellRightPanelConfig {
+  panelViews: PanelView[];
+  defaultView?: string;
+}
+
+export interface AppShellAuthConfig {
+  title: ReactNode;
+  description?: ReactNode;
+  brandName?: ReactNode;
+  brandMark?: ReactNode;
+  eyebrow?: ReactNode;
+  preview?: ReactNode;
+  actions?: ReactNode;
+}
