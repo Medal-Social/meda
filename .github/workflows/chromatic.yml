@@ -1,16 +1,11 @@
 name: Chromatic
 
-# TEMPORARY: auto-runs disabled during the storybook cleanup plan
-# (docs/superpowers/plans/2026-04-28-storybook-cleanup.md) so we don't burn
-# Chromatic credits on intermediate baselines while the story tree is in flux.
-# Restore the push/pull_request triggers in the final task of the plan, after
-# the prune is complete and we're ready to accept the new baselines.
 on:
+  push:
+    branches: [dev, prod]
+  pull_request:
+    branches: [dev, prod]
   workflow_dispatch:
-  # push:
-  #   branches: [dev, prod]
-  # pull_request:
-  #   branches: [dev, prod]
 
 permissions:
   contents: read
