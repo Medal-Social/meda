@@ -402,7 +402,11 @@ describe('collapse toggle', () => {
     expect(btn).toBeInTheDocument();
     expect(btn).toHaveAttribute('aria-label', 'Collapse sidebar');
     expect(btn).toHaveAttribute('aria-expanded', 'true');
-    expect(btn).toHaveAttribute('aria-controls', 'meda-context-rail');
+    // aria-controls is a per-instance id (useId) prefixed with meda-context-rail-
+    const ariaControls = btn.getAttribute('aria-controls');
+    expect(ariaControls).toMatch(/^meda-context-rail-/);
+    // The aside it points at must actually exist
+    expect(document.getElementById(ariaControls!)).toBeInTheDocument();
   });
 
   it('renders the toggle button when collapsed (seeded via storage)', () => {
@@ -474,12 +478,31 @@ describe('collapse toggle', () => {
     expect(screen.queryByTestId('context-rail-toggle')).not.toBeInTheDocument();
   });
 
-  it('outer aside has id="meda-context-rail" so aria-controls resolves', () => {
+  it('outer aside id is per-instance (multiple rails do not collide on duplicate id)', () => {
     render(
       <Wrapper>
-        <ContextRail appId="mail" module={MODULE} />
+        <>
+          <ContextRail appId="mail" module={MODULE} />
+          <ContextRail appId="mail" module={MODULE} />
+        </>
       </Wrapper>
     );
-    expect(document.getElementById('meda-context-rail')).toBeInTheDocument();
+    const asides = screen.getAllByRole('complementary', { name: 'Mail' });
+    expect(asides).toHaveLength(2);
+    const ids = asides.map((a) => a.id);
+    expect(ids[0]).toMatch(/^meda-context-rail-/);
+    expect(ids[1]).toMatch(/^meda-context-rail-/);
+    expect(ids[0]).not.toBe(ids[1]); // unique per instance
+  });
+
+  it('does not render the toggle when collapsible={false}', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} collapsible={false} />
+      </Wrapper>
+    );
+    expect(screen.queryByTestId('context-rail-toggle')).not.toBeInTheDocument();
+    // The aside still renders (collapsible=false just removes the affordance)
+    expect(screen.getByRole('complementary', { name: 'Mail' })).toBeInTheDocument();
   });
 });

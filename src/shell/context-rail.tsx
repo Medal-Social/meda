@@ -17,7 +17,7 @@
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ReactNode, PointerEvent as ReactPointerEvent } from 'react';
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import { useMedaShell } from './shell-provider.js';
 import type { ContextModule, ShellLinkRenderArgs } from './types.js';
@@ -120,7 +120,7 @@ function ResizeHandle({ currentWidth, onResize, onCommit }: ResizeHandleProps) {
 // ContextRailToggle — chevron button that flips ctx.contextRail.collapsed
 // ---------------------------------------------------------------------------
 
-function ContextRailToggle() {
+function ContextRailToggle({ railId }: { railId: string }) {
   const ctx = useMedaShell();
   const collapsed = ctx.contextRail.collapsed;
   const Icon = collapsed ? ChevronRight : ChevronLeft;
@@ -130,7 +130,7 @@ function ContextRailToggle() {
       onClick={() => ctx.contextRail.setCollapsed(!collapsed)}
       aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       aria-expanded={!collapsed}
-      aria-controls="meda-context-rail"
+      aria-controls={railId}
       data-testid="context-rail-toggle"
       className={cn(
         // 20×20 visual size; before:* expands the touch hit area to ~36×36
@@ -155,7 +155,7 @@ export function ContextRail({
   appId: _appId,
   module,
   hidden = false,
-  collapsible: _collapsible = true,
+  collapsible = true,
   activeItemId,
   renderLink,
   className,
@@ -163,6 +163,10 @@ export function ContextRail({
   const band = useShellViewport();
   const ctx = useMedaShell();
   const collapsed = ctx.contextRail.collapsed;
+  // Per-instance id so multiple <ContextRail>s in one document don't clash on
+  // duplicate `id="..."` (HTML invalid + breaks aria-controls relationships).
+  const reactId = useId();
+  const railId = `meda-context-rail-${reactId}`;
 
   // Local display width tracks pointer-move updates; ctx.contextRail.setWidth
   // is called on pointerUp to persist via useShellLayoutState.
@@ -190,7 +194,7 @@ export function ContextRail({
 
   return (
     <aside
-      id="meda-context-rail"
+      id={railId}
       data-testid="context-rail"
       aria-label={module.label}
       className={cn(
@@ -204,8 +208,9 @@ export function ContextRail({
       {/* Toggle: absolute, sits half on the rail's right edge. Stays visible
           even when the inner content shrinks to width 0 — when collapsed, the
           outer aside is also w-0 and the toggle anchors at the IconRail's
-          right edge by virtue of -right-2.5. */}
-      <ContextRailToggle />
+          right edge by virtue of -right-2.5. Skipped when collapsible={false}
+          so consumers opting out of the collapse behavior get a fixed rail. */}
+      {collapsible && <ContextRailToggle railId={railId} />}
 
       {/* Inner overflow wrapper so the rail content clips cleanly during the
           width animation without clipping the absolute toggle above.
