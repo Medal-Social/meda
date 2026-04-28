@@ -1,11 +1,13 @@
 name: Chromatic
 
+# Auto-runs intentionally disabled — re-enable explicitly when ready to spend
+# credits and accept new baselines. Use `workflow_dispatch` to run manually.
 on:
-  push:
-    branches: [dev, prod]
-  pull_request:
-    branches: [dev, prod]
   workflow_dispatch:
+  # push:
+  #   branches: [dev, prod]
+  # pull_request:
+  #   branches: [dev, prod]
 
 permissions:
   contents: read
