@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 import { globSync, readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const BANNED_NAME_RE = /^(Dark|Light|Mobile|Tablet|Desktop)\w*/;
-const EXPORT_RE = /^export const (\w+)\s*:/gm;
+// Match both typed (`export const Foo: Story = ...`) and untyped
+// (`export const Foo = ...` / `export const Foo = {} satisfies Story`) CSF exports.
+const EXPORT_RE = /^export const (\w+)\s*[:=]/gm;
 const THEME_OVERRIDE_RE = /themes\s*:\s*\{[^}]*themeOverride/;
 const DEFAULT_VIEWPORT_RE = /viewport\s*:\s*\{[^}]*defaultViewport/;
 const BUDGET_FAIL = 5;
@@ -101,6 +103,10 @@ function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Standard ESM "is this file the CLI entry?" check. Robust on macOS/Linux/Windows
+// because pathToFileURL handles drive letters, percent-encoding, and absolute/relative
+// path normalization — the previous string-concat (`file://${process.argv[1]}`) only
+// worked when argv[1] was already an absolute POSIX path.
+if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
   main();
 }

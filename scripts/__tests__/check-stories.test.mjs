@@ -39,4 +39,10 @@ describe('checkStoryFile', () => {
     const violations = checkStoryFile(f.path, f.source);
     expect(violations.some((v) => v.message.includes('exceeds budget'))).toBe(true);
   });
+
+  it('detects banned names in untyped CSF exports (export const Foo = ...)', () => {
+    const f = fixture('untyped-exports.stories.tsx');
+    const violations = checkStoryFile(f.path, f.source);
+    expect(violations.some((v) => v.message.includes('DarkTheme'))).toBe(true);
+  });
 });
