@@ -20,6 +20,12 @@ export interface MobileDrawersProps {
   module?: ContextModule;
   /** Panels drawer source. */
   panelViews?: PanelView[];
+  /**
+   * Default panel view id. Used when ctx.panel.activeView is null so the
+   * mobile panels drawer opens to the same view as the desktop right panel.
+   * Without this, mobile would always fall back to panelViews[0].
+   */
+  defaultView?: string;
   /** Custom content drawers keyed by id from MobileBottomNavItem.opens render fn. */
   customContent?: Record<string, (close: () => void) => ReactNode>;
   className?: string;
@@ -34,6 +40,7 @@ export function MobileDrawers({
   menuItems = [],
   module,
   panelViews = [],
+  defaultView,
   customContent = {},
 }: MobileDrawersProps) {
   const ctx = useMedaShell();
@@ -53,6 +60,7 @@ export function MobileDrawers({
         open={open === 'panels-drawer'}
         onClose={close}
         panelViews={panelViews}
+        defaultView={defaultView}
         renderCtx={renderCtx}
       />
       <AiDrawer
@@ -161,16 +169,23 @@ function PanelsDrawer({
   open,
   onClose,
   panelViews,
+  defaultView,
   renderCtx,
 }: {
   open: boolean;
   onClose: () => void;
   panelViews: PanelView[];
+  defaultView?: string;
   renderCtx: ShellRenderContext;
 }) {
   const ctx = useMedaShell();
   const activeView = ctx.panel.activeView;
-  const active = panelViews.find((v) => v.id === activeView) ?? panelViews[0];
+  // Resolution order: explicit user selection → consumer-provided defaultView
+  // → first view. Keeps mobile parity with desktop where defaultView is honored.
+  const active =
+    panelViews.find((v) => v.id === activeView) ??
+    (defaultView ? panelViews.find((v) => v.id === defaultView) : undefined) ??
+    panelViews[0];
 
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()} direction="bottom">

@@ -7,6 +7,13 @@ import type { MobileBottomNavItem } from '../types.js';
 import { useShellViewport } from '../use-shell-viewport.js';
 
 export interface MobileBottomNavProps {
+  /**
+   * Override the items to render. When omitted, falls back to
+   * `ctx.mobileBottomNav` from the provider. AppShellWorkspace passes a
+   * derived list filtered to drawers that actually have content, so taps
+   * never dispatch into the void.
+   */
+  items?: MobileBottomNavItem[];
   className?: string;
 }
 
@@ -21,12 +28,15 @@ export interface MobileBottomNavProps {
  *
  * Hidden on non-mobile viewports and when the right panel is in fullscreen mode.
  */
-export function MobileBottomNav({ className }: MobileBottomNavProps) {
+export function MobileBottomNav({ items, className }: MobileBottomNavProps) {
   const ctx = useMedaShell();
   const band = useShellViewport();
 
   if (band !== 'mobile') return null;
   if (ctx.panel.mode === 'fullscreen') return null;
+
+  const resolvedItems = items ?? ctx.mobileBottomNav;
+  if (resolvedItems.length === 0) return null;
 
   return (
     <nav
@@ -37,7 +47,7 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
         className
       )}
     >
-      {ctx.mobileBottomNav.map((item) => (
+      {resolvedItems.map((item) => (
         <MobileBottomNavButton key={item.id} item={item} />
       ))}
     </nav>

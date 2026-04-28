@@ -1,4 +1,5 @@
 'use client';
+import { LayoutGrid, Menu, PanelTop, Sparkles } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { AppShellBody } from './app-shell.js';
 import { ContextRail } from './context-rail.js';
@@ -13,6 +14,7 @@ import type {
   AppShellContextRailConfig,
   AppShellIconRailConfig,
   AppShellRightPanelConfig,
+  MobileBottomNavItem,
 } from './types.js';
 import { useShellViewport } from './use-shell-viewport.js';
 
@@ -35,10 +37,13 @@ export function AppShellWorkspace({
   const isMobile = viewport === 'mobile';
 
   if (isMobile) {
-    // MobileBottomNav opens the drawers via shell context state, so it has
-    // nothing to do when no drawer content is configured. Gating both keeps
-    // taps from setting state into the void.
-    const hasDrawerContent = Boolean(iconRail || contextRail || rightPanel);
+    // Derive the bottom-nav items from the variant config so each button maps
+    // to a drawer that actually has content. Without this filter, partial
+    // configs (e.g. iconRail only) would show Module/Panels/AI buttons that
+    // dispatch into the void. Drawers themselves still mount unconditionally
+    // when hasDrawerContent — the no-content drawers just never open.
+    const navItems = buildMobileNavItems(iconRail, contextRail, rightPanel);
+    const hasDrawerContent = navItems.length > 0;
     // Mobile uses a flex column so the body fits between MobileHeader and
     // MobileBottomNav. AppShellBody's fixed `100vh - headerHeight` only
     // accounts for the desktop header — using it here would push the bottom
@@ -51,11 +56,12 @@ export function AppShellWorkspace({
         </div>
         {hasDrawerContent && (
           <>
-            <MobileBottomNav />
+            <MobileBottomNav items={navItems} />
             <MobileDrawers
               menuItems={iconRail?.mainItems ?? []}
               module={contextRail?.module}
               panelViews={rightPanel?.panelViews ?? []}
+              defaultView={rightPanel?.defaultView}
             />
           </>
         )}
@@ -89,4 +95,25 @@ export function AppShellWorkspace({
       </AppShellBody>
     </>
   );
+}
+
+function buildMobileNavItems(
+  iconRail: AppShellIconRailConfig | undefined,
+  contextRail: AppShellContextRailConfig | undefined,
+  rightPanel: AppShellRightPanelConfig | undefined
+): MobileBottomNavItem[] {
+  const items: MobileBottomNavItem[] = [];
+  if (iconRail) {
+    items.push({ id: 'menu', label: 'Menu', icon: Menu, opens: 'menu-drawer' });
+  }
+  if (contextRail?.module) {
+    items.push({ id: 'module', label: 'Module', icon: LayoutGrid, opens: 'module-drawer' });
+  }
+  if (rightPanel) {
+    items.push({ id: 'panels', label: 'Panels', icon: PanelTop, opens: 'panels-drawer' });
+    if (rightPanel.panelViews.some((v) => v.id === 'ai')) {
+      items.push({ id: 'ai', label: 'AI', icon: Sparkles, opens: 'ai-drawer' });
+    }
+  }
+  return items;
 }
