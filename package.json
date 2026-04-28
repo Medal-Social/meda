@@ -15,6 +15,9 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22"
+  },
   "files": [
     "README.md",
     "components.json",
@@ -96,6 +99,7 @@
     "release": "pnpm build && changeset publish",
     "registry:validate": "node ./registry/scripts/validate-registry.mjs",
     "lint:tokens": "node scripts/lint-tokens.mjs",
+    "check:stories": "node scripts/check-stories.mjs --warn",
     "quality": "pnpm lint && pnpm typecheck && pnpm lint:tokens && pnpm test"
   },
   "peerDependencies": {

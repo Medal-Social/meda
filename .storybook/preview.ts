@@ -10,6 +10,13 @@ const preview: Preview = {
   parameters: {
     layout: 'padded',
     backgrounds: { disable: true }, // theme decorator drives background
+    chromatic: {
+      modes: {
+        desktop: { viewport: 1280 },
+        ipad: { viewport: 768 },
+        mobile: { viewport: 390 },
+      },
+    },
     options: {
       storySort: {
         order: [
