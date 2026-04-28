@@ -44,6 +44,10 @@
       "types": "./dist/timeline/index.d.ts",
       "default": "./dist/timeline/index.js"
     },
+    "./list": {
+      "types": "./dist/list/index.d.ts",
+      "import": "./dist/list/index.js"
+    },
     "./marketing": {
       "types": "./dist/marketing/index.d.ts",
       "default": "./dist/marketing/index.js"

@@ -406,6 +406,7 @@ describe('collapse toggle', () => {
     const ariaControls = btn.getAttribute('aria-controls');
     expect(ariaControls).toMatch(/^meda-context-rail-/);
     // The aside it points at must actually exist
+    // biome-ignore lint/style/noNonNullAssertion: ariaControls is confirmed non-null by the toMatch assertion above
     expect(document.getElementById(ariaControls!)).toBeInTheDocument();
   });
 
@@ -481,10 +482,8 @@ describe('collapse toggle', () => {
   it('outer aside id is per-instance (multiple rails do not collide on duplicate id)', () => {
     render(
       <Wrapper>
-        <>
-          <ContextRail appId="mail" module={MODULE} />
-          <ContextRail appId="mail" module={MODULE} />
-        </>
+        <ContextRail appId="mail" module={MODULE} />
+        <ContextRail appId="mail" module={MODULE} />
       </Wrapper>
     );
     const asides = screen.getAllByRole('complementary', { name: 'Mail' });
