@@ -80,6 +80,7 @@ function KanbanBoardInner<TItem extends KanbanItem, TStatus extends string = str
   emptyColumnContent,
   labels,
   headless = false,
+  className,
 }: KanbanBoardProps<TItem, TStatus>) {
   const resolvedLabels: KanbanLabels = { ...defaultKanbanLabels, ...(labels ?? {}) };
 
@@ -228,7 +229,7 @@ function KanbanBoardInner<TItem extends KanbanItem, TStatus extends string = str
 
   return (
     <>
-      <div data-slot="kanban-board" className="flex h-full gap-4 pb-4">
+      <div data-slot="kanban-board" className={cn('flex h-full gap-4 pb-4', className)}>
         {visibleColumns.map((column) => {
           const columnItems = itemsByStatus.get(column.id as TStatus) ?? [];
           const canDropInColumn =
