@@ -1,3 +1,5 @@
+'use client';
+
 import {
   DndContext,
   type DragEndEvent as DndKitDragEndEvent,
@@ -260,7 +262,11 @@ export function KanbanBoard<TItem extends KanbanItem, TStatus extends string = s
                 items={columnItems}
                 count={columnItems.length}
                 isOver={isOver}
-                onAddItem={onAddItem ? () => onAddItem(column.id as TStatus) : undefined}
+                onAddItem={
+                  onAddItem && column.canAdd !== false
+                    ? () => onAddItem(column.id as TStatus)
+                    : undefined
+                }
                 onHideColumn={
                   onHiddenColumnIdsChange ? () => handleHideColumn(column.id as TStatus) : undefined
                 }
@@ -270,7 +276,7 @@ export function KanbanBoard<TItem extends KanbanItem, TStatus extends string = s
                   // If onAddItem is provided, show nothing (add button appears on hover)
                   // Otherwise show custom empty content or default "No items" message
                   (() => {
-                    if (onAddItem) return null;
+                    if (onAddItem && column.canAdd !== false) return null;
                     return (
                       emptyColumnContent || (
                         <div className="py-8 text-center text-muted-foreground text-sm">

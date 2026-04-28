@@ -1,3 +1,5 @@
+'use client';
+
 import { useDroppable } from '@dnd-kit/core';
 import { MoreHorizontal, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
