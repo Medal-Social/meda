@@ -15,7 +15,7 @@
  * once <AppShellBody> ships as a ResizableShell Group.
  */
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import type { ReactNode, PointerEvent as ReactPointerEvent } from 'react';
 import { useId, useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
@@ -123,7 +123,10 @@ function ResizeHandle({ currentWidth, onResize, onCommit }: ResizeHandleProps) {
 function ContextRailToggle({ railId }: { railId: string }) {
   const ctx = useMedaShell();
   const collapsed = ctx.contextRail.collapsed;
-  const Icon = collapsed ? ChevronRight : ChevronLeft;
+  // Lucide PanelLeft* icons render the chevron-with-wall pattern (similar
+  // to Unifi). The wall reinforces "this is a sidebar toggle" rather than
+  // a generic navigation chevron.
+  const Icon = collapsed ? PanelLeftOpen : PanelLeftClose;
   return (
     <button
       type="button"
@@ -133,16 +136,18 @@ function ContextRailToggle({ railId }: { railId: string }) {
       aria-controls={railId}
       data-testid="context-rail-toggle"
       className={cn(
-        // 20×20 visual size; before:* expands the touch hit area to ~36×36
-        // without changing the visible footprint (free UX win for touch).
-        'absolute top-3 -right-2.5 z-20 inline-flex h-5 w-5 items-center justify-center',
+        // Pull-tab: 14w × 32h, flat left edge attached to the rail (no left
+        // border), rounded right. Sticks out of the rail's outer edge so the
+        // separation reads clearly. before:* gives a ~36×36 touch hit area.
+        'absolute top-3.5 -right-3.5 z-20 inline-flex h-8 w-3.5 items-center justify-center',
         'before:absolute before:-inset-2 before:content-[""]',
-        'rounded-md border border-border bg-card text-muted-foreground shadow-sm',
+        'rounded-r-md border border-l-0 border-border bg-card text-muted-foreground',
+        'shadow-[1px_0_3px_rgb(0_0_0_/_0.06)]',
         'hover:bg-accent hover:text-foreground',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
       )}
     >
-      <Icon size={14} aria-hidden />
+      <Icon size={12} aria-hidden />
     </button>
   );
 }
