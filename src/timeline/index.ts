@@ -2,6 +2,16 @@ export type { DateSwitcherProps } from './date-switcher.js';
 export { DateSwitcher } from './date-switcher.js';
 export type { EventCardProps, EventCardSize } from './event-card.js';
 export { EventCard } from './event-card.js';
+export { LaneTimeline } from './lane-timeline.js';
+export type {
+  Lane,
+  LaneBar,
+  LaneLegendItem,
+  LaneTimelineLabels,
+  LaneTimelineProps,
+  LaneTimelineRange,
+} from './lane-timeline-types.js';
+export { defaultLaneTimelineLabels } from './lane-timeline-types.js';
 export type { LiveIndicatorProps } from './live-indicator.js';
 export { LiveIndicator } from './live-indicator.js';
 export type { ScrubBarProps } from './scrub-bar.js';
