@@ -58,7 +58,10 @@ export type ShellLayoutStateUpdater =
   | ((prev: ShellLayoutState) => ShellLayoutState);
 
 const DEFAULTS: ShellLayoutState = {
-  contextRail: { width: 300, collapsed: false },
+  // 260 default keeps the rail snug for typical module navs (4-8 short labels
+  // like Inbox/Sent/Drafts) without feeling cramped. Consumers can drag wider
+  // up to MAX_WIDTH (420) — the value is persisted per-workspace.
+  contextRail: { width: 260, collapsed: false },
   rightPanel: { mode: 'closed', activeView: null, width: 340 },
 };
 

@@ -82,7 +82,7 @@ function Wrapper({
 // ---------------------------------------------------------------------------
 
 describe('ContextRail — layout + visibility', () => {
-  it('default width 300px applied as inline style on aside', () => {
+  it('default width 260px applied as inline style on aside', () => {
     render(
       <Wrapper>
         <ContextRail appId="mail" module={MODULE} />
@@ -90,8 +90,8 @@ describe('ContextRail — layout + visibility', () => {
     );
 
     const aside = screen.getByRole('complementary', { name: 'Mail' });
-    // Default layout state sets contextRail.width = 300
-    expect(aside).toHaveStyle({ width: '300px' });
+    // Default layout state sets contextRail.width = 260
+    expect(aside).toHaveStyle({ width: '260px' });
   });
 
   it('hidden=true renders nothing visible (aria-hidden div, no aside)', () => {
@@ -174,7 +174,7 @@ describe('ContextRail — resize clamping', () => {
     const aside = screen.getByRole('complementary', { name: 'Mail' });
     const handle = screen.getByRole('separator', { name: 'Resize context rail' });
 
-    // Simulate drag that would bring width below min (300 - 200 = 100, clamped to 240)
+    // Simulate drag that would bring width below min (260 - 200 = 60, clamped to 240)
     act(() => {
       fireEvent.pointerDown(handle, { clientX: 300, pointerId: 1 });
       fireEvent.pointerMove(handle, { clientX: 100, pointerId: 1 });
@@ -193,7 +193,7 @@ describe('ContextRail — resize clamping', () => {
     const aside = screen.getByRole('complementary', { name: 'Mail' });
     const handle = screen.getByRole('separator', { name: 'Resize context rail' });
 
-    // Simulate drag that would bring width above max (300 + 200 = 500, clamped to 420)
+    // Simulate drag that would bring width above max (260 + 200 = 460, clamped to 420)
     act(() => {
       fireEvent.pointerDown(handle, { clientX: 300, pointerId: 1 });
       fireEvent.pointerMove(handle, { clientX: 500, pointerId: 1 });
@@ -212,13 +212,13 @@ describe('ContextRail — resize clamping', () => {
     const aside = screen.getByRole('complementary', { name: 'Mail' });
     const handle = screen.getByRole('separator', { name: 'Resize context rail' });
 
-    // Simulate drag: start at x=300, move to x=350 → width goes from 300 to 350
+    // Simulate drag: start at x=300, move to x=350 → delta +50, width goes from 260 to 310
     act(() => {
       fireEvent.pointerDown(handle, { clientX: 300, pointerId: 1 });
       fireEvent.pointerMove(handle, { clientX: 350, pointerId: 1 });
     });
 
-    expect(aside).toHaveStyle({ width: '350px' });
+    expect(aside).toHaveStyle({ width: '310px' });
   });
 });
 
@@ -350,10 +350,10 @@ describe('ContextRail — width persistence via useShellLayoutState', () => {
     });
 
     // storage.save should have been called with the layout state containing
-    // contextRail.width = 350
+    // contextRail.width = 310 (260 default + 50 drag delta)
     expect(storage.save).toHaveBeenCalled();
     const savedState = storage.save.mock.calls[storage.save.mock.calls.length - 1][1];
-    expect((savedState as { contextRail: { width: number } }).contextRail.width).toBe(350);
+    expect((savedState as { contextRail: { width: number } }).contextRail.width).toBe(310);
   });
 });
 
@@ -384,5 +384,151 @@ describe('ContextRail — renders on desktop viewport', () => {
       </Wrapper>
     );
     expect(screen.getByRole('complementary', { name: 'Mail' })).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Collapse toggle — chevron button on the rail's right edge
+// ---------------------------------------------------------------------------
+
+describe('collapse toggle', () => {
+  it('renders the toggle button when expanded', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+    const btn = screen.getByTestId('context-rail-toggle');
+    expect(btn).toBeInTheDocument();
+    expect(btn).toHaveAttribute('aria-label', 'Collapse sidebar');
+    expect(btn).toHaveAttribute('aria-expanded', 'true');
+    // aria-controls is a per-instance id (useId) prefixed with meda-context-rail-
+    const ariaControls = btn.getAttribute('aria-controls');
+    expect(ariaControls).toMatch(/^meda-context-rail-/);
+    // The aside it points at must actually exist
+    expect(document.getElementById(ariaControls!)).toBeInTheDocument();
+  });
+
+  it('renders the toggle button when collapsed (seeded via storage)', () => {
+    // Seed initial layout state via the storage adapter so we exercise the
+    // first-render path (catches bugs that wouldn't manifest via click-to-collapse).
+    const seededStorage = {
+      load: (key: string) =>
+        key.startsWith('meda:shell:')
+          ? {
+              contextRail: { width: 300, collapsed: true },
+              rightPanel: { mode: 'closed', activeView: null, width: 340 },
+            }
+          : null,
+      save: () => {},
+    };
+    render(
+      <Wrapper storage={seededStorage}>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+    const btn = screen.getByTestId('context-rail-toggle');
+    expect(btn).toHaveAttribute('aria-label', 'Expand sidebar');
+    expect(btn).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('clicking the toggle flips ctx.contextRail.collapsed', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+    const btn = screen.getByTestId('context-rail-toggle');
+    expect(btn).toHaveAttribute('aria-expanded', 'true');
+    act(() => {
+      fireEvent.click(btn);
+    });
+    expect(btn).toHaveAttribute('aria-expanded', 'false');
+    act(() => {
+      fireEvent.click(btn);
+    });
+    expect(btn).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('does not render the resize handle when collapsed', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+    expect(screen.queryByRole('separator', { name: /resize context rail/i })).toBeInTheDocument();
+
+    // Collapse via the toggle
+    act(() => {
+      fireEvent.click(screen.getByTestId('context-rail-toggle'));
+    });
+    expect(
+      screen.queryByRole('separator', { name: /resize context rail/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not render the toggle on mobile viewport', () => {
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
+    (useShellViewport as any).mockReturnValue('mobile');
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+    expect(screen.queryByTestId('context-rail-toggle')).not.toBeInTheDocument();
+  });
+
+  it('outer aside id is per-instance (multiple rails do not collide on duplicate id)', () => {
+    render(
+      <Wrapper>
+        <>
+          <ContextRail appId="mail" module={MODULE} />
+          <ContextRail appId="mail" module={MODULE} />
+        </>
+      </Wrapper>
+    );
+    const asides = screen.getAllByRole('complementary', { name: 'Mail' });
+    expect(asides).toHaveLength(2);
+    const ids = asides.map((a) => a.id);
+    expect(ids[0]).toMatch(/^meda-context-rail-/);
+    expect(ids[1]).toMatch(/^meda-context-rail-/);
+    expect(ids[0]).not.toBe(ids[1]); // unique per instance
+  });
+
+  it('does not render the toggle when collapsible={false}', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} collapsible={false} />
+      </Wrapper>
+    );
+    expect(screen.queryByTestId('context-rail-toggle')).not.toBeInTheDocument();
+    // The aside still renders (collapsible=false just removes the affordance)
+    expect(screen.getByRole('complementary', { name: 'Mail' })).toBeInTheDocument();
+  });
+
+  it('collapsible={false} forces expanded render even when persisted state is collapsed', () => {
+    // Seed collapsed: true via storage to simulate a user who collapsed the
+    // rail before the consumer flipped collapsible to false. Without the
+    // override, the rail would render at width 0 with no way to recover.
+    const seededCollapsed = {
+      load: (key: string) =>
+        key.startsWith('meda:shell:')
+          ? {
+              contextRail: { width: 260, collapsed: true },
+              rightPanel: { mode: 'closed', activeView: null, width: 340 },
+            }
+          : null,
+      save: () => {},
+    };
+    render(
+      <Wrapper storage={seededCollapsed}>
+        <ContextRail appId="mail" module={MODULE} collapsible={false} />
+      </Wrapper>
+    );
+    // No toggle (collapsible=false)
+    expect(screen.queryByTestId('context-rail-toggle')).not.toBeInTheDocument();
+    // Aside renders at the persisted width, NOT at width 0
+    const aside = screen.getByRole('complementary', { name: 'Mail' });
+    expect(aside).toHaveStyle({ width: '260px' });
   });
 });

@@ -98,7 +98,7 @@ describe('storage adapter', () => {
 // ---------------------------------------------------------------------------
 
 const DEFAULTS = {
-  contextRail: { width: 300, collapsed: false },
+  contextRail: { width: 260, collapsed: false },
   rightPanel: { mode: 'closed', activeView: null, width: 340 },
 };
 
