@@ -1,0 +1,42 @@
+name: Auto-approve trusted bot PRs
+
+# Auto-approves PRs from trusted automation so branch protection's
+# "approval from someone other than the last pusher" rule doesn't block
+# routine release / dependency PRs. The approval comes from the Medal
+# Approvals GitHub App — a different identity from the Medal Social
+# Release Bot, so the rule is genuinely satisfied.
+#
+# Today this covers:
+#   - medal-social-release-bot[bot]   → Changesets release PR
+#   - dependabot[bot]                 → dependency bumps
+#   - changeset-bot[bot]              → first-party Changesets bot (if installed)
+#
+# Add more actors as needed in the `if:` below.
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions: {}
+
+jobs:
+  auto-approve:
+    if: >
+      github.event.pull_request.user.type == 'Bot' &&
+      contains(fromJson('["medal-social-release-bot[bot]", "dependabot[bot]", "changeset-bot[bot]"]'), github.event.pull_request.user.login)
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Generate Medal Approvals token
+        id: app-token
+        uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v2.1.4
+        with:
+          app-id: ${{ secrets.MEDAL_APPROVALS_APP_ID }}
+          private-key: ${{ secrets.MEDAL_APPROVALS_PRIVATE_KEY }}
+
+      - name: Approve
+        uses: hmarr/auto-approve-action@f0939ea97e9205ef24d872e76833fa908a770363 # v4.0.0
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          review-message: 'Auto-approved by Medal Approvals — trusted bot PR.'
