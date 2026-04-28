@@ -1,0 +1,63 @@
+name: Auto-approve trusted bot PRs
+
+# Auto-approves PRs from trusted automation so branch protection's
+# "approval from someone other than the last pusher" rule doesn't block
+# routine release / dependency PRs. The approval comes from the Medal
+# Approvals GitHub App — a different identity from the Medal Social
+# Release Bot, so the rule is genuinely satisfied.
+#
+# Today this covers:
+#   - medal-social-release-bot[bot]   → Changesets release PR
+#   - changeset-bot[bot]              → first-party Changesets bot (if installed)
+#
+# NOT covered (intentionally):
+#   - dependabot[bot] — Dependabot-triggered workflows only see secrets
+#     stored in the Dependabot scope (Settings → Secrets → Dependabot),
+#     NOT regular Actions secrets where MEDAL_APPROVALS_* live. Adding
+#     dependabot here would silently fail to mint the App token. To enable
+#     later: mirror the two MEDAL_APPROVALS_* secrets into the Dependabot
+#     scope and add 'dependabot[bot]' back to both lists below.
+#
+# Add more actors as needed in the `if:` below.
+#
+# Security note: the `if:` below checks BOTH `pull_request.user.login`
+# (the PR opener — never changes) AND `github.actor` (whoever pushed the
+# latest commit that fired this workflow). On `synchronize` events any
+# write-access user can push to a bot-created branch; without the
+# `github.actor` gate, those commits would also get auto-approved.
+
+# Use `pull_request` (NOT `pull_request_target`) so the workflow does not
+# run with secret-rich base-repo context. All trusted bots above push
+# same-repo branches (not forks), so `pull_request` triggers normally for
+# them and we keep secret exposure scoped to a context that can't be
+# hijacked by a future `actions/checkout` of PR code.
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions: {}
+
+jobs:
+  auto-approve:
+    if: >
+      github.event.pull_request.user.type == 'Bot' &&
+      contains(fromJson('["medal-social-release-bot[bot]", "changeset-bot[bot]"]'), github.event.pull_request.user.login) &&
+      contains(fromJson('["medal-social-release-bot[bot]", "changeset-bot[bot]"]'), github.actor)
+    runs-on: ubuntu-latest
+    # GITHUB_TOKEN needs no privileges in this job — the only step that
+    # writes to PRs uses the Medal Approvals App token. Empty `permissions`
+    # leaves the default token with zero rights.
+    permissions: {}
+    steps:
+      - name: Generate Medal Approvals token
+        id: app-token
+        uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v2.1.4
+        with:
+          app-id: ${{ secrets.MEDAL_APPROVALS_APP_ID }}
+          private-key: ${{ secrets.MEDAL_APPROVALS_PRIVATE_KEY }}
+
+      - name: Approve
+        uses: hmarr/auto-approve-action@f0939ea97e9205ef24d872e76833fa908a770363 # v4.0.0
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          review-message: 'Auto-approved by Medal Approvals — trusted bot PR.'
