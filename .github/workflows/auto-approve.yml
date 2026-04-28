@@ -8,8 +8,15 @@ name: Auto-approve trusted bot PRs
 #
 # Today this covers:
 #   - medal-social-release-bot[bot]   → Changesets release PR
-#   - dependabot[bot]                 → dependency bumps
 #   - changeset-bot[bot]              → first-party Changesets bot (if installed)
+#
+# NOT covered (intentionally):
+#   - dependabot[bot] — Dependabot-triggered workflows only see secrets
+#     stored in the Dependabot scope (Settings → Secrets → Dependabot),
+#     NOT regular Actions secrets where MEDAL_APPROVALS_* live. Adding
+#     dependabot here would silently fail to mint the App token. To enable
+#     later: mirror the two MEDAL_APPROVALS_* secrets into the Dependabot
+#     scope and add 'dependabot[bot]' back to both lists below.
 #
 # Add more actors as needed in the `if:` below.
 #
@@ -34,8 +41,8 @@ jobs:
   auto-approve:
     if: >
       github.event.pull_request.user.type == 'Bot' &&
-      contains(fromJson('["medal-social-release-bot[bot]", "dependabot[bot]", "changeset-bot[bot]"]'), github.event.pull_request.user.login) &&
-      contains(fromJson('["medal-social-release-bot[bot]", "dependabot[bot]", "changeset-bot[bot]"]'), github.actor)
+      contains(fromJson('["medal-social-release-bot[bot]", "changeset-bot[bot]"]'), github.event.pull_request.user.login) &&
+      contains(fromJson('["medal-social-release-bot[bot]", "changeset-bot[bot]"]'), github.actor)
     runs-on: ubuntu-latest
     # GITHUB_TOKEN needs no privileges in this job — the only step that
     # writes to PRs uses the Medal Approvals App token. Empty `permissions`
