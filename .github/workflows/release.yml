@@ -27,8 +27,8 @@ jobs:
         id: app-token-checkout
         uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v2.1.4
         with:
-          app-id: ${{ secrets.MEDAL_RELEASE_BOT_APP_ID }}
-          private-key: ${{ secrets.MEDAL_RELEASE_BOT_PRIVATE_KEY }}
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -66,8 +66,8 @@ jobs:
         id: app-token-publish
         uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v2.1.4
         with:
-          app-id: ${{ secrets.MEDAL_RELEASE_BOT_APP_ID }}
-          private-key: ${{ secrets.MEDAL_RELEASE_BOT_PRIVATE_KEY }}
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
       - name: Refresh persisted git credential
         run: |
