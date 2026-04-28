@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { axe } from 'vitest-axe';
 import { DateSwitcher } from './date-switcher.js';
 import { EventCard } from './event-card.js';
+import type { Lane } from './index.js';
+import { LaneTimeline } from './index.js';
 import { LiveIndicator } from './live-indicator.js';
 import { ScrubBar } from './scrub-bar.js';
 import { TimelineRail } from './timeline-rail.js';
@@ -104,4 +106,53 @@ describe('timeline a11y', () => {
       })
     ).toHaveNoViolations();
   }, 15_000);
+});
+
+const LANE_TIMELINE_FIXTURE: Lane[] = [
+  {
+    id: 'm1',
+    label: 'studio.local',
+    sublabel: '2 sessions',
+    statusDotClass: 'bg-success-500',
+    bars: [
+      {
+        id: 'b1',
+        label: 'WS subs',
+        start: new Date(Date.now() - 30 * 60_000),
+        end: new Date(Date.now() - 5 * 60_000),
+        fillClass: 'bg-primary/70',
+      },
+    ],
+  },
+  {
+    id: 'm2',
+    label: 'beast.local',
+    sublabel: 'offline',
+    muted: true,
+    bars: [],
+  },
+];
+
+describe('LaneTimeline a11y', () => {
+  it('has no axe violations', async () => {
+    const { container } = render(
+      <LaneTimeline
+        title="Timeline"
+        lanes={LANE_TIMELINE_FIXTURE}
+        activeCount={1}
+        legend={[
+          { label: 'running', swatchClass: 'bg-primary/70' },
+          { label: 'idle', swatchClass: 'bg-muted' },
+        ]}
+      />
+    );
+    const results = await axe(container, {
+      // Bar fill colors use Tailwind opacity tokens that do not resolve to
+      // real hex values in jsdom (CSS custom properties are unset). Skip the
+      // color-contrast rule here; real-browser contrast is validated manually
+      // against the design tokens.
+      rules: { 'color-contrast': { enabled: false } },
+    });
+    expect(results).toHaveNoViolations();
+  });
 });
