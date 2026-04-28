@@ -1,10 +1,10 @@
 ---
-'@medalsocial/meda': major
+'@medalsocial/meda': minor
 ---
 
-Storybook cleanup and AppShell unification.
+Storybook cleanup and AppShell unification. Shipped as a `minor` to keep `@medalsocial/meda` on the 1.x line — the API changes below are technically breaking but no consumers exist yet, so we are not spending the major bump here.
 
-**Breaking changes:**
+**API changes:**
 - `<AppShell>` now requires a `variant` prop: `"auth" | "workspace" | "chat"`. Composition is config-driven via `iconRail`, `contextRail`, `rightPanel`, `globalActions`, and `auth` props.
 - `MobileHeader`, `MobileBottomNav`, `MobileDrawers`, `ShellAuthFrame`, and `ShellAuthThemeToggle` are removed. Their behavior is now internal to `<AppShell variant="auth">` and `<AppShell variant="workspace">`. The viewport switch is automatic.
 
