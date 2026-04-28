@@ -40,7 +40,7 @@ export function LaneTimeline({
 }: LaneTimelineProps) {
   const resolvedLabels: LaneTimelineLabels = { ...defaultLaneTimelineLabels, ...(labels ?? {}) };
   const [internalRange, setInternalRange] = useState<LaneTimelineRange>(defaultRange);
-  const [internalDate, setInternalDate] = useState<Date>(() => new Date());
+  const [internalDate, setInternalDate] = useState<Date>(() => now ?? new Date());
   const range = controlledRange ?? internalRange;
   const selectedDate = controlledDate ?? internalDate;
   const referenceNow = now ?? new Date();
