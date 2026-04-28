@@ -146,6 +146,7 @@ export function IconRail({
   return (
     <TooltipProvider>
       <nav
+        data-testid="icon-rail"
         aria-label="Primary"
         className={cn(
           'flex h-full w-[var(--shell-rail-width)] shrink-0 flex-col items-center bg-shell-rail py-3.5',

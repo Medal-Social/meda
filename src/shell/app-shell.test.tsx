@@ -50,6 +50,10 @@ const apps: AppDefinition[] = [{ id: 'app-a', label: 'A', icon: Menu }];
 /** Get the AppShell / AppShellBody root div via its child sentinel. */
 function getRootDiv(testId = 'x'): HTMLElement {
   const child = screen.getByTestId(testId);
+  // Prefer the outer AppShell wrapper (data-meda-variant); fall back to the
+  // nearest classed div ancestor for AppShellBody-only tests.
+  const variantRoot = child.closest('div[data-meda-variant]');
+  if (variantRoot) return variantRoot as HTMLElement;
   const root = child.closest('div[class]');
   if (!root) throw new Error('Could not find root div');
   return root as HTMLElement;

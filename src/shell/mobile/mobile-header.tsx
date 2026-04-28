@@ -44,6 +44,7 @@ export function MobileHeader({
 
   return (
     <header
+      data-testid="mobile-header"
       data-meda-mobile-header={isNested ? 'nested' : 'root'}
       className={cn(
         'flex h-[var(--shell-header-height)] items-center justify-between border-b border-border bg-card px-3',
@@ -80,3 +81,5 @@ export function MobileHeader({
     </header>
   );
 }
+
+export { MobileHeader as MobileHeaderInternal };

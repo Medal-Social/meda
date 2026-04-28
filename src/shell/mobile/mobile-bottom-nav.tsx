@@ -30,6 +30,7 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
 
   return (
     <nav
+      data-testid="mobile-bottom-nav"
       aria-label="Mobile navigation"
       className={cn(
         'flex h-[var(--shell-bottom-nav-height)] items-center justify-around border-t border-border bg-card',
@@ -114,3 +115,5 @@ function MobileBottomNavButton({ item }: { item: MobileBottomNavItem }) {
     </button>
   );
 }
+
+export { MobileBottomNav as MobileBottomNavInternal };
