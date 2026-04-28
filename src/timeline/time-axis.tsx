@@ -12,6 +12,8 @@ export interface TimeAxisProps {
   onRangeChange: (range: LaneTimelineRange) => void;
   selectedDate: Date;
   onDateChange: (date: Date) => void;
+  /** Reference time used to determine whether `selectedDate` is "today" in the header label. */
+  now: Date;
   title?: ReactNode;
   groupChip?: ReactNode;
   activeCount?: number;
@@ -26,6 +28,7 @@ export function TimeAxis({
   onRangeChange,
   selectedDate,
   onDateChange,
+  now,
   title,
   groupChip,
   activeCount,
@@ -82,7 +85,7 @@ export function TimeAxis({
           >
             <ChevronLeft className="size-3.5" />
           </button>
-          <div className="px-1">{formatDateHeader(selectedDate)}</div>
+          <div className="px-1">{formatDateHeader(selectedDate, now)}</div>
           <button
             type="button"
             aria-label={labels.nextDate}
@@ -114,9 +117,8 @@ export function TimeAxis({
   );
 }
 
-function formatDateHeader(d: Date): string {
-  const today = new Date();
-  const isToday = d.toDateString() === today.toDateString();
+function formatDateHeader(d: Date, referenceNow: Date): string {
+  const isToday = d.toDateString() === referenceNow.toDateString();
   const fmt = new Intl.DateTimeFormat(undefined, {
     weekday: 'short',
     month: 'short',

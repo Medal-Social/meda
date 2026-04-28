@@ -84,6 +84,7 @@ export function LaneTimeline({
         onRangeChange={handleRange}
         selectedDate={selectedDate}
         onDateChange={handleDate}
+        now={referenceNow}
         title={title}
         groupChip={groupChip}
         activeCount={activeCount}
