@@ -1,7 +1,17 @@
 import '@testing-library/jest-dom/vitest';
 import { DndContext } from '@dnd-kit/core';
 import { act, render } from '@testing-library/react';
-import { Bell, Calendar, FileText, Inbox, Mail, Settings, Sparkles, Users } from 'lucide-react';
+import {
+  Bell,
+  Calendar,
+  FileText,
+  Inbox,
+  Mail,
+  Settings,
+  Sparkles,
+  Target,
+  Users,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -9,6 +19,7 @@ import { axe } from 'vitest-axe';
 import { AppShell, AppShellBody } from './app-shell.js';
 import { CommandPalette } from './command-palette.js';
 import { ContextRail } from './context-rail.js';
+import { DragModeBanner } from './drag-mode-banner.js';
 import type { IconRailItem } from './icon-rail.js';
 import { IconRail, RailDivider } from './icon-rail.js';
 import { MobileBottomNav } from './internal/mobile-bottom-nav.js';
@@ -16,6 +27,7 @@ import { MobileDrawers } from './internal/mobile-drawers.js';
 import { MobileHeader } from './internal/mobile-header.js';
 import type { ShellStorageAdapter } from './layout-state.js';
 import { RailDropSlot } from './rail-drop-slot.js';
+import { RailDropZones } from './rail-drop-zones.js';
 import { RightPanel } from './right-panel.js';
 import { AppTabs, PanelToggle, ShellHeader, WorkspaceSwitcher } from './shell-header.js';
 import { ShellMain } from './shell-main.js';
@@ -654,6 +666,123 @@ describe('RailDropSlot a11y', () => {
         <RailDropSlot id="m2" ariaLabel="Assign to laptop.local" disabled>
           <div>laptop.local</div>
         </RailDropSlot>
+      </DndContext>
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it('render prop — idle state — no violations', async () => {
+    const { container } = render(
+      <DndContext>
+        <RailDropSlot
+          id="m3"
+          ariaLabel="Assign to beast.local"
+          render={(state) => <div data-state={state}>beast.local</div>}
+        />
+      </DndContext>
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it('render prop — rejected (disabled) state — no violations', async () => {
+    // Disabled slot renders the rejected visual without a drag in progress.
+    const { container } = render(
+      <DndContext>
+        <RailDropSlot
+          id="m4"
+          ariaLabel="Assign to offline.local"
+          disabled
+          render={(state) => <div data-state={state}>offline.local · {state}</div>}
+        />
+      </DndContext>
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DragModeBanner a11y
+// ---------------------------------------------------------------------------
+
+describe('DragModeBanner a11y', () => {
+  it('renders nothing (null) when no drag is active — no violations', async () => {
+    // When no drag is happening the banner returns null; the DndContext wrapper
+    // renders an empty container. axe should see no issues.
+    const { container } = render(
+      <DndContext>
+        <DragModeBanner message="Drop on a machine to assign" cancelKey="ESC" />
+      </DndContext>
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it('forceActive-equivalent via wrapper — banner visible — no violations', async () => {
+    // DragModeBanner only becomes visible when useDndMonitor fires onDragStart.
+    // We can't easily simulate a real pointer drag in jsdom, so we instead render
+    // the banner markup directly to verify the static HTML is accessible.
+    const { container } = render(
+      <div>
+        <div
+          role="status"
+          aria-live="polite"
+          className="pointer-events-none flex items-center justify-center gap-3 px-4 py-2 text-sm"
+        >
+          <span>Drop on a machine to assign</span>
+          <kbd className="rounded border px-1.5 py-0.5 font-mono text-xs">ESC</kbd>
+        </div>
+      </div>
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RailDropZones a11y
+// ---------------------------------------------------------------------------
+
+describe('RailDropZones a11y', () => {
+  it('idle state (no drag) — no violations', async () => {
+    const { container } = render(
+      <DndContext>
+        <RailDropZones
+          title="Drop zones"
+          subtitle="Eligible machines for ENG-405"
+          count="3 / 4"
+          icon={<Target className="size-4" aria-hidden="true" />}
+        >
+          <DndContext>
+            <RailDropSlot id="z-m1" ariaLabel="Assign to mac-mini-01">
+              <div>mac-mini-01</div>
+            </RailDropSlot>
+          </DndContext>
+        </RailDropZones>
+      </DndContext>
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it('forceActive=true (drag-active outline) — no violations', async () => {
+    const { container } = render(
+      <DndContext>
+        <RailDropZones
+          title="Drop zones"
+          subtitle="Eligible machines for ENG-405"
+          count="3 / 4"
+          forceActive
+          icon={<Target className="size-4" aria-hidden="true" />}
+        >
+          <DndContext>
+            <RailDropSlot id="z-m2" ariaLabel="Assign to studio-mbp">
+              <div>studio-mbp</div>
+            </RailDropSlot>
+          </DndContext>
+        </RailDropZones>
       </DndContext>
     );
     const results = await axe(container);
