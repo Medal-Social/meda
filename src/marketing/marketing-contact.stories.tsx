@@ -32,7 +32,10 @@ function DemoForm() {
 const meta = {
   title: 'Marketing/Contact',
   component: MarketingContact,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+    chromatic: { modes: { desktop: { viewport: 1280 }, mobile: { viewport: 390 } } },
+  },
   args: {
     intro: 'Give buyers a direct path to the team behind the campaign.',
     form: <DemoForm />,
@@ -58,9 +61,3 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
-
-export const Compact: Story = {
-  args: {
-    compact: true,
-  },
-};
