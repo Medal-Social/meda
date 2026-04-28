@@ -44,6 +44,14 @@
       "types": "./dist/timeline/index.d.ts",
       "default": "./dist/timeline/index.js"
     },
+    "./kanban": {
+      "types": "./dist/kanban/index.d.ts",
+      "import": "./dist/kanban/index.js"
+    },
+    "./list": {
+      "types": "./dist/list/index.d.ts",
+      "import": "./dist/list/index.js"
+    },
     "./marketing": {
       "types": "./dist/marketing/index.d.ts",
       "default": "./dist/marketing/index.js"
@@ -103,6 +111,9 @@
     "quality": "pnpm lint && pnpm typecheck && pnpm lint:tokens && pnpm test"
   },
   "peerDependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@react-three/fiber": "^9.0.0",
     "lucide-react": "^1.8.0",
     "next-themes": "^0.4.0",
@@ -110,6 +121,15 @@
     "react-dom": ">=19"
   },
   "peerDependenciesMeta": {
+    "@dnd-kit/core": {
+      "optional": false
+    },
+    "@dnd-kit/sortable": {
+      "optional": false
+    },
+    "@dnd-kit/utilities": {
+      "optional": false
+    },
     "@react-three/fiber": {
       "optional": true
     },
@@ -133,6 +153,9 @@
     "@biomejs/biome": "^2.4.12",
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.0",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.0",
     "@size-limit/preset-small-lib": "^12.1.0",

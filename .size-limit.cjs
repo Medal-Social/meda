@@ -26,6 +26,12 @@
 //   Pre-existing overages (predate Shell v2 work). Bumped to clear CI; deeper
 //   investigation is out of Shell v2 scope.
 //
+// timeline raised 13 kB → 16 kB (PR #60):
+//   LaneTimeline + Lane + TimeAxis added to the timeline subpath. Measured
+//   13.02 kB brotli — 20 B over the previous limit. Bumped to 16 kB for ~22%
+//   headroom. Note: in PR #61 these move to data-view/gantt and the timeline
+//   subpath will reclaim headroom; consider lowering then.
+//
 // Sub-entry split for shell (provider / desktop / mobile / palette) is
 // deferred to v1.x — decision pinned to real consumer adoption data, not
 // upfront speculation. See plan file Decision C history for context.
@@ -53,7 +59,7 @@ module.exports = [
   {
     name: 'timeline',
     path: 'dist/timeline/index.js',
-    limit: '13 kB',
+    limit: '16 kB',
   },
   {
     name: 'voice',
