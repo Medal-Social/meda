@@ -1,7 +1,6 @@
 'use client';
 import { LayoutGrid, Menu, PanelTop, Sparkles } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { AppShellBody } from './app-shell.js';
 import { ContextRail } from './context-rail.js';
 import { IconRail } from './icon-rail.js';
 import { MobileBottomNav } from './internal/mobile-bottom-nav.js';
@@ -36,44 +35,32 @@ export function AppShellWorkspace({
   const viewport = useShellViewport();
   const isMobile = viewport === 'mobile';
 
-  if (isMobile) {
-    // Derive the bottom-nav items from the variant config so each button maps
-    // to a drawer that actually has content. Without this filter, partial
-    // configs (e.g. iconRail only) would show Module/Panels/AI buttons that
-    // dispatch into the void. Drawers themselves still mount unconditionally
-    // when hasDrawerContent — the no-content drawers just never open.
-    const navItems = buildMobileNavItems(iconRail, contextRail, rightPanel);
-    const hasDrawerContent = navItems.length > 0;
-    // Mobile uses a flex column so the body fits between MobileHeader and
-    // MobileBottomNav. AppShellBody's fixed `100vh - headerHeight` only
-    // accounts for the desktop header — using it here would push the bottom
-    // nav past the wrapper's `h-screen overflow-hidden` and clip it off.
-    return (
-      <div className="flex h-full flex-col">
-        <MobileHeader globalActions={globalActions} />
-        <div className="relative flex flex-1 overflow-hidden">
-          <ShellMain layout="workspace">{children}</ShellMain>
-        </div>
-        {hasDrawerContent && (
-          <>
-            <MobileBottomNav items={navItems} />
-            <MobileDrawers
-              menuItems={iconRail?.mainItems ?? []}
-              module={contextRail?.module}
-              panelViews={rightPanel?.panelViews ?? []}
-              defaultView={rightPanel?.defaultView}
-            />
-          </>
-        )}
-      </div>
-    );
-  }
+  // Derive the bottom-nav items from the variant config so each button maps
+  // to a drawer that actually has content. Without this filter, partial
+  // configs (e.g. iconRail only) would show Module/Panels/AI buttons that
+  // dispatch into the void.
+  const navItems = buildMobileNavItems(iconRail, contextRail, rightPanel);
+  const hasDrawerContent = navItems.length > 0;
 
+  // Mobile menu drawer needs both main and utility items — desktop IconRail
+  // shows both, so dropping utilityItems here would orphan items like Help/
+  // Settings on mobile. Concat preserves discoverability; visual separation
+  // (divider in the drawer between main and utility) is a future polish.
+  const mobileMenuItems = iconRail ? [...iconRail.mainItems, ...(iconRail.utilityItems ?? [])] : [];
+
+  // ONE tree shape across both viewports. ShellMain stays at a fixed position
+  // in its parent's children array so React preserves its subtree (and the
+  // user's `children` state) when useShellViewport flips after mount or on
+  // rotation. Conditional siblings render as `false` rather than disappearing.
   return (
-    <>
-      <ShellHeader globalActions={globalActions} />
-      <AppShellBody>
-        {iconRail && (
+    <div className="flex h-full flex-col">
+      {isMobile ? (
+        <MobileHeader globalActions={globalActions} />
+      ) : (
+        <ShellHeader globalActions={globalActions} />
+      )}
+      <div className="relative flex flex-1 overflow-hidden">
+        {!isMobile && iconRail && (
           <IconRail
             mainItems={iconRail.mainItems}
             utilityItems={iconRail.utilityItems}
@@ -81,7 +68,7 @@ export function AppShellWorkspace({
             activeId={iconRail.activeId}
           />
         )}
-        {contextRail && (
+        {!isMobile && contextRail && (
           <ContextRail
             appId={contextRail.appId}
             module={contextRail.module}
@@ -89,11 +76,20 @@ export function AppShellWorkspace({
           />
         )}
         <ShellMain layout="workspace">{children}</ShellMain>
-        {rightPanel && (
+        {!isMobile && rightPanel && (
           <RightPanel panelViews={rightPanel.panelViews} defaultView={rightPanel.defaultView} />
         )}
-      </AppShellBody>
-    </>
+      </div>
+      {isMobile && hasDrawerContent && <MobileBottomNav items={navItems} />}
+      {isMobile && hasDrawerContent && (
+        <MobileDrawers
+          menuItems={mobileMenuItems}
+          module={contextRail?.module}
+          panelViews={rightPanel?.panelViews ?? []}
+          defaultView={rightPanel?.defaultView}
+        />
+      )}
+    </div>
   );
 }
 
