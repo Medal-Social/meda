@@ -1,5 +1,11 @@
 # @medalsocial/meda
 
+## 1.1.2
+
+### Patch Changes
+
+- [#56](https://github.com/Medal-Social/meda/pull/56) [`8649dc7`](https://github.com/Medal-Social/meda/commit/8649dc753e58bc5a0b835203bfa553b9d723e239) Thanks [@alioftech](https://github.com/alioftech)! - `ShellMain`'s default `workspace` layout now left-aligns content within its `max-w-[1280px]` cap instead of centering it. This removes the unused band that appeared on the left of the work area when `ContextRail` was collapsed. Pages that need horizontally centered reading should opt into `layout="centered"`; pages that want full bleed already use `layout="fullbleed"`.
+
 ## 1.1.1
 
 ### Patch Changes
