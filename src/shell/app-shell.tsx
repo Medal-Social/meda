@@ -11,54 +11,64 @@ import type {
   AppShellContextRailConfig,
   AppShellIconRailConfig,
   AppShellRightPanelConfig,
-  AppShellVariant,
 } from './types.js';
 
-export interface AppShellProps {
-  variant: AppShellVariant;
+interface AppShellBaseProps {
   children: ReactNode;
   className?: string;
-
-  // workspace + chat
-  iconRail?: AppShellIconRailConfig;
-  contextRail?: AppShellContextRailConfig;
-  rightPanel?: AppShellRightPanelConfig;
-  globalActions?: ReactNode;
-
-  // auth
-  auth?: AppShellAuthConfig;
 }
 
-export function AppShell({ variant, children, className, ...rest }: AppShellProps) {
+export type AppShellProps = AppShellBaseProps &
+  (
+    | {
+        variant: 'auth';
+        auth: AppShellAuthConfig;
+      }
+    | {
+        variant: 'workspace';
+        iconRail?: AppShellIconRailConfig;
+        contextRail?: AppShellContextRailConfig;
+        rightPanel?: AppShellRightPanelConfig;
+        globalActions?: ReactNode;
+      }
+    | {
+        variant: 'chat';
+        globalActions?: ReactNode;
+      }
+  );
+
+export function AppShell(props: AppShellProps) {
   const { workspace, activeAppId } = useMedaShell();
 
   const wrapper = (content: ReactNode) => (
     <div
       data-meda-app={activeAppId}
       data-meda-workspace={workspace.id}
-      data-meda-variant={variant}
-      className={cn('h-screen overflow-hidden bg-background text-foreground', className)}
+      data-meda-variant={props.variant}
+      className={cn('h-screen overflow-hidden bg-background text-foreground', props.className)}
     >
       {content}
     </div>
   );
 
-  switch (variant) {
+  switch (props.variant) {
     case 'auth':
-      return wrapper(<AppShellAuth {...(rest.auth ?? { title: '' })}>{children}</AppShellAuth>);
+      return wrapper(<AppShellAuth {...props.auth}>{props.children}</AppShellAuth>);
     case 'workspace':
       return wrapper(
         <AppShellWorkspace
-          iconRail={rest.iconRail}
-          contextRail={rest.contextRail}
-          rightPanel={rest.rightPanel}
-          globalActions={rest.globalActions}
+          iconRail={props.iconRail}
+          contextRail={props.contextRail}
+          rightPanel={props.rightPanel}
+          globalActions={props.globalActions}
         >
-          {children}
+          {props.children}
         </AppShellWorkspace>
       );
     case 'chat':
-      return wrapper(<AppShellChat globalActions={rest.globalActions}>{children}</AppShellChat>);
+      return wrapper(
+        <AppShellChat globalActions={props.globalActions}>{props.children}</AppShellChat>
+      );
   }
 }
 

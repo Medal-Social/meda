@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { Inbox } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 import { AppShell } from './app-shell.js';
 import { MedaShellProvider } from './shell-provider.js';
@@ -7,7 +8,7 @@ const baseProvider = (children: React.ReactNode) => (
   <MedaShellProvider
     workspace={{ id: 'w', name: 'W', icon: null }}
     workspaces={[{ id: 'w', name: 'W', icon: null }]}
-    apps={[{ id: 'a', label: 'A', icon: () => null as unknown as JSX.Element }]}
+    apps={[{ id: 'a', label: 'A', icon: Inbox }]}
     storage={{ load: () => null, save: () => {} }}
     themeAdapter="default"
   >
@@ -34,9 +35,7 @@ describe('AppShell variant', () => {
         <AppShell
           variant="workspace"
           iconRail={{
-            mainItems: [
-              { id: 'i', label: 'Inbox', to: '/i', icon: () => null as unknown as JSX.Element },
-            ],
+            mainItems: [{ id: 'i', label: 'Inbox', to: '/i', icon: Inbox }],
           }}
         >
           <main aria-label="content">hi</main>
