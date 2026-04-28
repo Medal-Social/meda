@@ -24,7 +24,9 @@ export function LaneTimeline({ lanes, now, defaultRange = '6h', range: controlle
         const futurePadMs = Math.max(rangeMs / 6, 5 * 60_000);
         const isToday = selectedDate.toDateString() === referenceNow.toDateString();
         const end = isToday ? new Date(referenceNow.getTime() + futurePadMs) : endOfDay(selectedDate);
-        const start = new Date(end.getTime() - rangeMs - futurePadMs);
+        // futurePadMs is only relevant for the "today" path (gives the now-line breathing room).
+        // Historical days should render exactly rangeMs of window — no asymmetric pad.
+        const start = new Date(end.getTime() - rangeMs - (isToday ? futurePadMs : 0));
         return { windowStart: start, windowEnd: end };
     }, [range, selectedDate, referenceNow]);
     const ticks = useMemo(() => buildTicks(windowStart, windowEnd, range), [windowStart, windowEnd, range]);
