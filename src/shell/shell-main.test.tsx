@@ -24,6 +24,16 @@ describe('ShellMain — default layout="workspace"', () => {
     const main = screen.getByRole('main');
     expect(main).toHaveAttribute('data-meda-shell-main-layout', 'workspace');
   });
+
+  it('does not apply mx-auto (workspace layout left-aligns content)', () => {
+    render(
+      <ShellMain>
+        <div />
+      </ShellMain>
+    );
+    const main = screen.getByRole('main');
+    expect(main.className).not.toContain('mx-auto');
+  });
 });
 
 describe('ShellMain — layout="centered"', () => {
