@@ -8,6 +8,12 @@ export interface MobileDrawersProps {
     module?: ContextModule;
     /** Panels drawer source. */
     panelViews?: PanelView[];
+    /**
+     * Default panel view id. Used when ctx.panel.activeView is null so the
+     * mobile panels drawer opens to the same view as the desktop right panel.
+     * Without this, mobile would always fall back to panelViews[0].
+     */
+    defaultView?: string;
     /** Custom content drawers keyed by id from MobileBottomNavItem.opens render fn. */
     customContent?: Record<string, (close: () => void) => ReactNode>;
     className?: string;
@@ -17,4 +23,4 @@ export interface MobileDrawersProps {
  * any custom-content drawers. Mount once near the AppShell root; drawers
  * open/close via `ctx.mobileDrawer.open` provider state.
  */
-export declare function MobileDrawers({ menuItems, module, panelViews, customContent, }: MobileDrawersProps): import("react/jsx-runtime").JSX.Element;
+export declare function MobileDrawers({ menuItems, module, panelViews, defaultView, customContent, }: MobileDrawersProps): import("react/jsx-runtime").JSX.Element;

@@ -57,12 +57,14 @@ function tokenize(value, level, key, indent, seen) {
     }
     return out;
 }
+// 700-shade variants for syntax tokens so 11px monospace text clears
+// WCAG AA (4.5:1) against the inspector's near-white background.
 const KIND_CLASS = {
     punct: 'text-muted-foreground',
     key: 'text-primary',
-    string: 'text-emerald-500',
-    number: 'text-amber-500',
-    literal: 'text-amber-500',
+    string: 'text-emerald-700',
+    number: 'text-amber-700',
+    literal: 'text-amber-700',
 };
 export function InspectorJSON({ data, indent = 2, className }) {
     const tokens = tokenize(data, 0, null, indent, new WeakSet());
