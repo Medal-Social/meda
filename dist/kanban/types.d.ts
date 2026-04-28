@@ -39,4 +39,9 @@ export interface KanbanBoardProps<TItem extends KanbanItem, TStatus extends stri
     emptyColumnContent?: ReactNode;
     labels?: Partial<KanbanLabels>;
     className?: string;
+    /** When true, KanbanBoard skips its internal `<DndContext>`. The consumer must
+     * wrap KanbanBoard and any sibling drop targets (e.g. RailDropSlot) in a shared
+     * `<DndContext>` and supply a unified `onDragEnd` that routes column drops via
+     * `handleKanbanColumnDrop` and external drops manually. */
+    headless?: boolean;
 }
