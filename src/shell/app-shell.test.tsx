@@ -63,7 +63,7 @@ describe('AppShell', () => {
   it('writes data-meda-app and data-meda-workspace to root div', () => {
     render(
       <MedaShellProvider workspace={ws} apps={apps}>
-        <AppShell>
+        <AppShell variant="workspace">
           <div data-testid="x" />
         </AppShell>
       </MedaShellProvider>
@@ -77,7 +77,7 @@ describe('AppShell', () => {
   it('applies bg-background text-foreground classes', () => {
     render(
       <MedaShellProvider workspace={ws} apps={apps}>
-        <AppShell>
+        <AppShell variant="workspace">
           <div data-testid="x" />
         </AppShell>
       </MedaShellProvider>
@@ -91,7 +91,7 @@ describe('AppShell', () => {
   it('appends consumer className without replacing base classes', () => {
     render(
       <MedaShellProvider workspace={ws} apps={apps}>
-        <AppShell className="custom-extra">
+        <AppShell variant="workspace" className="custom-extra">
           <div data-testid="x" />
         </AppShell>
       </MedaShellProvider>
