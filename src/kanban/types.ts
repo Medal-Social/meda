@@ -52,8 +52,3 @@ export interface KanbanBoardProps<TItem extends KanbanItem, TStatus extends stri
   labels?: Partial<KanbanLabels>;
   className?: string;
 }
-
-export interface KanbanCardWrapperProps<TItem extends KanbanItem> {
-  item: TItem;
-  renderCard: (item: TItem) => ReactNode;
-}

@@ -44,6 +44,10 @@
       "types": "./dist/timeline/index.d.ts",
       "default": "./dist/timeline/index.js"
     },
+    "./kanban": {
+      "types": "./dist/kanban/index.d.ts",
+      "import": "./dist/kanban/index.js"
+    },
     "./list": {
       "types": "./dist/list/index.d.ts",
       "import": "./dist/list/index.js"
