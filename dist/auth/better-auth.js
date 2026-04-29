@@ -5,7 +5,7 @@ import { AuthProviderButton } from './auth-provider-button.js';
 export function BetterAuthProviderButton({ authClient, provider = 'google', callbackURL, errorCallbackURL, onPendingChange, onError, onSuccess, loading, ...props }) {
     const [internalPending, setInternalPending] = useState(false);
     const pending = loading ?? internalPending;
-    return (_jsx(AuthProviderButton, { provider: provider, loading: pending, onClick: async () => {
+    return (_jsx(AuthProviderButton, { ...props, provider: provider, loading: pending, onClick: async () => {
             const social = authClient.signIn?.social;
             if (!social) {
                 onError?.(new Error('better-auth social sign-in is unavailable.'));
@@ -24,7 +24,7 @@ export function BetterAuthProviderButton({ authClient, provider = 'google', call
                 setInternalPending(false);
                 onPendingChange?.(false);
             }
-        }, ...props }));
+        } }));
 }
 export function useBetterAuthLastLoginMethod(authClient) {
     const [method, setMethod] = useState(null);

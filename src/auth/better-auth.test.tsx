@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   BetterAuthOneTap,
   BetterAuthProviderButton,
+  type BetterAuthProviderButtonProps,
   createBetterAuthAdapter,
   useBetterAuthLastLoginMethod,
 } from './better-auth.js';
@@ -37,6 +38,27 @@ describe('better-auth adapter', () => {
     expect(onPendingChange).toHaveBeenNthCalledWith(1, true);
     expect(onPendingChange).toHaveBeenLastCalledWith(false);
     expect(onSuccess).toHaveBeenCalledWith({ ok: true });
+  });
+
+  it('does not allow forwarded button props to replace social sign-in', async () => {
+    const social = vi.fn().mockResolvedValue({ ok: true });
+    const forwardedClick = vi.fn();
+    const forwardedProps = {
+      onClick: forwardedClick,
+    } as unknown as BetterAuthProviderButtonProps;
+
+    render(
+      <BetterAuthProviderButton
+        {...forwardedProps}
+        authClient={{ signIn: { social } }}
+        label="Continue with Google"
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
+
+    await waitFor(() => expect(social).toHaveBeenCalledWith({ provider: 'google' }));
+    expect(forwardedClick).not.toHaveBeenCalled();
   });
 
   it('reports an error when social sign-in is unavailable', async () => {

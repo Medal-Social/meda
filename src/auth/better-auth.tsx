@@ -48,6 +48,7 @@ export function BetterAuthProviderButton({
 
   return (
     <AuthProviderButton
+      {...props}
       provider={provider}
       loading={pending}
       onClick={async () => {
@@ -69,7 +70,6 @@ export function BetterAuthProviderButton({
           onPendingChange?.(false);
         }
       }}
-      {...props}
     />
   );
 }
