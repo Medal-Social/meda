@@ -13,7 +13,12 @@
 
 @layer base {
   :root {
-    color-scheme: light dark;
+    color-scheme: light;
+  }
+
+  .dark,
+  [data-theme="dark"] {
+    color-scheme: dark;
   }
 }
 
