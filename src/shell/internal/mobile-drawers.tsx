@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useEffect } from 'react';
+import { cloneElement, isValidElement, type MouseEvent, type ReactNode, useEffect } from 'react';
 import {
   Drawer,
   DrawerContent,
@@ -9,13 +9,17 @@ import {
   DrawerTitle,
 } from '../../components/ui/drawer.js';
 import { cn } from '../../lib/utils.js';
-import type { IconRailItem } from '../icon-rail.js';
+import type { IconRailItem, IconRailProps } from '../icon-rail.js';
 import { useMedaShell } from '../shell-provider.js';
 import type { ContextModule, PanelView, ShellRenderContext } from '../types.js';
 
 export interface MobileDrawersProps {
   /** Menu drawer source (icon-rail items). */
   menuItems?: IconRailItem[];
+  /** Active menu item id, sourced from icon rail config. */
+  menuActiveId?: string;
+  /** Custom menu link renderer, sourced from icon rail config. */
+  menuRenderLink?: IconRailProps['renderLink'];
   /** Module drawer source (current app's context-rail module). */
   module?: ContextModule;
   /** Panels drawer source. */
@@ -38,6 +42,8 @@ export interface MobileDrawersProps {
  */
 export function MobileDrawers({
   menuItems = [],
+  menuActiveId,
+  menuRenderLink,
   module,
   panelViews = [],
   defaultView,
@@ -54,7 +60,13 @@ export function MobileDrawers({
 
   return (
     <>
-      <MenuDrawer open={open === 'menu-drawer'} onClose={close} items={menuItems} />
+      <MenuDrawer
+        open={open === 'menu-drawer'}
+        onClose={close}
+        items={menuItems}
+        activeId={menuActiveId}
+        renderLink={menuRenderLink}
+      />
       <ModuleDrawer open={open === 'module-drawer'} onClose={close} module={module} />
       <PanelsDrawer
         open={open === 'panels-drawer'}
@@ -88,10 +100,14 @@ function MenuDrawer({
   open,
   onClose,
   items,
+  activeId,
+  renderLink,
 }: {
   open: boolean;
   onClose: () => void;
   items: IconRailItem[];
+  activeId?: string;
+  renderLink?: IconRailProps['renderLink'];
 }) {
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()} direction="left">
@@ -103,24 +119,78 @@ function MenuDrawer({
           </DrawerDescription>
         </DrawerHeader>
         <nav className="flex flex-col gap-0.5 p-2">
-          {items.map((item) => {
-            const Icon = item.icon;
-            return (
-              <a
-                key={item.id}
-                href={item.to}
-                onClick={onClose}
-                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-              >
-                <Icon size={18} aria-hidden="true" />
-                <span>{item.label}</span>
-              </a>
-            );
-          })}
+          {items.map((item) => (
+            <MenuDrawerItem
+              key={item.id}
+              item={item}
+              isActive={item.id === activeId}
+              onClose={onClose}
+              renderLink={renderLink}
+            />
+          ))}
         </nav>
       </DrawerContent>
     </Drawer>
   );
+}
+
+const menuItemClassName =
+  'flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground';
+
+function MenuDrawerItem({
+  item,
+  isActive,
+  onClose,
+  renderLink,
+}: {
+  item: IconRailItem;
+  isActive: boolean;
+  onClose: () => void;
+  renderLink?: IconRailProps['renderLink'];
+}) {
+  const Icon = item.icon;
+  const children = (
+    <>
+      <Icon size={18} aria-hidden="true" />
+      <span>{item.label}</span>
+    </>
+  );
+
+  if (renderLink) {
+    return closeAfterLinkClick(
+      renderLink({
+        item,
+        isActive,
+        className: cn(menuItemClassName, isActive && 'bg-accent text-foreground'),
+        children,
+      }),
+      onClose
+    );
+  }
+
+  return (
+    <a href={item.to} onClick={onClose} className={menuItemClassName}>
+      {children}
+    </a>
+  );
+}
+
+type MenuLinkElementProps = {
+  onClick?: (event: MouseEvent<HTMLElement>) => void;
+};
+
+function closeAfterLinkClick(link: ReactNode, onClose: () => void): ReactNode {
+  if (!isValidElement<MenuLinkElementProps>(link)) {
+    return link;
+  }
+
+  const originalOnClick = link.props.onClick;
+  return cloneElement(link, {
+    onClick: (event: MouseEvent<HTMLElement>) => {
+      originalOnClick?.(event);
+      onClose();
+    },
+  });
 }
 
 function ModuleDrawer({

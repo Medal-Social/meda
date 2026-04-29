@@ -90,6 +90,8 @@ export function AppShellWorkspace({
       {isMobile && hasDrawerContent && (
         <MobileDrawers
           menuItems={mobileMenuItems}
+          menuActiveId={iconRail?.activeId}
+          menuRenderLink={iconRail?.renderLink}
           module={contextRail?.module}
           panelViews={rightPanel?.panelViews ?? []}
           defaultView={rightPanel?.defaultView}

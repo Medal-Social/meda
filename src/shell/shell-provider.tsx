@@ -23,6 +23,7 @@ import type {
   ThemeAdapter,
   WorkspaceDefinition,
 } from './types.js';
+import { useShellViewport } from './use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
 // MobileDrawer types
@@ -211,6 +212,7 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
     appId: activeAppId,
     storage,
   });
+  const isMobile = useShellViewport() === 'mobile';
 
   const panel = useMemo(
     () => ({
@@ -232,27 +234,35 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
           ...prev,
           rightPanel: { ...prev.rightPanel, width },
         })),
-      open: () =>
+      open: () => {
+        if (isMobile) setMobileDrawerOpen('panels-drawer');
         setLayoutState((prev) => ({
           ...prev,
           rightPanel: {
             ...prev.rightPanel,
             mode: prev.rightPanel.mode === 'closed' ? 'panel' : prev.rightPanel.mode,
           },
-        })),
-      close: () =>
+        }));
+      },
+      close: () => {
+        if (isMobile) setMobileDrawerOpen((open) => (open === 'panels-drawer' ? null : open));
         setLayoutState((prev) => ({
           ...prev,
           rightPanel: { ...prev.rightPanel, mode: 'closed' },
-        })),
-      toggle: () =>
+        }));
+      },
+      toggle: () => {
+        if (isMobile) {
+          setMobileDrawerOpen((open) => (open === 'panels-drawer' ? null : 'panels-drawer'));
+        }
         setLayoutState((prev) => ({
           ...prev,
           rightPanel: {
             ...prev.rightPanel,
             mode: prev.rightPanel.mode === 'closed' ? 'panel' : 'closed',
           },
-        })),
+        }));
+      },
       // focus(viewId) — opens panel + switches to view in one call.
       // Only flips closed → panel; preserves expanded / fullscreen modes.
       focus: (viewId: string) =>
@@ -265,7 +275,7 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
           };
         }),
     }),
-    [layoutState, setLayoutState]
+    [isMobile, layoutState, setLayoutState]
   );
 
   const contextRail = useMemo(
