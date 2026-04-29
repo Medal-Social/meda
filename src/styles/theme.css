@@ -11,6 +11,12 @@
 
 @custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
 
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+}
+
 @theme inline {
   /* Color primitives — exposed as Tailwind color scales */
 
