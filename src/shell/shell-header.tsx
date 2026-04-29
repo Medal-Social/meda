@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronDown, Monitor, Moon, PanelRightClose, PanelRightOpen, Sun } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +12,7 @@ import {
 import { cn } from '../lib/utils.js';
 import { useMedaShell } from './shell-provider.js';
 import { useTheme } from './theme.js';
+import type { WorkspaceMenuItem } from './types.js';
 import { useShellViewport } from './use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
@@ -46,11 +47,66 @@ function ThemeToggleMenuItem() {
 // ---------------------------------------------------------------------------
 
 export interface WorkspaceSwitcherProps {
+  /**
+   * Configurable dropdown items. When provided, REPLACES the default
+   * "Manage workspaces / Settings / Profile / Sign out" entries. The theme
+   * toggle is still inserted automatically by meda — between the items and
+   * the footer — so consumers don't have to reimplement theme cycling.
+   *
+   * When omitted, the package-default items render (1.x behavior).
+   */
+  menuItems?: WorkspaceMenuItem[];
+  /**
+   * Extra content rendered after all items and the theme toggle. Backwards-
+   * compatible alias for the legacy `workspaceMenuFooter` prop.
+   */
+  menuFooter?: ReactNode;
+  /** @deprecated Use `menuFooter` instead. */
   workspaceMenuFooter?: ReactNode;
 }
 
-export function WorkspaceSwitcher({ workspaceMenuFooter }: WorkspaceSwitcherProps = {}) {
+function renderConfiguredIcon(icon: WorkspaceMenuItem['icon']): ReactNode {
+  if (icon == null) return null;
+  // LucideIcon-shape — callable React component with `size` prop.
+  if (typeof icon === 'function') {
+    const Icon = icon;
+    return <Icon size={16} aria-hidden="true" />;
+  }
+  // ReactNode — render as-is.
+  return icon;
+}
+
+function renderConfiguredItem(item: WorkspaceMenuItem): ReactNode {
+  const handleSelect = () => {
+    item.onClick?.();
+    if (item.href != null && typeof window !== 'undefined') {
+      window.location.assign(item.href);
+    }
+  };
+
+  // base-ui DropdownMenuItem accepts `render` for as-element; consumers using
+  // their own router (next/link, react-router) can wrap the page after
+  // shipping. For now we keep behavior simple and predictable.
+  return (
+    <DropdownMenuItem
+      data-variant={item.variant ?? 'default'}
+      className={item.variant === 'destructive' ? 'text-destructive' : undefined}
+      onClick={handleSelect}
+    >
+      {renderConfiguredIcon(item.icon)}
+      {item.label}
+    </DropdownMenuItem>
+  );
+}
+
+export function WorkspaceSwitcher({
+  menuItems,
+  menuFooter,
+  workspaceMenuFooter,
+}: WorkspaceSwitcherProps = {}) {
   const { workspace, workspaces } = useMedaShell();
+  const resolvedFooter = menuFooter ?? workspaceMenuFooter;
+  const useConfiguredItems = Array.isArray(menuItems);
 
   return (
     <DropdownMenu>
@@ -86,20 +142,32 @@ export function WorkspaceSwitcher({ workspaceMenuFooter }: WorkspaceSwitcherProp
           </>
         )}
 
-        <DropdownMenuItem>Manage workspaces</DropdownMenuItem>
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuItem>Settings</DropdownMenuItem>
-        <DropdownMenuItem>Profile</DropdownMenuItem>
+        {useConfiguredItems ? (
+          menuItems.map((item) => (
+            <Fragment key={item.id}>
+              {renderConfiguredItem(item)}
+              {item.separatorAfter && <DropdownMenuSeparator />}
+            </Fragment>
+          ))
+        ) : (
+          <>
+            <DropdownMenuItem>Manage workspaces</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem>Profile</DropdownMenuItem>
+          </>
+        )}
 
         <DropdownMenuSeparator />
         <ThemeToggleMenuItem />
-        <DropdownMenuSeparator />
+        {!useConfiguredItems && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Sign out</DropdownMenuItem>
+          </>
+        )}
 
-        <DropdownMenuItem>Sign out</DropdownMenuItem>
-
-        {workspaceMenuFooter}
+        {resolvedFooter}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -184,9 +252,20 @@ export function PanelToggle() {
 export interface ShellHeaderProps {
   globalActions?: ReactNode;
   className?: string;
+  /**
+   * Forwarded to the internal `<WorkspaceSwitcher>`. See
+   * `WorkspaceSwitcherProps` for the full shape.
+   */
+  workspaceMenuItems?: WorkspaceMenuItem[];
+  workspaceMenuFooter?: ReactNode;
 }
 
-export function ShellHeader({ globalActions, className }: ShellHeaderProps = {}) {
+export function ShellHeader({
+  globalActions,
+  className,
+  workspaceMenuItems,
+  workspaceMenuFooter,
+}: ShellHeaderProps = {}) {
   const band = useShellViewport();
   if (band === 'mobile') return null;
 
@@ -200,7 +279,7 @@ export function ShellHeader({ globalActions, className }: ShellHeaderProps = {})
     >
       {/* Left region: WorkspaceSwitcher then AppTabs (no separator between them) */}
       <div className="flex items-center">
-        <WorkspaceSwitcher />
+        <WorkspaceSwitcher menuItems={workspaceMenuItems} menuFooter={workspaceMenuFooter} />
         <AppTabs />
       </div>
 

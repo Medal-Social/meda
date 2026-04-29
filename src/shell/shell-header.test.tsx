@@ -176,6 +176,93 @@ describe('WorkspaceSwitcher — workspaceMenuFooter slot renders extra items', (
 
     expect(screen.getByText('Footer Item')).toBeInTheDocument();
   });
+
+  it('menuFooter is the preferred alias and wins when both are supplied', () => {
+    renderWithProvider(
+      <WorkspaceSwitcher
+        menuFooter={<div>New Footer</div>}
+        workspaceMenuFooter={<div>Legacy Footer</div>}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    expect(screen.getByText('New Footer')).toBeInTheDocument();
+    expect(screen.queryByText('Legacy Footer')).not.toBeInTheDocument();
+  });
+});
+
+describe('WorkspaceSwitcher — menuItems replaces hardcoded defaults', () => {
+  it('renders configured items in order, drops the default ones', () => {
+    const handleSettings = vi.fn();
+    const handleSignOut = vi.fn();
+
+    renderWithProvider(
+      <WorkspaceSwitcher
+        menuItems={[
+          { id: 'settings', label: 'Account settings', onClick: handleSettings },
+          { id: 'profile', label: 'View profile', href: '/profile', separatorAfter: true },
+          { id: 'sign-out', label: 'Log out', onClick: handleSignOut, variant: 'destructive' },
+        ]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    // Configured items render
+    expect(screen.getByText('Account settings')).toBeInTheDocument();
+    expect(screen.getByText('View profile')).toBeInTheDocument();
+    expect(screen.getByText('Log out')).toBeInTheDocument();
+
+    // Default items DO NOT render
+    expect(screen.queryByText('Manage workspaces')).not.toBeInTheDocument();
+    expect(screen.queryByText('Settings')).not.toBeInTheDocument();
+    expect(screen.queryByText('Profile')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sign out')).not.toBeInTheDocument();
+
+    // onClick wires through
+    fireEvent.click(screen.getByText('Account settings'));
+    expect(handleSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it('still inserts the theme toggle between configured items and footer', () => {
+    renderWithProvider(
+      <WorkspaceSwitcher
+        menuItems={[{ id: 'a', label: 'Item A', onClick: () => {} }]}
+        menuFooter={<div>Custom footer</div>}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    // Theme toggle text is one of three possible based on current theme; just
+    // assert that some "Switch to ... theme" item is present in the menu.
+    expect(screen.getByText(/switch to .* theme/i)).toBeInTheDocument();
+    expect(screen.getByText('Custom footer')).toBeInTheDocument();
+  });
+
+  it('renders destructive variant with the destructive class hint', () => {
+    renderWithProvider(
+      <WorkspaceSwitcher
+        menuItems={[{ id: 'danger', label: 'Delete', variant: 'destructive', onClick: () => {} }]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    const destructiveItem = screen.getByText('Delete').closest('[data-variant]');
+    expect(destructiveItem).toHaveAttribute('data-variant', 'destructive');
+  });
+
+  it('empty menuItems array hides defaults and renders only the theme toggle', () => {
+    renderWithProvider(<WorkspaceSwitcher menuItems={[]} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    expect(screen.queryByText('Manage workspaces')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sign out')).not.toBeInTheDocument();
+    expect(screen.getByText(/switch to .* theme/i)).toBeInTheDocument();
+  });
 });
 
 describe('WorkspaceSwitcher — Escape closes the menu', () => {

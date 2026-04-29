@@ -12,6 +12,7 @@ import type {
   AppShellContextRailConfig,
   AppShellIconRailConfig,
   AppShellRightPanelConfig,
+  AppShellWorkspaceConfig,
 } from './types.js';
 
 interface AppShellBaseProps {
@@ -33,6 +34,12 @@ export type AppShellProps = AppShellBaseProps &
         iconRail?: AppShellIconRailConfig;
         contextRail?: AppShellContextRailConfig;
         rightPanel?: AppShellRightPanelConfig;
+        /**
+         * Configurable workspace dropdown — replaces the package-default
+         * "Manage workspaces / Settings / Profile / Sign out" entries when
+         * `menuItems` is provided. The theme toggle is preserved automatically.
+         */
+        workspace?: AppShellWorkspaceConfig;
         globalActions?: ReactNode;
       }
     | {
@@ -69,6 +76,7 @@ export function AppShell(props: AppShellProps) {
           iconRail={props.iconRail}
           contextRail={props.contextRail}
           rightPanel={props.rightPanel}
+          workspace={props.workspace}
           globalActions={props.globalActions}
         >
           {props.children}
