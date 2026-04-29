@@ -1,6 +1,26 @@
 @import "./tokens.css";
 
+/* Tell Tailwind v4 to scan meda's compiled component output so utilities
+   like `h-full`, `mt-auto`, `py-3.5`, and `bg-shell-rail` (used by IconRail,
+   AppShellWorkspace, etc.) are generated even when the consumer app doesn't
+   reference them itself. Without this, consumers see broken layout where
+   meda components rely on classes the app doesn't otherwise use. Path is
+   resolved relative to this CSS file at build time, so it points to the
+   sibling component output regardless of where the package is installed. */
+@source "../**/*.js";
+
 @custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  .dark,
+  [data-theme="dark"] {
+    color-scheme: dark;
+  }
+}
 
 @theme inline {
   /* Color primitives — exposed as Tailwind color scales */
