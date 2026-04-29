@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { Menu } from 'lucide-react';
+import { Menu, User } from 'lucide-react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppTabs, PanelToggle, ShellHeader, WorkspaceSwitcher } from './shell-header.js';
 import { MedaShellProvider } from './shell-provider.js';
@@ -223,6 +223,29 @@ describe('WorkspaceSwitcher — menuItems replaces hardcoded defaults', () => {
     // onClick wires through
     fireEvent.click(screen.getByText('Account settings'));
     expect(handleSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders href items as anchor links', () => {
+    renderWithProvider(
+      <WorkspaceSwitcher menuItems={[{ id: 'profile', label: 'View profile', href: '/profile' }]} />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    const profileLink = screen.getByRole('menuitem', { name: 'View profile' });
+    expect(profileLink).toHaveAttribute('href', '/profile');
+  });
+
+  it('renders lucide icons without runtime errors', () => {
+    renderWithProvider(
+      <WorkspaceSwitcher
+        menuItems={[{ id: 'profile', label: 'View profile', href: '/profile', icon: User }]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    expect(screen.getByText('View profile')).toBeInTheDocument();
   });
 
   it('still inserts the theme toggle between configured items and footer', () => {

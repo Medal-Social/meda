@@ -121,17 +121,18 @@ export interface AppShellRightPanelConfig {
  * be provided; supplying both makes the item a button that fires `onClick`
  * AND navigates to `href` afterwards.
  */
-export interface WorkspaceMenuItem {
+interface WorkspaceMenuItemBase {
   id: string;
   label: ReactNode;
   icon?: LucideIcon | ReactNode;
-  href?: string;
-  onClick?: () => void;
   /** Insert a `<DropdownMenuSeparator />` immediately after this item. */
   separatorAfter?: boolean;
   /** Visual intent — `destructive` paints with the destructive token. */
   variant?: 'default' | 'destructive';
 }
+
+export type WorkspaceMenuItem = WorkspaceMenuItemBase &
+  ({ href: string; onClick?: () => void } | { onClick: () => void; href?: string });
 
 /**
  * Workspace dropdown configuration for `<AppShell variant="workspace">`.

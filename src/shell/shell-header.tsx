@@ -1,7 +1,8 @@
 'use client';
 
+import type { LucideIcon } from 'lucide-react';
 import { ChevronDown, Monitor, Moon, PanelRightClose, PanelRightOpen, Sun } from 'lucide-react';
-import { Fragment, type ReactNode } from 'react';
+import { createElement, Fragment, isValidElement, type ReactNode } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,28 +68,32 @@ export interface WorkspaceSwitcherProps {
 
 function renderConfiguredIcon(icon: WorkspaceMenuItem['icon']): ReactNode {
   if (icon == null) return null;
-  // LucideIcon-shape — callable React component with `size` prop.
-  if (typeof icon === 'function') {
-    const Icon = icon;
-    return <Icon size={16} aria-hidden="true" />;
+  if (isValidElement(icon)) return icon;
+  if (
+    typeof icon === 'string' ||
+    typeof icon === 'number' ||
+    typeof icon === 'boolean' ||
+    typeof icon === 'bigint'
+  ) {
+    return icon;
   }
-  // ReactNode — render as-is.
-  return icon;
+  if (typeof icon !== 'function' && typeof icon !== 'object') return icon;
+  // LucideIcon-shape — callable component or forwardRef component object.
+  return createElement(icon as LucideIcon, { size: 16, 'aria-hidden': true });
 }
 
 function renderConfiguredItem(item: WorkspaceMenuItem): ReactNode {
-  const handleSelect = () => {
-    item.onClick?.();
-    if (item.href != null && typeof window !== 'undefined') {
-      window.location.assign(item.href);
-    }
-  };
+  const handleSelect = () => item.onClick?.();
+  const renderLink =
+    item.href != null ? (
+      <a href={item.href}>
+        <span className="sr-only">Navigate</span>
+      </a>
+    ) : undefined;
 
-  // base-ui DropdownMenuItem accepts `render` for as-element; consumers using
-  // their own router (next/link, react-router) can wrap the page after
-  // shipping. For now we keep behavior simple and predictable.
   return (
     <DropdownMenuItem
+      render={renderLink}
       data-variant={item.variant ?? 'default'}
       className={item.variant === 'destructive' ? 'text-destructive' : undefined}
       onClick={handleSelect}
