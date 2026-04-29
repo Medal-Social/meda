@@ -16,8 +16,8 @@
  */
 
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import type { ReactNode, PointerEvent as ReactPointerEvent } from 'react';
-import { useId, useRef, useState } from 'react';
+import type { AnchorHTMLAttributes, ReactNode, PointerEvent as ReactPointerEvent } from 'react';
+import { Fragment, useId, useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import { useMedaShell } from './shell-provider.js';
 import type { ContextModule, ShellLinkRenderArgs } from './types.js';
@@ -269,19 +269,21 @@ export function ContextRail({
                 </>
               );
 
+              const linkProps = {
+                href: item.to,
+                'aria-current': isActive ? 'page' : undefined,
+                className: klass,
+                children: inner,
+              } satisfies AnchorHTMLAttributes<HTMLAnchorElement>;
+
               if (renderLink) {
-                return renderLink({ item, isActive, className: klass, children: inner });
+                return (
+                  <Fragment key={item.id}>
+                    {renderLink({ item, isActive, className: klass, children: inner, linkProps })}
+                  </Fragment>
+                );
               }
-              return (
-                <a
-                  key={item.id}
-                  href={item.to}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={klass}
-                >
-                  {inner}
-                </a>
-              );
+              return <a key={item.id} {...linkProps} />;
             })}
           </nav>
         )}

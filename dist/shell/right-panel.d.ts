@@ -1,3 +1,4 @@
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import type { PanelMode, PanelView } from './types.js';
 export interface RightPanelProps {
     /** Views to render as tabs in the panel header. */
@@ -10,6 +11,16 @@ export interface RightPanelProps {
      * If only ['panel'], the cycle button is hidden.
      */
     modes?: PanelMode[];
+    renderTab?: (args: RightPanelTabRenderArgs) => ReactNode;
     className?: string;
 }
-export declare function RightPanel({ panelViews, defaultView, modes, className, }: RightPanelProps): import("react/jsx-runtime").JSX.Element | null;
+export interface RightPanelTabRenderArgs {
+    view: PanelView;
+    isActive: boolean;
+    buttonProps: RightPanelTabButtonProps;
+    children: ReactNode;
+}
+export type RightPanelTabButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+    'data-active'?: boolean;
+};
+export declare function RightPanel({ panelViews, defaultView, modes, renderTab, className, }: RightPanelProps): import("react/jsx-runtime").JSX.Element | null;

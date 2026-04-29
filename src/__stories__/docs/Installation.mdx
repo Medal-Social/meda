@@ -12,7 +12,7 @@ Meda is published to npm as `@medalsocial/meda`. It supports React 19+ and ships
 pnpm add @medalsocial/meda lucide-react
 ```
 
-`lucide-react` is a peer dependency.
+`lucide-react`, `react`, and `react-dom` are peer dependencies. Install `next-themes` only when using the optional `themeAdapter="next-themes"` shell bridge.
 
 ## Import the runtime CSS
 
@@ -31,22 +31,25 @@ This pulls in:
 ## Use a component
 
 ```tsx
-import { AppShell, AppShellBody, MedaShellProvider, ShellHeader } from '@medalsocial/meda/shell';
-import { Inbox } from 'lucide-react';
+import { AppShell, MedaShellProvider } from '@medalsocial/meda/shell';
+import { Inbox, Settings } from 'lucide-react';
 
 const workspace = { id: 'workspace', name: 'Workspace' };
 const apps = [{ id: 'inbox', label: 'Inbox', icon: Inbox }];
+const iconRail = {
+  mainItems: [{ id: 'inbox', label: 'Inbox', icon: Inbox, to: '/inbox' }],
+  utilityItems: [{ id: 'settings', label: 'Settings', icon: Settings, to: '/settings' }],
+};
 
 export function App() {
   return (
     <MedaShellProvider workspace={workspace} apps={apps}>
-      <AppShell>
-        <ShellHeader />
-        <AppShellBody>{/* app content */}</AppShellBody>
+      <AppShell variant="workspace" iconRail={iconRail}>
+        {/* app content */}
       </AppShell>
     </MedaShellProvider>
   );
 }
 ```
 
-Subpath imports such as `@medalsocial/meda/shell`, `/chat`, `/voice`, `/timeline`, and `/panel` keep the bundle focused.
+Subpath imports such as `@medalsocial/meda/shell`, `/shell/primitives`, `/auth`, `/auth/better-auth`, `/recipes/next`, `/theme`, `/chat`, `/voice`, `/timeline`, and `/panel` keep the bundle focused.

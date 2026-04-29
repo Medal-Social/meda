@@ -29,6 +29,49 @@ describe('AppShell variant', () => {
     expect(screen.getByLabelText('email')).toBeInTheDocument();
   });
 
+  it('renders the auth variant with branding shorthand', () => {
+    render(
+      baseProvider(
+        <AppShell
+          variant="auth"
+          branding={{
+            brandName: 'Housebets',
+            brandMark: <span data-testid="brand-mark">HB</span>,
+            appName: 'Auto',
+            tagline: 'by Housebets',
+          }}
+          preview={<div data-testid="auth-preview">Preview</div>}
+        >
+          <input aria-label="email" />
+        </AppShell>
+      )
+    );
+
+    expect(screen.getByRole('heading', { name: 'Auto' })).toBeInTheDocument();
+    expect(screen.getByText('by Housebets')).toBeInTheDocument();
+    expect(screen.getAllByTestId('brand-mark')).toHaveLength(2);
+    expect(screen.getByTestId('auth-preview')).toBeInTheDocument();
+    expect(screen.getByLabelText('email')).toBeInTheDocument();
+  });
+
+  it('lets auth config override branding shorthand fields', () => {
+    render(
+      baseProvider(
+        <AppShell
+          variant="auth"
+          auth={{ title: 'Admin sign in', brandName: 'Meda Admin' }}
+          branding={{ brandName: 'Housebets', appName: 'Auto' }}
+        >
+          <input aria-label="email" />
+        </AppShell>
+      )
+    );
+
+    expect(screen.getByRole('heading', { name: 'Admin sign in' })).toBeInTheDocument();
+    expect(screen.getByText('Meda Admin')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Auto' })).not.toBeInTheDocument();
+  });
+
   it('renders the workspace variant when variant="workspace"', () => {
     render(
       baseProvider(

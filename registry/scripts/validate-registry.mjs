@@ -10,6 +10,7 @@ const files = [
   'r/meda-shell.json',
   'r/meda-shell-state.json',
   'r/meda-workbench-layout.json',
+  'r/meda-next-app-shell.json',
   'r/meda-marketing.json',
   'r/meda-marketing-callout.json',
   'r/meda-marketing-contact.json',
@@ -19,6 +20,13 @@ const files = [
 function assert(condition, message) {
   if (!condition) {
     throw new Error(message);
+  }
+}
+
+function assertStringList(value, label) {
+  assert(Array.isArray(value) && value.length > 0, `${label} must be a non-empty array.`);
+  for (const item of value) {
+    assert(typeof item === 'string' && item.trim().length > 0, `${label} must contain strings.`);
   }
 }
 
@@ -44,6 +52,19 @@ for (const [file, json] of parsedFiles.entries()) {
     `${file} must include a registry type.`
   );
   assert(Array.isArray(json?.dependencies), `${file} must declare dependencies.`);
+  if (json.meta?.peerDependencies) {
+    assertStringList(json.meta.peerDependencies, `${file} peerDependencies`);
+  }
+  if (json.meta?.accessibility) {
+    assertStringList(json.meta.accessibility, `${file} accessibility metadata`);
+  }
+  if (json.meta?.composition) {
+    assertStringList(json.meta.composition, `${file} composition metadata`);
+  }
+  if (file === 'r/meda-next-app-shell.json') {
+    assertStringList(json.meta?.accessibility, `${file} accessibility metadata`);
+    assertStringList(json.meta?.composition, `${file} composition metadata`);
+  }
   assert(
     Array.isArray(json?.files) && json.files.length > 0,
     `${file} must include at least one file entry.`

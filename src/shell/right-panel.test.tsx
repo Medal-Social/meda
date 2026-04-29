@@ -298,6 +298,27 @@ describe('RightPanel — panelViews', () => {
     expect(inspectorTab).toHaveAttribute('aria-current', 'true');
   });
 
+  it('passes tab props into custom rendered panel tabs', () => {
+    render(
+      <Wrapper mode="panel" activeView="inspector">
+        <RightPanel
+          panelViews={VIEWS}
+          renderTab={({ view, buttonProps }) => (
+            <button {...buttonProps} type="button" data-testid={`panel-tab-${view.id}`} />
+          )}
+        />
+      </Wrapper>
+    );
+
+    const inspectorTab = screen.getByTestId('panel-tab-inspector');
+    expect(inspectorTab).toHaveAccessibleName('Inspector');
+    expect(inspectorTab).toHaveAttribute('aria-current', 'true');
+    expect(inspectorTab).toHaveAttribute('data-active', 'true');
+
+    fireEvent.click(screen.getByTestId('panel-tab-activity'));
+    expect(screen.getByTestId('panel-tab-activity')).toHaveAttribute('aria-current', 'true');
+  });
+
   it('inactive tab does not have aria-current', () => {
     render(
       <Wrapper mode="panel" activeView="inspector">

@@ -1,16 +1,16 @@
 # @medalsocial/meda
 
-Shared UI shell and runtime primitives — the navigation chrome, panels, tab bars, command palette, and workbench layout that power Medal's apps. Published as Apache-2.0.
+Shared UI shell and runtime primitives — the navigation chrome, panels, auth controls, recipes, theme bridges, command palette, and workbench layout that power Medal's apps. Published as Apache-2.0.
 
 ![npm](https://img.shields.io/npm/v/@medalsocial/meda)
 
 ## Install
 
 ```bash
-pnpm add @medalsocial/meda
+pnpm add @medalsocial/meda lucide-react
 ```
 
-Peer deps: `react >= 19`, `react-dom >= 19`.
+Peer deps: `react >= 19`, `react-dom >= 19`, and `lucide-react`.
 
 ## Tailwind CSS v4 setup
 
@@ -22,36 +22,81 @@ Meda ships a `styles.css` with its design tokens. Import it once in your entry s
 
 ## Usage
 
-`ShellStateProvider` stores panel/selection state in URL search params and is router-agnostic. You provide a `ShellSearchParamsAdapter` so it can read and update them however your router prefers. A minimal, in-memory adapter:
+Use `AppShell` for the styled shell surface:
 
 ```tsx
-import { useState } from 'react';
-import { ShellStateProvider, ShellFrame } from '@medalsocial/meda';
+import { AppShell, MedaShellProvider } from '@medalsocial/meda/shell';
+import { Inbox } from 'lucide-react';
 
 export function App() {
-  const [searchParams, setSearchParams] = useState(() => new URLSearchParams());
+  const workspace = { id: 'workspace', name: 'Workspace' };
+  const apps = [{ id: 'inbox', label: 'Inbox', icon: Inbox }];
 
   return (
-    <ShellStateProvider
-      adapter={{
-        searchParams,
-        setSearchParams: (updater) => setSearchParams((current) => updater(current)),
-      }}
-    >
-      <ShellFrame>{/* your app */}</ShellFrame>
-    </ShellStateProvider>
+    <MedaShellProvider workspace={workspace} apps={apps}>
+      <AppShell
+        variant="workspace"
+        iconRail={{
+          mainItems: [{ id: 'inbox', label: 'Inbox', icon: Inbox, to: '/inbox' }],
+        }}
+      >
+        {/* your app */}
+      </AppShell>
+    </MedaShellProvider>
   );
 }
 ```
 
-For a real app, wire the adapter to your router (e.g. TanStack Router's `useSearch`/`useNavigate`, React Router's `useSearchParams`) so URL changes persist state.
+For framework routing, pass a render callback and forward Meda props:
+
+```tsx
+import Link from 'next/link';
+
+<AppShell
+  variant="workspace"
+  iconRail={{
+    mainItems,
+    renderLink: ({ item, linkProps }) => <Link {...linkProps} href={item.to} prefetch />,
+  }}
+>
+  {children}
+</AppShell>;
+```
+
+For app-scoped brand tokens:
+
+```ts
+import { createMedaThemeCss, defineMedaTheme } from '@medalsocial/meda/theme';
+
+const css = createMedaThemeCss(
+  defineMedaTheme({
+    appId: 'auto',
+    colors: {
+      primary: 'var(--hb-brand-500)',
+      background: 'var(--hb-base-50)',
+    },
+    dark: {
+      colors: {
+        background: 'var(--hb-base-900)',
+      },
+    },
+  })
+);
+```
+
+Lower-level `ShellStateProvider` and layout parts remain available from `@medalsocial/meda/shell/primitives` for apps that need to own more composition.
 
 See the [demo app](./demo) for a live playground.
 
 ## Exports
 
 - `@medalsocial/meda` — curated public API (components + helpers)
-- `@medalsocial/meda/shell` — shell-only subpath
+- `@medalsocial/meda/shell` — styled shell components and hooks
+- `@medalsocial/meda/shell/primitives` — lower-level shell state and layout primitives
+- `@medalsocial/meda/auth` — provider-neutral auth controls
+- `@medalsocial/meda/auth/better-auth` — optional better-auth adapter
+- `@medalsocial/meda/recipes/next` — copyable Next.js adoption recipe metadata
+- `@medalsocial/meda/theme` — app-scoped token bridge helpers
 - `@medalsocial/meda/marketing` — marketing sections and campaign blocks
 - `@medalsocial/meda/styles.css` — design tokens + base styles
 
@@ -64,6 +109,7 @@ Prefer to copy source into your project instead of installing? The shadcn-compat
 npx shadcn add https://meda.medalsocial.com/r/meda-shell.json
 npx shadcn add https://meda.medalsocial.com/r/meda-shell-state.json
 npx shadcn add https://meda.medalsocial.com/r/meda-workbench-layout.json
+npx shadcn add https://meda.medalsocial.com/r/meda-next-app-shell.json
 ```
 
 The registry index is at `https://meda.medalsocial.com/registry.json`. Source JSON files live under [`./registry`](./registry) in this repo and are deployed as static assets via Cloudflare Workers — see `wrangler.toml` and `.github/workflows/deploy-worker.yml`.
