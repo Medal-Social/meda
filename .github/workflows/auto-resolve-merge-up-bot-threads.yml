@@ -1,0 +1,110 @@
+name: Auto-resolve bot threads on merge-up PRs
+
+# Codex (chatgpt-codex-connector) does not honor branch-based skip rules — it
+# only respects AGENTS.md "Review guidelines" as a soft signal. Combined with
+# `required_conversation_resolution: true` on the prod branch, an unresolved
+# Codex thread on a merge-up PR (dev → prod, changeset-release/* → prod,
+# auto-sync-* → dev) will block auto-merge.
+#
+# This workflow auto-resolves any unresolved review threads opened by bots on
+# those PRs once required CI checks have passed. It is intentionally narrow:
+#   - Only runs on PRs whose head ref matches the merge-up patterns
+#   - Only resolves threads opened by known bot accounts
+#   - Only fires once required checks have completed successfully
+
+on:
+  check_suite:
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to process'
+        required: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.check_suite.conclusion == 'success' &&
+       github.event.check_suite.pull_requests[0] != null)
+    steps:
+      - name: Resolve bot threads on eligible PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.check_suite.pull_requests[0].number }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${PR_NUMBER:-}" ]; then
+            echo "No PR number — exiting."
+            exit 0
+          fi
+
+          OWNER="${REPO%/*}"
+          NAME="${REPO#*/}"
+
+          PR_JSON=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}")
+          HEAD_REF=$(echo "$PR_JSON" | jq -r '.head.ref')
+          STATE=$(echo "$PR_JSON" | jq -r '.state')
+
+          if [ "$STATE" != "open" ]; then
+            echo "PR #${PR_NUMBER} is not open (state=${STATE}) — skipping."
+            exit 0
+          fi
+
+          case "$HEAD_REF" in
+            dev|changeset-release/*|chore/auto-sync-*)
+              echo "PR #${PR_NUMBER} head ref '${HEAD_REF}' is a merge-up PR — proceeding."
+              ;;
+            *)
+              echo "PR #${PR_NUMBER} head ref '${HEAD_REF}' is not a merge-up PR — skipping."
+              exit 0
+              ;;
+          esac
+
+          THREADS=$(gh api graphql -f query="
+            query(\$owner: String!, \$name: String!, \$num: Int!) {
+              repository(owner: \$owner, name: \$name) {
+                pullRequest(number: \$num) {
+                  reviewThreads(first: 100) {
+                    nodes {
+                      id
+                      isResolved
+                      comments(first: 1) {
+                        nodes { author { login } }
+                      }
+                    }
+                  }
+                }
+              }
+            }" -f owner="$OWNER" -f name="$NAME" -F num="$PR_NUMBER")
+
+          BOT_LOGINS='chatgpt-codex-connector qodo-code-review github-actions copilot'
+
+          echo "$THREADS" | jq -r '
+            .data.repository.pullRequest.reviewThreads.nodes[]
+            | select(.isResolved == false)
+            | "\(.id) \(.comments.nodes[0].author.login)"
+          ' | while IFS=' ' read -r thread_id author; do
+            stripped="${author%\[bot\]}"
+            for bot in $BOT_LOGINS; do
+              if [ "$stripped" = "$bot" ]; then
+                echo "Resolving thread ${thread_id} from ${author}"
+                gh api graphql -f query='
+                  mutation($id: ID!) {
+                    resolveReviewThread(input: {threadId: $id}) {
+                      thread { id isResolved }
+                    }
+                  }' -f id="$thread_id" >/dev/null
+                break
+              fi
+            done
+          done
+
+          echo "Done."
