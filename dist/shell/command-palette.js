@@ -109,7 +109,8 @@ export function CommandPalette({ children }) {
     // -------------------------------------------------------------------------
     return (_jsxs(CommandRegistryContext.Provider, { value: registry, children: [children, _jsx(CommandDialog, { open: open, onOpenChange: setOpen, children: _jsxs(Command, { children: [_jsx(CommandInput, { placeholder: "Search commands\u2026" }), _jsxs(CommandList, { children: [_jsx(CommandEmpty, { children: "No results." }), grouped.map((group) => (_jsx(CommandGroup, { heading: group.label, children: group.commands.map((cmd) => {
                                         const Icon = cmd.icon;
-                                        return (_jsxs(CommandItem, { value: `${group.label} ${cmd.label}`, onSelect: () => handleSelect(cmd), children: [Icon && _jsx(Icon, { size: 16, "aria-hidden": "true" }), _jsx("span", { children: cmd.label }), cmd.shortcut && _jsx(CommandShortcut, { children: cmd.shortcut })] }, cmd.id));
+                                        const shortcut = cmd.shortcut ?? cmd.hotkey;
+                                        return (_jsxs(CommandItem, { value: `${group.label} ${cmd.label}`, onSelect: () => handleSelect(cmd), children: [Icon && _jsx(Icon, { size: 16, "aria-hidden": "true" }), _jsx("span", { children: cmd.label }), shortcut && _jsx(CommandShortcut, { children: shortcut })] }, cmd.id));
                                     }) }, group.id)))] })] }) })] }));
 }
 // ---------------------------------------------------------------------------

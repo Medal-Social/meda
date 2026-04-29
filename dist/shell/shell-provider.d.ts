@@ -15,6 +15,9 @@ interface MedaShellContextValue {
         setMode: (m: PanelMode) => void;
         setActiveView: (v: string | null) => void;
         setWidth: (w: number) => void;
+        open: () => void;
+        close: () => void;
+        toggle: () => void;
         /** Opens panel + switches to viewId in one call.
          * Sugar for app keyboard shortcuts (e.g. Cmd+J → panel.focus('ai')).
          * If already open in 'panel', 'expanded', or 'fullscreen', the existing
@@ -26,6 +29,7 @@ interface MedaShellContextValue {
         collapsed: boolean;
         setWidth: (w: number) => void;
         setCollapsed: (c: boolean) => void;
+        toggle: () => void;
     };
     mobileBottomNav: MobileBottomNavItem[];
     mobileDrawer: {
