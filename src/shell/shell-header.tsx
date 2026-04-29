@@ -84,12 +84,7 @@ function renderConfiguredIcon(icon: WorkspaceMenuItem['icon']): ReactNode {
 
 function renderConfiguredItem(item: WorkspaceMenuItem): ReactNode {
   const handleSelect = () => item.onClick?.();
-  const renderLink =
-    item.href != null ? (
-      <a href={item.href}>
-        <span className="sr-only">Navigate</span>
-      </a>
-    ) : undefined;
+  const renderLink = item.href != null ? <a href={item.href}>{item.label}</a> : undefined;
 
   return (
     <DropdownMenuItem
