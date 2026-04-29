@@ -1,36 +1,35 @@
-name: Auto-approve trusted bot PRs
+name: Auto-approve trusted PRs
 
-# Auto-approves PRs from trusted automation so branch protection's
-# "approval from someone other than the last pusher" rule doesn't block
-# routine release / dependency PRs. The approval comes from the Medal
-# Approvals GitHub App — a different identity from the Medal Social
-# Release Bot, so the rule is genuinely satisfied.
+# Auto-approves PRs from trusted automation and trusted maintainers so branch
+# protection's "approval from someone other than the last pusher" rule doesn't
+# block the recurring release / sync / promote flow. The approval comes from
+# the Medal Approvals GitHub App — a different identity from the PR opener,
+# so the rule is genuinely satisfied.
 #
-# Today this covers:
-#   - medal-social-release-bot[bot]   → Changesets release PR
-#   - changeset-bot[bot]              → first-party Changesets bot (if installed)
+# Covered today:
+#   - changeset-release/* PRs opened by Changesets bots         (Release PR)
+#   - chore/auto-sync-* PRs opened by github-actions[bot]       (auto-sync prod → dev)
+#   - dev → prod PRs opened by trusted maintainer humans        (release promote)
 #
 # NOT covered (intentionally):
-#   - dependabot[bot] — Dependabot-triggered workflows only see secrets
-#     stored in the Dependabot scope (Settings → Secrets → Dependabot),
-#     NOT regular Actions secrets where MEDAL_APPROVALS_* live. Adding
-#     dependabot here would silently fail to mint the App token. To enable
-#     later: mirror the two MEDAL_APPROVALS_* secrets into the Dependabot
-#     scope and add 'dependabot[bot]' back to both lists below.
+#   - dependabot[bot] — Dependabot-triggered workflows only see secrets stored
+#     in the Dependabot scope (Settings → Secrets → Dependabot), NOT regular
+#     Actions secrets where MEDAL_APPROVALS_* live. Adding dependabot here
+#     would silently fail to mint the App token. To enable later: mirror the
+#     two MEDAL_APPROVALS_* secrets into the Dependabot scope and add
+#     'dependabot[bot]' back to the bot allowlist below.
 #
-# Add more actors as needed in the `if:` below.
-#
-# Security note: the `if:` below checks BOTH `pull_request.user.login`
-# (the PR opener — never changes) AND `github.actor` (whoever pushed the
-# latest commit that fired this workflow). On `synchronize` events any
-# write-access user can push to a bot-created branch; without the
-# `github.actor` gate, those commits would also get auto-approved.
+# Security model:
+#   - Both the PR opener (`pull_request.user.login`) AND `github.actor`
+#     (whoever pushed the latest commit that fired this workflow) must be in
+#     the trusted set. Without that, any write-access user could push to a
+#     trusted bot-created branch on `synchronize` and ride the auto-approval.
+#   - Same-repo guard (`head.repo.full_name == repository`) keeps fork PRs
+#     from impersonating the trusted branch patterns by name.
+#   - `pull_request` (not `pull_request_target`) is intentional so this
+#     workflow never runs with secret-rich base-repo context against fork PR
+#     code.
 
-# Use `pull_request` (NOT `pull_request_target`) so the workflow does not
-# run with secret-rich base-repo context. All trusted bots above push
-# same-repo branches (not forks), so `pull_request` triggers normally for
-# them and we keep secret exposure scoped to a context that can't be
-# hijacked by a future `actions/checkout` of PR code.
 on:
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
@@ -39,10 +38,29 @@ permissions: {}
 
 jobs:
   auto-approve:
+    # Three eligible cases:
+    #   (A) Trusted bot opens a Release PR (changeset-release/*) or an
+    #       auto-sync PR (chore/auto-sync-*).
+    #   (B) Trusted maintainer opens the dev → prod promote PR.
     if: >
-      github.event.pull_request.user.type == 'Bot' &&
-      contains(fromJson('["medal-social-release-bot[bot]", "changeset-bot[bot]"]'), github.event.pull_request.user.login) &&
-      contains(fromJson('["medal-social-release-bot[bot]", "changeset-bot[bot]"]'), github.actor)
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (
+        (
+          github.event.pull_request.user.type == 'Bot' &&
+          contains(fromJson('["medal-social-release-bot[bot]", "changeset-bot[bot]", "github-actions[bot]"]'), github.event.pull_request.user.login) &&
+          contains(fromJson('["medal-social-release-bot[bot]", "changeset-bot[bot]", "github-actions[bot]"]'), github.actor) &&
+          (
+            startsWith(github.event.pull_request.head.ref, 'changeset-release/') ||
+            startsWith(github.event.pull_request.head.ref, 'chore/auto-sync-')
+          )
+        ) ||
+        (
+          github.event.pull_request.head.ref == 'dev' &&
+          github.event.pull_request.base.ref == 'prod' &&
+          contains(fromJson('["alioftech", "adaadev"]'), github.event.pull_request.user.login) &&
+          contains(fromJson('["alioftech", "adaadev"]'), github.actor)
+        )
+      )
     runs-on: ubuntu-latest
     # GITHUB_TOKEN needs no privileges in this job — the only step that
     # writes to PRs uses the Medal Approvals App token. Empty `permissions`
@@ -60,4 +78,4 @@ jobs:
         uses: hmarr/auto-approve-action@f0939ea97e9205ef24d872e76833fa908a770363 # v4.0.0
         with:
           github-token: ${{ steps.app-token.outputs.token }}
-          review-message: 'Auto-approved by Medal Approvals — trusted bot PR.'
+          review-message: 'Auto-approved by Medal Approvals — trusted PR (bot release / auto-sync / maintainer promote).'
