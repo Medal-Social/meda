@@ -1,7 +1,12 @@
 import { type ReactNode } from 'react';
 import { type ShellStorageAdapter } from './layout-state.js';
-import type { AppDefinition, MobileBottomNavItem, PanelMode, ThemeAdapter, WorkspaceDefinition } from './types.js';
+import type { AppDefinition, MobileBottomNavItem, PanelMode, PanelView, ThemeAdapter, WorkspaceDefinition } from './types.js';
 export type MobileDrawerKind = 'menu-drawer' | 'module-drawer' | 'panels-drawer' | 'ai-drawer' | (string & {}) | null;
+export interface PanelViewRegistration {
+    id: string;
+    views: PanelView[];
+    defaultView?: string;
+}
 interface MedaShellContextValue {
     workspace: WorkspaceDefinition;
     workspaces: WorkspaceDefinition[];
@@ -15,6 +20,9 @@ interface MedaShellContextValue {
         setMode: (m: PanelMode) => void;
         setActiveView: (v: string | null) => void;
         setWidth: (w: number) => void;
+        open: () => void;
+        close: () => void;
+        toggle: () => void;
         /** Opens panel + switches to viewId in one call.
          * Sugar for app keyboard shortcuts (e.g. Cmd+J → panel.focus('ai')).
          * If already open in 'panel', 'expanded', or 'fullscreen', the existing
@@ -26,6 +34,7 @@ interface MedaShellContextValue {
         collapsed: boolean;
         setWidth: (w: number) => void;
         setCollapsed: (c: boolean) => void;
+        toggle: () => void;
     };
     mobileBottomNav: MobileBottomNavItem[];
     mobileDrawer: {
@@ -35,6 +44,10 @@ interface MedaShellContextValue {
     commandPalette: {
         open: boolean;
         setOpen: (open: boolean) => void;
+    };
+    panelViews: {
+        registrations: PanelViewRegistration[];
+        register: (id: string, views: PanelView[], defaultView?: string) => () => void;
     };
     commandPaletteHotkey: string;
     /** Selection bridge between main workspace and right panel views (spec §17). */

@@ -6,6 +6,7 @@ import { IconRail } from './icon-rail.js';
 import { MobileBottomNav } from './internal/mobile-bottom-nav.js';
 import { MobileDrawers } from './internal/mobile-drawers.js';
 import { MobileHeader } from './internal/mobile-header.js';
+import { useResolvedPanelViews } from './panel-views-provider.js';
 import { RightPanel } from './right-panel.js';
 import { ShellHeader } from './shell-header.js';
 import { ShellMain } from './shell-main.js';
@@ -14,8 +15,11 @@ import type {
   AppShellIconRailConfig,
   AppShellRightPanelConfig,
   MobileBottomNavItem,
+  PanelView,
 } from './types.js';
 import { useShellViewport } from './use-shell-viewport.js';
+
+const EMPTY_PANEL_VIEWS: PanelView[] = [];
 
 export interface AppShellWorkspaceProps {
   iconRail?: AppShellIconRailConfig;
@@ -34,12 +38,14 @@ export function AppShellWorkspace({
 }: AppShellWorkspaceProps) {
   const viewport = useShellViewport();
   const isMobile = viewport === 'mobile';
+  const staticPanelViews = rightPanel?.panelViews ?? EMPTY_PANEL_VIEWS;
+  const resolvedRightPanel = useResolvedPanelViews(staticPanelViews, rightPanel?.defaultView);
 
   // Derive the bottom-nav items from the variant config so each button maps
   // to a drawer that actually has content. Without this filter, partial
   // configs (e.g. iconRail only) would show Module/Panels/AI buttons that
   // dispatch into the void.
-  const navItems = buildMobileNavItems(iconRail, contextRail, rightPanel);
+  const navItems = buildMobileNavItems(iconRail, contextRail, resolvedRightPanel.panelViews);
   const hasDrawerContent = navItems.length > 0;
 
   // Mobile menu drawer needs both main and utility items — desktop IconRail
@@ -71,6 +77,7 @@ export function AppShellWorkspace({
             utilityItems={iconRail.utilityItems}
             footer={iconRail.footer}
             activeId={iconRail.activeId}
+            renderLink={iconRail.renderLink}
           />
         )}
         {!isMobile && contextRail && (
@@ -81,17 +88,20 @@ export function AppShellWorkspace({
           />
         )}
         <ShellMain layout="workspace">{children}</ShellMain>
-        {!isMobile && rightPanel && (
-          <RightPanel panelViews={rightPanel.panelViews} defaultView={rightPanel.defaultView} />
+        {!isMobile && resolvedRightPanel.panelViews.length > 0 && (
+          <RightPanel panelViews={staticPanelViews} defaultView={rightPanel?.defaultView} />
         )}
       </div>
       {isMobile && hasDrawerContent && <MobileBottomNav items={navItems} />}
       {isMobile && hasDrawerContent && (
         <MobileDrawers
           menuItems={mobileMenuItems}
+          menuActiveId={iconRail?.activeId}
+          menuRenderLink={iconRail?.renderLink}
           module={contextRail?.module}
-          panelViews={rightPanel?.panelViews ?? []}
-          defaultView={rightPanel?.defaultView}
+          moduleAppId={contextRail?.appId}
+          panelViews={resolvedRightPanel.panelViews}
+          defaultView={resolvedRightPanel.defaultView}
         />
       )}
     </div>
@@ -101,20 +111,23 @@ export function AppShellWorkspace({
 function buildMobileNavItems(
   iconRail: AppShellIconRailConfig | undefined,
   contextRail: AppShellContextRailConfig | undefined,
-  rightPanel: AppShellRightPanelConfig | undefined
+  panelViews: PanelView[]
 ): MobileBottomNavItem[] {
   const items: MobileBottomNavItem[] = [];
   if (iconRail) {
     items.push({ id: 'menu', label: 'Menu', icon: Menu, opens: 'menu-drawer' });
   }
-  if (contextRail?.module) {
+  if (
+    contextRail?.module &&
+    ((contextRail.module.items ?? []).length > 0 || Boolean(contextRail.module.render))
+  ) {
     items.push({ id: 'module', label: 'Module', icon: LayoutGrid, opens: 'module-drawer' });
   }
   // Panels button only when there's an actual view to render — empty
   // panelViews would open an empty drawer (dead-end tap).
-  if (rightPanel && rightPanel.panelViews.length > 0) {
+  if (panelViews.length > 0) {
     items.push({ id: 'panels', label: 'Panels', icon: PanelTop, opens: 'panels-drawer' });
-    if (rightPanel.panelViews.some((v) => v.id === 'ai')) {
+    if (panelViews.some((v) => v.id === 'ai')) {
       items.push({ id: 'ai', label: 'AI', icon: Sparkles, opens: 'ai-drawer' });
     }
   }

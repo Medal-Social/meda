@@ -1,9 +1,10 @@
 'use client';
 import { jsx as _jsx } from "react/jsx-runtime";
 import { LayoutGrid, Menu, PanelTop, Sparkles } from 'lucide-react';
-import { createContext, lazy, Suspense, useContext, useMemo, useState, } from 'react';
+import { createContext, lazy, Suspense, useCallback, useContext, useMemo, useState, } from 'react';
 import { createLocalStorageAdapter, useShellLayoutState, } from './layout-state.js';
 import { DefaultThemeProvider, ThemeCtx } from './theme.js';
+import { useShellViewport } from './use-shell-viewport.js';
 // ---------------------------------------------------------------------------
 // Theme adapter wiring
 // ---------------------------------------------------------------------------
@@ -78,11 +79,35 @@ export function MedaShellProvider(props) {
         open: commandPaletteOpen,
         setOpen: setCommandPaletteOpen,
     }), [commandPaletteOpen]);
+    const [panelViewRegistrations, setPanelViewRegistrations] = useState([]);
+    const registerPanelViews = useCallback((id, views, defaultView) => {
+        setPanelViewRegistrations((prev) => {
+            const existing = prev.find((registration) => registration.id === id);
+            if (existing?.views === views && existing.defaultView === defaultView)
+                return prev;
+            const nextRegistration = defaultView === undefined ? { id, views } : { id, views, defaultView };
+            if (existing == null)
+                return [...prev, nextRegistration];
+            return prev.map((registration) => (registration.id === id ? nextRegistration : registration));
+        });
+        return () => {
+            setPanelViewRegistrations((prev) => prev.some((registration) => registration.id === id &&
+                registration.views === views &&
+                registration.defaultView === defaultView)
+                ? prev.filter((registration) => registration.id !== id)
+                : prev);
+        };
+    }, []);
+    const panelViews = useMemo(() => ({
+        registrations: panelViewRegistrations,
+        register: registerPanelViews,
+    }), [panelViewRegistrations, registerPanelViews]);
     const [layoutState, setLayoutState] = useShellLayoutState({
         workspaceId: props.workspace.id,
         appId: activeAppId,
         storage,
     });
+    const isMobile = useShellViewport() === 'mobile';
     const panel = useMemo(() => ({
         mode: layoutState.rightPanel.mode,
         activeView: layoutState.rightPanel.activeView,
@@ -99,6 +124,37 @@ export function MedaShellProvider(props) {
             ...prev,
             rightPanel: { ...prev.rightPanel, width },
         })),
+        open: () => {
+            if (isMobile)
+                setMobileDrawerOpen('panels-drawer');
+            setLayoutState((prev) => ({
+                ...prev,
+                rightPanel: {
+                    ...prev.rightPanel,
+                    mode: prev.rightPanel.mode === 'closed' ? 'panel' : prev.rightPanel.mode,
+                },
+            }));
+        },
+        close: () => {
+            if (isMobile)
+                setMobileDrawerOpen((open) => (open === 'panels-drawer' ? null : open));
+            setLayoutState((prev) => ({
+                ...prev,
+                rightPanel: { ...prev.rightPanel, mode: 'closed' },
+            }));
+        },
+        toggle: () => {
+            if (isMobile) {
+                setMobileDrawerOpen((open) => (open === 'panels-drawer' ? null : 'panels-drawer'));
+            }
+            setLayoutState((prev) => ({
+                ...prev,
+                rightPanel: {
+                    ...prev.rightPanel,
+                    mode: prev.rightPanel.mode === 'closed' ? 'panel' : 'closed',
+                },
+            }));
+        },
         // focus(viewId) — opens panel + switches to view in one call.
         // Only flips closed → panel; preserves expanded / fullscreen modes.
         focus: (viewId) => setLayoutState((prev) => {
@@ -108,7 +164,7 @@ export function MedaShellProvider(props) {
                 rightPanel: { ...prev.rightPanel, mode: nextMode, activeView: viewId },
             };
         }),
-    }), [layoutState, setLayoutState]);
+    }), [isMobile, layoutState, setLayoutState]);
     const contextRail = useMemo(() => ({
         width: layoutState.contextRail.width,
         collapsed: layoutState.contextRail.collapsed,
@@ -119,6 +175,10 @@ export function MedaShellProvider(props) {
         setCollapsed: (collapsed) => setLayoutState((prev) => ({
             ...prev,
             contextRail: { ...prev.contextRail, collapsed },
+        })),
+        toggle: () => setLayoutState((prev) => ({
+            ...prev,
+            contextRail: { ...prev.contextRail, collapsed: !prev.contextRail.collapsed },
         })),
     }), [layoutState, setLayoutState]);
     const value = useMemo(() => ({
@@ -132,6 +192,7 @@ export function MedaShellProvider(props) {
         mobileBottomNav: props.mobileBottomNav ?? defaultMobileBottomNav,
         mobileDrawer,
         commandPalette,
+        panelViews,
         commandPaletteHotkey: props.commandPaletteHotkey ?? 'mod+k',
         selection,
         setSelection,
@@ -145,6 +206,7 @@ export function MedaShellProvider(props) {
         props.mobileBottomNav,
         mobileDrawer,
         commandPalette,
+        panelViews,
         props.commandPaletteHotkey,
         selection,
     ]);

@@ -2,7 +2,9 @@ import '@testing-library/jest-dom/vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { Info } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { StrictMode, useEffect, useRef, useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { PanelViewsProvider } from './panel-views-provider.js';
 import { RightPanel } from './right-panel.js';
 import { MedaShellProvider, useMedaShell } from './shell-provider.js';
 import type { AppDefinition, PanelMode, PanelView, WorkspaceDefinition } from './types.js';
@@ -386,6 +388,393 @@ describe('RightPanel — panelViews', () => {
       </Wrapper>
     );
 
+    expect(screen.getByText('No panel view selected')).toBeInTheDocument();
+  });
+});
+
+describe('RightPanel — PanelViewsProvider registrations', () => {
+  const routeViews: PanelView[] = [
+    { id: 'route-view', label: 'Route View', icon: Info, render: () => <div>Route content</div> },
+  ];
+
+  it('renders panel views registered by a route child through PanelViewsProvider', () => {
+    render(
+      <Wrapper mode="panel" activeView="route-view">
+        <PanelViewsProvider views={routeViews}>
+          <RightPanel />
+        </PanelViewsProvider>
+      </Wrapper>
+    );
+
+    expect(screen.getByRole('button', { name: /route view/i })).toBeInTheDocument();
+    expect(screen.getByText('Route content')).toBeInTheDocument();
+  });
+
+  it('registered views override static views with the same id', () => {
+    const staticViews: PanelView[] = [
+      {
+        id: 'inspector',
+        label: 'Static Inspector',
+        icon: Info,
+        render: () => <div>Static inspector content</div>,
+      },
+    ];
+    const registeredViews: PanelView[] = [
+      {
+        id: 'inspector',
+        label: 'Registered Inspector',
+        icon: Info,
+        render: () => <div>Registered inspector content</div>,
+      },
+    ];
+
+    render(
+      <Wrapper mode="panel" activeView="inspector">
+        <PanelViewsProvider views={registeredViews}>
+          <RightPanel panelViews={staticViews} />
+        </PanelViewsProvider>
+      </Wrapper>
+    );
+
+    expect(screen.getByRole('button', { name: /registered inspector/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /static inspector/i })).not.toBeInTheDocument();
+    expect(screen.getByText('Registered inspector content')).toBeInTheDocument();
+    expect(screen.queryByText('Static inspector content')).not.toBeInTheDocument();
+  });
+
+  it('places registered overrides after remaining static views', () => {
+    const staticViews: PanelView[] = [
+      {
+        id: 'inspector',
+        label: 'Static Inspector',
+        icon: Info,
+        render: () => <div>Static inspector content</div>,
+      },
+      { id: 'activity', label: 'Activity', icon: Info, render: () => <div>Activity content</div> },
+    ];
+    const registeredViews: PanelView[] = [
+      {
+        id: 'inspector',
+        label: 'Registered Inspector',
+        icon: Info,
+        render: () => <div>Registered inspector content</div>,
+      },
+    ];
+
+    render(
+      <Wrapper mode="panel" activeView="activity">
+        <PanelViewsProvider views={registeredViews}>
+          <RightPanel panelViews={staticViews} />
+        </PanelViewsProvider>
+      </Wrapper>
+    );
+
+    const activityTab = screen.getByRole('button', { name: /activity/i });
+    const registeredTab = screen.getByRole('button', { name: /registered inspector/i });
+    expect(
+      activityTab.compareDocumentPosition(registeredTab) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
+
+  it('merges views from multiple provider instances without requiring consumer ids', () => {
+    const firstRouteViews: PanelView[] = [
+      { id: 'route-a', label: 'Route A', icon: Info, render: () => <div>Route A content</div> },
+    ];
+    const secondRouteViews: PanelView[] = [
+      { id: 'route-b', label: 'Route B', icon: Info, render: () => <div>Route B content</div> },
+    ];
+
+    render(
+      <Wrapper mode="panel" activeView="route-a">
+        <PanelViewsProvider views={firstRouteViews}>
+          <div />
+        </PanelViewsProvider>
+        <PanelViewsProvider views={secondRouteViews}>
+          <div />
+        </PanelViewsProvider>
+        <RightPanel />
+      </Wrapper>
+    );
+
+    expect(screen.getByRole('button', { name: /route a/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /route b/i })).toBeInTheDocument();
+  });
+
+  it('registered provider defaultView wins over static defaultView and sets active view when no active view exists', async () => {
+    const storage = { load: vi.fn(() => null), save: vi.fn() };
+
+    function Root() {
+      const ctx = useMedaShell();
+      const isPanel = ctx.panel.mode === 'panel';
+      return (
+        <>
+          <button type="button" onClick={() => ctx.panel.setMode('panel')} data-testid="open-panel">
+            Open
+          </button>
+          {isPanel && (
+            <PanelViewsProvider views={routeViews} defaultView="route-view">
+              <RightPanel panelViews={VIEWS} defaultView="activity" />
+            </PanelViewsProvider>
+          )}
+        </>
+      );
+    }
+
+    render(
+      <MedaShellProvider workspace={ws} apps={apps} storage={storage}>
+        <Root />
+      </MedaShellProvider>
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('open-panel'));
+    });
+
+    expect(screen.getByRole('button', { name: /route view/i })).toHaveAttribute(
+      'aria-current',
+      'true'
+    );
+    expect(screen.getByText('Route content')).toBeInTheDocument();
+  });
+
+  it('does not overwrite an existing active view when registered defaultView changes', async () => {
+    const routeViews: PanelView[] = [
+      { id: 'route-a', label: 'Route A', icon: Info, render: () => <div>Route A content</div> },
+      { id: 'route-b', label: 'Route B', icon: Info, render: () => <div>Route B content</div> },
+    ];
+
+    function Root() {
+      const [defaultView, setDefaultView] = useState('route-a');
+      return (
+        <>
+          <button
+            type="button"
+            data-testid="switch-default"
+            onClick={() => setDefaultView('route-b')}
+          >
+            Switch default
+          </button>
+          <PanelViewsProvider views={routeViews} defaultView={defaultView}>
+            <RightPanel />
+          </PanelViewsProvider>
+        </>
+      );
+    }
+
+    render(
+      <Wrapper mode="panel" activeView={null}>
+        <Root />
+      </Wrapper>
+    );
+
+    expect(await screen.findByRole('button', { name: /route a/i })).toHaveAttribute(
+      'aria-current',
+      'true'
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('switch-default'));
+    });
+
+    expect(screen.getByRole('button', { name: /route a/i })).toHaveAttribute(
+      'aria-current',
+      'true'
+    );
+    expect(screen.getByText('Route A content')).toBeInTheDocument();
+  });
+
+  it('does not apply a defaultView id that is not registered', () => {
+    render(
+      <Wrapper mode="panel" activeView={null}>
+        <PanelViewsProvider views={routeViews} defaultView="missing-view">
+          <RightPanel />
+        </PanelViewsProvider>
+      </Wrapper>
+    );
+
+    expect(screen.getByRole('button', { name: /route view/i })).not.toHaveAttribute('aria-current');
+    expect(screen.getByText('No panel view selected')).toBeInTheDocument();
+  });
+
+  it('uses the last registered defaultView when multiple providers supply defaults', async () => {
+    const firstRouteViews: PanelView[] = [
+      { id: 'route-a', label: 'Route A', icon: Info, render: () => <div>Route A content</div> },
+    ];
+    const secondRouteViews: PanelView[] = [
+      { id: 'route-b', label: 'Route B', icon: Info, render: () => <div>Route B content</div> },
+    ];
+
+    render(
+      <Wrapper mode="panel" activeView={null}>
+        <PanelViewsProvider views={firstRouteViews} defaultView="route-a">
+          <div />
+        </PanelViewsProvider>
+        <PanelViewsProvider views={secondRouteViews} defaultView="route-b">
+          <div />
+        </PanelViewsProvider>
+        <RightPanel />
+      </Wrapper>
+    );
+
+    expect(await screen.findByRole('button', { name: /route b/i })).toHaveAttribute(
+      'aria-current',
+      'true'
+    );
+    expect(screen.getByText('Route B content')).toBeInTheDocument();
+  });
+
+  it('replaces stale registrations when provider view props change', async () => {
+    const firstRouteViews: PanelView[] = [
+      { id: 'route-a', label: 'Route A', icon: Info, render: () => <div>Route A content</div> },
+    ];
+    const secondRouteViews: PanelView[] = [
+      { id: 'route-b', label: 'Route B', icon: Info, render: () => <div>Route B content</div> },
+    ];
+
+    function Root() {
+      const [views, setViews] = useState(firstRouteViews);
+      return (
+        <>
+          <button
+            type="button"
+            data-testid="switch-views"
+            onClick={() => setViews(secondRouteViews)}
+          >
+            Switch views
+          </button>
+          <PanelViewsProvider views={views}>
+            <RightPanel />
+          </PanelViewsProvider>
+        </>
+      );
+    }
+
+    render(
+      <Wrapper mode="panel" activeView="route-b">
+        <Root />
+      </Wrapper>
+    );
+
+    expect(screen.getByRole('button', { name: /route a/i })).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('switch-views'));
+    });
+
+    expect(screen.queryByRole('button', { name: /route a/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /route b/i })).toBeInTheDocument();
+    expect(screen.getByText('Route B content')).toBeInTheDocument();
+  });
+
+  it('keeps registered views mounted through React StrictMode effect replay', () => {
+    render(
+      <StrictMode>
+        <Wrapper mode="panel" activeView="route-view">
+          <PanelViewsProvider views={routeViews}>
+            <RightPanel />
+          </PanelViewsProvider>
+        </Wrapper>
+      </StrictMode>
+    );
+
+    expect(screen.getByRole('button', { name: /route view/i })).toBeInTheDocument();
+    expect(screen.getByText('Route content')).toBeInTheDocument();
+  });
+
+  it('does not re-register equivalent inline view arrays on parent rerender', async () => {
+    function RegistrationChangeProbe() {
+      const ctx = useMedaShell();
+      const registrations = ctx.panelViews.registrations;
+      const previousRegistrations = useRef(registrations);
+      const [changes, setChanges] = useState(0);
+
+      useEffect(() => {
+        if (previousRegistrations.current !== registrations) {
+          previousRegistrations.current = registrations;
+          setChanges((value) => value + 1);
+        }
+      }, [registrations]);
+
+      return <output data-testid="registration-change-count">{changes}</output>;
+    }
+
+    function Root() {
+      const [count, setCount] = useState(0);
+      return (
+        <>
+          <button type="button" data-testid="rerender-route" onClick={() => setCount((n) => n + 1)}>
+            Rerender
+          </button>
+          <RegistrationChangeProbe />
+          <PanelViewsProvider
+            views={[
+              {
+                id: 'route-view',
+                label: 'Route View',
+                icon: Info,
+                render: () => <div>Route content {count}</div>,
+              },
+            ]}
+          >
+            <RightPanel />
+          </PanelViewsProvider>
+        </>
+      );
+    }
+
+    render(
+      <Wrapper mode="panel" activeView="route-view">
+        <Root />
+      </Wrapper>
+    );
+
+    expect(await screen.findByText('Route content 0')).toBeInTheDocument();
+    expect(screen.getByTestId('registration-change-count')).toHaveTextContent('1');
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('rerender-route'));
+    });
+
+    expect(screen.getByText('Route content 1')).toBeInTheDocument();
+    expect(screen.getByTestId('registration-change-count')).toHaveTextContent('1');
+  });
+
+  it('registered views unregister on provider unmount and RightPanel falls back to no selected view', async () => {
+    function Root() {
+      const [showRegistered, setShowRegistered] = useState(true);
+      return (
+        <>
+          <button
+            type="button"
+            onClick={() => setShowRegistered(false)}
+            data-testid="unmount-provider"
+          >
+            Unmount
+          </button>
+          {showRegistered ? (
+            <PanelViewsProvider views={routeViews}>
+              <RightPanel />
+            </PanelViewsProvider>
+          ) : (
+            <RightPanel />
+          )}
+        </>
+      );
+    }
+
+    render(
+      <Wrapper mode="panel" activeView="route-view">
+        <Root />
+      </Wrapper>
+    );
+
+    expect(screen.getByText('Route content')).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('unmount-provider'));
+    });
+
+    expect(screen.queryByRole('button', { name: /route view/i })).not.toBeInTheDocument();
     expect(screen.getByText('No panel view selected')).toBeInTheDocument();
   });
 });
