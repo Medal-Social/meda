@@ -1,0 +1,31 @@
+name: Auto-merge promote PRs
+
+# Enables auto-merge on the two recurring promote PRs:
+#   1. The dev → prod promotion PR (head ref `dev`).
+#   2. The Changesets-bot Release PR (head ref `changeset-release/prod`).
+# Auto-merge waits for required status checks before merging, so this is
+# gated on the same `lint` / `test` / `build` checks as a manual merge.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    branches: [prod]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enable-auto-merge:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.pull_request.head.ref == 'dev' ||
+      startsWith(github.event.pull_request.head.ref, 'changeset-release/')
+    steps:
+      - name: Enable auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr merge --auto --merge \
+            --repo "${{ github.repository }}" \
+            "$PR_NUMBER"

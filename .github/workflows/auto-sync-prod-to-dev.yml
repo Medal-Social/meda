@@ -1,0 +1,77 @@
+name: Auto-sync prod → dev
+
+# After the Changesets Release PR merges to prod, the version-bump commit
+# lands on prod and dev falls behind. This workflow opens (and auto-merges)
+# a chore PR that brings dev back in sync with prod, eliminating the
+# manual merge-up step.
+#
+# Escape hatch: include `[skip auto-sync]` in the prod commit message to
+# suppress this workflow for that push.
+on:
+  push:
+    branches: [prod]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, '[skip auto-sync]') }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          # Need both branches available locally to compute divergence and
+          # produce the merge.
+          ref: prod
+
+      - name: Configure git identity
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Check whether prod has commits not on dev
+        id: divergence
+        run: |
+          git fetch origin dev:refs/remotes/origin/dev
+          if [ -z "$(git rev-list origin/dev..HEAD)" ]; then
+            echo "needs_sync=false" >> "$GITHUB_OUTPUT"
+            echo "prod is not ahead of dev — nothing to sync."
+          else
+            echo "needs_sync=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create sync branch and merge dev into it
+        if: steps.divergence.outputs.needs_sync == 'true'
+        id: branch
+        run: |
+          BRANCH="chore/auto-sync-prod-to-dev-${{ github.run_id }}"
+          git checkout -b "$BRANCH"
+          # Merge origin/dev into the prod-based branch so the resulting PR
+          # cleanly fast-forwards (or three-way merges) into dev.
+          git merge --no-edit origin/dev || {
+            echo "Merge conflict between prod and dev — manual intervention required."
+            exit 1
+          }
+          git push origin "$BRANCH"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Open PR and enable auto-merge
+        if: steps.divergence.outputs.needs_sync == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ steps.branch.outputs.branch }}
+        run: |
+          PR_URL=$(gh pr create \
+            --repo "${{ github.repository }}" \
+            --base dev \
+            --head "$BRANCH" \
+            --title 'chore: auto-sync prod → dev' \
+            --body 'Automated sync after a release landed on `prod`. Brings `dev` back in line with `prod` so the next feat → dev → prod cycle starts from a clean ancestry.')
+          echo "Opened: $PR_URL"
+          gh pr merge --auto --merge \
+            --repo "${{ github.repository }}" \
+            "$PR_URL"
