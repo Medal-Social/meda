@@ -3,6 +3,7 @@
 // the directive (see test/nextjs-consumer.test.ts). Each underlying component
 // file carries its own 'use client' — Next traces through the barrel and
 // applies them per-component. The barrel itself is just a re-exporter.
+export { AuthError, AuthNotice, AuthOneTapSlot, AuthProviderButton, AuthProviderList, } from '../auth/index.js';
 // Layout
 export { AppShell, AppShellBody } from './app-shell.js';
 // Command palette

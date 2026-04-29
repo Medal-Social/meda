@@ -32,6 +32,14 @@
       "types": "./dist/brand/index.d.ts",
       "default": "./dist/brand/index.js"
     },
+    "./auth": {
+      "types": "./dist/auth/index.d.ts",
+      "default": "./dist/auth/index.js"
+    },
+    "./auth/better-auth": {
+      "types": "./dist/auth/better-auth.d.ts",
+      "default": "./dist/auth/better-auth.js"
+    },
     "./shell": {
       "types": "./dist/shell/index.d.ts",
       "default": "./dist/shell/index.js"

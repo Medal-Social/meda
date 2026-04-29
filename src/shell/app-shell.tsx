@@ -7,6 +7,7 @@ import { AppShellChat } from './app-shell-chat.js';
 import { AppShellWorkspace } from './app-shell-workspace.js';
 import { useMedaShell } from './shell-provider.js';
 import type {
+  AppShellAuthBranding,
   AppShellAuthConfig,
   AppShellContextRailConfig,
   AppShellIconRailConfig,
@@ -22,7 +23,10 @@ export type AppShellProps = AppShellBaseProps &
   (
     | {
         variant: 'auth';
-        auth: AppShellAuthConfig;
+        auth?: AppShellAuthConfig;
+        branding?: AppShellAuthBranding;
+        preview?: ReactNode;
+        actions?: ReactNode;
       }
     | {
         variant: 'workspace';
@@ -58,7 +62,7 @@ export function AppShell(props: AppShellProps) {
 
   switch (props.variant) {
     case 'auth':
-      return wrapper(<AppShellAuth {...props.auth}>{props.children}</AppShellAuth>);
+      return wrapper(<AppShellAuth {...resolveAuthConfig(props)}>{props.children}</AppShellAuth>);
     case 'workspace':
       return wrapper(
         <AppShellWorkspace
@@ -75,6 +79,20 @@ export function AppShell(props: AppShellProps) {
         <AppShellChat globalActions={props.globalActions}>{props.children}</AppShellChat>
       );
   }
+}
+
+function resolveAuthConfig(props: Extract<AppShellProps, { variant: 'auth' }>): AppShellAuthConfig {
+  const { auth, branding } = props;
+
+  return {
+    title: auth?.title ?? branding?.appName ?? branding?.brandName ?? 'Sign in',
+    description: auth?.description ?? branding?.tagline,
+    brandName: auth?.brandName ?? branding?.brandName,
+    brandMark: auth?.brandMark ?? branding?.brandMark,
+    eyebrow: auth?.eyebrow,
+    preview: auth?.preview ?? props.preview,
+    actions: auth?.actions ?? props.actions,
+  };
 }
 
 export function AppShellBody({ children, className }: { children: ReactNode; className?: string }) {

@@ -123,3 +123,10 @@ export interface AppShellAuthConfig {
   preview?: ReactNode;
   actions?: ReactNode;
 }
+
+export interface AppShellAuthBranding {
+  brandName?: ReactNode;
+  brandMark?: ReactNode;
+  appName?: ReactNode;
+  tagline?: ReactNode;
+}

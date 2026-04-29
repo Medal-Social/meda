@@ -1,3 +1,5 @@
+export type { AuthMessageProps, AuthOneTapSlotProps, AuthProvider, AuthProviderButtonProps, AuthProviderListProps, } from '../auth/index.js';
+export { AuthError, AuthNotice, AuthOneTapSlot, AuthProviderButton, AuthProviderList, } from '../auth/index.js';
 export { AppShell, AppShellBody } from './app-shell.js';
 export type { CommandGroupDefinition } from './command-palette.js';
 export { CommandPalette, useCommandGroup, useCommands } from './command-palette.js';
@@ -23,5 +25,5 @@ export type { MedaShellProviderProps } from './shell-provider.js';
 export { MedaShellProvider, useMedaShell, useShellSelection } from './shell-provider.js';
 export { DefaultThemeProvider, ThemeToggle, useTheme } from './theme.js';
 export { NextThemesAdapter } from './theme-next-themes.js';
-export type { AppDefinition, AppShellAuthConfig, AppShellContextRailConfig, AppShellIconRailConfig, AppShellRightPanelConfig, AppShellVariant, CommandDefinition, ContextItem, ContextModule, MobileBottomNavItem, PanelMode, PanelView, ShellLinkRenderArgs, ShellMainLayout, ShellRenderContext, ShellViewport, ThemeAdapter, WorkspaceDefinition, } from './types.js';
+export type { AppDefinition, AppShellAuthBranding, AppShellAuthConfig, AppShellContextRailConfig, AppShellIconRailConfig, AppShellRightPanelConfig, AppShellVariant, CommandDefinition, ContextItem, ContextModule, MobileBottomNavItem, PanelMode, PanelView, ShellLinkRenderArgs, ShellMainLayout, ShellRenderContext, ShellViewport, ThemeAdapter, WorkspaceDefinition, } from './types.js';
 export { useShellViewport } from './use-shell-viewport.js';

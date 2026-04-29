@@ -4,6 +4,20 @@
 // file carries its own 'use client' — Next traces through the barrel and
 // applies them per-component. The barrel itself is just a re-exporter.
 
+export type {
+  AuthMessageProps,
+  AuthOneTapSlotProps,
+  AuthProvider,
+  AuthProviderButtonProps,
+  AuthProviderListProps,
+} from '../auth/index.js';
+export {
+  AuthError,
+  AuthNotice,
+  AuthOneTapSlot,
+  AuthProviderButton,
+  AuthProviderList,
+} from '../auth/index.js';
 // Layout
 export { AppShell, AppShellBody } from './app-shell.js';
 export type { CommandGroupDefinition } from './command-palette.js';
@@ -43,6 +57,7 @@ export { NextThemesAdapter } from './theme-next-themes.js';
 // Types
 export type {
   AppDefinition,
+  AppShellAuthBranding,
   AppShellAuthConfig,
   AppShellContextRailConfig,
   AppShellIconRailConfig,
