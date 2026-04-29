@@ -363,6 +363,26 @@ describe('ContextRail — module items rendering', () => {
     expect(screen.queryAllByRole('link')).toHaveLength(0);
   });
 
+  it('renderLink receives default link props for route adapters', () => {
+    render(
+      <Wrapper>
+        <ContextRail
+          appId="mail"
+          module={MODULE}
+          activeItemId="inbox"
+          renderLink={({ item, linkProps }) => (
+            <a {...linkProps} data-testid={`route-link-${item.id}`} data-route-link="true" />
+          )}
+        />
+      </Wrapper>
+    );
+
+    const inboxLink = screen.getByTestId('route-link-inbox');
+    expect(inboxLink).toHaveAttribute('href', '/inbox');
+    expect(inboxLink).toHaveAttribute('aria-current', 'page');
+    expect(inboxLink).toHaveAttribute('data-route-link', 'true');
+  });
+
   it('item with shortcut renders keyboard shortcut text', () => {
     const moduleWithShortcut: ContextModule = {
       id: 'mail',

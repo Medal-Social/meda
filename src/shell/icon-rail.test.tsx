@@ -155,6 +155,26 @@ describe('IconRail', () => {
     expect(screen.getByTestId('link-settings')).toBeInTheDocument();
   });
 
+  it('renderLink receives default link props for router adapters', () => {
+    render(
+      <Wrapper>
+        <IconRail
+          mainItems={mainItems}
+          activeId="inbox"
+          renderLink={({ item, linkProps }) => (
+            <a {...linkProps} data-testid={`router-link-${item.id}`} data-router-link="true" />
+          )}
+        />
+      </Wrapper>
+    );
+
+    const inboxLink = screen.getByTestId('router-link-inbox');
+    expect(inboxLink).toHaveAttribute('href', '/inbox');
+    expect(inboxLink).toHaveAttribute('aria-label', 'Inbox');
+    expect(inboxLink).toHaveAttribute('aria-current', 'page');
+    expect(inboxLink).toHaveAttribute('data-router-link', 'true');
+  });
+
   it('utilityItems render below mainItems with divider between', () => {
     render(
       <Wrapper>

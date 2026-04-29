@@ -1,12 +1,15 @@
 import type { ReactNode } from 'react';
-import type { AppShellAuthConfig, AppShellContextRailConfig, AppShellIconRailConfig, AppShellRightPanelConfig } from './types.js';
+import type { AppShellAuthBranding, AppShellAuthConfig, AppShellContextRailConfig, AppShellIconRailConfig, AppShellRightPanelConfig } from './types.js';
 interface AppShellBaseProps {
     children: ReactNode;
     className?: string;
 }
 export type AppShellProps = AppShellBaseProps & ({
     variant: 'auth';
-    auth: AppShellAuthConfig;
+    auth?: AppShellAuthConfig;
+    branding?: AppShellAuthBranding;
+    preview?: ReactNode;
+    actions?: ReactNode;
 } | {
     variant: 'workspace';
     iconRail?: AppShellIconRailConfig;

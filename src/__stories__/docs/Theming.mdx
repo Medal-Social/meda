@@ -39,3 +39,37 @@ Use `dark:bg-card`, `dark:text-foreground`, and related utilities without extra 
 ## Checking canonical values
 
 The [Foundations / Color](?path=/docs/foundations-color--docs) page shows the full primitive ramp and semantic mapping. Use it as the source of truth.
+
+## App token bridge
+
+Existing products can map their brand variables onto Meda's semantic tokens without copying long CSS blocks:
+
+```ts
+import { createMedaThemeCss, defineMedaTheme } from '@medalsocial/meda/theme';
+
+const autoTheme = defineMedaTheme({
+  appId: 'auto',
+  colors: {
+    primary: 'var(--hb-brand-500)',
+  },
+  fonts: {
+    body: 'var(--font-body)',
+  },
+  light: {
+    colors: {
+      background: 'var(--hb-base-50)',
+      foreground: 'var(--hb-base-950)',
+    },
+  },
+  dark: {
+    colors: {
+      background: 'var(--hb-base-900)',
+      foreground: 'var(--hb-base-50)',
+    },
+  },
+});
+
+const css = createMedaThemeCss(autoTheme);
+```
+
+Apply the generated CSS under `[data-meda-app="auto"]`, then set that attribute on the app root.

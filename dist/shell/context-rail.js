@@ -15,7 +15,7 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
  * once <AppShellBody> ships as a ResizableShell Group.
  */
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import { useId, useRef, useState } from 'react';
+import { Fragment, useId, useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import { useMedaShell } from './shell-provider.js';
 import { useShellViewport } from './use-shell-viewport.js';
@@ -120,9 +120,15 @@ export function ContextRail({ appId, module, hidden = false, collapsible = true,
                                 : 'text-muted-foreground hover:bg-accent hover:text-foreground');
                             const IconComp = item.icon;
                             const inner = (_jsxs(_Fragment, { children: [_jsx(IconComp, { size: 16, "aria-hidden": "true", className: "shrink-0" }), _jsx("span", { className: "truncate", children: item.label }), item.shortcut && (_jsx("kbd", { className: "ml-auto font-mono text-[10px] text-muted-foreground", children: item.shortcut }))] }));
+                            const linkProps = {
+                                href: item.to,
+                                'aria-current': isActive ? 'page' : undefined,
+                                className: klass,
+                                children: inner,
+                            };
                             if (renderLink) {
-                                return renderLink({ item, isActive, className: klass, children: inner });
+                                return (_jsx(Fragment, { children: renderLink({ item, isActive, className: klass, children: inner, linkProps }) }, item.id));
                             }
-                            return (_jsx("a", { href: item.to, "aria-current": isActive ? 'page' : undefined, className: klass, children: inner }, item.id));
+                            return _jsx("a", { ...linkProps }, item.id);
                         }) })), module.render?.({ workspaceId: ctx.workspace.id, appId })] }), !collapsed && (_jsx(ResizeHandle, { currentWidth: width, onResize: handleResize, onCommit: handleCommit }))] }));
 }

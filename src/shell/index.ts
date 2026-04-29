@@ -4,6 +4,20 @@
 // file carries its own 'use client' — Next traces through the barrel and
 // applies them per-component. The barrel itself is just a re-exporter.
 
+export type {
+  AuthMessageProps,
+  AuthOneTapSlotProps,
+  AuthProvider,
+  AuthProviderButtonProps,
+  AuthProviderListProps,
+} from '../auth/index.js';
+export {
+  AuthError,
+  AuthNotice,
+  AuthOneTapSlot,
+  AuthProviderButton,
+  AuthProviderList,
+} from '../auth/index.js';
 // Layout
 export { AppShell, AppShellBody } from './app-shell.js';
 export type { CommandGroupDefinition } from './command-palette.js';
@@ -16,6 +30,7 @@ export { DragModeBanner } from './drag-mode-banner.js';
 // Extras (legacy components ported during Phase 15 — opt-in for apps that need them)
 export * as Extras from './extras/index.js';
 // Rails + main + panel
+export type { IconRailItem, IconRailProps, IconRailRenderLinkArgs } from './icon-rail.js';
 export { IconRail, RailDivider } from './icon-rail.js';
 export type { ShellStorageAdapter } from './layout-state.js';
 // Storage adapter (consumers may want to provide their own)
@@ -43,6 +58,7 @@ export { NextThemesAdapter } from './theme-next-themes.js';
 // Types
 export type {
   AppDefinition,
+  AppShellAuthBranding,
   AppShellAuthConfig,
   AppShellContextRailConfig,
   AppShellIconRailConfig,

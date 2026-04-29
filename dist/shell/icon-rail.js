@@ -29,9 +29,16 @@ export function IconRail({ mainItems, utilityItems = [], footer, activeId, rende
         const klass = itemClass(isActive);
         const IconComp = item.icon;
         const inner = (_jsxs(_Fragment, { children: [_jsx(IconComp, { size: 22, "aria-hidden": "true" }), item.badge ? _jsx("span", { className: "absolute right-1 top-1", children: item.badge }) : null] }));
+        const linkProps = {
+            href: item.to,
+            'aria-label': item.label,
+            'aria-current': isActive ? 'page' : undefined,
+            className: 'contents',
+            children: inner,
+        };
         const linkContent = renderLink ? (
         // renderLink consumers receive the className so they can apply it themselves
-        renderLink({ item, isActive, className: klass, children: inner })) : (_jsx("a", { href: item.to, "aria-label": item.label, "aria-current": isActive ? 'page' : undefined, className: "contents", children: inner }));
+        renderLink({ item, isActive, className: klass, children: inner, linkProps })) : (_jsx("a", { ...linkProps }));
         return (_jsxs(Tooltip, { children: [_jsx(TooltipTrigger, { render: _jsx("span", { "data-testid": `icon-rail-trigger-${item.id}`, className: klass, children: linkContent }) }), _jsx(TooltipContent, { side: "right", children: item.label })] }, item.id));
     };
     return (_jsx(TooltipProvider, { children: _jsxs("nav", { "data-testid": "icon-rail", "aria-label": "Primary", className: cn('flex h-full w-[var(--shell-rail-width)] shrink-0 flex-col items-center bg-shell-rail py-3.5', className), children: [_jsx("div", { className: "flex flex-col items-center gap-1", children: mainItems.map(renderItem) }), utilityItems.length > 0 && (_jsxs(_Fragment, { children: [_jsx(RailDivider, { pinnedBottom: pinnedBottom, onToggle: () => setPinnedBottom((prev) => !prev) }), _jsx("div", { "data-testid": "utility-items-wrapper", className: cn('flex flex-col items-center gap-1', pinnedBottom && 'mt-auto'), children: utilityItems.map(renderItem) })] })), footer && (_jsx("div", { className: cn('pt-3', pinnedBottom || utilityItems.length === 0 ? 'mt-auto' : ''), children: footer }))] }) }));

@@ -1,0 +1,88 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Get Started/Adoption" />
+
+# Adoption
+
+Meda's shell can be adopted at three layers:
+
+1. **Styled shell**: import `AppShell` and `MedaShellProvider` from `@medalsocial/meda/shell`.
+2. **Shell primitives**: import state providers and lower-level layout parts from `@medalsocial/meda/shell/primitives`.
+3. **Copyable recipes**: use `@medalsocial/meda/recipes/next` or the registry item when a host app needs local routing, analytics, or auth glue.
+
+## Next.js links
+
+Framework routers should preserve Meda's link props:
+
+```tsx
+import Link from 'next/link';
+import { AppShell } from '@medalsocial/meda/shell';
+
+<AppShell
+  variant="workspace"
+  iconRail={{
+    mainItems,
+    activeId,
+    renderLink: ({ item, linkProps }) => <Link {...linkProps} href={item.to} prefetch />,
+  }}
+>
+  {children}
+</AppShell>;
+```
+
+`linkProps` carries Meda's accessibility labels, active state, event handlers, and class names. Spread it before framework-specific props.
+
+## Route-owned panels
+
+When panel views are known at layout render time, pass them directly to `AppShell` so the right panel and mobile panel button exist on first paint:
+
+```tsx
+<AppShell variant="workspace" rightPanel={{ panelViews, defaultView: 'details' }}>
+  <PanelViewsProvider views={panelViews} defaultView="details">
+    {children}
+  </PanelViewsProvider>
+</AppShell>
+```
+
+Use `PanelViewsProvider` deeper in the tree when a route owns temporary views that should unregister on unmount.
+
+## Auth screens
+
+Use provider-neutral controls from `@medalsocial/meda/auth`, then wire sign-in behavior in the app:
+
+```tsx
+<AppShell
+  variant="auth"
+  branding={{ brandName: 'Housebets', brandMark, appName: 'Auto', tagline: 'by Housebets' }}
+>
+  <AuthProviderList>
+    <AuthProviderButton provider="google" label="Continue with Google" onClick={onGoogleSignIn} />
+  </AuthProviderList>
+  <AuthError>{error}</AuthError>
+</AppShell>
+```
+
+The optional `@medalsocial/meda/auth/better-auth` subpath provides `BetterAuthProviderButton`, `BetterAuthOneTap`, and `useBetterAuthLastLoginMethod` without coupling the base auth controls to better-auth.
+
+## Theme bridge
+
+Use `@medalsocial/meda/theme` to generate app-scoped CSS for brand token mapping:
+
+```ts
+const css = createMedaThemeCss(
+  defineMedaTheme({
+    appId: 'auto',
+    colors: {
+      primary: 'var(--hb-brand-500)',
+    },
+    dark: {
+      colors: {
+        background: 'var(--hb-base-900)',
+        foreground: 'var(--hb-base-50)',
+      },
+    },
+  })
+);
+```
+
+Mount the app root with `data-meda-app="auto"` and toggle `.dark` or `data-theme="dark"` on the same root.

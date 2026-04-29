@@ -32,6 +32,14 @@
       "types": "./dist/brand/index.d.ts",
       "default": "./dist/brand/index.js"
     },
+    "./auth": {
+      "types": "./dist/auth/index.d.ts",
+      "default": "./dist/auth/index.js"
+    },
+    "./auth/better-auth": {
+      "types": "./dist/auth/better-auth.d.ts",
+      "default": "./dist/auth/better-auth.js"
+    },
     "./shell": {
       "types": "./dist/shell/index.d.ts",
       "default": "./dist/shell/index.js"
@@ -72,6 +80,18 @@
     },
     "./styles/tokens": {
       "default": "./dist/styles/tokens.css"
+    },
+    "./shell/primitives": {
+      "types": "./dist/shell/primitives.d.ts",
+      "default": "./dist/shell/primitives.js"
+    },
+    "./recipes/next": {
+      "types": "./dist/recipes/next.d.ts",
+      "default": "./dist/recipes/next.js"
+    },
+    "./theme": {
+      "types": "./dist/theme/index.d.ts",
+      "default": "./dist/theme/index.js"
     }
   },
   "sideEffects": [

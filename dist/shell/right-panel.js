@@ -1,5 +1,5 @@
 'use client';
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-runtime";
 /**
  * RightPanel — spec §12
  *
@@ -16,7 +16,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * TODO(phase-15-refactor): swap to ResizableShell once AppShellBody is a PanelGroup
  */
 import { Maximize2, Minimize2, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import { useResolvedPanelViews } from './panel-views-provider.js';
 import { useMedaShell } from './shell-provider.js';
@@ -63,7 +63,7 @@ function ResizeHandle({ currentWidth, onResize, onCommit }) {
 // ---------------------------------------------------------------------------
 // RightPanel
 // ---------------------------------------------------------------------------
-export function RightPanel({ panelViews = EMPTY_PANEL_VIEWS, defaultView, modes = ['panel', 'expanded', 'fullscreen'], className, }) {
+export function RightPanel({ panelViews = EMPTY_PANEL_VIEWS, defaultView, modes = ['panel', 'expanded', 'fullscreen'], renderTab, className, }) {
     const band = useShellViewport();
     const ctx = useMedaShell();
     const { mode, activeView, width, setMode, setActiveView, setWidth } = ctx.panel;
@@ -132,8 +132,20 @@ export function RightPanel({ panelViews = EMPTY_PANEL_VIEWS, defaultView, modes 
     return (_jsx("aside", { "data-meda-panel-mode": mode, "aria-hidden": mode === 'closed' ? 'true' : undefined, className: cn('relative h-full shrink-0 overflow-hidden border-l border-shell-border bg-shell-panel', 'transition-[width] ease-[var(--motion-ease)] duration-[var(--motion-panel)]', mode === 'fullscreen' && 'fixed inset-0 h-screen w-screen border-none', zIndexClass, className), style: widthStyle, children: mode !== 'closed' && (_jsxs("div", { className: "flex h-full flex-col", children: [_jsxs("div", { className: "flex items-center justify-between border-b border-shell-border px-3 py-2", children: [_jsx("div", { className: "flex items-center gap-1", children: resolvedPanelViews.map((view) => {
                                 const isActive = view.id === activeView;
                                 const Icon = view.icon;
-                                return (_jsxs("button", { type: "button", "aria-current": isActive ? 'true' : undefined, onClick: () => setActiveView(view.id), className: cn('inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors', isActive
+                                const children = (_jsxs(_Fragment, { children: [_jsx(Icon, { size: 14, "aria-hidden": "true" }), _jsx("span", { children: view.label })] }));
+                                const buttonProps = {
+                                    type: 'button',
+                                    'aria-current': isActive ? 'true' : undefined,
+                                    'data-active': isActive || undefined,
+                                    onClick: () => setActiveView(view.id),
+                                    className: cn('inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors', isActive
                                         ? 'bg-accent text-accent-foreground'
-                                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'), children: [_jsx(Icon, { size: 14, "aria-hidden": "true" }), _jsx("span", { children: view.label })] }, view.id));
+                                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'),
+                                    children,
+                                };
+                                if (renderTab) {
+                                    return (_jsx(Fragment, { children: renderTab({ view, isActive, buttonProps, children }) }, view.id));
+                                }
+                                return _jsx("button", { ...buttonProps }, view.id);
                             }) }), _jsxs("div", { className: "flex items-center gap-1", children: [modes.length > 1 && (_jsx("button", { type: "button", "aria-label": cycleAriaLabel, onClick: cycleOpenMode, className: "inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground", children: mode === 'fullscreen' ? (_jsx(Minimize2, { size: 14, "aria-hidden": "true" })) : (_jsx(Maximize2, { size: 14, "aria-hidden": "true" })) })), _jsx("button", { type: "button", "aria-label": "Close panel", onClick: () => setMode('closed'), className: "inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground", children: _jsx(X, { size: 14, "aria-hidden": "true" }) })] })] }), _jsx("div", { className: "flex-1 overflow-y-auto", children: activePanelView != null ? (activePanelView.render(renderCtx)) : (_jsx("div", { className: "p-4 text-muted-foreground text-sm", children: "No panel view selected" })) }), mode === 'panel' && (_jsx(ResizeHandle, { currentWidth: resolvedWidth, onResize: handleResize, onCommit: handleCommit }))] })) }));
 }

@@ -3,6 +3,7 @@
 // the directive (see test/nextjs-consumer.test.ts). Each underlying component
 // file carries its own 'use client' — Next traces through the barrel and
 // applies them per-component. The barrel itself is just a re-exporter.
+export { AuthError, AuthNotice, AuthOneTapSlot, AuthProviderButton, AuthProviderList, } from '../auth/index.js';
 // Layout
 export { AppShell, AppShellBody } from './app-shell.js';
 // Command palette
@@ -12,7 +13,6 @@ export { ContextRail } from './context-rail.js';
 export { DragModeBanner } from './drag-mode-banner.js';
 // Extras (legacy components ported during Phase 15 — opt-in for apps that need them)
 export * as Extras from './extras/index.js';
-// Rails + main + panel
 export { IconRail, RailDivider } from './icon-rail.js';
 // Storage adapter (consumers may want to provide their own)
 export { createLocalStorageAdapter } from './layout-state.js';
