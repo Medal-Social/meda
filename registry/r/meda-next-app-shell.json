@@ -4,18 +4,27 @@
   "type": "registry:block",
   "title": "Meda Next AppShell",
   "description": "Install a copyable Next.js App Router shell adapter with next/link routing, route-owned panel views, and auth controls.",
-  "dependencies": ["@medalsocial/meda", "lucide-react"],
+  "dependencies": [
+    "@medalsocial/meda",
+    "lucide-react"
+  ],
   "files": [
     {
       "path": "registry/meda/meda-next-app-shell/meda-next-app-shell.tsx",
-      "content": "export { nextAppShellRecipe as medaNextAppShellRecipe } from '@medalsocial/meda/recipes/next'\n",
+      "content": "'use client'\n\nimport Link from 'next/link'\nimport type { ComponentProps, ReactNode } from 'react'\nimport {\n  AppShell,\n  AuthError,\n  AuthNotice,\n  AuthOneTapSlot,\n  AuthProviderButton,\n  AuthProviderList,\n  MedaShellProvider,\n  PanelViewsProvider,\n  type AppDefinition,\n  type IconRailItem,\n  type PanelView,\n  type WorkspaceDefinition,\n} from '@medalsocial/meda/shell'\n\nexport function MedaNextWorkspaceShell({\n  workspace,\n  apps,\n  iconItems,\n  activeIconId,\n  panelViews = [],\n  defaultPanelView,\n  children,\n}: {\n  workspace: WorkspaceDefinition\n  apps: AppDefinition[]\n  iconItems: IconRailItem[]\n  activeIconId?: string\n  panelViews?: PanelView[]\n  defaultPanelView?: string\n  children: ReactNode\n}) {\n  return (\n    <MedaShellProvider workspace={workspace} apps={apps}>\n      <AppShell\n        variant=\"workspace\"\n        iconRail={{\n          mainItems: iconItems,\n          activeId: activeIconId,\n          renderLink: ({ item, linkProps }) => (\n            <Link {...linkProps} href={item.to} prefetch />\n          ),\n        }}\n        rightPanel={{ panelViews, defaultView: defaultPanelView }}\n      >\n        <PanelViewsProvider views={panelViews} defaultView={defaultPanelView}>\n          {children}\n        </PanelViewsProvider>\n      </AppShell>\n    </MedaShellProvider>\n  )\n}\n\nexport function MedaNextAuthShell({\n  brandName,\n  brandMark,\n  appName,\n  tagline,\n  preview,\n  error,\n  notice,\n  onGoogleSignIn,\n}: {\n  brandName: ReactNode\n  brandMark?: ReactNode\n  appName?: ReactNode\n  tagline?: ReactNode\n  preview?: ReactNode\n  error?: ReactNode\n  notice?: ReactNode\n  onGoogleSignIn: ComponentProps<typeof AuthProviderButton>['onClick']\n}) {\n  return (\n    <MedaShellProvider workspace={{ id: 'auth', name: 'Auth', icon: brandMark }} apps={[]}>\n      <AppShell\n        variant=\"auth\"\n        branding={{ brandName, brandMark, appName, tagline }}\n        preview={preview}\n      >\n        <AuthProviderList>\n          <AuthProviderButton\n            provider=\"google\"\n            label=\"Continue with Google\"\n            onClick={onGoogleSignIn}\n          />\n        </AuthProviderList>\n        <AuthNotice>{notice}</AuthNotice>\n        <AuthError>{error}</AuthError>\n        <AuthOneTapSlot />\n      </AppShell>\n    </MedaShellProvider>\n  )\n}\n",
       "type": "registry:block",
       "target": "components/meda/meda-next-app-shell.tsx"
     }
   ],
   "meta": {
-    "peerDependencies": ["next", "react", "react-dom"],
-    "cssVars": ["@medalsocial/meda/styles.css"],
+    "peerDependencies": [
+      "next",
+      "react",
+      "react-dom"
+    ],
+    "cssVars": [
+      "@medalsocial/meda/styles.css"
+    ],
     "accessibility": [
       "Forward all linkProps from rail render callbacks.",
       "Panel views should include a visible or visually-hidden heading.",

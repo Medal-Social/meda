@@ -61,6 +61,35 @@ describe('better-auth adapter', () => {
     expect(forwardedClick).not.toHaveBeenCalled();
   });
 
+  it('keeps internal pending state when external loading is false', async () => {
+    let resolveSocial!: (value: unknown) => void;
+    const social = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveSocial = resolve;
+        })
+    );
+
+    render(
+      <BetterAuthProviderButton
+        authClient={{ signIn: { social } }}
+        label="Continue with Google"
+        loading={false}
+      />
+    );
+
+    const button = screen.getByRole('button', { name: 'Continue with Google' });
+
+    fireEvent.click(button);
+    await waitFor(() => expect(button).toBeDisabled());
+    fireEvent.click(button);
+
+    expect(social).toHaveBeenCalledTimes(1);
+
+    resolveSocial({ ok: true });
+    await waitFor(() => expect(button).not.toBeDisabled());
+  });
+
   it('reports an error when social sign-in is unavailable', async () => {
     const onError = vi.fn();
 

@@ -44,7 +44,7 @@ export function BetterAuthProviderButton({
   ...props
 }: BetterAuthProviderButtonProps) {
   const [internalPending, setInternalPending] = useState(false);
-  const pending = loading ?? internalPending;
+  const pending = Boolean(loading || internalPending);
 
   return (
     <AuthProviderButton
