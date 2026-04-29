@@ -7,13 +7,19 @@ name: Auto-resolve bot threads on merge-up PRs
 # auto-sync-* → dev) will block auto-merge.
 #
 # This workflow auto-resolves any unresolved review threads opened by bots on
-# those PRs once required CI checks have passed. It is intentionally narrow:
+# those PRs once the CI workflow has completed successfully. It is
+# intentionally narrow:
+#   - Only fires when CI on a same-repo PR finished with `success`
 #   - Only runs on PRs whose head ref matches the merge-up patterns
 #   - Only resolves threads opened by known bot accounts
-#   - Only fires once required checks have completed successfully
 
 on:
-  check_suite:
+  # `check_suite.completed` is unreliable here: per GitHub docs, check_suite
+  # events created by GitHub Actions do not trigger workflows, so for CI runs
+  # this event would never fire. `workflow_run` fires for any completion of a
+  # named workflow regardless of who created the check suite.
+  workflow_run:
+    workflows: ['CI']
     types: [completed]
   workflow_dispatch:
     inputs:
@@ -28,21 +34,33 @@ permissions:
 jobs:
   resolve:
     runs-on: ubuntu-latest
+    # Same-repo guard for both triggers:
+    #   - workflow_run: head_repository.full_name must match the base repo
+    #     (forks are excluded automatically because workflow_run for fork PRs
+    #     comes with the fork as the head repository).
+    #   - workflow_dispatch: re-checked inside the script via the PR's
+    #     head.repo.full_name.
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event.check_suite.conclusion == 'success' &&
-       github.event.check_suite.pull_requests[0] != null)
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'pull_request' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     steps:
       - name: Resolve bot threads on eligible PRs
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.check_suite.pull_requests[0].number }}
+          PR_NUMBER_INPUT: ${{ github.event.inputs.pr_number }}
+          # workflow_run includes pull_requests only for same-repo PRs, so
+          # pull_requests[0].number is safe here once the same-repo guard above
+          # has matched.
+          WORKFLOW_RUN_PR: ${{ github.event.workflow_run.pull_requests[0].number }}
         run: |
           set -euo pipefail
 
-          if [ -z "${PR_NUMBER:-}" ]; then
-            echo "No PR number — exiting."
+          PR_NUMBER="${PR_NUMBER_INPUT:-${WORKFLOW_RUN_PR:-}}"
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No PR number resolved from event — exiting."
             exit 0
           fi
 
@@ -51,7 +69,16 @@ jobs:
 
           PR_JSON=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}")
           HEAD_REF=$(echo "$PR_JSON" | jq -r '.head.ref')
+          HEAD_REPO=$(echo "$PR_JSON" | jq -r '.head.repo.full_name')
           STATE=$(echo "$PR_JSON" | jq -r '.state')
+
+          # Hard same-repo gate. Critical for the workflow_dispatch path where
+          # an arbitrary PR number can be passed; also belt-and-braces for the
+          # workflow_run path.
+          if [ "$HEAD_REPO" != "$REPO" ]; then
+            echo "PR #${PR_NUMBER} head repo '${HEAD_REPO}' is a fork — skipping."
+            exit 0
+          fi
 
           if [ "$STATE" != "open" ]; then
             echo "PR #${PR_NUMBER} is not open (state=${STATE}) — skipping."
