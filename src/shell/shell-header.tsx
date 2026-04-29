@@ -76,13 +76,14 @@ function renderConfiguredIcon(icon: WorkspaceMenuItem['icon']): ReactNode {
   // treat them like Lucide components. Any other object (arrays, fragments
   // produced by jsx-runtime, plain ReactNode objects) is rendered as-is so
   // it doesn't crash createElement with "Element type is invalid".
-  if (
-    typeof icon === 'object' &&
-    icon !== null &&
-    '$$typeof' in (icon as Record<string, unknown>) &&
-    typeof (icon as { render?: unknown }).render === 'function'
-  ) {
-    return createElement(icon as LucideIcon, { size: 16, 'aria-hidden': true });
+  if (typeof icon === 'object' && icon !== null) {
+    const candidate = icon as unknown as { $$typeof?: symbol; render?: unknown };
+    if (candidate.$$typeof != null && typeof candidate.render === 'function') {
+      return createElement(icon as unknown as LucideIcon, {
+        size: 16,
+        'aria-hidden': true,
+      });
+    }
   }
   return icon;
 }
