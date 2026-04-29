@@ -73,12 +73,12 @@ function renderConfiguredIcon(icon: WorkspaceMenuItem['icon']): ReactNode {
     return createElement(icon as LucideIcon, { size: 16, 'aria-hidden': true });
   }
   // forwardRef/memo components are objects carrying a `$$typeof` symbol —
-  // treat them like Lucide components. Any other object (arrays, fragments
-  // produced by jsx-runtime, plain ReactNode objects) is rendered as-is so
-  // it doesn't crash createElement with "Element type is invalid".
+  // treat them like Lucide components. Plain ReactNode objects (arrays,
+  // iterables, promises) have no `$$typeof` and are rendered as-is so they
+  // don't crash createElement with "Element type is invalid".
   if (typeof icon === 'object' && icon !== null) {
-    const candidate = icon as unknown as { $$typeof?: symbol; render?: unknown };
-    if (candidate.$$typeof != null && typeof candidate.render === 'function') {
+    const candidate = icon as unknown as { $$typeof?: symbol };
+    if (candidate.$$typeof != null) {
       return createElement(icon as unknown as LucideIcon, {
         size: 16,
         'aria-hidden': true,

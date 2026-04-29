@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Menu, User } from 'lucide-react';
+import { memo } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppTabs, PanelToggle, ShellHeader, WorkspaceSwitcher } from './shell-header.js';
 import { MedaShellProvider } from './shell-provider.js';
@@ -261,6 +262,20 @@ describe('WorkspaceSwitcher — menuItems replaces hardcoded defaults', () => {
     expect(link.tagName).toBe('A');
     expect(link).toHaveAttribute('href', '/profile');
     expect(link.querySelector('svg')).not.toBeNull();
+  });
+
+  it('renders memoized icon components without falling through', () => {
+    const MemoIcon = memo(User);
+    renderWithProvider(
+      <WorkspaceSwitcher
+        menuItems={[{ id: 'profile', label: 'View profile', onClick: () => {}, icon: MemoIcon }]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    const item = screen.getByRole('menuitem', { name: /view profile/i });
+    expect(item.querySelector('svg')).not.toBeNull();
   });
 
   it('renders array-shaped icon ReactNodes as-is without crashing', () => {
