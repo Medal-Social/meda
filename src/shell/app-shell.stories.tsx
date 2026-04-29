@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { AppShell } from './app-shell.js';
-import { MedaShellProvider } from './shell-provider.js';
+import { MedaShellProvider, useMedaShell } from './shell-provider.js';
 import type {
   AppDefinition,
   ContextItem,
@@ -84,6 +84,35 @@ function withProvider(Story: () => ReactNode) {
     >
       <Story />
     </MedaShellProvider>
+  );
+}
+
+function AdoptionControlPanel() {
+  const shell = useMedaShell();
+
+  const buttonClass =
+    'rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground hover:bg-accent hover:text-accent-foreground';
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground mb-2">Adoption hooks</h1>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" className={buttonClass} onClick={() => shell.panel.open()}>
+          Open panel
+        </button>
+        <button type="button" className={buttonClass} onClick={() => shell.panel.toggle()}>
+          Toggle panel
+        </button>
+        <button type="button" className={buttonClass} onClick={() => shell.panel.close()}>
+          Close panel
+        </button>
+        <button type="button" className={buttonClass} onClick={() => shell.contextRail.toggle()}>
+          Toggle context rail
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -195,6 +224,36 @@ export const Chat: Story = {
           integrations.
         </div>
       </div>
+    </AppShell>
+  ),
+};
+
+export const WorkspaceWithAdoptionHooks: Story = {
+  parameters: { chromatic: { modes: ALL_VIEWPORTS } },
+  render: () => (
+    <AppShell
+      variant="workspace"
+      iconRail={{
+        mainItems: RAIL_MAIN,
+        utilityItems: RAIL_UTILITY,
+        activeId: 'inbox',
+        renderLink: ({ item, isActive, className, children }) => (
+          <a
+            href={item.to}
+            aria-label={item.label}
+            aria-current={isActive ? 'page' : undefined}
+            className={className}
+            data-testid={`storybook-router-link-${item.id}`}
+            data-router-link="next-link-compatible"
+          >
+            {children}
+          </a>
+        ),
+      }}
+      contextRail={{ appId: 'inbox', module: INBOX_MODULE, activeItemId: 'inbox' }}
+      rightPanel={{ panelViews: PANEL_VIEWS, defaultView: 'inspector' }}
+    >
+      <AdoptionControlPanel />
     </AppShell>
   ),
 };

@@ -71,6 +71,7 @@ export interface CommandDefinition {
   icon?: LucideIcon;
   group: string;
   shortcut?: string;
+  /** Display-only alias for `shortcut`; `shortcut` wins when both are supplied. */
   hotkey?: string;
   run: () => void | Promise<void>;
 }
