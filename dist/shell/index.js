@@ -18,6 +18,7 @@ export { IconRail, RailDivider } from './icon-rail.js';
 export { createLocalStorageAdapter } from './layout-state.js';
 // Hooks + tokens
 export { motion } from './motion.js';
+export { PanelViewsProvider } from './panel-views-provider.js';
 // Resize primitives
 export { RailDropSlot } from './rail-drop-slot.js';
 export { RailDropZones } from './rail-drop-zones.js';

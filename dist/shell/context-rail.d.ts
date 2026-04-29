@@ -14,4 +14,4 @@ export interface ContextRailProps {
     renderLink?: (args: ShellLinkRenderArgs) => ReactNode;
     className?: string;
 }
-export declare function ContextRail({ appId: _appId, module, hidden, collapsible, activeItemId, renderLink, className, }: ContextRailProps): import("react/jsx-runtime").JSX.Element | null;
+export declare function ContextRail({ appId, module, hidden, collapsible, activeItemId, renderLink, className, }: ContextRailProps): import("react/jsx-runtime").JSX.Element | null;

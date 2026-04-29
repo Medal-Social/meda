@@ -14,7 +14,8 @@ export interface ContextModule {
     id: string;
     label: string;
     description?: string;
-    items: ContextItem[];
+    items?: ContextItem[];
+    render?: (ctx: ShellRenderContext) => ReactNode;
 }
 export interface ContextItem {
     id: string;

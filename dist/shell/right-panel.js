@@ -18,6 +18,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { Maximize2, Minimize2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
+import { useResolvedPanelViews } from './panel-views-provider.js';
 import { useMedaShell } from './shell-provider.js';
 import { useShellViewport } from './use-shell-viewport.js';
 // ---------------------------------------------------------------------------
@@ -25,6 +26,7 @@ import { useShellViewport } from './use-shell-viewport.js';
 // ---------------------------------------------------------------------------
 const MIN_WIDTH = 300;
 const MAX_WIDTH = 520;
+const EMPTY_PANEL_VIEWS = [];
 function ResizeHandle({ currentWidth, onResize, onCommit }) {
     const startWidthRef = useRef(currentWidth);
     const startXRef = useRef(0);
@@ -61,17 +63,28 @@ function ResizeHandle({ currentWidth, onResize, onCommit }) {
 // ---------------------------------------------------------------------------
 // RightPanel
 // ---------------------------------------------------------------------------
-export function RightPanel({ panelViews = [], defaultView, modes = ['panel', 'expanded', 'fullscreen'], className, }) {
+export function RightPanel({ panelViews = EMPTY_PANEL_VIEWS, defaultView, modes = ['panel', 'expanded', 'fullscreen'], className, }) {
     const band = useShellViewport();
     const ctx = useMedaShell();
     const { mode, activeView, width, setMode, setActiveView, setWidth } = ctx.panel;
-    // Hydrate defaultView on mount if no active view set
-    // biome-ignore lint/correctness/useExhaustiveDependencies: intentional one-time mount effect
+    const { panelViews: resolvedPanelViews, defaultView: resolvedDefaultView } = useResolvedPanelViews(panelViews, defaultView);
+    const hydratedDefaultRef = useRef(null);
+    // Hydrate a default when static or route-registered views become available.
     useEffect(() => {
-        if (!activeView && defaultView) {
-            setActiveView(defaultView);
+        const defaultExists = resolvedDefaultView != null &&
+            resolvedPanelViews.some((view) => view.id === resolvedDefaultView);
+        if (!defaultExists)
+            return;
+        const source = resolvedDefaultView !== defaultView ? 'registered' : 'static';
+        const canReplaceStaticDefault = activeView === hydratedDefaultRef.current?.id &&
+            hydratedDefaultRef.current.source === 'static' &&
+            source === 'registered' &&
+            activeView !== resolvedDefaultView;
+        if (!activeView || canReplaceStaticDefault) {
+            hydratedDefaultRef.current = { id: resolvedDefaultView, source };
+            setActiveView(resolvedDefaultView);
         }
-    }, []);
+    }, [activeView, defaultView, resolvedDefaultView, resolvedPanelViews, setActiveView]);
     // Local display width tracks pointer-move updates live;
     // setWidth (persist) is called on pointerUp.
     const [displayWidth, setDisplayWidth] = useState(null);
@@ -109,14 +122,14 @@ export function RightPanel({ panelViews = [], defaultView, modes = ['panel', 'ex
     })();
     // Z-index escalation: fullscreen covers header + rails
     const zIndexClass = mode === 'fullscreen' ? 'z-[var(--z-shell-fullscreen)]' : 'z-[var(--z-shell-panel)]';
-    const activePanelView = panelViews.find((v) => v.id === activeView);
+    const activePanelView = resolvedPanelViews.find((v) => v.id === activeView);
     const cycleAriaLabel = mode === 'panel' ? 'Expand panel' : mode === 'expanded' ? 'Maximize panel' : 'Restore panel';
     const handleResize = (w) => setDisplayWidth(w);
     const handleCommit = (w) => {
         setDisplayWidth(null);
         setWidth(w);
     };
-    return (_jsx("aside", { "data-meda-panel-mode": mode, "aria-hidden": mode === 'closed' ? 'true' : undefined, className: cn('relative h-full shrink-0 overflow-hidden border-l border-shell-border bg-shell-panel', 'transition-[width] ease-[var(--motion-ease)] duration-[var(--motion-panel)]', mode === 'fullscreen' && 'fixed inset-0 h-screen w-screen border-none', zIndexClass, className), style: widthStyle, children: mode !== 'closed' && (_jsxs("div", { className: "flex h-full flex-col", children: [_jsxs("div", { className: "flex items-center justify-between border-b border-shell-border px-3 py-2", children: [_jsx("div", { className: "flex items-center gap-1", children: panelViews.map((view) => {
+    return (_jsx("aside", { "data-meda-panel-mode": mode, "aria-hidden": mode === 'closed' ? 'true' : undefined, className: cn('relative h-full shrink-0 overflow-hidden border-l border-shell-border bg-shell-panel', 'transition-[width] ease-[var(--motion-ease)] duration-[var(--motion-panel)]', mode === 'fullscreen' && 'fixed inset-0 h-screen w-screen border-none', zIndexClass, className), style: widthStyle, children: mode !== 'closed' && (_jsxs("div", { className: "flex h-full flex-col", children: [_jsxs("div", { className: "flex items-center justify-between border-b border-shell-border px-3 py-2", children: [_jsx("div", { className: "flex items-center gap-1", children: resolvedPanelViews.map((view) => {
                                 const isActive = view.id === activeView;
                                 const Icon = view.icon;
                                 return (_jsxs("button", { type: "button", "aria-current": isActive ? 'true' : undefined, onClick: () => setActiveView(view.id), className: cn('inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors', isActive

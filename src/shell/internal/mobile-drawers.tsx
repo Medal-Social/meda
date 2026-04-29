@@ -22,6 +22,8 @@ export interface MobileDrawersProps {
   menuRenderLink?: IconRailProps['renderLink'];
   /** Module drawer source (current app's context-rail module). */
   module?: ContextModule;
+  /** App id used when rendering module custom content. */
+  moduleAppId?: string;
   /** Panels drawer source. */
   panelViews?: PanelView[];
   /**
@@ -45,6 +47,7 @@ export function MobileDrawers({
   menuActiveId,
   menuRenderLink,
   module,
+  moduleAppId,
   panelViews = [],
   defaultView,
   customContent = {},
@@ -57,6 +60,10 @@ export function MobileDrawers({
     workspaceId: ctx.workspace.id,
     appId: ctx.activeAppId,
   };
+  const moduleRenderCtx: ShellRenderContext = {
+    workspaceId: ctx.workspace.id,
+    appId: moduleAppId ?? ctx.activeAppId,
+  };
 
   return (
     <>
@@ -67,7 +74,12 @@ export function MobileDrawers({
         activeId={menuActiveId}
         renderLink={menuRenderLink}
       />
-      <ModuleDrawer open={open === 'module-drawer'} onClose={close} module={module} />
+      <ModuleDrawer
+        open={open === 'module-drawer'}
+        onClose={close}
+        module={module}
+        renderCtx={moduleRenderCtx}
+      />
       <PanelsDrawer
         open={open === 'panels-drawer'}
         onClose={close}
@@ -197,12 +209,15 @@ function ModuleDrawer({
   open,
   onClose,
   module,
+  renderCtx,
 }: {
   open: boolean;
   onClose: () => void;
   module?: ContextModule;
+  renderCtx: ShellRenderContext;
 }) {
-  if (!module) return null;
+  const items = module?.items ?? [];
+  if (!module || (items.length === 0 && !module.render)) return null;
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()} direction="left">
       <DrawerContent>
@@ -214,22 +229,25 @@ function ModuleDrawer({
             </DrawerDescription>
           )}
         </DrawerHeader>
-        <nav className="flex flex-col gap-0.5 p-2">
-          {module.items.map((item) => {
-            const Icon = item.icon;
-            return (
-              <a
-                key={item.id}
-                href={item.to}
-                onClick={onClose}
-                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-              >
-                <Icon size={16} aria-hidden="true" />
-                <span>{item.label}</span>
-              </a>
-            );
-          })}
-        </nav>
+        {items.length > 0 && (
+          <nav className="flex flex-col gap-0.5 p-2">
+            {items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <a
+                  key={item.id}
+                  href={item.to}
+                  onClick={onClose}
+                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <Icon size={16} aria-hidden="true" />
+                  <span>{item.label}</span>
+                </a>
+              );
+            })}
+          </nav>
+        )}
+        {module.render?.(renderCtx)}
       </DrawerContent>
     </Drawer>
   );

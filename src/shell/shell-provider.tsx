@@ -6,6 +6,7 @@ import {
   lazy,
   type ReactNode,
   Suspense,
+  useCallback,
   useContext,
   useMemo,
   useState,
@@ -20,6 +21,7 @@ import type {
   AppDefinition,
   MobileBottomNavItem,
   PanelMode,
+  PanelView,
   ThemeAdapter,
   WorkspaceDefinition,
 } from './types.js';
@@ -89,6 +91,12 @@ const defaultMobileBottomNav: MobileBottomNavItem[] = [
 // Context value shape
 // ---------------------------------------------------------------------------
 
+export interface PanelViewRegistration {
+  id: string;
+  views: PanelView[];
+  defaultView?: string;
+}
+
 interface MedaShellContextValue {
   workspace: WorkspaceDefinition;
   workspaces: WorkspaceDefinition[];
@@ -126,6 +134,10 @@ interface MedaShellContextValue {
   commandPalette: {
     open: boolean;
     setOpen: (open: boolean) => void;
+  };
+  panelViews: {
+    registrations: PanelViewRegistration[];
+    register: (id: string, views: PanelView[], defaultView?: string) => () => void;
   };
   commandPaletteHotkey: string;
   /** Selection bridge between main workspace and right panel views (spec §17). */
@@ -205,6 +217,43 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
       setOpen: setCommandPaletteOpen,
     }),
     [commandPaletteOpen]
+  );
+
+  const [panelViewRegistrations, setPanelViewRegistrations] = useState<PanelViewRegistration[]>([]);
+
+  const registerPanelViews = useCallback((id: string, views: PanelView[], defaultView?: string) => {
+    setPanelViewRegistrations((prev) => {
+      const existing = prev.find((registration) => registration.id === id);
+      if (existing?.views === views && existing.defaultView === defaultView) return prev;
+
+      const nextRegistration =
+        defaultView === undefined ? { id, views } : { id, views, defaultView };
+
+      if (existing == null) return [...prev, nextRegistration];
+
+      return prev.map((registration) => (registration.id === id ? nextRegistration : registration));
+    });
+
+    return () => {
+      setPanelViewRegistrations((prev) =>
+        prev.some(
+          (registration) =>
+            registration.id === id &&
+            registration.views === views &&
+            registration.defaultView === defaultView
+        )
+          ? prev.filter((registration) => registration.id !== id)
+          : prev
+      );
+    };
+  }, []);
+
+  const panelViews = useMemo(
+    () => ({
+      registrations: panelViewRegistrations,
+      register: registerPanelViews,
+    }),
+    [panelViewRegistrations, registerPanelViews]
   );
 
   const [layoutState, setLayoutState] = useShellLayoutState({
@@ -313,6 +362,7 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
       mobileBottomNav: props.mobileBottomNav ?? defaultMobileBottomNav,
       mobileDrawer,
       commandPalette,
+      panelViews,
       commandPaletteHotkey: props.commandPaletteHotkey ?? 'mod+k',
       selection,
       setSelection,
@@ -327,6 +377,7 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
       props.mobileBottomNav,
       mobileDrawer,
       commandPalette,
+      panelViews,
       props.commandPaletteHotkey,
       selection,
     ]

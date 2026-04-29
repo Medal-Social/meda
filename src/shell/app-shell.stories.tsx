@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { AppShell } from './app-shell.js';
+import { PanelViewsProvider } from './panel-views-provider.js';
 import { MedaShellProvider, useMedaShell } from './shell-provider.js';
 import type {
   AppDefinition,
@@ -45,6 +46,17 @@ const INBOX_MODULE: ContextModule = {
   description: 'Mail + drafts',
   items: INBOX_ITEMS,
 };
+const DYNAMIC_INBOX_MODULE: ContextModule = {
+  ...INBOX_MODULE,
+  render: () => (
+    <div className="border-t border-border px-3 py-4">
+      <p className="text-xs font-medium uppercase text-muted-foreground">Conversation queue</p>
+      <div className="mt-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">
+        6 priority conversations
+      </div>
+    </div>
+  ),
+};
 const PANEL_VIEWS: PanelView[] = [
   {
     id: 'inspector',
@@ -62,6 +74,16 @@ const PANEL_VIEWS: PanelView[] = [
     label: 'Activity',
     icon: Activity,
     render: () => <div className="p-4 text-sm text-muted-foreground">Activity</div>,
+  },
+];
+const ROUTE_PANEL_VIEWS: PanelView[] = [
+  {
+    id: 'conversation',
+    label: 'Conversation',
+    icon: Mail,
+    render: () => (
+      <div className="p-4 text-sm text-muted-foreground">Route-owned conversation details.</div>
+    ),
   },
 ];
 
@@ -250,10 +272,12 @@ export const WorkspaceWithAdoptionHooks: Story = {
           </a>
         ),
       }}
-      contextRail={{ appId: 'inbox', module: INBOX_MODULE, activeItemId: 'inbox' }}
+      contextRail={{ appId: 'inbox', module: DYNAMIC_INBOX_MODULE, activeItemId: 'inbox' }}
       rightPanel={{ panelViews: PANEL_VIEWS, defaultView: 'inspector' }}
     >
-      <AdoptionControlPanel />
+      <PanelViewsProvider views={ROUTE_PANEL_VIEWS} defaultView="conversation">
+        <AdoptionControlPanel />
+      </PanelViewsProvider>
     </AppShell>
   ),
 };
