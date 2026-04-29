@@ -19,6 +19,7 @@
 import { Maximize2, Minimize2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
+import { useResolvedPanelViews } from './panel-views-provider.js';
 import { useMedaShell } from './shell-provider.js';
 import type { PanelMode, PanelView, ShellRenderContext } from './types.js';
 import { useShellViewport } from './use-shell-viewport.js';
@@ -29,6 +30,7 @@ import { useShellViewport } from './use-shell-viewport.js';
 
 const MIN_WIDTH = 300;
 const MAX_WIDTH = 520;
+const EMPTY_PANEL_VIEWS: PanelView[] = [];
 
 // ---------------------------------------------------------------------------
 // RightPanelProps
@@ -116,7 +118,7 @@ function ResizeHandle({ currentWidth, onResize, onCommit }: ResizeHandleProps) {
 // ---------------------------------------------------------------------------
 
 export function RightPanel({
-  panelViews = [],
+  panelViews = EMPTY_PANEL_VIEWS,
   defaultView,
   modes = ['panel', 'expanded', 'fullscreen'],
   className,
@@ -124,14 +126,29 @@ export function RightPanel({
   const band = useShellViewport();
   const ctx = useMedaShell();
   const { mode, activeView, width, setMode, setActiveView, setWidth } = ctx.panel;
+  const { panelViews: resolvedPanelViews, defaultView: resolvedDefaultView } =
+    useResolvedPanelViews(panelViews, defaultView);
+  const hydratedDefaultRef = useRef<{ id: string; source: 'static' | 'registered' } | null>(null);
 
-  // Hydrate defaultView on mount if no active view set
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional one-time mount effect
+  // Hydrate a default when static or route-registered views become available.
   useEffect(() => {
-    if (!activeView && defaultView) {
-      setActiveView(defaultView);
+    const defaultExists =
+      resolvedDefaultView != null &&
+      resolvedPanelViews.some((view) => view.id === resolvedDefaultView);
+    if (!defaultExists) return;
+
+    const source = resolvedDefaultView !== defaultView ? 'registered' : 'static';
+    const canReplaceStaticDefault =
+      activeView === hydratedDefaultRef.current?.id &&
+      hydratedDefaultRef.current.source === 'static' &&
+      source === 'registered' &&
+      activeView !== resolvedDefaultView;
+
+    if (!activeView || canReplaceStaticDefault) {
+      hydratedDefaultRef.current = { id: resolvedDefaultView, source };
+      setActiveView(resolvedDefaultView);
     }
-  }, []);
+  }, [activeView, defaultView, resolvedDefaultView, resolvedPanelViews, setActiveView]);
 
   // Local display width tracks pointer-move updates live;
   // setWidth (persist) is called on pointerUp.
@@ -175,7 +192,7 @@ export function RightPanel({
   const zIndexClass =
     mode === 'fullscreen' ? 'z-[var(--z-shell-fullscreen)]' : 'z-[var(--z-shell-panel)]';
 
-  const activePanelView = panelViews.find((v) => v.id === activeView);
+  const activePanelView = resolvedPanelViews.find((v) => v.id === activeView);
 
   const cycleAriaLabel =
     mode === 'panel' ? 'Expand panel' : mode === 'expanded' ? 'Maximize panel' : 'Restore panel';
@@ -205,7 +222,7 @@ export function RightPanel({
           <div className="flex items-center justify-between border-b border-shell-border px-3 py-2">
             {/* View tabs */}
             <div className="flex items-center gap-1">
-              {panelViews.map((view) => {
+              {resolvedPanelViews.map((view) => {
                 const isActive = view.id === activeView;
                 const Icon = view.icon;
                 return (

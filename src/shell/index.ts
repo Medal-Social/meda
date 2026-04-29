@@ -22,6 +22,8 @@ export type { ShellStorageAdapter } from './layout-state.js';
 export { createLocalStorageAdapter } from './layout-state.js';
 // Hooks + tokens
 export { motion } from './motion.js';
+export type { PanelViewsProviderProps } from './panel-views-provider.js';
+export { PanelViewsProvider } from './panel-views-provider.js';
 export type { RailDropSlotProps, RailDropSlotState } from './rail-drop-slot.js';
 // Resize primitives
 export { RailDropSlot } from './rail-drop-slot.js';
