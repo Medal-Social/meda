@@ -19,6 +19,8 @@ import type {
 } from './types.js';
 import { useShellViewport } from './use-shell-viewport.js';
 
+const EMPTY_PANEL_VIEWS: PanelView[] = [];
+
 export interface AppShellWorkspaceProps {
   iconRail?: AppShellIconRailConfig;
   contextRail?: AppShellContextRailConfig;
@@ -36,10 +38,8 @@ export function AppShellWorkspace({
 }: AppShellWorkspaceProps) {
   const viewport = useShellViewport();
   const isMobile = viewport === 'mobile';
-  const resolvedRightPanel = useResolvedPanelViews(
-    rightPanel?.panelViews ?? [],
-    rightPanel?.defaultView
-  );
+  const staticPanelViews = rightPanel?.panelViews ?? EMPTY_PANEL_VIEWS;
+  const resolvedRightPanel = useResolvedPanelViews(staticPanelViews, rightPanel?.defaultView);
 
   // Derive the bottom-nav items from the variant config so each button maps
   // to a drawer that actually has content. Without this filter, partial
@@ -89,10 +89,7 @@ export function AppShellWorkspace({
         )}
         <ShellMain layout="workspace">{children}</ShellMain>
         {!isMobile && resolvedRightPanel.panelViews.length > 0 && (
-          <RightPanel
-            panelViews={rightPanel?.panelViews ?? []}
-            defaultView={rightPanel?.defaultView}
-          />
+          <RightPanel panelViews={staticPanelViews} defaultView={rightPanel?.defaultView} />
         )}
       </div>
       {isMobile && hasDrawerContent && <MobileBottomNav items={navItems} />}

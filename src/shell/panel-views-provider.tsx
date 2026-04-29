@@ -1,8 +1,8 @@
 'use client';
 
-import { type ReactNode, useId, useLayoutEffect, useMemo } from 'react';
+import { type ReactNode, useId, useLayoutEffect, useMemo, useRef } from 'react';
 import { type PanelViewRegistration, useMedaShell } from './shell-provider.js';
-import type { PanelView } from './types.js';
+import type { PanelView, ShellRenderContext } from './types.js';
 
 export interface PanelViewsProviderProps {
   views: PanelView[];
@@ -56,13 +56,36 @@ export function useResolvedPanelViews(
   );
 }
 
+function getPanelViewsSignature(views: PanelView[]): string {
+  return views.map((view) => `${view.id}\u001f${view.label}`).join('\u001e');
+}
+
 export function PanelViewsProvider({ views, defaultView, children }: PanelViewsProviderProps) {
   const { register } = useMedaShell().panelViews;
   const registrationId = useId();
+  const latestViewsRef = useRef(views);
+  latestViewsRef.current = views;
+
+  const viewsSignature = getPanelViewsSignature(views);
+  const registeredViewsRef = useRef<{ signature: string; views: PanelView[] } | null>(null);
+  if (registeredViewsRef.current?.signature !== viewsSignature) {
+    registeredViewsRef.current = {
+      signature: viewsSignature,
+      views: views.map((view) => ({
+        id: view.id,
+        label: view.label,
+        icon: view.icon,
+        render: (ctx: ShellRenderContext) =>
+          latestViewsRef.current.find((currentView) => currentView.id === view.id)?.render(ctx) ??
+          null,
+      })),
+    };
+  }
+  const registeredViews = registeredViewsRef.current.views;
 
   useLayoutEffect(() => {
-    return register(registrationId, views, defaultView);
-  }, [register, registrationId, views, defaultView]);
+    return register(registrationId, registeredViews, defaultView);
+  }, [register, registrationId, registeredViews, defaultView]);
 
   return <>{children}</>;
 }

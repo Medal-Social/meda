@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { Info } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { StrictMode, useState } from 'react';
+import { StrictMode, useEffect, useRef, useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PanelViewsProvider } from './panel-views-provider.js';
 import { RightPanel } from './right-panel.js';
@@ -679,6 +679,64 @@ describe('RightPanel — PanelViewsProvider registrations', () => {
 
     expect(screen.getByRole('button', { name: /route view/i })).toBeInTheDocument();
     expect(screen.getByText('Route content')).toBeInTheDocument();
+  });
+
+  it('does not re-register equivalent inline view arrays on parent rerender', async () => {
+    function RegistrationChangeProbe() {
+      const ctx = useMedaShell();
+      const registrations = ctx.panelViews.registrations;
+      const previousRegistrations = useRef(registrations);
+      const [changes, setChanges] = useState(0);
+
+      useEffect(() => {
+        if (previousRegistrations.current !== registrations) {
+          previousRegistrations.current = registrations;
+          setChanges((value) => value + 1);
+        }
+      }, [registrations]);
+
+      return <output data-testid="registration-change-count">{changes}</output>;
+    }
+
+    function Root() {
+      const [count, setCount] = useState(0);
+      return (
+        <>
+          <button type="button" data-testid="rerender-route" onClick={() => setCount((n) => n + 1)}>
+            Rerender
+          </button>
+          <RegistrationChangeProbe />
+          <PanelViewsProvider
+            views={[
+              {
+                id: 'route-view',
+                label: 'Route View',
+                icon: Info,
+                render: () => <div>Route content {count}</div>,
+              },
+            ]}
+          >
+            <RightPanel />
+          </PanelViewsProvider>
+        </>
+      );
+    }
+
+    render(
+      <Wrapper mode="panel" activeView="route-view">
+        <Root />
+      </Wrapper>
+    );
+
+    expect(await screen.findByText('Route content 0')).toBeInTheDocument();
+    expect(screen.getByTestId('registration-change-count')).toHaveTextContent('1');
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('rerender-route'));
+    });
+
+    expect(screen.getByText('Route content 1')).toBeInTheDocument();
+    expect(screen.getByTestId('registration-change-count')).toHaveTextContent('1');
   });
 
   it('registered views unregister on provider unmount and RightPanel falls back to no selected view', async () => {
