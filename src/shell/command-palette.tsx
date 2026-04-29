@@ -185,6 +185,7 @@ export function CommandPalette({ children }: CommandPaletteProps) {
               <CommandGroup key={group.id} heading={group.label}>
                 {group.commands.map((cmd) => {
                   const Icon = cmd.icon;
+                  const shortcut = cmd.shortcut ?? cmd.hotkey;
                   return (
                     <CommandItem
                       key={cmd.id}
@@ -193,7 +194,7 @@ export function CommandPalette({ children }: CommandPaletteProps) {
                     >
                       {Icon && <Icon size={16} aria-hidden="true" />}
                       <span>{cmd.label}</span>
-                      {cmd.shortcut && <CommandShortcut>{cmd.shortcut}</CommandShortcut>}
+                      {shortcut && <CommandShortcut>{shortcut}</CommandShortcut>}
                     </CommandItem>
                   );
                 })}

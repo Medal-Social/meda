@@ -509,6 +509,74 @@ describe('useCommands — registers on mount, unregisters on unmount', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Command shortcut display
+// ---------------------------------------------------------------------------
+
+describe('CommandPalette — command shortcut display', () => {
+  function CommandSetup({ commands }: { commands: CommandDefinition[] }) {
+    useCommands(commands);
+    const ctx = useMedaShell();
+    return (
+      <button type="button" onClick={() => ctx.commandPalette.setOpen(true)} data-testid="open">
+        open
+      </button>
+    );
+  }
+
+  it('shows hotkey text when a command has hotkey but no shortcut', async () => {
+    const cmd: CommandDefinition = {
+      id: 'hotkey-only',
+      label: 'Hotkey Only',
+      group: 'tests',
+      hotkey: '⌘J',
+      run: vi.fn(),
+    };
+
+    render(
+      <MedaShellProvider workspace={workspace} apps={apps}>
+        <CommandPalette>
+          <CommandSetup commands={[cmd]} />
+        </CommandPalette>
+      </MedaShellProvider>
+    );
+
+    fireEvent.click(screen.getByTestId('open'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Hotkey Only')).toBeInTheDocument();
+      expect(screen.getByText('⌘J')).toBeInTheDocument();
+    });
+  });
+
+  it('shows shortcut instead of hotkey when both are present', async () => {
+    const cmd: CommandDefinition = {
+      id: 'shortcut-wins',
+      label: 'Shortcut Wins',
+      group: 'tests',
+      shortcut: '⌘S',
+      hotkey: '⌘H',
+      run: vi.fn(),
+    };
+
+    render(
+      <MedaShellProvider workspace={workspace} apps={apps}>
+        <CommandPalette>
+          <CommandSetup commands={[cmd]} />
+        </CommandPalette>
+      </MedaShellProvider>
+    );
+
+    fireEvent.click(screen.getByTestId('open'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Shortcut Wins')).toBeInTheDocument();
+      expect(screen.getByText('⌘S')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('⌘H')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Task 14.2: useCommandGroup hook
 // ---------------------------------------------------------------------------
 

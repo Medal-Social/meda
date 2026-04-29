@@ -71,6 +71,7 @@ export interface CommandDefinition {
   icon?: LucideIcon;
   group: string;
   shortcut?: string;
+  hotkey?: string;
   run: () => void | Promise<void>;
 }
 
