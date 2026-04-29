@@ -17,9 +17,14 @@ permissions:
 jobs:
   enable-auto-merge:
     runs-on: ubuntu-latest
+    # Same-repo gate is critical: this workflow runs on `pull_request_target`
+    # with write permissions, so without `head.repo.full_name == repository` a
+    # fork could open a PR to `prod` from a branch named `dev` and have
+    # auto-merge enabled on it.
     if: |
-      github.event.pull_request.head.ref == 'dev' ||
-      startsWith(github.event.pull_request.head.ref, 'changeset-release/')
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (github.event.pull_request.head.ref == 'dev' ||
+       startsWith(github.event.pull_request.head.ref, 'changeset-release/'))
     steps:
       - name: Enable auto-merge
         env:
