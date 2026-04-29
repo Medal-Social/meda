@@ -1,0 +1,157 @@
+name: Auto-resolve bot threads on merge-up PRs
+
+# Codex (chatgpt-codex-connector) does not honor branch-based skip rules — it
+# only respects AGENTS.md "Review guidelines" as a soft signal. Combined with
+# `required_conversation_resolution: true` on the prod branch, an unresolved
+# Codex thread on a merge-up PR (dev → prod, changeset-release/* → prod,
+# auto-sync-* → dev) will block auto-merge.
+#
+# This workflow auto-resolves any unresolved review threads opened by bots on
+# those PRs once the CI workflow has completed successfully. It is
+# intentionally narrow:
+#   - Only fires when CI on a same-repo PR finished with `success`
+#   - Only runs on PRs whose head ref matches the merge-up patterns
+#   - Only resolves threads opened by known bot accounts
+
+on:
+  # `check_suite.completed` is unreliable here: per GitHub docs, check_suite
+  # events created by GitHub Actions do not trigger workflows, so for CI runs
+  # this event would never fire. `workflow_run` fires for any completion of a
+  # named workflow regardless of who created the check suite.
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to process'
+        required: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    # Same-repo guard for both triggers:
+    #   - workflow_run: head_repository.full_name must match the base repo
+    #     (forks are excluded automatically because workflow_run for fork PRs
+    #     comes with the fork as the head repository).
+    #   - workflow_dispatch: re-checked inside the script via the PR's
+    #     head.repo.full_name.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'pull_request' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    steps:
+      - name: Resolve bot threads on eligible PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER_INPUT: ${{ github.event.inputs.pr_number }}
+          # workflow_run includes pull_requests only for same-repo PRs, so
+          # pull_requests[0].number is safe here once the same-repo guard above
+          # has matched.
+          WORKFLOW_RUN_PR: ${{ github.event.workflow_run.pull_requests[0].number }}
+        run: |
+          set -euo pipefail
+
+          PR_NUMBER="${PR_NUMBER_INPUT:-${WORKFLOW_RUN_PR:-}}"
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No PR number resolved from event — exiting."
+            exit 0
+          fi
+
+          OWNER="${REPO%/*}"
+          NAME="${REPO#*/}"
+
+          PR_JSON=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}")
+          HEAD_REF=$(echo "$PR_JSON" | jq -r '.head.ref')
+          HEAD_REPO=$(echo "$PR_JSON" | jq -r '.head.repo.full_name')
+          STATE=$(echo "$PR_JSON" | jq -r '.state')
+
+          # Hard same-repo gate. Critical for the workflow_dispatch path where
+          # an arbitrary PR number can be passed; also belt-and-braces for the
+          # workflow_run path.
+          if [ "$HEAD_REPO" != "$REPO" ]; then
+            echo "PR #${PR_NUMBER} head repo '${HEAD_REPO}' is a fork — skipping."
+            exit 0
+          fi
+
+          if [ "$STATE" != "open" ]; then
+            echo "PR #${PR_NUMBER} is not open (state=${STATE}) — skipping."
+            exit 0
+          fi
+
+          case "$HEAD_REF" in
+            dev|changeset-release/*|chore/auto-sync-*)
+              echo "PR #${PR_NUMBER} head ref '${HEAD_REF}' is a merge-up PR — proceeding."
+              ;;
+            *)
+              echo "PR #${PR_NUMBER} head ref '${HEAD_REF}' is not a merge-up PR — skipping."
+              exit 0
+              ;;
+          esac
+
+          BOT_LOGINS='chatgpt-codex-connector qodo-code-review github-actions copilot'
+
+          # Paginate through all review threads. GitHub caps `first` at 100, so
+          # large PRs can carry leftover bot threads on subsequent pages that
+          # would otherwise still block merge under required_conversation_resolution.
+          CURSOR=""
+          while :; do
+            if [ -z "$CURSOR" ]; then
+              AFTER_ARG=""
+            else
+              AFTER_ARG="-f cursor=$CURSOR"
+            fi
+
+            # shellcheck disable=SC2086
+            PAGE=$(gh api graphql $AFTER_ARG -f query="
+              query(\$owner: String!, \$name: String!, \$num: Int!, \$cursor: String) {
+                repository(owner: \$owner, name: \$name) {
+                  pullRequest(number: \$num) {
+                    reviewThreads(first: 100, after: \$cursor) {
+                      pageInfo { hasNextPage endCursor }
+                      nodes {
+                        id
+                        isResolved
+                        comments(first: 1) {
+                          nodes { author { login } }
+                        }
+                      }
+                    }
+                  }
+                }
+              }" -f owner="$OWNER" -f name="$NAME" -F num="$PR_NUMBER")
+
+            echo "$PAGE" | jq -r '
+              .data.repository.pullRequest.reviewThreads.nodes[]
+              | select(.isResolved == false)
+              | "\(.id) \(.comments.nodes[0].author.login)"
+            ' | while IFS=' ' read -r thread_id author; do
+              stripped="${author%\[bot\]}"
+              for bot in $BOT_LOGINS; do
+                if [ "$stripped" = "$bot" ]; then
+                  echo "Resolving thread ${thread_id} from ${author}"
+                  gh api graphql -f query='
+                    mutation($id: ID!) {
+                      resolveReviewThread(input: {threadId: $id}) {
+                        thread { id isResolved }
+                      }
+                    }' -f id="$thread_id" >/dev/null
+                  break
+                fi
+              done
+            done
+
+            HAS_NEXT=$(echo "$PAGE" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage')
+            if [ "$HAS_NEXT" != "true" ]; then
+              break
+            fi
+            CURSOR=$(echo "$PAGE" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.endCursor')
+          done
+
+          echo "Done."

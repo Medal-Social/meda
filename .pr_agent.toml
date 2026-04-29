@@ -1,0 +1,17 @@
+# Qodo Merge / qodo-code-review configuration.
+# https://qodo-merge-docs.qodo.ai/usage-guide/additional_configurations/
+
+[config]
+# Skip Qodo review on merge-up PRs. The code on these PRs has already been
+# reviewed at the feat → dev stage; re-reviewing on the promote PRs is noise
+# that delays the release flow with stale findings.
+#
+# Patterns are regex against the source (head) branch name:
+#   - `^dev$`                    → the dev → prod release PR
+#   - `^changeset-release/.*$`   → the Changesets bot's "Release PR"
+#   - `^chore/auto-sync-.*$`     → the prod → dev auto-sync PR
+ignore_pr_source_branches = [
+  "^dev$",
+  "^changeset-release/.*$",
+  "^chore/auto-sync-.*$",
+]

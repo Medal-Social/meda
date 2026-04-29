@@ -11,6 +11,11 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: npm
+    # Pin Playwright's browser dir at the job level so every step (including
+    # the Husky pre-commit hook fired by changesets/action when it commits
+    # the version bump) resolves to the cached install location.
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
     # GITHUB_TOKEN gets only what the npm OIDC + provenance steps need.
     # All git/PR writes (checkout, push, PR open) use the Medal Social
     # Release Bot App token, not GITHUB_TOKEN — so contents: write and
@@ -41,15 +46,29 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
 
-      # changesets/action stages + commits the version bump, which fires the
-      # Husky pre-commit hook (lint + test). The vitest 'storybook' project
-      # runs every *.stories.tsx in headless Chromium via @vitest/browser-
-      # playwright, so the browser binary needs to be present before that
-      # commit. --with-deps installs the required system libs on Ubuntu.
-      - run: pnpm exec playwright install chromium --with-deps
+      # Cache the Playwright browser binaries — the Husky pre-commit hook
+      # (which fires when changesets/action commits the version bump) runs
+      # `pnpm test`, and the vitest 'storybook' project drives headless
+      # Chromium via @vitest/browser-playwright. Pin PLAYWRIGHT_BROWSERS_PATH
+      # so the cache path matches the install location deterministically.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f # v3.4.3
+        with:
+          path: ${{ github.workspace }}/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Playwright Chromium (cache miss)
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Install Playwright system deps only (cache hit)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
 
       - run: pnpm build
 
