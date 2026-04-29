@@ -1,5 +1,17 @@
 # @medalsocial/meda
 
+## 1.4.0
+
+### Minor Changes
+
+- [#73](https://github.com/Medal-Social/meda/pull/73) [`79fb98a`](https://github.com/Medal-Social/meda/commit/79fb98a31c9a29c68da70604169d1e0a8202811c) Thanks [@alioftech](https://github.com/alioftech)! - Adds auth adoption controls, `AppShell` auth branding shorthand, and an optional better-auth adapter subpath.
+
+- [#75](https://github.com/Medal-Social/meda/pull/75) [`439e475`](https://github.com/Medal-Social/meda/commit/439e475e7e1c0c8f2e93fe38456d47d469f43711) Thanks [@alioftech](https://github.com/alioftech)! - Add shell primitive and Next recipe package subpaths, plus registry metadata for copyable AppShell adoption recipes.
+
+- [#74](https://github.com/Medal-Social/meda/pull/74) [`3bb777c`](https://github.com/Medal-Social/meda/commit/3bb777c23ef050a542e4786b2b0da2fcc996d071) Thanks [@alioftech](https://github.com/alioftech)! - Add render-boundary adapter props for auth provider buttons, shell rail links, and right panel tabs so consumers can integrate routers, analytics, and wrapper components while preserving Meda ARIA, state, and event props.
+
+- [#76](https://github.com/Medal-Social/meda/pull/76) [`970a8e6`](https://github.com/Medal-Social/meda/commit/970a8e6d8f8e60c68b199666c67c56f66f6a8dfd) Thanks [@alioftech](https://github.com/alioftech)! - Add a public theme bridge helper for app-scoped Meda token CSS and strengthen Next recipe accessibility/composition contracts.
+
 ## 1.3.0
 
 ### Minor Changes
