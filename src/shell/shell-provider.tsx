@@ -101,6 +101,9 @@ interface MedaShellContextValue {
     setMode: (m: PanelMode) => void;
     setActiveView: (v: string | null) => void;
     setWidth: (w: number) => void;
+    open: () => void;
+    close: () => void;
+    toggle: () => void;
     /** Opens panel + switches to viewId in one call.
      * Sugar for app keyboard shortcuts (e.g. Cmd+J → panel.focus('ai')).
      * If already open in 'panel', 'expanded', or 'fullscreen', the existing
@@ -112,6 +115,7 @@ interface MedaShellContextValue {
     collapsed: boolean;
     setWidth: (w: number) => void;
     setCollapsed: (c: boolean) => void;
+    toggle: () => void;
   };
   mobileBottomNav: MobileBottomNavItem[];
   mobileDrawer: {
@@ -228,6 +232,27 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
           ...prev,
           rightPanel: { ...prev.rightPanel, width },
         })),
+      open: () =>
+        setLayoutState((prev) => ({
+          ...prev,
+          rightPanel: {
+            ...prev.rightPanel,
+            mode: prev.rightPanel.mode === 'closed' ? 'panel' : prev.rightPanel.mode,
+          },
+        })),
+      close: () =>
+        setLayoutState((prev) => ({
+          ...prev,
+          rightPanel: { ...prev.rightPanel, mode: 'closed' },
+        })),
+      toggle: () =>
+        setLayoutState((prev) => ({
+          ...prev,
+          rightPanel: {
+            ...prev.rightPanel,
+            mode: prev.rightPanel.mode === 'closed' ? 'panel' : 'closed',
+          },
+        })),
       // focus(viewId) — opens panel + switches to view in one call.
       // Only flips closed → panel; preserves expanded / fullscreen modes.
       focus: (viewId: string) =>
@@ -256,6 +281,11 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
         setLayoutState((prev) => ({
           ...prev,
           contextRail: { ...prev.contextRail, collapsed },
+        })),
+      toggle: () =>
+        setLayoutState((prev) => ({
+          ...prev,
+          contextRail: { ...prev.contextRail, collapsed: !prev.contextRail.collapsed },
         })),
     }),
     [layoutState, setLayoutState]

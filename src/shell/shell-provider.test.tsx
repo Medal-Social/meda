@@ -116,11 +116,15 @@ describe('MedaShellProvider', () => {
     expect(typeof ctx.panel.setMode).toBe('function');
     expect(typeof ctx.panel.setActiveView).toBe('function');
     expect(typeof ctx.panel.setWidth).toBe('function');
+    expect(typeof ctx.panel.open).toBe('function');
+    expect(typeof ctx.panel.close).toBe('function');
+    expect(typeof ctx.panel.toggle).toBe('function');
     // contextRail shape
     expect(typeof ctx.contextRail.width).toBe('number');
     expect(typeof ctx.contextRail.collapsed).toBe('boolean');
     expect(typeof ctx.contextRail.setWidth).toBe('function');
     expect(typeof ctx.contextRail.setCollapsed).toBe('function');
+    expect(typeof ctx.contextRail.toggle).toBe('function');
     // commandPaletteHotkey default
     expect(ctx.commandPaletteHotkey).toBe('mod+k');
   });
@@ -507,6 +511,86 @@ describe('MedaShellProvider — panel.focus', () => {
 });
 
 // ---------------------------------------------------------------------------
+// MedaShellProvider — panel helper methods
+// ---------------------------------------------------------------------------
+
+describe('MedaShellProvider — panel helper methods', () => {
+  function makePanelWrapper(initialMode: 'closed' | 'panel' | 'expanded' | 'fullscreen') {
+    const storage = makeStubStorage({
+      rightPanel: { mode: initialMode, activeView: 'inspector', width: 420 },
+      contextRail: { width: 240, collapsed: false },
+    });
+    return ({ children }: { children: ReactNode }) => (
+      <MedaShellProvider workspace={workspace} apps={apps} storage={storage}>
+        {children}
+      </MedaShellProvider>
+    );
+  }
+
+  it('panel.open opens closed to panel', () => {
+    const { result } = renderHook(() => useMedaShell(), {
+      wrapper: makePanelWrapper('closed'),
+    });
+
+    act(() => {
+      result.current.panel.open();
+    });
+
+    expect(result.current.panel.mode).toBe('panel');
+    expect(result.current.panel.activeView).toBe('inspector');
+    expect(result.current.panel.width).toBe(420);
+  });
+
+  it('panel.open preserves expanded', () => {
+    const { result } = renderHook(() => useMedaShell(), {
+      wrapper: makePanelWrapper('expanded'),
+    });
+
+    act(() => {
+      result.current.panel.open();
+    });
+
+    expect(result.current.panel.mode).toBe('expanded');
+    expect(result.current.panel.activeView).toBe('inspector');
+    expect(result.current.panel.width).toBe(420);
+  });
+
+  it('panel.close preserves activeView', () => {
+    const { result } = renderHook(() => useMedaShell(), {
+      wrapper: makePanelWrapper('panel'),
+    });
+
+    act(() => {
+      result.current.panel.close();
+    });
+
+    expect(result.current.panel.mode).toBe('closed');
+    expect(result.current.panel.activeView).toBe('inspector');
+    expect(result.current.panel.width).toBe(420);
+  });
+
+  it('panel.toggle opens closed then closes open', () => {
+    const { result } = renderHook(() => useMedaShell(), {
+      wrapper: makePanelWrapper('closed'),
+    });
+
+    act(() => {
+      result.current.panel.toggle();
+    });
+
+    expect(result.current.panel.mode).toBe('panel');
+
+    act(() => {
+      result.current.panel.toggle();
+    });
+
+    expect(result.current.panel.mode).toBe('closed');
+    expect(result.current.panel.activeView).toBe('inspector');
+    expect(result.current.panel.width).toBe(420);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // MedaShellProvider — contextRail same-tick updates
 // ---------------------------------------------------------------------------
 
@@ -521,6 +605,34 @@ describe('MedaShellProvider — contextRail same-tick updates', () => {
 
     expect(result.current.contextRail.width).toBe(420);
     expect(result.current.contextRail.collapsed).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MedaShellProvider — contextRail helper methods
+// ---------------------------------------------------------------------------
+
+describe('MedaShellProvider — contextRail helper methods', () => {
+  it('contextRail.toggle flips collapsed state and preserves width across two toggles', () => {
+    const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+
+    act(() => {
+      result.current.contextRail.setWidth(420);
+    });
+
+    act(() => {
+      result.current.contextRail.toggle();
+    });
+
+    expect(result.current.contextRail.collapsed).toBe(true);
+    expect(result.current.contextRail.width).toBe(420);
+
+    act(() => {
+      result.current.contextRail.toggle();
+    });
+
+    expect(result.current.contextRail.collapsed).toBe(false);
+    expect(result.current.contextRail.width).toBe(420);
   });
 });
 
