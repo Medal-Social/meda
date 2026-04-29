@@ -34,15 +34,22 @@ const menuItemClassName = 'flex items-center gap-2 rounded-md px-3 py-2 text-sm 
 function MenuDrawerItem({ item, isActive, onClose, renderLink, }) {
     const Icon = item.icon;
     const children = (_jsxs(_Fragment, { children: [_jsx(Icon, { size: 18, "aria-hidden": "true" }), _jsx("span", { children: item.label })] }));
+    const className = cn(menuItemClassName, isActive && 'bg-accent text-foreground');
+    const linkProps = {
+        href: item.to,
+        className,
+        children,
+    };
     if (renderLink) {
         return closeAfterLinkClick(renderLink({
             item,
             isActive,
-            className: cn(menuItemClassName, isActive && 'bg-accent text-foreground'),
+            className,
             children,
+            linkProps,
         }), onClose);
     }
-    return (_jsx("a", { href: item.to, onClick: onClose, className: menuItemClassName, children: children }));
+    return closeAfterLinkClick(_jsx("a", { ...linkProps }), onClose);
 }
 function closeAfterLinkClick(link, onClose) {
     if (!isValidElement(link)) {

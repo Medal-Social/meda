@@ -1,6 +1,7 @@
 'use client';
 
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { type RenderElement, renderElement } from '../lib/render-element.js';
 import { cn } from '../lib/utils.js';
 
 export type AuthProvider = 'google' | (string & {});
@@ -14,7 +15,13 @@ export interface AuthProviderButtonProps
   loadingLabel?: ReactNode;
   lastUsed?: boolean;
   lastUsedLabel?: ReactNode;
+  render?: RenderElement<ButtonHTMLAttributes<HTMLButtonElement>>;
 }
+
+type AuthProviderButtonRenderProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  'data-provider'?: string;
+  'data-last-used'?: boolean;
+};
 
 export function AuthProviderButton({
   provider,
@@ -24,6 +31,7 @@ export function AuthProviderButton({
   loadingLabel = 'Loading...',
   lastUsed = false,
   lastUsedLabel = 'Last used',
+  render,
   disabled,
   className,
   type = 'button',
@@ -32,19 +40,8 @@ export function AuthProviderButton({
   const resolvedIcon = icon ?? (provider === 'google' ? <GoogleIcon /> : null);
   const isDisabled = disabled || loading;
 
-  return (
-    <button
-      type={type}
-      disabled={isDisabled}
-      aria-busy={loading || undefined}
-      data-provider={provider}
-      data-last-used={lastUsed || undefined}
-      className={cn(
-        'relative inline-flex min-h-11 w-full items-center justify-center gap-3 rounded-md border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60',
-        className
-      )}
-      {...props}
-    >
+  const children = (
+    <>
       {resolvedIcon && (
         <span className="flex size-5 shrink-0 items-center justify-center" aria-hidden="true">
           {resolvedIcon}
@@ -59,8 +56,28 @@ export function AuthProviderButton({
           {lastUsedLabel}
         </span>
       )}
-    </button>
+    </>
   );
+
+  const buttonProps = {
+    type,
+    disabled: isDisabled,
+    'aria-busy': loading || undefined,
+    'data-provider': provider,
+    'data-last-used': lastUsed || undefined,
+    className: cn(
+      'relative inline-flex min-h-11 w-full items-center justify-center gap-3 rounded-md border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60',
+      className
+    ),
+    ...props,
+    children,
+  } satisfies AuthProviderButtonRenderProps;
+
+  if (render) {
+    return renderElement(render, buttonProps);
+  }
+
+  return <button {...buttonProps} />;
 }
 
 function GoogleIcon() {

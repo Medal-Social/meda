@@ -167,24 +167,27 @@ function MenuDrawerItem({
       <span>{item.label}</span>
     </>
   );
+  const className = cn(menuItemClassName, isActive && 'bg-accent text-foreground');
+  const linkProps = {
+    href: item.to,
+    className,
+    children,
+  };
 
   if (renderLink) {
     return closeAfterLinkClick(
       renderLink({
         item,
         isActive,
-        className: cn(menuItemClassName, isActive && 'bg-accent text-foreground'),
+        className,
         children,
+        linkProps,
       }),
       onClose
     );
   }
 
-  return (
-    <a href={item.to} onClick={onClose} className={menuItemClassName}>
-      {children}
-    </a>
-  );
+  return closeAfterLinkClick(<a {...linkProps} />, onClose);
 }
 
 type MenuLinkElementProps = {

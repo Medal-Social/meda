@@ -17,7 +17,8 @@
  */
 
 import { Maximize2, Minimize2, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import { useResolvedPanelViews } from './panel-views-provider.js';
 import { useMedaShell } from './shell-provider.js';
@@ -47,8 +48,20 @@ export interface RightPanelProps {
    * If only ['panel'], the cycle button is hidden.
    */
   modes?: PanelMode[];
+  renderTab?: (args: RightPanelTabRenderArgs) => ReactNode;
   className?: string;
 }
+
+export interface RightPanelTabRenderArgs {
+  view: PanelView;
+  isActive: boolean;
+  buttonProps: RightPanelTabButtonProps;
+  children: ReactNode;
+}
+
+export type RightPanelTabButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  'data-active'?: boolean;
+};
 
 // ---------------------------------------------------------------------------
 // ResizeHandle — left-edge drag handle (Pattern B)
@@ -121,6 +134,7 @@ export function RightPanel({
   panelViews = EMPTY_PANEL_VIEWS,
   defaultView,
   modes = ['panel', 'expanded', 'fullscreen'],
+  renderTab,
   className,
 }: RightPanelProps) {
   const band = useShellViewport();
@@ -225,23 +239,35 @@ export function RightPanel({
               {resolvedPanelViews.map((view) => {
                 const isActive = view.id === activeView;
                 const Icon = view.icon;
-                return (
-                  <button
-                    key={view.id}
-                    type="button"
-                    aria-current={isActive ? 'true' : undefined}
-                    onClick={() => setActiveView(view.id)}
-                    className={cn(
-                      'inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors',
-                      isActive
-                        ? 'bg-accent text-accent-foreground'
-                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                    )}
-                  >
+                const children = (
+                  <>
                     <Icon size={14} aria-hidden="true" />
                     <span>{view.label}</span>
-                  </button>
+                  </>
                 );
+                const buttonProps = {
+                  type: 'button',
+                  'aria-current': isActive ? 'true' : undefined,
+                  'data-active': isActive || undefined,
+                  onClick: () => setActiveView(view.id),
+                  className: cn(
+                    'inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors',
+                    isActive
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  ),
+                  children,
+                } satisfies RightPanelTabButtonProps;
+
+                if (renderTab) {
+                  return (
+                    <Fragment key={view.id}>
+                      {renderTab({ view, isActive, buttonProps, children })}
+                    </Fragment>
+                  );
+                }
+
+                return <button key={view.id} {...buttonProps} />;
               })}
             </div>
 

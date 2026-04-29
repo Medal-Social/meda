@@ -62,6 +62,30 @@ describe('auth controls', () => {
     consoleError.mockRestore();
   });
 
+  it('passes Meda button props into a custom rendered auth button', () => {
+    const onClick = vi.fn();
+    const customClick = vi.fn();
+
+    render(
+      <AuthProviderButton
+        provider="google"
+        label="Continue with Google"
+        lastUsed
+        onClick={onClick}
+        render={<button type="button" data-testid="custom-auth" onClick={customClick} />}
+      />
+    );
+
+    const button = screen.getByTestId('custom-auth');
+    expect(button).toHaveAttribute('data-provider', 'google');
+    expect(button).toHaveAttribute('data-last-used', 'true');
+    expect(button).toHaveAccessibleName('Continue with Google');
+
+    fireEvent.click(button);
+    expect(customClick).toHaveBeenCalledTimes(1);
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
   it('renders auth messages only when content is supplied', () => {
     const { container } = render(
       <>

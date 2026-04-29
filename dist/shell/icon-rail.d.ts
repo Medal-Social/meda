@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { AnchorHTMLAttributes, ReactNode } from 'react';
 export interface IconRailItem {
     id: string;
     label: string;
@@ -12,6 +12,7 @@ export interface IconRailRenderLinkArgs {
     isActive: boolean;
     className: string;
     children: ReactNode;
+    linkProps: AnchorHTMLAttributes<HTMLAnchorElement>;
 }
 export interface IconRailProps {
     mainItems: IconRailItem[];

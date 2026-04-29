@@ -2,7 +2,7 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { useState } from 'react';
 import {
   Tooltip,
@@ -30,6 +30,7 @@ export interface IconRailRenderLinkArgs {
   isActive: boolean;
   className: string;
   children: ReactNode;
+  linkProps: AnchorHTMLAttributes<HTMLAnchorElement>;
 }
 
 export interface IconRailProps {
@@ -114,18 +115,19 @@ export function IconRail({
       </>
     );
 
+    const linkProps = {
+      href: item.to,
+      'aria-label': item.label,
+      'aria-current': isActive ? 'page' : undefined,
+      className: 'contents',
+      children: inner,
+    } satisfies AnchorHTMLAttributes<HTMLAnchorElement>;
+
     const linkContent = renderLink ? (
       // renderLink consumers receive the className so they can apply it themselves
-      renderLink({ item, isActive, className: klass, children: inner })
+      renderLink({ item, isActive, className: klass, children: inner, linkProps })
     ) : (
-      <a
-        href={item.to}
-        aria-label={item.label}
-        aria-current={isActive ? 'page' : undefined}
-        className="contents"
-      >
-        {inner}
-      </a>
+      <a {...linkProps} />
     );
 
     return (
