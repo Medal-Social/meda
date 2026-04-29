@@ -1,7 +1,7 @@
 'use client';
 import { jsx as _jsx } from "react/jsx-runtime";
 import { LayoutGrid, Menu, PanelTop, Sparkles } from 'lucide-react';
-import { createContext, lazy, Suspense, useContext, useMemo, useState, } from 'react';
+import { createContext, lazy, Suspense, useCallback, useContext, useMemo, useState, } from 'react';
 import { createLocalStorageAdapter, useShellLayoutState, } from './layout-state.js';
 import { DefaultThemeProvider, ThemeCtx } from './theme.js';
 import { useShellViewport } from './use-shell-viewport.js';
@@ -79,6 +79,29 @@ export function MedaShellProvider(props) {
         open: commandPaletteOpen,
         setOpen: setCommandPaletteOpen,
     }), [commandPaletteOpen]);
+    const [panelViewRegistrations, setPanelViewRegistrations] = useState([]);
+    const registerPanelViews = useCallback((id, views, defaultView) => {
+        setPanelViewRegistrations((prev) => {
+            const existing = prev.find((registration) => registration.id === id);
+            if (existing?.views === views && existing.defaultView === defaultView)
+                return prev;
+            const nextRegistration = defaultView === undefined ? { id, views } : { id, views, defaultView };
+            if (existing == null)
+                return [...prev, nextRegistration];
+            return prev.map((registration) => (registration.id === id ? nextRegistration : registration));
+        });
+        return () => {
+            setPanelViewRegistrations((prev) => prev.some((registration) => registration.id === id &&
+                registration.views === views &&
+                registration.defaultView === defaultView)
+                ? prev.filter((registration) => registration.id !== id)
+                : prev);
+        };
+    }, []);
+    const panelViews = useMemo(() => ({
+        registrations: panelViewRegistrations,
+        register: registerPanelViews,
+    }), [panelViewRegistrations, registerPanelViews]);
     const [layoutState, setLayoutState] = useShellLayoutState({
         workspaceId: props.workspace.id,
         appId: activeAppId,
@@ -169,6 +192,7 @@ export function MedaShellProvider(props) {
         mobileBottomNav: props.mobileBottomNav ?? defaultMobileBottomNav,
         mobileDrawer,
         commandPalette,
+        panelViews,
         commandPaletteHotkey: props.commandPaletteHotkey ?? 'mod+k',
         selection,
         setSelection,
@@ -182,6 +206,7 @@ export function MedaShellProvider(props) {
         props.mobileBottomNav,
         mobileDrawer,
         commandPalette,
+        panelViews,
         props.commandPaletteHotkey,
         selection,
     ]);

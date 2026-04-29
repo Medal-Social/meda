@@ -75,7 +75,7 @@ function ContextRailToggle({ railId }) {
 // ---------------------------------------------------------------------------
 // ContextRail
 // ---------------------------------------------------------------------------
-export function ContextRail({ appId: _appId, module, hidden = false, collapsible = true, activeItemId, renderLink, className, }) {
+export function ContextRail({ appId, module, hidden = false, collapsible = true, activeItemId, renderLink, className, }) {
     const band = useShellViewport();
     const ctx = useMedaShell();
     // collapsible={false} means the rail must always render expanded — even if
@@ -91,12 +91,13 @@ export function ContextRail({ appId: _appId, module, hidden = false, collapsible
     // is called on pointerUp to persist via useShellLayoutState.
     const [displayWidth, setDisplayWidth] = useState(null);
     const width = displayWidth ?? ctx.contextRail.width;
+    const items = module?.items ?? [];
     if (band === 'mobile')
         return null;
     if (hidden) {
         return _jsx("div", { "aria-hidden": "true", className: "hidden", "data-testid": "context-rail-hidden" });
     }
-    if (!module || module.items.length === 0) {
+    if (!module || (items.length === 0 && !module.render)) {
         return _jsx("div", { "aria-hidden": "true", className: "hidden", "data-testid": "context-rail-empty" });
     }
     const handleResize = (w) => {
@@ -112,7 +113,7 @@ export function ContextRail({ appId: _appId, module, hidden = false, collapsible
     // transition then so the rail snaps to the cursor instead of lagging
     // behind it.
     const isDragging = displayWidth !== null;
-    return (_jsxs("aside", { id: railId, "data-testid": "context-rail", "aria-label": module.label, className: cn('relative h-full shrink-0 border-r border-shell-border bg-shell-context', !isDragging && 'transition-[width] duration-200 ease-in-out motion-reduce:transition-none', collapsed && 'w-0', className), style: { width: collapsed ? 0 : width }, children: [collapsible && _jsx(ContextRailToggle, { railId: railId }), _jsxs("div", { className: "h-full overflow-hidden", "aria-hidden": collapsed, inert: collapsed || undefined, children: [_jsxs("div", { className: "border-b border-shell-border px-4 py-3", children: [_jsx("h2", { className: "text-sm font-semibold text-foreground", children: module.label }), module.description && (_jsx("p", { className: "mt-0.5 text-xs text-muted-foreground", children: module.description }))] }), _jsx("nav", { "aria-label": `${module.label} navigation`, className: "flex flex-col gap-0.5 p-2", children: module.items.map((item) => {
+    return (_jsxs("aside", { id: railId, "data-testid": "context-rail", "aria-label": module.label, className: cn('relative h-full shrink-0 border-r border-shell-border bg-shell-context', !isDragging && 'transition-[width] duration-200 ease-in-out motion-reduce:transition-none', collapsed && 'w-0', className), style: { width: collapsed ? 0 : width }, children: [collapsible && _jsx(ContextRailToggle, { railId: railId }), _jsxs("div", { className: "h-full overflow-hidden", "aria-hidden": collapsed, inert: collapsed || undefined, children: [_jsxs("div", { className: "border-b border-shell-border px-4 py-3", children: [_jsx("h2", { className: "text-sm font-semibold text-foreground", children: module.label }), module.description && (_jsx("p", { className: "mt-0.5 text-xs text-muted-foreground", children: module.description }))] }), items.length > 0 && (_jsx("nav", { "aria-label": `${module.label} navigation`, className: "flex flex-col gap-0.5 p-2", children: items.map((item) => {
                             const isActive = item.id === activeItemId;
                             const klass = cn('flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors', isActive
                                 ? 'bg-primary/10 text-primary'
@@ -123,5 +124,5 @@ export function ContextRail({ appId: _appId, module, hidden = false, collapsible
                                 return renderLink({ item, isActive, className: klass, children: inner });
                             }
                             return (_jsx("a", { href: item.to, "aria-current": isActive ? 'page' : undefined, className: klass, children: inner }, item.id));
-                        }) })] }), !collapsed && (_jsx(ResizeHandle, { currentWidth: width, onResize: handleResize, onCommit: handleCommit }))] }));
+                        }) })), module.render?.({ workspaceId: ctx.workspace.id, appId })] }), !collapsed && (_jsx(ResizeHandle, { currentWidth: width, onResize: handleResize, onCommit: handleCommit }))] }));
 }

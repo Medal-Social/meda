@@ -10,6 +10,8 @@ export interface MobileDrawersProps {
     menuRenderLink?: IconRailProps['renderLink'];
     /** Module drawer source (current app's context-rail module). */
     module?: ContextModule;
+    /** App id used when rendering module custom content. */
+    moduleAppId?: string;
     /** Panels drawer source. */
     panelViews?: PanelView[];
     /**
@@ -27,4 +29,4 @@ export interface MobileDrawersProps {
  * any custom-content drawers. Mount once near the AppShell root; drawers
  * open/close via `ctx.mobileDrawer.open` provider state.
  */
-export declare function MobileDrawers({ menuItems, menuActiveId, menuRenderLink, module, panelViews, defaultView, customContent, }: MobileDrawersProps): import("react/jsx-runtime").JSX.Element;
+export declare function MobileDrawers({ menuItems, menuActiveId, menuRenderLink, module, moduleAppId, panelViews, defaultView, customContent, }: MobileDrawersProps): import("react/jsx-runtime").JSX.Element;

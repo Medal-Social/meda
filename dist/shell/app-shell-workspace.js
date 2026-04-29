@@ -6,6 +6,7 @@ import { IconRail } from './icon-rail.js';
 import { MobileBottomNav } from './internal/mobile-bottom-nav.js';
 import { MobileDrawers } from './internal/mobile-drawers.js';
 import { MobileHeader } from './internal/mobile-header.js';
+import { useResolvedPanelViews } from './panel-views-provider.js';
 import { RightPanel } from './right-panel.js';
 import { ShellHeader } from './shell-header.js';
 import { ShellMain } from './shell-main.js';
@@ -13,11 +14,12 @@ import { useShellViewport } from './use-shell-viewport.js';
 export function AppShellWorkspace({ iconRail, contextRail, rightPanel, globalActions, children, }) {
     const viewport = useShellViewport();
     const isMobile = viewport === 'mobile';
+    const resolvedRightPanel = useResolvedPanelViews(rightPanel?.panelViews ?? [], rightPanel?.defaultView);
     // Derive the bottom-nav items from the variant config so each button maps
     // to a drawer that actually has content. Without this filter, partial
     // configs (e.g. iconRail only) would show Module/Panels/AI buttons that
     // dispatch into the void.
-    const navItems = buildMobileNavItems(iconRail, contextRail, rightPanel);
+    const navItems = buildMobileNavItems(iconRail, contextRail, resolvedRightPanel.panelViews);
     const hasDrawerContent = navItems.length > 0;
     // Mobile menu drawer needs both main and utility items — desktop IconRail
     // shows both, so dropping utilityItems here would orphan items like Help/
@@ -33,21 +35,22 @@ export function AppShellWorkspace({ iconRail, contextRail, rightPanel, globalAct
     // rendered without an explicit-height ancestor (tests, direct imports). The
     // <AppShell> wrapper already enforces h-screen for the workspace variant, so
     // nested viewport-height divs collapse cleanly — no double-scroll.
-    return (_jsxs("div", { className: "flex h-screen flex-col", children: [isMobile ? (_jsx(MobileHeader, { globalActions: globalActions })) : (_jsx(ShellHeader, { globalActions: globalActions })), _jsxs("div", { className: "relative flex flex-1 overflow-hidden", children: [!isMobile && iconRail && (_jsx(IconRail, { mainItems: iconRail.mainItems, utilityItems: iconRail.utilityItems, footer: iconRail.footer, activeId: iconRail.activeId, renderLink: iconRail.renderLink })), !isMobile && contextRail && (_jsx(ContextRail, { appId: contextRail.appId, module: contextRail.module, activeItemId: contextRail.activeItemId })), _jsx(ShellMain, { layout: "workspace", children: children }), !isMobile && rightPanel && (_jsx(RightPanel, { panelViews: rightPanel.panelViews, defaultView: rightPanel.defaultView }))] }), isMobile && hasDrawerContent && _jsx(MobileBottomNav, { items: navItems }), isMobile && hasDrawerContent && (_jsx(MobileDrawers, { menuItems: mobileMenuItems, menuActiveId: iconRail?.activeId, menuRenderLink: iconRail?.renderLink, module: contextRail?.module, panelViews: rightPanel?.panelViews ?? [], defaultView: rightPanel?.defaultView }))] }));
+    return (_jsxs("div", { className: "flex h-screen flex-col", children: [isMobile ? (_jsx(MobileHeader, { globalActions: globalActions })) : (_jsx(ShellHeader, { globalActions: globalActions })), _jsxs("div", { className: "relative flex flex-1 overflow-hidden", children: [!isMobile && iconRail && (_jsx(IconRail, { mainItems: iconRail.mainItems, utilityItems: iconRail.utilityItems, footer: iconRail.footer, activeId: iconRail.activeId, renderLink: iconRail.renderLink })), !isMobile && contextRail && (_jsx(ContextRail, { appId: contextRail.appId, module: contextRail.module, activeItemId: contextRail.activeItemId })), _jsx(ShellMain, { layout: "workspace", children: children }), !isMobile && resolvedRightPanel.panelViews.length > 0 && (_jsx(RightPanel, { panelViews: rightPanel?.panelViews ?? [], defaultView: rightPanel?.defaultView }))] }), isMobile && hasDrawerContent && _jsx(MobileBottomNav, { items: navItems }), isMobile && hasDrawerContent && (_jsx(MobileDrawers, { menuItems: mobileMenuItems, menuActiveId: iconRail?.activeId, menuRenderLink: iconRail?.renderLink, module: contextRail?.module, moduleAppId: contextRail?.appId, panelViews: resolvedRightPanel.panelViews, defaultView: resolvedRightPanel.defaultView }))] }));
 }
-function buildMobileNavItems(iconRail, contextRail, rightPanel) {
+function buildMobileNavItems(iconRail, contextRail, panelViews) {
     const items = [];
     if (iconRail) {
         items.push({ id: 'menu', label: 'Menu', icon: Menu, opens: 'menu-drawer' });
     }
-    if (contextRail?.module) {
+    if (contextRail?.module &&
+        ((contextRail.module.items ?? []).length > 0 || Boolean(contextRail.module.render))) {
         items.push({ id: 'module', label: 'Module', icon: LayoutGrid, opens: 'module-drawer' });
     }
     // Panels button only when there's an actual view to render — empty
     // panelViews would open an empty drawer (dead-end tap).
-    if (rightPanel && rightPanel.panelViews.length > 0) {
+    if (panelViews.length > 0) {
         items.push({ id: 'panels', label: 'Panels', icon: PanelTop, opens: 'panels-drawer' });
-        if (rightPanel.panelViews.some((v) => v.id === 'ai')) {
+        if (panelViews.some((v) => v.id === 'ai')) {
             items.push({ id: 'ai', label: 'AI', icon: Sparkles, opens: 'ai-drawer' });
         }
     }
