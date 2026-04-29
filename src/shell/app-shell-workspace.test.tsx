@@ -65,4 +65,33 @@ describe('AppShellWorkspace', () => {
     expect(screen.getByTestId('mobile-header')).toBeInTheDocument();
     expect(screen.getByTestId('mobile-bottom-nav')).toBeInTheDocument();
   });
+
+  it('passes iconRail.renderLink through to IconRail on desktop', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+
+    render(
+      <Provider>
+        <AppShellWorkspace
+          iconRail={{
+            mainItems: [{ id: 'i', label: 'Inbox', to: '/i', icon: Inbox }],
+            renderLink: ({ item, children, className }) => (
+              <a
+                data-testid={`custom-link-${item.id}`}
+                href={`/next${item.to}`}
+                className={className}
+              >
+                {children}
+              </a>
+            ),
+          }}
+        >
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    const link = screen.getByTestId('custom-link-i');
+    expect(link).toHaveAttribute('href', '/next/i');
+    expect(link.className).toContain('h-11');
+  });
 });

@@ -71,6 +71,7 @@ export function AppShellWorkspace({
             utilityItems={iconRail.utilityItems}
             footer={iconRail.footer}
             activeId={iconRail.activeId}
+            renderLink={iconRail.renderLink}
           />
         )}
         {!isMobile && contextRail && (
