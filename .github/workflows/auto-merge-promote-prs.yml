@@ -1,0 +1,41 @@
+name: Auto-merge promote PRs
+
+# Enables auto-merge on the two recurring promote PRs:
+#   1. The dev → prod promotion PR (head ref `dev`).
+#   2. The Changesets-bot Release PR (head ref `changeset-release/prod`).
+# Auto-merge waits for required status checks before merging, so this is
+# gated on the same `lint` / `test` / `build` checks as a manual merge.
+on:
+  # `pull_request` (not `pull_request_target`) is intentional: this workflow
+  # only ever acts on same-repo promote PRs, so it never needs base-repo
+  # context for fork PRs. With `pull_request`, fork PRs run with a read-only
+  # GITHUB_TOKEN and the `gh pr merge` write call would fail anyway — so
+  # token scope provides defense in depth alongside the same-repo `if` guard
+  # below.
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [prod]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enable-auto-merge:
+    runs-on: ubuntu-latest
+    # Belt-and-braces same-repo gate even though `pull_request` already
+    # restricts the token for forks — keeps the no-op early instead of
+    # letting it fail with a 403.
+    if: |
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (github.event.pull_request.head.ref == 'dev' ||
+       startsWith(github.event.pull_request.head.ref, 'changeset-release/'))
+    steps:
+      - name: Enable auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr merge --auto --merge \
+            --repo "${{ github.repository }}" \
+            "$PR_NUMBER"
