@@ -32,6 +32,13 @@
 //   headroom. Note: in PR #61 these move to data-view/gantt and the timeline
 //   subpath will reclaim headroom; consider lowering then.
 //
+// theme.css raised 2 kB → 2.5 kB (PR #80):
+//   Added `@source "../**/*.js"` directive so consumer Tailwind v4 builds emit
+//   utility classes meda components rely on, plus a base `color-scheme` block
+//   bound to the resolved theme so native UA controls follow the in-app
+//   palette. Measured 2.07 kB brotli — 66 B over the previous limit. Bumped
+//   to 2.5 kB for ~20% headroom.
+//
 // Sub-entry split for shell (provider / desktop / mobile / palette) is
 // deferred to v1.x — decision pinned to real consumer adoption data, not
 // upfront speculation. See plan file Decision C history for context.
@@ -69,7 +76,7 @@ module.exports = [
   {
     name: 'theme.css',
     path: 'dist/styles/theme.css',
-    limit: '2 kB',
+    limit: '2.5 kB',
   },
   {
     // Bumped from 1 kB → 2 kB: canonical .lib.pen contract adds 6 full color

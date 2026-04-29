@@ -64,6 +64,7 @@ export type {
   AppShellIconRailConfig,
   AppShellRightPanelConfig,
   AppShellVariant,
+  AppShellWorkspaceConfig,
   CommandDefinition,
   ContextItem,
   ContextModule,
@@ -76,5 +77,6 @@ export type {
   ShellViewport,
   ThemeAdapter,
   WorkspaceDefinition,
+  WorkspaceMenuItem,
 } from './types.js';
 export { useShellViewport } from './use-shell-viewport.js';

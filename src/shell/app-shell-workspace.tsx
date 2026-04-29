@@ -14,6 +14,7 @@ import type {
   AppShellContextRailConfig,
   AppShellIconRailConfig,
   AppShellRightPanelConfig,
+  AppShellWorkspaceConfig,
   MobileBottomNavItem,
   PanelView,
 } from './types.js';
@@ -25,6 +26,7 @@ export interface AppShellWorkspaceProps {
   iconRail?: AppShellIconRailConfig;
   contextRail?: AppShellContextRailConfig;
   rightPanel?: AppShellRightPanelConfig;
+  workspace?: AppShellWorkspaceConfig;
   globalActions?: ReactNode;
   children: ReactNode;
 }
@@ -33,6 +35,7 @@ export function AppShellWorkspace({
   iconRail,
   contextRail,
   rightPanel,
+  workspace,
   globalActions,
   children,
 }: AppShellWorkspaceProps) {
@@ -68,7 +71,11 @@ export function AppShellWorkspace({
       {isMobile ? (
         <MobileHeader globalActions={globalActions} />
       ) : (
-        <ShellHeader globalActions={globalActions} />
+        <ShellHeader
+          globalActions={globalActions}
+          workspaceMenuItems={workspace?.menuItems}
+          workspaceMenuFooter={workspace?.menuFooter}
+        />
       )}
       <div className="relative flex flex-1 overflow-hidden">
         {!isMobile && iconRail && (
