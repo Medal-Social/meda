@@ -4,6 +4,7 @@ import { LayoutGrid, Menu, PanelTop, Sparkles } from 'lucide-react';
 import { createContext, lazy, Suspense, useContext, useMemo, useState, } from 'react';
 import { createLocalStorageAdapter, useShellLayoutState, } from './layout-state.js';
 import { DefaultThemeProvider, ThemeCtx } from './theme.js';
+import { useShellViewport } from './use-shell-viewport.js';
 // ---------------------------------------------------------------------------
 // Theme adapter wiring
 // ---------------------------------------------------------------------------
@@ -83,6 +84,7 @@ export function MedaShellProvider(props) {
         appId: activeAppId,
         storage,
     });
+    const isMobile = useShellViewport() === 'mobile';
     const panel = useMemo(() => ({
         mode: layoutState.rightPanel.mode,
         activeView: layoutState.rightPanel.activeView,
@@ -99,24 +101,37 @@ export function MedaShellProvider(props) {
             ...prev,
             rightPanel: { ...prev.rightPanel, width },
         })),
-        open: () => setLayoutState((prev) => ({
-            ...prev,
-            rightPanel: {
-                ...prev.rightPanel,
-                mode: prev.rightPanel.mode === 'closed' ? 'panel' : prev.rightPanel.mode,
-            },
-        })),
-        close: () => setLayoutState((prev) => ({
-            ...prev,
-            rightPanel: { ...prev.rightPanel, mode: 'closed' },
-        })),
-        toggle: () => setLayoutState((prev) => ({
-            ...prev,
-            rightPanel: {
-                ...prev.rightPanel,
-                mode: prev.rightPanel.mode === 'closed' ? 'panel' : 'closed',
-            },
-        })),
+        open: () => {
+            if (isMobile)
+                setMobileDrawerOpen('panels-drawer');
+            setLayoutState((prev) => ({
+                ...prev,
+                rightPanel: {
+                    ...prev.rightPanel,
+                    mode: prev.rightPanel.mode === 'closed' ? 'panel' : prev.rightPanel.mode,
+                },
+            }));
+        },
+        close: () => {
+            if (isMobile)
+                setMobileDrawerOpen((open) => (open === 'panels-drawer' ? null : open));
+            setLayoutState((prev) => ({
+                ...prev,
+                rightPanel: { ...prev.rightPanel, mode: 'closed' },
+            }));
+        },
+        toggle: () => {
+            if (isMobile) {
+                setMobileDrawerOpen((open) => (open === 'panels-drawer' ? null : 'panels-drawer'));
+            }
+            setLayoutState((prev) => ({
+                ...prev,
+                rightPanel: {
+                    ...prev.rightPanel,
+                    mode: prev.rightPanel.mode === 'closed' ? 'panel' : 'closed',
+                },
+            }));
+        },
         // focus(viewId) — opens panel + switches to view in one call.
         // Only flips closed → panel; preserves expanded / fullscreen modes.
         focus: (viewId) => setLayoutState((prev) => {
@@ -126,7 +141,7 @@ export function MedaShellProvider(props) {
                 rightPanel: { ...prev.rightPanel, mode: nextMode, activeView: viewId },
             };
         }),
-    }), [layoutState, setLayoutState]);
+    }), [isMobile, layoutState, setLayoutState]);
     const contextRail = useMemo(() => ({
         width: layoutState.contextRail.width,
         collapsed: layoutState.contextRail.collapsed,
