@@ -1,5 +1,13 @@
 # @medalsocial/meda
 
+## 1.3.0
+
+### Minor Changes
+
+- [#68](https://github.com/Medal-Social/meda/pull/68) [`983e648`](https://github.com/Medal-Social/meda/commit/983e6481875787122e65b0087fd05a014018e33c) Thanks [@alioftech](https://github.com/alioftech)! - Document shell adoption helpers with a Storybook workspace example covering `iconRail.renderLink` pass-through, the `panel.open`, `panel.close`, `panel.toggle`, and `contextRail.toggle` helpers, and `CommandDefinition.hotkey` as a display-only alias where `shortcut` wins when both are supplied.
+
+- [#69](https://github.com/Medal-Social/meda/pull/69) [`5a496a2`](https://github.com/Medal-Social/meda/commit/5a496a29b2f87f4fd6fca6daa77fefe71a4e6e8f) Thanks [@alioftech](https://github.com/alioftech)! - Add dynamic shell composition APIs: context modules can render custom content in desktop and mobile rails, and route content can register right-panel views with PanelViewsProvider.
+
 ## 1.2.0
 
 ### Minor Changes
