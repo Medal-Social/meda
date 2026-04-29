@@ -1,0 +1,25 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "meda-next-app-shell",
+  "type": "registry:block",
+  "title": "Meda Next AppShell",
+  "description": "Install a copyable Next.js App Router shell adapter with next/link routing, route-owned panel views, and auth controls.",
+  "dependencies": ["@medalsocial/meda", "lucide-react"],
+  "files": [
+    {
+      "path": "registry/meda/meda-next-app-shell/meda-next-app-shell.tsx",
+      "content": "export { nextAppShellRecipe as medaNextAppShellRecipe } from '@medalsocial/meda/recipes/next'\n",
+      "type": "registry:block",
+      "target": "components/meda/meda-next-app-shell.tsx"
+    }
+  ],
+  "meta": {
+    "peerDependencies": ["next", "react", "react-dom"],
+    "cssVars": ["@medalsocial/meda/styles.css"],
+    "accessibility": [
+      "Forward all linkProps from rail render callbacks.",
+      "Panel views should include a visible or visually-hidden heading.",
+      "Auth provider buttons preserve accessible button names."
+    ]
+  }
+}

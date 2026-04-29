@@ -10,6 +10,7 @@ const files = [
   'r/meda-shell.json',
   'r/meda-shell-state.json',
   'r/meda-workbench-layout.json',
+  'r/meda-next-app-shell.json',
   'r/meda-marketing.json',
   'r/meda-marketing-callout.json',
   'r/meda-marketing-contact.json',
@@ -44,6 +45,15 @@ for (const [file, json] of parsedFiles.entries()) {
     `${file} must include a registry type.`
   );
   assert(Array.isArray(json?.dependencies), `${file} must declare dependencies.`);
+  if (json.meta?.peerDependencies) {
+    assert(Array.isArray(json.meta.peerDependencies), `${file} peerDependencies must be an array.`);
+  }
+  if (json.meta?.accessibility) {
+    assert(
+      Array.isArray(json.meta.accessibility) && json.meta.accessibility.length > 0,
+      `${file} accessibility metadata must be a non-empty array.`
+    );
+  }
   assert(
     Array.isArray(json?.files) && json.files.length > 0,
     `${file} must include at least one file entry.`

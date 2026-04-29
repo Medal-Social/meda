@@ -11,6 +11,7 @@ Current items:
 - `meda-shell`
 - `meda-shell-state`
 - `meda-workbench-layout`
+- `meda-next-app-shell`
 - `meda-marketing`
 - `meda-marketing-callout`
 - `meda-marketing-contact`

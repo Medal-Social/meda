@@ -80,6 +80,14 @@
     },
     "./styles/tokens": {
       "default": "./dist/styles/tokens.css"
+    },
+    "./shell/primitives": {
+      "types": "./dist/shell/primitives.d.ts",
+      "default": "./dist/shell/primitives.js"
+    },
+    "./recipes/next": {
+      "types": "./dist/recipes/next.d.ts",
+      "default": "./dist/recipes/next.js"
     }
   },
   "sideEffects": [

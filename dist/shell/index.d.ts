@@ -7,6 +7,7 @@ export { ContextRail } from './context-rail.js';
 export type { DragModeBannerProps } from './drag-mode-banner.js';
 export { DragModeBanner } from './drag-mode-banner.js';
 export * as Extras from './extras/index.js';
+export type { IconRailItem, IconRailProps, IconRailRenderLinkArgs } from './icon-rail.js';
 export { IconRail, RailDivider } from './icon-rail.js';
 export type { ShellStorageAdapter } from './layout-state.js';
 export { createLocalStorageAdapter } from './layout-state.js';
