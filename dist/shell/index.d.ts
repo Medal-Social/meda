@@ -9,6 +9,8 @@ export { IconRail, RailDivider } from './icon-rail.js';
 export type { ShellStorageAdapter } from './layout-state.js';
 export { createLocalStorageAdapter } from './layout-state.js';
 export { motion } from './motion.js';
+export type { PanelViewsProviderProps } from './panel-views-provider.js';
+export { PanelViewsProvider } from './panel-views-provider.js';
 export type { RailDropSlotProps, RailDropSlotState } from './rail-drop-slot.js';
 export { RailDropSlot } from './rail-drop-slot.js';
 export type { RailDropZonesProps } from './rail-drop-zones.js';

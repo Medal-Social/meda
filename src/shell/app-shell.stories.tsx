@@ -12,7 +12,8 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { AppShell } from './app-shell.js';
-import { MedaShellProvider } from './shell-provider.js';
+import { PanelViewsProvider } from './panel-views-provider.js';
+import { MedaShellProvider, useMedaShell } from './shell-provider.js';
 import type {
   AppDefinition,
   ContextItem,
@@ -45,6 +46,17 @@ const INBOX_MODULE: ContextModule = {
   description: 'Mail + drafts',
   items: INBOX_ITEMS,
 };
+const DYNAMIC_INBOX_MODULE: ContextModule = {
+  ...INBOX_MODULE,
+  render: () => (
+    <div className="border-t border-border px-3 py-4">
+      <p className="text-xs font-medium uppercase text-muted-foreground">Conversation queue</p>
+      <div className="mt-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">
+        6 priority conversations
+      </div>
+    </div>
+  ),
+};
 const PANEL_VIEWS: PanelView[] = [
   {
     id: 'inspector',
@@ -62,6 +74,16 @@ const PANEL_VIEWS: PanelView[] = [
     label: 'Activity',
     icon: Activity,
     render: () => <div className="p-4 text-sm text-muted-foreground">Activity</div>,
+  },
+];
+const ROUTE_PANEL_VIEWS: PanelView[] = [
+  {
+    id: 'conversation',
+    label: 'Conversation',
+    icon: Mail,
+    render: () => (
+      <div className="p-4 text-sm text-muted-foreground">Route-owned conversation details.</div>
+    ),
   },
 ];
 
@@ -84,6 +106,35 @@ function withProvider(Story: () => ReactNode) {
     >
       <Story />
     </MedaShellProvider>
+  );
+}
+
+function AdoptionControlPanel() {
+  const shell = useMedaShell();
+
+  const buttonClass =
+    'rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground hover:bg-accent hover:text-accent-foreground';
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground mb-2">Adoption hooks</h1>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" className={buttonClass} onClick={() => shell.panel.open()}>
+          Open panel
+        </button>
+        <button type="button" className={buttonClass} onClick={() => shell.panel.toggle()}>
+          Toggle panel
+        </button>
+        <button type="button" className={buttonClass} onClick={() => shell.panel.close()}>
+          Close panel
+        </button>
+        <button type="button" className={buttonClass} onClick={() => shell.contextRail.toggle()}>
+          Toggle context rail
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -195,6 +246,38 @@ export const Chat: Story = {
           integrations.
         </div>
       </div>
+    </AppShell>
+  ),
+};
+
+export const WorkspaceWithAdoptionHooks: Story = {
+  parameters: { chromatic: { modes: ALL_VIEWPORTS } },
+  render: () => (
+    <AppShell
+      variant="workspace"
+      iconRail={{
+        mainItems: RAIL_MAIN,
+        utilityItems: RAIL_UTILITY,
+        activeId: 'inbox',
+        renderLink: ({ item, isActive, className, children }) => (
+          <a
+            href={item.to}
+            aria-label={item.label}
+            aria-current={isActive ? 'page' : undefined}
+            className={className}
+            data-testid={`storybook-router-link-${item.id}`}
+            data-router-link="next-link-compatible"
+          >
+            {children}
+          </a>
+        ),
+      }}
+      contextRail={{ appId: 'inbox', module: DYNAMIC_INBOX_MODULE, activeItemId: 'inbox' }}
+      rightPanel={{ panelViews: PANEL_VIEWS, defaultView: 'inspector' }}
+    >
+      <PanelViewsProvider views={ROUTE_PANEL_VIEWS} defaultView="conversation">
+        <AdoptionControlPanel />
+      </PanelViewsProvider>
     </AppShell>
   ),
 };

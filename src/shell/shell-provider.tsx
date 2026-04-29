@@ -6,6 +6,7 @@ import {
   lazy,
   type ReactNode,
   Suspense,
+  useCallback,
   useContext,
   useMemo,
   useState,
@@ -20,9 +21,11 @@ import type {
   AppDefinition,
   MobileBottomNavItem,
   PanelMode,
+  PanelView,
   ThemeAdapter,
   WorkspaceDefinition,
 } from './types.js';
+import { useShellViewport } from './use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
 // MobileDrawer types
@@ -88,6 +91,12 @@ const defaultMobileBottomNav: MobileBottomNavItem[] = [
 // Context value shape
 // ---------------------------------------------------------------------------
 
+export interface PanelViewRegistration {
+  id: string;
+  views: PanelView[];
+  defaultView?: string;
+}
+
 interface MedaShellContextValue {
   workspace: WorkspaceDefinition;
   workspaces: WorkspaceDefinition[];
@@ -101,6 +110,9 @@ interface MedaShellContextValue {
     setMode: (m: PanelMode) => void;
     setActiveView: (v: string | null) => void;
     setWidth: (w: number) => void;
+    open: () => void;
+    close: () => void;
+    toggle: () => void;
     /** Opens panel + switches to viewId in one call.
      * Sugar for app keyboard shortcuts (e.g. Cmd+J → panel.focus('ai')).
      * If already open in 'panel', 'expanded', or 'fullscreen', the existing
@@ -112,6 +124,7 @@ interface MedaShellContextValue {
     collapsed: boolean;
     setWidth: (w: number) => void;
     setCollapsed: (c: boolean) => void;
+    toggle: () => void;
   };
   mobileBottomNav: MobileBottomNavItem[];
   mobileDrawer: {
@@ -121,6 +134,10 @@ interface MedaShellContextValue {
   commandPalette: {
     open: boolean;
     setOpen: (open: boolean) => void;
+  };
+  panelViews: {
+    registrations: PanelViewRegistration[];
+    register: (id: string, views: PanelView[], defaultView?: string) => () => void;
   };
   commandPaletteHotkey: string;
   /** Selection bridge between main workspace and right panel views (spec §17). */
@@ -202,11 +219,49 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
     [commandPaletteOpen]
   );
 
+  const [panelViewRegistrations, setPanelViewRegistrations] = useState<PanelViewRegistration[]>([]);
+
+  const registerPanelViews = useCallback((id: string, views: PanelView[], defaultView?: string) => {
+    setPanelViewRegistrations((prev) => {
+      const existing = prev.find((registration) => registration.id === id);
+      if (existing?.views === views && existing.defaultView === defaultView) return prev;
+
+      const nextRegistration =
+        defaultView === undefined ? { id, views } : { id, views, defaultView };
+
+      if (existing == null) return [...prev, nextRegistration];
+
+      return prev.map((registration) => (registration.id === id ? nextRegistration : registration));
+    });
+
+    return () => {
+      setPanelViewRegistrations((prev) =>
+        prev.some(
+          (registration) =>
+            registration.id === id &&
+            registration.views === views &&
+            registration.defaultView === defaultView
+        )
+          ? prev.filter((registration) => registration.id !== id)
+          : prev
+      );
+    };
+  }, []);
+
+  const panelViews = useMemo(
+    () => ({
+      registrations: panelViewRegistrations,
+      register: registerPanelViews,
+    }),
+    [panelViewRegistrations, registerPanelViews]
+  );
+
   const [layoutState, setLayoutState] = useShellLayoutState({
     workspaceId: props.workspace.id,
     appId: activeAppId,
     storage,
   });
+  const isMobile = useShellViewport() === 'mobile';
 
   const panel = useMemo(
     () => ({
@@ -228,6 +283,35 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
           ...prev,
           rightPanel: { ...prev.rightPanel, width },
         })),
+      open: () => {
+        if (isMobile) setMobileDrawerOpen('panels-drawer');
+        setLayoutState((prev) => ({
+          ...prev,
+          rightPanel: {
+            ...prev.rightPanel,
+            mode: prev.rightPanel.mode === 'closed' ? 'panel' : prev.rightPanel.mode,
+          },
+        }));
+      },
+      close: () => {
+        if (isMobile) setMobileDrawerOpen((open) => (open === 'panels-drawer' ? null : open));
+        setLayoutState((prev) => ({
+          ...prev,
+          rightPanel: { ...prev.rightPanel, mode: 'closed' },
+        }));
+      },
+      toggle: () => {
+        if (isMobile) {
+          setMobileDrawerOpen((open) => (open === 'panels-drawer' ? null : 'panels-drawer'));
+        }
+        setLayoutState((prev) => ({
+          ...prev,
+          rightPanel: {
+            ...prev.rightPanel,
+            mode: prev.rightPanel.mode === 'closed' ? 'panel' : 'closed',
+          },
+        }));
+      },
       // focus(viewId) — opens panel + switches to view in one call.
       // Only flips closed → panel; preserves expanded / fullscreen modes.
       focus: (viewId: string) =>
@@ -240,7 +324,7 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
           };
         }),
     }),
-    [layoutState, setLayoutState]
+    [isMobile, layoutState, setLayoutState]
   );
 
   const contextRail = useMemo(
@@ -256,6 +340,11 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
         setLayoutState((prev) => ({
           ...prev,
           contextRail: { ...prev.contextRail, collapsed },
+        })),
+      toggle: () =>
+        setLayoutState((prev) => ({
+          ...prev,
+          contextRail: { ...prev.contextRail, collapsed: !prev.contextRail.collapsed },
         })),
     }),
     [layoutState, setLayoutState]
@@ -273,6 +362,7 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
       mobileBottomNav: props.mobileBottomNav ?? defaultMobileBottomNav,
       mobileDrawer,
       commandPalette,
+      panelViews,
       commandPaletteHotkey: props.commandPaletteHotkey ?? 'mod+k',
       selection,
       setSelection,
@@ -287,6 +377,7 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
       props.mobileBottomNav,
       mobileDrawer,
       commandPalette,
+      panelViews,
       props.commandPaletteHotkey,
       selection,
     ]
