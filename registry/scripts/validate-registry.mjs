@@ -23,6 +23,13 @@ function assert(condition, message) {
   }
 }
 
+function assertStringList(value, label) {
+  assert(Array.isArray(value) && value.length > 0, `${label} must be a non-empty array.`);
+  for (const item of value) {
+    assert(typeof item === 'string' && item.trim().length > 0, `${label} must contain strings.`);
+  }
+}
+
 const parsedFiles = new Map();
 
 for (const file of files) {
@@ -46,13 +53,17 @@ for (const [file, json] of parsedFiles.entries()) {
   );
   assert(Array.isArray(json?.dependencies), `${file} must declare dependencies.`);
   if (json.meta?.peerDependencies) {
-    assert(Array.isArray(json.meta.peerDependencies), `${file} peerDependencies must be an array.`);
+    assertStringList(json.meta.peerDependencies, `${file} peerDependencies`);
   }
   if (json.meta?.accessibility) {
-    assert(
-      Array.isArray(json.meta.accessibility) && json.meta.accessibility.length > 0,
-      `${file} accessibility metadata must be a non-empty array.`
-    );
+    assertStringList(json.meta.accessibility, `${file} accessibility metadata`);
+  }
+  if (json.meta?.composition) {
+    assertStringList(json.meta.composition, `${file} composition metadata`);
+  }
+  if (file === 'r/meda-next-app-shell.json') {
+    assertStringList(json.meta?.accessibility, `${file} accessibility metadata`);
+    assertStringList(json.meta?.composition, `${file} composition metadata`);
   }
   assert(
     Array.isArray(json?.files) && json.files.length > 0,

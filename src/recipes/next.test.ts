@@ -20,10 +20,24 @@ describe('Next recipes', () => {
   });
 
   it('documents accessibility and composition contracts', () => {
+    expect(nextAppShellRecipe.accessibility.length).toBeGreaterThan(0);
+    expect(nextAppShellRecipe.composition.length).toBeGreaterThan(0);
     expect(nextAppShellRecipe.accessibility).toEqual(
       expect.arrayContaining([
         expect.stringContaining('linkProps'),
+        expect.stringContaining('aria-current'),
         expect.stringContaining('Auth provider buttons'),
+        expect.stringContaining('headings'),
+        expect.stringContaining('Reduced-motion'),
+      ])
+    );
+    expect(nextAppShellRecipe.composition).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('MedaShellProvider'),
+        expect.stringContaining('AppShell'),
+        expect.stringContaining('rightPanel'),
+        expect.stringContaining('PanelViewsProvider'),
+        expect.stringContaining('renderLink'),
       ])
     );
   });
