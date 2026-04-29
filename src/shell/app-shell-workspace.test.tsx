@@ -252,6 +252,35 @@ describe('AppShellWorkspace', () => {
     expect(screen.getByTestId('mobile-drawer-state')).toHaveTextContent('closed');
   });
 
+  it('keeps mobile menu linkProps safe to spread without embedding close handler', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('mobile');
+    let linkPropsOnClick: unknown = null;
+
+    render(
+      <Provider>
+        <MobileDrawerStateProbe />
+        <AppShellWorkspace
+          iconRail={{
+            activeId: 'i',
+            mainItems: [{ id: 'i', label: 'Inbox', to: '/i', icon: Inbox }],
+            renderLink: ({ item, linkProps }) => {
+              linkPropsOnClick = linkProps.onClick;
+              return <a {...linkProps} data-testid={`spread-mobile-link-${item.id}`} />;
+            },
+          }}
+        >
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
+    expect(linkPropsOnClick).toBeUndefined();
+
+    fireEvent.click(screen.getByTestId('spread-mobile-link-i'));
+    expect(screen.getByTestId('mobile-drawer-state')).toHaveTextContent('closed');
+  });
+
   it('renders mobile context module custom content with the context rail app id', () => {
     (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('mobile');
 

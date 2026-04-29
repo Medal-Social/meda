@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { AnchorHTMLAttributes, ReactNode } from 'react';
 export interface AppDefinition {
     id: string;
     label: string;
@@ -49,6 +49,7 @@ export interface ShellLinkRenderArgs {
     isActive: boolean;
     className: string;
     children: ReactNode;
+    linkProps: AnchorHTMLAttributes<HTMLAnchorElement>;
 }
 export interface CommandDefinition {
     id: string;
