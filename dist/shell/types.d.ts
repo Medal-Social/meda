@@ -55,6 +55,8 @@ export interface CommandDefinition {
     icon?: LucideIcon;
     group: string;
     shortcut?: string;
+    /** Display-only alias for `shortcut`; `shortcut` wins when both are supplied. */
+    hotkey?: string;
     run: () => void | Promise<void>;
 }
 export interface ThemeAdapter {
@@ -76,6 +78,7 @@ export interface AppShellIconRailConfig {
     utilityItems?: import('./icon-rail.js').IconRailItem[];
     footer?: ReactNode;
     activeId?: string;
+    renderLink?: import('./icon-rail.js').IconRailProps['renderLink'];
 }
 /** ContextRail configuration for `<AppShell variant="workspace">`. */
 export interface AppShellContextRailConfig {

@@ -99,6 +99,24 @@ export function MedaShellProvider(props) {
             ...prev,
             rightPanel: { ...prev.rightPanel, width },
         })),
+        open: () => setLayoutState((prev) => ({
+            ...prev,
+            rightPanel: {
+                ...prev.rightPanel,
+                mode: prev.rightPanel.mode === 'closed' ? 'panel' : prev.rightPanel.mode,
+            },
+        })),
+        close: () => setLayoutState((prev) => ({
+            ...prev,
+            rightPanel: { ...prev.rightPanel, mode: 'closed' },
+        })),
+        toggle: () => setLayoutState((prev) => ({
+            ...prev,
+            rightPanel: {
+                ...prev.rightPanel,
+                mode: prev.rightPanel.mode === 'closed' ? 'panel' : 'closed',
+            },
+        })),
         // focus(viewId) — opens panel + switches to view in one call.
         // Only flips closed → panel; preserves expanded / fullscreen modes.
         focus: (viewId) => setLayoutState((prev) => {
@@ -119,6 +137,10 @@ export function MedaShellProvider(props) {
         setCollapsed: (collapsed) => setLayoutState((prev) => ({
             ...prev,
             contextRail: { ...prev.contextRail, collapsed },
+        })),
+        toggle: () => setLayoutState((prev) => ({
+            ...prev,
+            contextRail: { ...prev.contextRail, collapsed: !prev.contextRail.collapsed },
         })),
     }), [layoutState, setLayoutState]);
     const value = useMemo(() => ({
