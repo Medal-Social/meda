@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Menu, User } from 'lucide-react';
+import { memo } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppTabs, PanelToggle, ShellHeader, WorkspaceSwitcher } from './shell-header.js';
 import { MedaShellProvider } from './shell-provider.js';
@@ -246,6 +247,62 @@ describe('WorkspaceSwitcher — menuItems replaces hardcoded defaults', () => {
     fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
 
     expect(screen.getByText('View profile')).toBeInTheDocument();
+  });
+
+  it('preserves icon when item is rendered as an anchor link', () => {
+    renderWithProvider(
+      <WorkspaceSwitcher
+        menuItems={[{ id: 'profile', label: 'View profile', href: '/profile', icon: User }]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    const link = screen.getByRole('menuitem', { name: 'View profile' });
+    expect(link.tagName).toBe('A');
+    expect(link).toHaveAttribute('href', '/profile');
+    expect(link.querySelector('svg')).not.toBeNull();
+  });
+
+  it('renders memoized icon components without falling through', () => {
+    const MemoIcon = memo(User);
+    renderWithProvider(
+      <WorkspaceSwitcher
+        menuItems={[{ id: 'profile', label: 'View profile', onClick: () => {}, icon: MemoIcon }]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    const item = screen.getByRole('menuitem', { name: /view profile/i });
+    expect(item.querySelector('svg')).not.toBeNull();
+  });
+
+  it('renders array-shaped icon ReactNodes as-is without crashing', () => {
+    renderWithProvider(
+      <WorkspaceSwitcher
+        menuItems={[
+          {
+            id: 'compound',
+            label: 'Compound',
+            onClick: () => {},
+            icon: [
+              <span key="a" data-testid="icon-a">
+                a
+              </span>,
+              <span key="b" data-testid="icon-b">
+                b
+              </span>,
+            ],
+          },
+        ]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    expect(screen.getByTestId('icon-a')).toBeInTheDocument();
+    expect(screen.getByTestId('icon-b')).toBeInTheDocument();
   });
 
   it('still inserts the theme toggle between configured items and footer', () => {
