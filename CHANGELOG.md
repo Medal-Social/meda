@@ -1,5 +1,52 @@
 # @medalsocial/meda
 
+## 1.5.0
+
+### Minor Changes
+
+- [#80](https://github.com/Medal-Social/meda/pull/80) [`0c32faf`](https://github.com/Medal-Social/meda/commit/0c32faf83ae56e4d44a1ad7003f6e739279ad00c) Thanks [@alioftech](https://github.com/alioftech)! - `<AppShell variant="workspace">` now accepts a `workspace` config that lets consumers replace the WorkspaceSwitcher's package-default dropdown items with their own. Previously the "Manage workspaces / Settings / Profile / Sign out" entries were hardcoded inside `WorkspaceSwitcher` with no `onClick` or `href`, so they did nothing when clicked — a blocker for any real adopter.
+
+  ```tsx
+  <AppShell
+    variant="workspace"
+    workspace={{
+      menuItems: [
+        { id: 'settings', label: 'Settings', href: '/settings/users' },
+        { id: 'profile',  label: 'Profile',  href: '/identity' },
+        { id: 'sign-out', label: 'Sign out', onClick: () => signOut(), variant: 'destructive' },
+      ],
+      menuFooter: <CustomBottomSlot />,
+    }}
+    iconRail={...}
+  >
+  ```
+
+  The new `WorkspaceMenuItem` shape supports `href`, `onClick`, optional `icon`, optional `separatorAfter`, and a `variant: 'default' | 'destructive'` tone hint. When `menuItems` is omitted the package-default items render unchanged (1.x behavior), so this is fully additive and non-breaking.
+
+  The theme toggle is preserved automatically — meda still inserts it between the items and the footer so consumers don't need to reimplement theme cycling.
+
+  `WorkspaceSwitcherProps.menuFooter` is the preferred name; `workspaceMenuFooter` is kept as a deprecated alias for backwards compatibility.
+
+### Patch Changes
+
+- [#86](https://github.com/Medal-Social/meda/pull/86) [`36b0ed1`](https://github.com/Medal-Social/meda/commit/36b0ed1f7e827027c5e8d1346cf8a1b4d793a358) Thanks [@alioftech](https://github.com/alioftech)! - fix(shell): preserve icon on `href` workspace menu items and avoid icon-render crash
+
+  - `WorkspaceMenuItem` entries with `href` now render their icon. The previous
+    implementation passed `<a href={item.href}>{item.label}</a>` to Base UI's
+    `render` prop, and the cloned anchor's own children overrode the
+    `DropdownMenuItem` children, silently dropping the icon. The anchor is now
+    childless so Base UI merges the menuitem's icon + label children into it.
+  - `renderConfiguredIcon` no longer crashes when `icon` is a non-element
+    `ReactNode` object (e.g. an array of nodes). Previously any non-primitive,
+    non-element value fell through to `createElement`, producing
+    "Element type is invalid". The function now only invokes `createElement` for
+    callable components and `forwardRef`/`memo`-shaped objects, and renders any
+    other `ReactNode` as-is.
+
+- [#80](https://github.com/Medal-Social/meda/pull/80) [`2368241`](https://github.com/Medal-Social/meda/commit/2368241cd014edfa9b1ad64526704bf83db93d31) Thanks [@alioftech](https://github.com/alioftech)! - Fix `<AppShell variant="workspace">` IconRail layout collapsing when consumed via Tailwind v4. Meda's exported `theme.css` now declares `@source "../**/*.js"` so utility classes used only by meda components (e.g. `h-full`, `mt-auto`, `py-3.5`, `bg-shell-rail`) are generated even when the consumer app doesn't reference them itself.
+
+  Without this directive, Tailwind v4 silently dropped those classes and the IconRail rendered with content height instead of full viewport height — utility items stacked tight against the divider near the top of the rail instead of pinning to the bottom, and the first icon sat flush against the header. The directive is resolved relative to the CSS file location at build time, so it scans the package's own dist output regardless of where it's installed.
+
 ## 1.4.0
 
 ### Minor Changes
