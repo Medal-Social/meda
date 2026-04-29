@@ -50,6 +50,21 @@
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "meda-next-app-shell",
+      "type": "registry:block",
+      "title": "Meda Next AppShell",
+      "description": "Install a copyable Next.js App Router shell adapter.",
+      "dependencies": ["@medalsocial/meda", "lucide-react"],
+      "files": [
+        {
+          "path": "registry/meda/meda-next-app-shell/meda-next-app-shell.tsx",
+          "type": "registry:block",
+          "target": "components/meda/meda-next-app-shell.tsx"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
       "name": "meda-marketing",
       "type": "registry:block",
       "title": "Meda Marketing",

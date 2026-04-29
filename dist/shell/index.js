@@ -13,7 +13,6 @@ export { ContextRail } from './context-rail.js';
 export { DragModeBanner } from './drag-mode-banner.js';
 // Extras (legacy components ported during Phase 15 — opt-in for apps that need them)
 export * as Extras from './extras/index.js';
-// Rails + main + panel
 export { IconRail, RailDivider } from './icon-rail.js';
 // Storage adapter (consumers may want to provide their own)
 export { createLocalStorageAdapter } from './layout-state.js';
