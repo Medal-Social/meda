@@ -6,7 +6,13 @@ name: Auto-merge promote PRs
 # Auto-merge waits for required status checks before merging, so this is
 # gated on the same `lint` / `test` / `build` checks as a manual merge.
 on:
-  pull_request_target:
+  # `pull_request` (not `pull_request_target`) is intentional: this workflow
+  # only ever acts on same-repo promote PRs, so it never needs base-repo
+  # context for fork PRs. With `pull_request`, fork PRs run with a read-only
+  # GITHUB_TOKEN and the `gh pr merge` write call would fail anyway — so
+  # token scope provides defense in depth alongside the same-repo `if` guard
+  # below.
+  pull_request:
     types: [opened, synchronize, reopened]
     branches: [prod]
 
@@ -17,10 +23,9 @@ permissions:
 jobs:
   enable-auto-merge:
     runs-on: ubuntu-latest
-    # Same-repo gate is critical: this workflow runs on `pull_request_target`
-    # with write permissions, so without `head.repo.full_name == repository` a
-    # fork could open a PR to `prod` from a branch named `dev` and have
-    # auto-merge enabled on it.
+    # Belt-and-braces same-repo gate even though `pull_request` already
+    # restricts the token for forks — keeps the no-op early instead of
+    # letting it fail with a 403.
     if: |
       github.event.pull_request.head.repo.full_name == github.repository &&
       (github.event.pull_request.head.ref == 'dev' ||
