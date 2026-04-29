@@ -81,3 +81,14 @@ Consumers compose one `<AppShell>` with a config:
 ```
 
 The variant decides which chrome renders. The viewport decides whether desktop or mobile chrome is used internally. Consumers do not import `MobileHeader`, `MobileBottomNav`, or `MobileDrawers` directly. Those are no longer exported.
+
+## Adoption recipes
+
+Copyable recipes should document both accessibility and composition contracts. At minimum, recipes that wrap `AppShell` need to say which props must be forwarded (`linkProps`, trigger props, tab props), where accessible names/headings come from, and which provider owns shell state.
+
+Keep recipe stories and docs close to the consumer workflow:
+
+- show framework adapters like `next/link` through render callbacks, not by replacing Meda state;
+- pass initial `rightPanel.panelViews` synchronously when they are known at layout render time;
+- use `PanelViewsProvider` for nested route registrations that need cleanup on unmount;
+- include reduced-motion and keyboard behavior in the recipe notes.
