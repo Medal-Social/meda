@@ -14,6 +14,7 @@ export interface MedaRecipe {
   cssVars: string[];
   files: MedaRecipeFile[];
   accessibility: string[];
+  composition: string[];
 }
 
 export const nextAppShellRecipe = {
@@ -136,6 +137,12 @@ export function MedaNextAuthShell({
     'Auth provider buttons keep the visible provider affordance separate from the accessible button name.',
     'Route-owned panel views should expose headings inside their rendered panel content.',
     'Reduced-motion behavior remains delegated to Meda shell motion tokens.',
+  ],
+  composition: [
+    'MedaShellProvider owns workspace and app context for the copied shell adapter.',
+    'AppShell receives route-owned rightPanel views on first render to avoid delayed panel UI.',
+    'PanelViewsProvider wraps children with the same panelViews and defaultPanelView for nested route registrations.',
+    'renderLink composes Next Link by forwarding Meda linkProps before setting framework-specific props.',
   ],
 } satisfies MedaRecipe;
 

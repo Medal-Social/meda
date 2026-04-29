@@ -88,6 +88,10 @@
     "./recipes/next": {
       "types": "./dist/recipes/next.d.ts",
       "default": "./dist/recipes/next.js"
+    },
+    "./theme": {
+      "types": "./dist/theme/index.d.ts",
+      "default": "./dist/theme/index.js"
     }
   },
   "sideEffects": [

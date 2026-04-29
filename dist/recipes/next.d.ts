@@ -13,6 +13,7 @@ export interface MedaRecipe {
     cssVars: string[];
     files: MedaRecipeFile[];
     accessibility: string[];
+    composition: string[];
 }
 export declare const nextAppShellRecipe: {
     name: string;
@@ -28,6 +29,7 @@ export declare const nextAppShellRecipe: {
         content: string;
     }[];
     accessibility: string[];
+    composition: string[];
 };
 export declare const nextRecipes: {
     name: string;
@@ -43,4 +45,5 @@ export declare const nextRecipes: {
         content: string;
     }[];
     accessibility: string[];
+    composition: string[];
 }[];
