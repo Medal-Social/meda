@@ -69,22 +69,31 @@ export interface WorkspaceSwitcherProps {
 function renderConfiguredIcon(icon: WorkspaceMenuItem['icon']): ReactNode {
   if (icon == null) return null;
   if (isValidElement(icon)) return icon;
-  if (
-    typeof icon === 'string' ||
-    typeof icon === 'number' ||
-    typeof icon === 'boolean' ||
-    typeof icon === 'bigint'
-  ) {
-    return icon;
+  if (typeof icon === 'function') {
+    return createElement(icon as LucideIcon, { size: 16, 'aria-hidden': true });
   }
-  if (typeof icon !== 'function' && typeof icon !== 'object') return icon;
-  // LucideIcon-shape — callable component or forwardRef component object.
-  return createElement(icon as LucideIcon, { size: 16, 'aria-hidden': true });
+  // forwardRef/memo components are objects carrying a `$$typeof` symbol —
+  // treat them like Lucide components. Any other object (arrays, fragments
+  // produced by jsx-runtime, plain ReactNode objects) is rendered as-is so
+  // it doesn't crash createElement with "Element type is invalid".
+  if (
+    typeof icon === 'object' &&
+    icon !== null &&
+    '$$typeof' in (icon as Record<string, unknown>) &&
+    typeof (icon as { render?: unknown }).render === 'function'
+  ) {
+    return createElement(icon as LucideIcon, { size: 16, 'aria-hidden': true });
+  }
+  return icon;
 }
 
 function renderConfiguredItem(item: WorkspaceMenuItem): ReactNode {
   const handleSelect = () => item.onClick?.();
-  const renderLink = item.href != null ? <a href={item.href}>{item.label}</a> : undefined;
+  // Childless anchor — Base UI merges the DropdownMenuItem's children into the
+  // cloned render element. Passing children here would override the icon +
+  // label children below and configured icons would silently disappear.
+  // biome-ignore lint/a11y/useAnchorContent: children are injected at render time by Base UI's `render` prop
+  const renderLink = item.href != null ? <a href={item.href} /> : undefined;
 
   return (
     <DropdownMenuItem

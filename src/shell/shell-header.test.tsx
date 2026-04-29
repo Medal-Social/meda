@@ -248,6 +248,48 @@ describe('WorkspaceSwitcher — menuItems replaces hardcoded defaults', () => {
     expect(screen.getByText('View profile')).toBeInTheDocument();
   });
 
+  it('preserves icon when item is rendered as an anchor link', () => {
+    renderWithProvider(
+      <WorkspaceSwitcher
+        menuItems={[{ id: 'profile', label: 'View profile', href: '/profile', icon: User }]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    const link = screen.getByRole('menuitem', { name: 'View profile' });
+    expect(link.tagName).toBe('A');
+    expect(link).toHaveAttribute('href', '/profile');
+    expect(link.querySelector('svg')).not.toBeNull();
+  });
+
+  it('renders array-shaped icon ReactNodes as-is without crashing', () => {
+    renderWithProvider(
+      <WorkspaceSwitcher
+        menuItems={[
+          {
+            id: 'compound',
+            label: 'Compound',
+            onClick: () => {},
+            icon: [
+              <span key="a" data-testid="icon-a">
+                a
+              </span>,
+              <span key="b" data-testid="icon-b">
+                b
+              </span>,
+            ],
+          },
+        ]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    expect(screen.getByTestId('icon-a')).toBeInTheDocument();
+    expect(screen.getByTestId('icon-b')).toBeInTheDocument();
+  });
+
   it('still inserts the theme toggle between configured items and footer', () => {
     renderWithProvider(
       <WorkspaceSwitcher
