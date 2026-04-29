@@ -8,7 +8,7 @@ name: Auto-approve trusted PRs
 #
 # Covered today:
 #   - changeset-release/* PRs opened by Changesets bots         (Release PR)
-#   - chore/auto-sync-* PRs opened by github-actions[bot]       (auto-sync prod → dev)
+#   - chore/auto-sync-* PRs opened by medal-approvals[bot]      (auto-sync prod → dev)
 #   - dev → prod PRs opened by trusted maintainer humans        (release promote)
 #
 # NOT covered (intentionally):
@@ -47,8 +47,8 @@ jobs:
       (
         (
           github.event.pull_request.user.type == 'Bot' &&
-          contains(fromJson('["medal-social-release-bot[bot]", "changeset-bot[bot]", "github-actions[bot]"]'), github.event.pull_request.user.login) &&
-          contains(fromJson('["medal-social-release-bot[bot]", "changeset-bot[bot]", "github-actions[bot]"]'), github.actor) &&
+          contains(fromJson('["medal-social-release-bot[bot]", "changeset-bot[bot]", "medal-approvals[bot]"]'), github.event.pull_request.user.login) &&
+          contains(fromJson('["medal-social-release-bot[bot]", "changeset-bot[bot]", "medal-approvals[bot]"]'), github.actor) &&
           (
             startsWith(github.event.pull_request.head.ref, 'changeset-release/') ||
             startsWith(github.event.pull_request.head.ref, 'chore/auto-sync-')
