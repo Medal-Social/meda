@@ -141,4 +141,90 @@ describe('AppShellWorkspace', () => {
     expect(navigate).toHaveBeenCalledWith('/i');
     expect(screen.getByTestId('mobile-drawer-state')).toHaveTextContent('closed');
   });
+
+  it('renders mobile context module custom content with the context rail app id', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('mobile');
+
+    render(
+      <Provider>
+        <AppShellWorkspace
+          iconRail={config.iconRail}
+          contextRail={{
+            appId: 'context-app',
+            module: {
+              id: 'custom-module',
+              label: 'Custom Module',
+              render: ({ workspaceId, appId }) => (
+                <section data-testid="mobile-module-custom-content">
+                  {workspaceId}:{appId}
+                </section>
+              ),
+            },
+          }}
+        >
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Module' }));
+
+    expect(screen.getByTestId('mobile-module-custom-content')).toHaveTextContent('w:context-app');
+    expect(screen.queryAllByRole('link')).toHaveLength(0);
+  });
+
+  it('renders mobile context module items before custom content', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('mobile');
+
+    render(
+      <Provider>
+        <AppShellWorkspace
+          iconRail={config.iconRail}
+          contextRail={{
+            appId: 'context-app',
+            module: {
+              ...config.contextRail.module,
+              render: () => (
+                <section data-testid="mobile-module-custom-content">Conversation list</section>
+              ),
+            },
+          }}
+        >
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Module' }));
+
+    const moduleLink = screen.getByRole('link', { name: 'Inbox' });
+    const customContent = screen.getByTestId('mobile-module-custom-content');
+    expect(
+      moduleLink.compareDocumentPosition(customContent) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
+
+  it.each([
+    { id: 'empty-module', label: 'Empty Module' },
+    { id: 'empty-items-module', label: 'Empty Items Module', items: [] },
+  ])('does not render a mobile Module nav item for empty module %#', (module) => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('mobile');
+
+    render(
+      <Provider>
+        <AppShellWorkspace
+          iconRail={config.iconRail}
+          contextRail={{
+            appId: 'context-app',
+            module,
+          }}
+        >
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    expect(screen.getByRole('button', { name: 'Menu' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Module' })).not.toBeInTheDocument();
+  });
 });

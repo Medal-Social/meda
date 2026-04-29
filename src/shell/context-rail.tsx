@@ -158,7 +158,7 @@ function ContextRailToggle({ railId }: { railId: string }) {
 // ---------------------------------------------------------------------------
 
 export function ContextRail({
-  appId: _appId,
+  appId,
   module,
   hidden = false,
   collapsible = true,
@@ -182,6 +182,7 @@ export function ContextRail({
   // is called on pointerUp to persist via useShellLayoutState.
   const [displayWidth, setDisplayWidth] = useState<number | null>(null);
   const width = displayWidth ?? ctx.contextRail.width;
+  const items = module?.items ?? [];
 
   if (band === 'mobile') return null;
 
@@ -189,7 +190,7 @@ export function ContextRail({
     return <div aria-hidden="true" className="hidden" data-testid="context-rail-hidden" />;
   }
 
-  if (!module || module.items.length === 0) {
+  if (!module || (items.length === 0 && !module.render)) {
     return <div aria-hidden="true" className="hidden" data-testid="context-rail-empty" />;
   }
 
@@ -245,44 +246,46 @@ export function ContextRail({
           )}
         </div>
 
-        {/* Items list — fleshed out in Phase 9.2 (Commit 3) */}
-        <nav aria-label={`${module.label} navigation`} className="flex flex-col gap-0.5 p-2">
-          {module.items.map((item) => {
-            const isActive = item.id === activeItemId;
-            const klass = cn(
-              'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
-              isActive
-                ? 'bg-primary/10 text-primary'
-                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-            );
-            const IconComp = item.icon;
-            const inner = (
-              <>
-                <IconComp size={16} aria-hidden="true" className="shrink-0" />
-                <span className="truncate">{item.label}</span>
-                {item.shortcut && (
-                  <kbd className="ml-auto font-mono text-[10px] text-muted-foreground">
-                    {item.shortcut}
-                  </kbd>
-                )}
-              </>
-            );
+        {items.length > 0 && (
+          <nav aria-label={`${module.label} navigation`} className="flex flex-col gap-0.5 p-2">
+            {items.map((item) => {
+              const isActive = item.id === activeItemId;
+              const klass = cn(
+                'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
+                isActive
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+              );
+              const IconComp = item.icon;
+              const inner = (
+                <>
+                  <IconComp size={16} aria-hidden="true" className="shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                  {item.shortcut && (
+                    <kbd className="ml-auto font-mono text-[10px] text-muted-foreground">
+                      {item.shortcut}
+                    </kbd>
+                  )}
+                </>
+              );
 
-            if (renderLink) {
-              return renderLink({ item, isActive, className: klass, children: inner });
-            }
-            return (
-              <a
-                key={item.id}
-                href={item.to}
-                aria-current={isActive ? 'page' : undefined}
-                className={klass}
-              >
-                {inner}
-              </a>
-            );
-          })}
-        </nav>
+              if (renderLink) {
+                return renderLink({ item, isActive, className: klass, children: inner });
+              }
+              return (
+                <a
+                  key={item.id}
+                  href={item.to}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={klass}
+                >
+                  {inner}
+                </a>
+              );
+            })}
+          </nav>
+        )}
+        {module.render?.({ workspaceId: ctx.workspace.id, appId })}
       </div>
 
       {/* Right-edge resize handle — only when expanded (no rail edge to grab when collapsed) */}

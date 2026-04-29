@@ -118,6 +118,18 @@ describe('ContextRail — layout + visibility', () => {
     expect(empty).toHaveAttribute('aria-hidden', 'true');
   });
 
+  it('module without items or custom render renders hidden placeholder, no aside', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={{ id: 'mail', label: 'Mail' }} />
+      </Wrapper>
+    );
+
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+    const empty = document.querySelector('[data-testid="context-rail-empty"]');
+    expect(empty).toHaveAttribute('aria-hidden', 'true');
+  });
+
   it('no module prop renders hidden placeholder, no aside', () => {
     render(
       <Wrapper>
@@ -227,6 +239,46 @@ describe('ContextRail — resize clamping', () => {
 // ---------------------------------------------------------------------------
 
 describe('ContextRail — module items rendering', () => {
+  it('renders module.render custom content without items and passes shell render context', () => {
+    render(
+      <Wrapper>
+        <ContextRail
+          appId="mail"
+          module={{
+            id: 'mail',
+            label: 'Mail',
+            render: ({ workspaceId, appId }) => (
+              <section data-testid="module-custom-content">
+                {workspaceId}:{appId}
+              </section>
+            ),
+          }}
+        />
+      </Wrapper>
+    );
+
+    expect(screen.getByTestId('module-custom-content')).toHaveTextContent('ws-test:mail');
+    expect(screen.queryAllByRole('link')).toHaveLength(0);
+  });
+
+  it('renders items before custom module content when both are supplied', () => {
+    render(
+      <Wrapper>
+        <ContextRail
+          appId="mail"
+          module={{
+            ...MODULE,
+            render: () => <section data-testid="module-custom-content">Custom tools</section>,
+          }}
+        />
+      </Wrapper>
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Mail navigation' });
+    const custom = screen.getByTestId('module-custom-content');
+    expect(nav.compareDocumentPosition(custom) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('renders module title + description in header', () => {
     render(
       <Wrapper>

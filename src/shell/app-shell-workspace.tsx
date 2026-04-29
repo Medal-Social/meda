@@ -93,6 +93,7 @@ export function AppShellWorkspace({
           menuActiveId={iconRail?.activeId}
           menuRenderLink={iconRail?.renderLink}
           module={contextRail?.module}
+          moduleAppId={contextRail?.appId}
           panelViews={rightPanel?.panelViews ?? []}
           defaultView={rightPanel?.defaultView}
         />
@@ -110,7 +111,10 @@ function buildMobileNavItems(
   if (iconRail) {
     items.push({ id: 'menu', label: 'Menu', icon: Menu, opens: 'menu-drawer' });
   }
-  if (contextRail?.module) {
+  if (
+    contextRail?.module &&
+    ((contextRail.module.items ?? []).length > 0 || Boolean(contextRail.module.render))
+  ) {
     items.push({ id: 'module', label: 'Module', icon: LayoutGrid, opens: 'module-drawer' });
   }
   // Panels button only when there's an actual view to render — empty
