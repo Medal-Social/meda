@@ -449,6 +449,24 @@ describe('AppTabs — renderLink routing integration', () => {
     expect(billingLink).toHaveAttribute('aria-current', 'page');
     expect(billingLink.className).toContain('border-primary');
   });
+
+  it('falls back to a button when an app has no route target', () => {
+    const renderLink = vi.fn(({ app, linkProps }) => (
+      <a {...linkProps} data-testid={`app-tab-link-${app.id}`} />
+    ));
+
+    renderWithProvider(<AppTabs renderLink={renderLink} />, {
+      apps: [
+        { id: 'app-a', label: 'Analytics', icon: Menu, to: '/analytics' },
+        { id: 'app-b', label: 'Billing', icon: Menu },
+      ],
+      defaultActiveApp: 'app-a',
+    });
+
+    expect(screen.getByTestId('app-tab-link-app-a')).toHaveAttribute('href', '/analytics');
+    expect(screen.getByRole('button', { name: /billing/i })).toBeInTheDocument();
+    expect(renderLink).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('AppTabs — supports non-Lucide icon shapes', () => {

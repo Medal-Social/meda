@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import type { AppShellAppTabsConfig, AppShellContextRailConfig, AppShellIconRailConfig, AppShellRightPanelConfig, AppShellWorkspaceConfig, ShellMainLayout } from './types.js';
 export interface AppShellWorkspaceProps {
     iconRail?: AppShellIconRailConfig;

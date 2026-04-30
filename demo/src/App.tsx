@@ -52,6 +52,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { type ComponentProps, useEffect, useRef, useState } from 'react';
+import packageJson from '../../package.json';
 import { ComponentDoc } from './ComponentDoc';
 
 /* ─────────────────────────────────────────────────────────────────────────── *
@@ -190,6 +191,7 @@ const SITE_WORKSPACE: WorkspaceDefinition = {
   name: 'Meda UI',
   icon: <MedalSocialMark className="site-workspace-mark" />,
 };
+const SITE_VERSION = `v${packageJson.version}`;
 
 const SITE_APPS: AppDefinition[] = [
   { id: 'overview', label: 'Overview', icon: BookOpen },
@@ -479,7 +481,7 @@ function SiteWorkspace() {
       <div className="site-workspace">
         <section id="overview" className="hero">
           <span className="badge">
-            <span>v1.0.0-rc.1</span>
+            <span>{SITE_VERSION}</span>
             <span>Apache-2.0</span>
             <span>React 19</span>
           </span>

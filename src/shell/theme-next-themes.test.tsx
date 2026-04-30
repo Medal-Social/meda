@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useTheme } from './theme.js';
 import { NextThemesAdapter } from './theme-next-themes.js';
@@ -18,22 +18,62 @@ function ThemeConsumer() {
   );
 }
 
+function stubThemeEnvironment({
+  storedTheme = null,
+  systemDark = false,
+  legacyMediaListener = false,
+}: {
+  storedTheme?: string | null;
+  systemDark?: boolean;
+  legacyMediaListener?: boolean;
+} = {}) {
+  const listeners = new Set<(event: MediaQueryListEvent) => void>();
+  const mql = {
+    matches: systemDark,
+    media: '(prefers-color-scheme: dark)',
+    onchange: null,
+    addListener: legacyMediaListener ? vi.fn((listener) => listeners.add(listener)) : undefined,
+    removeListener: legacyMediaListener
+      ? vi.fn((listener) => listeners.delete(listener))
+      : undefined,
+    addEventListener: legacyMediaListener
+      ? undefined
+      : vi.fn((_event: string, listener) => listeners.add(listener)),
+    removeEventListener: legacyMediaListener
+      ? undefined
+      : vi.fn((_event: string, listener) => listeners.delete(listener)),
+    dispatchEvent: vi.fn(),
+  } as unknown as MediaQueryList & {
+    matches: boolean;
+    addListener?: ReturnType<typeof vi.fn>;
+    removeListener?: ReturnType<typeof vi.fn>;
+  };
+
+  vi.stubGlobal('localStorage', {
+    getItem: vi.fn(() => storedTheme),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+  });
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn(() => mql)
+  );
+
+  return {
+    mql,
+    emitSystemChange(nextMatches: boolean) {
+      mql.matches = nextMatches;
+      for (const listener of listeners) {
+        listener({ matches: nextMatches } as MediaQueryListEvent);
+      }
+    },
+  };
+}
+
 describe('NextThemesAdapter — exposes a next-themes-compatible meda ThemeAdapter shape', () => {
   it('exposes theme and resolvedTheme via meda ThemeCtx', () => {
-    // Stub matchMedia so system theme detection works in jsdom
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn().mockImplementation((query: string) => ({
-        matches: false,
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      }))
-    );
+    stubThemeEnvironment();
 
     render(
       <NextThemesAdapter>
@@ -48,19 +88,7 @@ describe('NextThemesAdapter — exposes a next-themes-compatible meda ThemeAdapt
   });
 
   it('narrowResolved defaults to light when resolvedTheme is undefined or unknown', () => {
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn().mockImplementation((query: string) => ({
-        matches: false,
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      }))
-    );
+    stubThemeEnvironment();
 
     render(
       <NextThemesAdapter>
@@ -74,19 +102,7 @@ describe('NextThemesAdapter — exposes a next-themes-compatible meda ThemeAdapt
   });
 
   it('does not render an inline script tag through React', () => {
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn().mockImplementation((query: string) => ({
-        matches: false,
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      }))
-    );
+    stubThemeEnvironment();
 
     const { container } = render(
       <NextThemesAdapter>
@@ -95,5 +111,47 @@ describe('NextThemesAdapter — exposes a next-themes-compatible meda ThemeAdapt
     );
 
     expect(container.querySelector('script')).toBeNull();
+  });
+
+  it('applies a stored dark theme to the document root', async () => {
+    stubThemeEnvironment({ storedTheme: 'dark' });
+
+    render(
+      <NextThemesAdapter>
+        <ThemeConsumer />
+      </NextThemesAdapter>
+    );
+
+    expect(document.documentElement).toHaveClass('dark');
+    await waitFor(() => {
+      expect(screen.getByTestId('theme').textContent).toBe('dark');
+      expect(screen.getByTestId('resolved').textContent).toBe('dark');
+    });
+  });
+
+  it('supports legacy MediaQueryList addListener/removeListener APIs', async () => {
+    const env = stubThemeEnvironment({
+      storedTheme: 'system',
+      systemDark: false,
+      legacyMediaListener: true,
+    });
+
+    render(
+      <NextThemesAdapter>
+        <ThemeConsumer />
+      </NextThemesAdapter>
+    );
+
+    await waitFor(() => {
+      expect(env.mql.addListener).toHaveBeenCalled();
+      expect(screen.getByTestId('resolved').textContent).toBe('light');
+    });
+
+    env.emitSystemChange(true);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('resolved').textContent).toBe('dark');
+      expect(document.documentElement).toHaveClass('dark');
+    });
   });
 });

@@ -7,7 +7,7 @@ vi.mock('./use-shell-viewport.js', () => ({
 }));
 
 import { AppShellWorkspace } from './app-shell-workspace.js';
-import { useCommands } from './command-palette.js';
+import { CommandPalette, useCommands } from './command-palette.js';
 import { PanelViewsProvider } from './panel-views-provider.js';
 import { MedaShellProvider, useMedaShell } from './shell-provider.js';
 import { useShellViewport } from './use-shell-viewport.js';
@@ -182,6 +182,25 @@ describe('AppShellWorkspace', () => {
     );
 
     expect(screen.getByTestId('command-registration-probe')).toBeInTheDocument();
+  });
+
+  it('does not mount a second command palette when a consumer already provides one', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+
+    render(
+      <Provider>
+        <CommandPalette>
+          <AppShellWorkspace>
+            <CommandRegistrationProbe />
+          </AppShellWorkspace>
+        </CommandPalette>
+      </Provider>
+    );
+
+    expect(screen.getByTestId('command-registration-probe')).toBeInTheDocument();
+    expect(addEventListenerSpy.mock.calls.filter(([event]) => event === 'keydown')).toHaveLength(1);
+    addEventListenerSpy.mockRestore();
   });
 
   it('renders desktop right panel tabs from route-registered panel views without static rightPanel config', async () => {

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import packageJson from '../../package.json';
 import { App } from './App';
 
 function matchMediaResult(query: string, matches = false) {
@@ -54,6 +55,7 @@ describe('demo App', () => {
     render(<App />);
 
     expect(screen.getByRole('heading', { name: /the shell that runs medal/i })).toBeInTheDocument();
+    expect(screen.getByText(`v${packageJson.version}`)).toBeInTheDocument();
     expect(screen.getAllByRole('navigation', { name: 'Primary' }).length).toBeGreaterThan(0);
   });
 

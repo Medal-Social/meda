@@ -1,7 +1,7 @@
 'use client';
 import { LayoutGrid, Menu, PanelTop, Sparkles } from 'lucide-react';
-import type { ReactNode } from 'react';
-import { CommandPalette } from './command-palette.js';
+import { type ReactNode, useContext } from 'react';
+import { CommandPalette, CommandRegistryContext } from './command-palette.js';
 import { ContextRail } from './context-rail.js';
 import { IconRail } from './icon-rail.js';
 import { MobileBottomNav } from './internal/mobile-bottom-nav.js';
@@ -78,68 +78,69 @@ export function AppShellWorkspace({
   // rendered without an explicit-height ancestor (tests, direct imports). The
   // <AppShell> wrapper already enforces h-screen for the workspace variant, so
   // nested viewport-height divs collapse cleanly — no double-scroll.
-  return (
-    <CommandPalette>
-      <div className="flex h-screen flex-col">
-        {isMobile ? (
-          <MobileHeader globalActions={globalActions} />
-        ) : (
-          <ShellHeader
-            globalActions={globalActions}
-            headerCenter={headerCenter}
-            appTabsRenderLink={appTabs?.renderLink}
-            workspaceMenuItems={workspace?.menuItems}
-            workspaceMenuFooter={workspace?.menuFooter}
-          />
-        )}
-        {banners ? (
-          <div data-meda-banners="" className="flex-shrink-0">
-            {banners}
-          </div>
-        ) : (
-          false
-        )}
-        <div className="relative flex flex-1 overflow-hidden">
-          {!isMobile && iconRail && (
-            <IconRail
-              mainItems={iconRail.mainItems}
-              utilityItems={iconRail.utilityItems}
-              footer={iconRail.footer}
-              activeId={iconRail.activeId}
-              renderLink={iconRail.renderLink}
-            />
-          )}
-          {!isMobile && contextRail && (
-            <ContextRail
-              appId={contextRail.appId}
-              module={contextRail.module}
-              activeItemId={contextRail.activeItemId}
-            />
-          )}
-          <ShellMain layout={mainLayout ?? 'workspace'} className={mainClassName}>
-            {children}
-          </ShellMain>
-          {!isMobile && resolvedRightPanel.panelViews.length > 0 && (
-            <RightPanel panelViews={staticPanelViews} defaultView={rightPanel?.defaultView} />
-          )}
+  const commandRegistry = useContext(CommandRegistryContext);
+  const shell = (
+    <div className="flex h-screen flex-col">
+      {isMobile ? (
+        <MobileHeader globalActions={globalActions} />
+      ) : (
+        <ShellHeader
+          globalActions={globalActions}
+          headerCenter={headerCenter}
+          appTabsRenderLink={appTabs?.renderLink}
+          workspaceMenuItems={workspace?.menuItems}
+          workspaceMenuFooter={workspace?.menuFooter}
+        />
+      )}
+      {banners ? (
+        <div data-meda-banners="" className="flex-shrink-0">
+          {banners}
         </div>
-        {isMobile && hasDrawerContent && <MobileBottomNav items={navItems} />}
-        {isMobile && hasDrawerContent && (
-          <MobileDrawers
-            menuItems={mobileMenuItems}
-            menuActiveId={iconRail?.activeId}
-            menuRenderLink={iconRail?.renderLink}
-            workspaceMenuItems={workspace?.menuItems}
-            workspaceMenuFooter={workspace?.menuFooter}
-            module={contextRail?.module}
-            moduleAppId={contextRail?.appId}
-            panelViews={resolvedRightPanel.panelViews}
-            defaultView={resolvedRightPanel.defaultView}
+      ) : (
+        false
+      )}
+      <div className="relative flex flex-1 overflow-hidden">
+        {!isMobile && iconRail && (
+          <IconRail
+            mainItems={iconRail.mainItems}
+            utilityItems={iconRail.utilityItems}
+            footer={iconRail.footer}
+            activeId={iconRail.activeId}
+            renderLink={iconRail.renderLink}
           />
+        )}
+        {!isMobile && contextRail && (
+          <ContextRail
+            appId={contextRail.appId}
+            module={contextRail.module}
+            activeItemId={contextRail.activeItemId}
+          />
+        )}
+        <ShellMain layout={mainLayout ?? 'workspace'} className={mainClassName}>
+          {children}
+        </ShellMain>
+        {!isMobile && resolvedRightPanel.panelViews.length > 0 && (
+          <RightPanel panelViews={staticPanelViews} defaultView={rightPanel?.defaultView} />
         )}
       </div>
-    </CommandPalette>
+      {isMobile && hasDrawerContent && <MobileBottomNav items={navItems} />}
+      {isMobile && hasDrawerContent && (
+        <MobileDrawers
+          menuItems={mobileMenuItems}
+          menuActiveId={iconRail?.activeId}
+          menuRenderLink={iconRail?.renderLink}
+          workspaceMenuItems={workspace?.menuItems}
+          workspaceMenuFooter={workspace?.menuFooter}
+          module={contextRail?.module}
+          moduleAppId={contextRail?.appId}
+          panelViews={resolvedRightPanel.panelViews}
+          defaultView={resolvedRightPanel.defaultView}
+        />
+      )}
+    </div>
   );
+
+  return commandRegistry ? shell : <CommandPalette>{shell}</CommandPalette>;
 }
 
 function buildMobileNavItems(

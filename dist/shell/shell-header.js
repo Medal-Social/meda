@@ -68,7 +68,7 @@ export function AppTabs({ renderLink } = {}) {
             const handleClick = () => {
                 setActiveApp(app.id);
             };
-            if (renderLink) {
+            if (renderLink && app.to) {
                 return (_jsx(Fragment, { children: renderLink({
                         app,
                         isActive,

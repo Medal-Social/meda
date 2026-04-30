@@ -214,7 +214,7 @@ export function AppTabs({ renderLink }: AppTabsProps = {}) {
           setActiveApp(app.id);
         };
 
-        if (renderLink) {
+        if (renderLink && app.to) {
           return (
             <Fragment key={app.id}>
               {renderLink({
