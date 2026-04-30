@@ -3,7 +3,7 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import { cn } from '../lib/utils.js';
 
-export interface FilterRailProps extends ComponentPropsWithoutRef<'aside'> {
+export interface FilterRailProps extends Omit<ComponentPropsWithoutRef<'aside'>, 'title'> {
   title?: ReactNode;
   description?: ReactNode;
   search?: ReactNode;
@@ -12,7 +12,7 @@ export interface FilterRailProps extends ComponentPropsWithoutRef<'aside'> {
   children?: ReactNode;
 }
 
-export interface FilterRailGroupProps extends ComponentPropsWithoutRef<'fieldset'> {
+export interface FilterRailGroupProps extends Omit<ComponentPropsWithoutRef<'fieldset'>, 'title'> {
   title?: ReactNode;
   description?: ReactNode;
   children?: ReactNode;

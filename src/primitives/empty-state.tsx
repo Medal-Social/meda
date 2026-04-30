@@ -6,7 +6,7 @@ import { cn } from '../lib/utils.js';
 
 export type EmptyStateVariant = 'default' | 'panel' | 'inline';
 
-export interface EmptyStateProps extends ComponentPropsWithoutRef<'div'> {
+export interface EmptyStateProps extends Omit<ComponentPropsWithoutRef<'div'>, 'title'> {
   icon?: LucideIcon | ReactNode;
   title: ReactNode;
   description?: ReactNode;
