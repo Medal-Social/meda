@@ -255,7 +255,7 @@ function renderWorkspaceIcon(icon: WorkspaceMenuItem['icon']): ReactNode {
   if (typeof icon === 'function') {
     return createElement(icon as LucideIcon, { size: 18, 'aria-hidden': true });
   }
-  if (typeof icon === 'object' && icon !== null) {
+  if (typeof icon === 'object') {
     const candidate = icon as unknown as { $$typeof?: symbol };
     if (candidate.$$typeof != null) {
       return createElement(icon as unknown as LucideIcon, { size: 18, 'aria-hidden': true });

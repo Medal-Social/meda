@@ -75,7 +75,7 @@ function renderWorkspaceIcon(icon) {
     if (typeof icon === 'function') {
         return createElement(icon, { size: 18, 'aria-hidden': true });
     }
-    if (typeof icon === 'object' && icon !== null) {
+    if (typeof icon === 'object') {
         const candidate = icon;
         if (candidate.$$typeof != null) {
             return createElement(icon, { size: 18, 'aria-hidden': true });
