@@ -62,15 +62,6 @@ select {
   background: var(--shell-main);
 }
 
-.site-app-body {
-  background: var(--shell-main);
-}
-
-.site-shell-header {
-  background: var(--shell-header);
-  border-color: var(--shell-border);
-}
-
 .site-header-actions {
   display: flex;
   align-items: center;
@@ -710,10 +701,6 @@ select {
 }
 
 @media (max-width: 820px) {
-  .site-app-body {
-    height: calc(100vh - var(--shell-header-height) - var(--shell-bottom-nav-height));
-  }
-
   .hero {
     min-height: auto;
     padding-top: 2rem;

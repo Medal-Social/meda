@@ -154,6 +154,22 @@ describe('AppShellWorkspace', () => {
     );
   });
 
+  it('passes main layout and className to the workspace scroll region', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+
+    const { container } = render(
+      <Provider>
+        <AppShellWorkspace mainLayout="fullbleed" mainClassName="custom-main">
+          <div>hi</div>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    const main = container.querySelector('main');
+    expect(main).toHaveAttribute('data-meda-shell-main-layout', 'fullbleed');
+    expect(main).toHaveClass('custom-main');
+  });
+
   it('auto-mounts the command palette registry for workspace descendants', () => {
     (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
 

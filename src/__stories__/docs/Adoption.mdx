@@ -45,6 +45,8 @@ Use `headerCenter` for section tabs or route-specific controls that should sit i
   variant="workspace"
   headerCenter={<SectionTabs />}
   banners={impersonating ? <ImpersonationBanner /> : null}
+  mainLayout="fullbleed"
+  mainClassName="route-main"
   workspace={{
     menuItems: [{ id: 'audit', label: 'Audit log', href: '/audit' }],
     menuFooter: <AccountMenuFooter />,
@@ -55,6 +57,8 @@ Use `headerCenter` for section tabs or route-specific controls that should sit i
 ```
 
 `workspace.menuItems`, `workspace.menuFooter`, and Meda's theme toggle render in the desktop workspace switcher and the mobile Menu drawer. Do not duplicate critical workspace actions into the icon rail only for mobile reachability.
+
+Use `mainLayout` and `mainClassName` when the route needs a custom main scroll region while still keeping AppShell's mobile header, bottom nav, drawers, and command palette. This is useful for full-bleed documentation or marketing surfaces that should use the same shell chrome as the product app.
 
 ## Commands
 

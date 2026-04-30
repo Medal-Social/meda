@@ -123,6 +123,20 @@ describe('AppShell', () => {
     expect(screen.getByRole('navigation', { name: 'Section tabs' })).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('System maintenance');
   });
+
+  it('passes workspace main layout and className through to the scroll region', () => {
+    render(
+      <MedaShellProvider workspace={ws} apps={apps}>
+        <AppShell variant="workspace" mainLayout="fullbleed" mainClassName="site-main">
+          <div data-testid="x" />
+        </AppShell>
+      </MedaShellProvider>
+    );
+
+    const main = screen.getByTestId('x').closest('main');
+    expect(main).toHaveAttribute('data-meda-shell-main-layout', 'fullbleed');
+    expect(main).toHaveClass('site-main');
+  });
 });
 
 describe('AppShellBody', () => {

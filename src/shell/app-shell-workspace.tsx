@@ -19,6 +19,7 @@ import type {
   AppShellWorkspaceConfig,
   MobileBottomNavItem,
   PanelView,
+  ShellMainLayout,
 } from './types.js';
 import { useShellViewport } from './use-shell-viewport.js';
 
@@ -33,6 +34,8 @@ export interface AppShellWorkspaceProps {
   globalActions?: ReactNode;
   headerCenter?: ReactNode;
   banners?: ReactNode;
+  mainLayout?: ShellMainLayout;
+  mainClassName?: string;
   children: ReactNode;
 }
 
@@ -45,6 +48,8 @@ export function AppShellWorkspace({
   globalActions,
   headerCenter,
   banners,
+  mainLayout,
+  mainClassName,
   children,
 }: AppShellWorkspaceProps) {
   const viewport = useShellViewport();
@@ -111,7 +116,9 @@ export function AppShellWorkspace({
               activeItemId={contextRail.activeItemId}
             />
           )}
-          <ShellMain layout="workspace">{children}</ShellMain>
+          <ShellMain layout={mainLayout ?? 'workspace'} className={mainClassName}>
+            {children}
+          </ShellMain>
           {!isMobile && resolvedRightPanel.panelViews.length > 0 && (
             <RightPanel panelViews={staticPanelViews} defaultView={rightPanel?.defaultView} />
           )}

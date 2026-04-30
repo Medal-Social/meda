@@ -96,6 +96,8 @@ Workspace shells also expose chrome-level composition slots:
   variant="workspace"
   headerCenter={<SectionTabs />}
   banners={<SystemHealthBanner />}
+  mainLayout="fullbleed"
+  mainClassName="marketing-main"
   workspace={{
     menuItems: [{ id: 'settings', label: 'Settings', href: '/settings' }],
     menuFooter: <AccountSwitcher />,
@@ -105,7 +107,7 @@ Workspace shells also expose chrome-level composition slots:
 </AppShell>
 ```
 
-`workspace.menuItems`, `workspace.menuFooter`, and the theme toggle are available from the mobile Menu drawer. `useCommands()` works from workspace descendants without manually mounting `CommandPalette`; lower-level primitive compositions can still mount `CommandPalette` directly.
+`workspace.menuItems`, `workspace.menuFooter`, and the theme toggle are available from the mobile Menu drawer. Use `mainLayout`/`mainClassName` when a workspace shell needs the same mobile chrome but a custom main scroll region, such as a full-bleed marketing page. `useCommands()` works from workspace descendants without manually mounting `CommandPalette`; lower-level primitive compositions can still mount `CommandPalette` directly.
 
 For app-scoped brand tokens:
 

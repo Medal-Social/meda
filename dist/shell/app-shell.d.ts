@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { AppShellAppTabsConfig, AppShellAuthBranding, AppShellAuthConfig, AppShellContextRailConfig, AppShellIconRailConfig, AppShellRightPanelConfig, AppShellWorkspaceConfig } from './types.js';
+import type { AppShellAppTabsConfig, AppShellAuthBranding, AppShellAuthConfig, AppShellContextRailConfig, AppShellIconRailConfig, AppShellRightPanelConfig, AppShellWorkspaceConfig, ShellMainLayout } from './types.js';
 interface AppShellBaseProps {
     children: ReactNode;
     className?: string;
@@ -37,6 +37,15 @@ export type AppShellProps = AppShellBaseProps & ({
      * the workspace rail row.
      */
     banners?: ReactNode;
+    /**
+     * Layout passed through to the workspace shell's main scroll region.
+     * Defaults to `workspace`.
+     */
+    mainLayout?: ShellMainLayout;
+    /**
+     * Optional className for the workspace shell's main scroll region.
+     */
+    mainClassName?: string;
 } | {
     variant: 'chat';
     globalActions?: ReactNode;

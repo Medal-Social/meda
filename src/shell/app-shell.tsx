@@ -14,6 +14,7 @@ import type {
   AppShellIconRailConfig,
   AppShellRightPanelConfig,
   AppShellWorkspaceConfig,
+  ShellMainLayout,
 } from './types.js';
 
 interface AppShellBaseProps {
@@ -57,6 +58,15 @@ export type AppShellProps = AppShellBaseProps &
          * the workspace rail row.
          */
         banners?: ReactNode;
+        /**
+         * Layout passed through to the workspace shell's main scroll region.
+         * Defaults to `workspace`.
+         */
+        mainLayout?: ShellMainLayout;
+        /**
+         * Optional className for the workspace shell's main scroll region.
+         */
+        mainClassName?: string;
       }
     | {
         variant: 'chat';
@@ -97,6 +107,8 @@ export function AppShell(props: AppShellProps) {
           globalActions={props.globalActions}
           headerCenter={props.headerCenter}
           banners={props.banners}
+          mainLayout={props.mainLayout}
+          mainClassName={props.mainClassName}
         >
           {props.children}
         </AppShellWorkspace>

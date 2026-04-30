@@ -21,7 +21,7 @@ export const nextAppShellRecipe = {
   name: 'meda-next-app-shell',
   title: 'Meda Next AppShell',
   description:
-    'Copyable Next.js App Router shell adapter with next/link routing, route-owned panel views, and auth controls.',
+    'Copyable Next.js App Router shell adapter with next/link routing, route-owned panel views, mobile workspace menus, full-bleed main layout hooks, and auth controls.',
   dependencies: ['@medalsocial/meda', 'lucide-react'],
   peerDependencies: ['next', 'react', 'react-dom'],
   cssVars: ['@medalsocial/meda/styles.css'],
@@ -48,6 +48,7 @@ import {
   type AppShellAppTabsConfig,
   type IconRailItem,
   type PanelView,
+  type ShellMainLayout,
   type WorkspaceDefinition,
   type WorkspaceMenuItem,
 } from '@medalsocial/meda/shell'
@@ -62,6 +63,8 @@ export function MedaNextWorkspaceShell({
   appTabs,
   headerCenter,
   banners,
+  mainLayout,
+  mainClassName,
   workspaceMenuItems,
   workspaceMenuFooter,
   children,
@@ -75,6 +78,8 @@ export function MedaNextWorkspaceShell({
   appTabs?: AppShellAppTabsConfig
   headerCenter?: ReactNode
   banners?: ReactNode
+  mainLayout?: ShellMainLayout
+  mainClassName?: string
   workspaceMenuItems?: WorkspaceMenuItem[]
   workspaceMenuFooter?: ReactNode
   children: ReactNode
@@ -98,6 +103,8 @@ export function MedaNextWorkspaceShell({
         }
         headerCenter={headerCenter}
         banners={banners}
+        mainLayout={mainLayout}
+        mainClassName={mainClassName}
         workspace={{ menuItems: workspaceMenuItems, menuFooter: workspaceMenuFooter }}
         rightPanel={{ panelViews, defaultView: defaultPanelView }}
       >
@@ -165,6 +172,7 @@ export function MedaNextAuthShell({
     'AppShell receives route-owned rightPanel views on first render to avoid delayed panel UI.',
     'AppShellWorkspace mounts CommandPalette internally; route children can call useCommands without an extra shell-level mount.',
     'headerCenter and banners keep route-level chrome in the shell band instead of inside the main pane.',
+    'mainLayout and mainClassName let full-bleed routes reuse AppShell mobile chrome without dropping down to primitives.',
     'PanelViewsProvider wraps children with the same panelViews and defaultPanelView for nested route registrations.',
     'renderLink composes Next Link by forwarding Meda linkProps before setting framework-specific props.',
   ],

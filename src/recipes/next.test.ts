@@ -24,6 +24,8 @@ describe('Next recipes', () => {
 
     expect(content).toContain('headerCenter');
     expect(content).toContain('banners');
+    expect(content).toContain('mainLayout');
+    expect(content).toContain('mainClassName');
     expect(content).toContain('workspaceMenuItems');
     expect(content).toContain('workspaceMenuFooter');
     expect(content).toContain('appTabs');

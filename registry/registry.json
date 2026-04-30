@@ -53,7 +53,7 @@
       "name": "meda-next-app-shell",
       "type": "registry:block",
       "title": "Meda Next AppShell",
-      "description": "Install a copyable Next.js App Router shell adapter with link, menu, banner, and command-palette wiring.",
+      "description": "Install a copyable Next.js App Router shell adapter with link, menu, banner, full-bleed main, and command-palette wiring.",
       "dependencies": ["@medalsocial/meda", "lucide-react"],
       "files": [
         {
