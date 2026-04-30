@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "meda-empty-state",
+  "type": "registry:component",
+  "title": "Meda Empty State",
+  "description": "Install the Meda empty, zero, and error state primitive.",
+  "dependencies": ["lucide-react"],
+  "files": [
+    {
+      "path": "registry/meda/meda-empty-state/empty-state.tsx",
+      "content": "import type { LucideIcon } from 'lucide-react'\nimport { type ComponentPropsWithoutRef, isValidElement, type ReactNode } from 'react'\nimport { cn } from '@/lib/utils'\n\nexport type EmptyStateVariant = 'default' | 'panel' | 'inline'\n\nexport interface EmptyStateProps extends ComponentPropsWithoutRef<'div'> {\n  icon?: LucideIcon | ReactNode\n  title: ReactNode\n  description?: ReactNode\n  action?: ReactNode\n  variant?: EmptyStateVariant\n}\n\nfunction isIconComponent(icon: EmptyStateProps['icon']): icon is LucideIcon {\n  return (\n    typeof icon === 'function' ||\n    (typeof icon === 'object' && icon !== null && '$$typeof' in icon && !isValidElement(icon))\n  )\n}\n\nfunction renderIcon(icon: EmptyStateProps['icon']) {\n  if (!icon) return null\n  if (isIconComponent(icon)) {\n    const Icon = icon\n    return <Icon data-testid=\"empty-state-icon\" className=\"size-10\" aria-hidden=\"true\" />\n  }\n  return (\n    <span data-testid=\"empty-state-icon\" aria-hidden=\"true\" className=\"inline-flex\">\n      {icon}\n    </span>\n  )\n}\n\nexport function EmptyState({ icon, title, description, action, variant = 'default', className, ...props }: EmptyStateProps) {\n  return (\n    <div\n      data-slot=\"empty-state\"\n      data-variant={variant}\n      className={cn(\n        'flex flex-col items-center justify-center text-center',\n        variant === 'default' && 'px-6 py-16',\n        variant === 'panel' && 'px-4 py-10',\n        variant === 'inline' && 'px-3 py-6',\n        className\n      )}\n      {...props}\n    >\n      {icon ? (\n        <div\n          data-slot=\"empty-state-icon\"\n          className={cn(\n            'mb-4 inline-flex items-center justify-center rounded-md text-muted-foreground',\n            variant === 'inline' ? 'size-9' : 'size-12'\n          )}\n        >\n          {renderIcon(icon)}\n        </div>\n      ) : null}\n      <h3\n        data-slot=\"empty-state-title\"\n        className={cn(\n          'font-semibold text-foreground',\n          variant === 'default' && 'text-lg',\n          variant === 'panel' && 'text-base',\n          variant === 'inline' && 'text-sm'\n        )}\n      >\n        {title}\n      </h3>\n      {description ? (\n        <p\n          data-slot=\"empty-state-description\"\n          className={cn('mt-1 max-w-sm text-muted-foreground', variant === 'inline' ? 'text-xs' : 'text-sm')}\n        >\n          {description}\n        </p>\n      ) : null}\n      {action ? <div data-slot=\"empty-state-action\" className=\"mt-5\">{action}</div> : null}\n    </div>\n  )\n}\n",
+      "type": "registry:component",
+      "target": "components/meda/empty-state.tsx"
+    }
+  ]
+}

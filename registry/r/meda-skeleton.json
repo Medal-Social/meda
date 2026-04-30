@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "meda-skeleton",
+  "type": "registry:component",
+  "title": "Meda Skeleton",
+  "description": "Install the Meda loading placeholder primitive.",
+  "dependencies": [],
+  "files": [
+    {
+      "path": "registry/meda/meda-skeleton/skeleton.tsx",
+      "content": "import type { ComponentProps } from 'react'\nimport { cn } from '@/lib/utils'\n\nexport type SkeletonProps = ComponentProps<'div'>\n\nexport function Skeleton({ className, 'aria-hidden': ariaHidden = true, ...props }: SkeletonProps) {\n  return (\n    <div\n      data-slot=\"skeleton\"\n      aria-hidden={ariaHidden}\n      className={cn('animate-pulse rounded-md bg-muted', className)}\n      {...props}\n    />\n  )\n}\n",
+      "type": "registry:component",
+      "target": "components/meda/skeleton.tsx"
+    }
+  ]
+}

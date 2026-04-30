@@ -50,6 +50,51 @@
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "meda-skeleton",
+      "type": "registry:component",
+      "title": "Meda Skeleton",
+      "description": "Install the Meda loading placeholder primitive.",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "registry/meda/meda-skeleton/skeleton.tsx",
+          "type": "registry:component",
+          "target": "components/meda/skeleton.tsx"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "meda-empty-state",
+      "type": "registry:component",
+      "title": "Meda Empty State",
+      "description": "Install the Meda empty, zero, and error state primitive.",
+      "dependencies": ["lucide-react"],
+      "files": [
+        {
+          "path": "registry/meda/meda-empty-state/empty-state.tsx",
+          "type": "registry:component",
+          "target": "components/meda/empty-state.tsx"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "meda-filter-rail",
+      "type": "registry:component",
+      "title": "Meda Filter Rail",
+      "description": "Install the Meda dense filter rail primitive.",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "registry/meda/meda-filter-rail/filter-rail.tsx",
+          "type": "registry:component",
+          "target": "components/meda/filter-rail.tsx"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
       "name": "meda-next-app-shell",
       "type": "registry:block",
       "title": "Meda Next AppShell",
