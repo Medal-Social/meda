@@ -87,6 +87,34 @@ describe('AppShellWorkspace', () => {
     expect(screen.queryByTestId('mobile-bottom-nav')).not.toBeInTheDocument();
   });
 
+  it('passes contextRail header and scroll options to ContextRail on desktop', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+
+    render(
+      <Provider>
+        <AppShellWorkspace
+          contextRail={{
+            appId: 'a',
+            header: 'hidden',
+            scroll: 'none',
+            module: {
+              id: 'custom',
+              label: 'Custom Module',
+              items: [{ id: 'inbox', label: 'Inbox', icon: Inbox, to: '/inbox' }],
+            },
+          }}
+        >
+          <div>Main</div>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    expect(screen.queryByRole('heading', { name: 'Custom Module' })).not.toBeInTheDocument();
+    const rail = screen.getByLabelText('Custom Module');
+    const scrollArea = rail.querySelector('[data-meda-context-rail-scroll-area]');
+    expect(scrollArea).toHaveClass('overflow-hidden');
+  });
+
   it('forwards headerCenter into the desktop header', () => {
     (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
 

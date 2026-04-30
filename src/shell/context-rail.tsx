@@ -20,7 +20,12 @@ import type { AnchorHTMLAttributes, ReactNode, PointerEvent as ReactPointerEvent
 import { Fragment, useId, useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import { useMedaShell } from './shell-provider.js';
-import type { ContextModule, ShellLinkRenderArgs } from './types.js';
+import type {
+  ContextModule,
+  ContextRailHeader,
+  ContextRailScroll,
+  ShellLinkRenderArgs,
+} from './types.js';
 import { useShellViewport } from './use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
@@ -46,6 +51,8 @@ export interface ContextRailProps {
   /** Optional active item id for nav active state (preferred over useMedaShell().selection). */
   activeItemId?: string;
   renderLink?: (args: ShellLinkRenderArgs) => ReactNode;
+  header?: ContextRailHeader;
+  scroll?: ContextRailScroll;
   className?: string;
 }
 
@@ -164,6 +171,8 @@ export function ContextRail({
   collapsible = true,
   activeItemId,
   renderLink,
+  header = 'auto',
+  scroll = 'auto',
   className,
 }: ContextRailProps) {
   const band = useShellViewport();
@@ -183,6 +192,8 @@ export function ContextRail({
   const [displayWidth, setDisplayWidth] = useState<number | null>(null);
   const width = displayWidth ?? ctx.contextRail.width;
   const items = module?.items ?? [];
+  const hasRender = typeof module?.render === 'function';
+  const showHeader = header === 'visible' || (header === 'auto' && items.length > 0 && !hasRender);
 
   if (band === 'mobile') return null;
 
@@ -234,60 +245,75 @@ export function ContextRail({
           aria-hidden + inert when collapsed so AT and keyboard users don't
           land in zero-width content. */}
       <div
-        className="h-full overflow-hidden"
+        className="flex h-full min-w-0 flex-col overflow-hidden"
         aria-hidden={collapsed}
         inert={collapsed || undefined}
       >
-        {/* Header */}
-        <div className="border-b border-shell-border px-4 py-3">
-          <h2 className="text-sm font-semibold text-foreground">{module.label}</h2>
-          {module.description && (
-            <p className="mt-0.5 text-xs text-muted-foreground">{module.description}</p>
-          )}
-        </div>
-
-        {items.length > 0 && (
-          <nav aria-label={`${module.label} navigation`} className="flex flex-col gap-0.5 p-2">
-            {items.map((item) => {
-              const isActive = item.id === activeItemId;
-              const klass = cn(
-                'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
-                isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-              );
-              const IconComp = item.icon;
-              const inner = (
-                <>
-                  <IconComp size={16} aria-hidden="true" className="shrink-0" />
-                  <span className="truncate">{item.label}</span>
-                  {item.shortcut && (
-                    <kbd className="ml-auto font-mono text-[10px] text-muted-foreground">
-                      {item.shortcut}
-                    </kbd>
-                  )}
-                </>
-              );
-
-              const linkProps = {
-                href: item.to,
-                'aria-current': isActive ? 'page' : undefined,
-                className: klass,
-                children: inner,
-              } satisfies AnchorHTMLAttributes<HTMLAnchorElement>;
-
-              if (renderLink) {
-                return (
-                  <Fragment key={item.id}>
-                    {renderLink({ item, isActive, className: klass, children: inner, linkProps })}
-                  </Fragment>
-                );
-              }
-              return <a key={item.id} {...linkProps} />;
-            })}
-          </nav>
+        {showHeader && (
+          <div className="shrink-0 border-b border-shell-border px-4 py-3">
+            <h2 className="text-sm font-semibold text-foreground">{module.label}</h2>
+            {module.description && (
+              <p className="mt-0.5 text-xs text-muted-foreground">{module.description}</p>
+            )}
+          </div>
         )}
-        {module.render?.({ workspaceId: ctx.workspace.id, appId })}
+
+        <div
+          data-meda-context-rail-scroll-area=""
+          className={cn(
+            'min-h-0 flex-1',
+            scroll === 'auto' ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden'
+          )}
+        >
+          {items.length > 0 && (
+            <nav aria-label={`${module.label} navigation`} className="flex flex-col gap-0.5 p-2">
+              {items.map((item) => {
+                const isActive = item.id === activeItemId;
+                const klass = cn(
+                  'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
+                  isActive
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                );
+                const IconComp = item.icon;
+                const inner = (
+                  <>
+                    <IconComp size={16} aria-hidden="true" className="shrink-0" />
+                    <span className="truncate">{item.label}</span>
+                    {item.shortcut && (
+                      <kbd className="ml-auto font-mono text-[10px] text-muted-foreground">
+                        {item.shortcut}
+                      </kbd>
+                    )}
+                  </>
+                );
+
+                const linkProps = {
+                  href: item.to,
+                  'aria-current': isActive ? 'page' : undefined,
+                  className: klass,
+                  children: inner,
+                } satisfies AnchorHTMLAttributes<HTMLAnchorElement>;
+
+                if (renderLink) {
+                  return (
+                    <Fragment key={item.id}>
+                      {renderLink({
+                        item,
+                        isActive,
+                        className: klass,
+                        children: inner,
+                        linkProps,
+                      })}
+                    </Fragment>
+                  );
+                }
+                return <a key={item.id} {...linkProps} />;
+              })}
+            </nav>
+          )}
+          {module.render?.({ workspaceId: ctx.workspace.id, appId })}
+        </div>
       </div>
 
       {/* Right-edge resize handle — only when expanded (no rail edge to grab when collapsed) */}

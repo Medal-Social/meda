@@ -114,6 +114,8 @@ export function AppShellWorkspace({
             appId={contextRail.appId}
             module={contextRail.module}
             activeItemId={contextRail.activeItemId}
+            header={contextRail.header}
+            scroll={contextRail.scroll}
           />
         )}
         <ShellMain layout={mainLayout ?? 'workspace'} className={mainClassName}>

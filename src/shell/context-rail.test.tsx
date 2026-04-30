@@ -63,6 +63,18 @@ const MODULE: ContextModule = {
   items: ITEMS,
 };
 
+const CUSTOM_RENDER_MODULE: ContextModule = {
+  id: 'custom',
+  label: 'Custom Rail',
+  description: 'Custom rail description',
+  render: () => (
+    <section>
+      <h2>Consumer heading</h2>
+      <p>Consumer custom content</p>
+    </section>
+  ),
+};
+
 function Wrapper({
   children,
   storage,
@@ -397,6 +409,77 @@ describe('ContextRail — module items rendering', () => {
     );
 
     expect(screen.getByText('⌘I')).toBeInTheDocument();
+  });
+});
+
+describe('ContextRail — header and scroll defaults', () => {
+  it('renders the visible Meda header by default for item navigation rails', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+
+    expect(screen.getByRole('heading', { name: 'Mail' })).toBeInTheDocument();
+    expect(screen.getByText('Inbox + sent')).toBeInTheDocument();
+  });
+
+  it('hides the visible Meda header by default for custom render rails', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={CUSTOM_RENDER_MODULE} />
+      </Wrapper>
+    );
+
+    expect(screen.queryByRole('heading', { name: 'Custom Rail' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Consumer heading' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Custom Rail')).toBeInTheDocument();
+  });
+
+  it('header="visible" renders the Meda header for custom render rails', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={CUSTOM_RENDER_MODULE} header="visible" />
+      </Wrapper>
+    );
+
+    expect(screen.getByRole('heading', { name: 'Custom Rail' })).toBeInTheDocument();
+    expect(screen.getByText('Custom rail description')).toBeInTheDocument();
+  });
+
+  it('header="hidden" hides the Meda header for item navigation rails', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} header="hidden" />
+      </Wrapper>
+    );
+
+    expect(screen.queryByRole('heading', { name: 'Mail' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /inbox/i })).toBeInTheDocument();
+  });
+
+  it('uses a vertical scroll container by default', () => {
+    const { container } = render(
+      <Wrapper>
+        <ContextRail appId="mail" module={CUSTOM_RENDER_MODULE} />
+      </Wrapper>
+    );
+
+    const scrollArea = container.querySelector('[data-meda-context-rail-scroll-area]');
+    expect(scrollArea).toHaveClass('overflow-y-auto');
+    expect(scrollArea).toHaveClass('overflow-x-hidden');
+  });
+
+  it('scroll="none" disables the built-in vertical scroll container', () => {
+    const { container } = render(
+      <Wrapper>
+        <ContextRail appId="mail" module={CUSTOM_RENDER_MODULE} scroll="none" />
+      </Wrapper>
+    );
+
+    const scrollArea = container.querySelector('[data-meda-context-rail-scroll-area]');
+    expect(scrollArea).not.toHaveClass('overflow-y-auto');
+    expect(scrollArea).toHaveClass('overflow-hidden');
   });
 });
 
