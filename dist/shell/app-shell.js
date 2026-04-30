@@ -16,7 +16,7 @@ export function AppShell(props) {
         case 'auth':
             return wrapper(_jsx(AppShellAuth, { ...resolveAuthConfig(props), children: props.children }));
         case 'workspace':
-            return wrapper(_jsx(AppShellWorkspace, { iconRail: props.iconRail, contextRail: props.contextRail, rightPanel: props.rightPanel, globalActions: props.globalActions, children: props.children }));
+            return wrapper(_jsx(AppShellWorkspace, { iconRail: props.iconRail, contextRail: props.contextRail, rightPanel: props.rightPanel, workspace: props.workspace, appTabs: props.appTabs, globalActions: props.globalActions, headerCenter: props.headerCenter, banners: props.banners, mainLayout: props.mainLayout, mainClassName: props.mainClassName, children: props.children }));
         case 'chat':
             return wrapper(_jsx(AppShellChat, { globalActions: props.globalActions, children: props.children }));
     }

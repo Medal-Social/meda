@@ -1,6 +1,16 @@
 'use client';
 
-import { cloneElement, isValidElement, type MouseEvent, type ReactNode, useEffect } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { Monitor, Moon, Sun } from 'lucide-react';
+import {
+  cloneElement,
+  createElement,
+  Fragment,
+  isValidElement,
+  type MouseEvent,
+  type ReactNode,
+  useEffect,
+} from 'react';
 import {
   Drawer,
   DrawerContent,
@@ -11,7 +21,8 @@ import {
 import { cn } from '../../lib/utils.js';
 import type { IconRailItem, IconRailProps } from '../icon-rail.js';
 import { useMedaShell } from '../shell-provider.js';
-import type { ContextModule, PanelView, ShellRenderContext } from '../types.js';
+import { useTheme } from '../theme.js';
+import type { ContextModule, PanelView, ShellRenderContext, WorkspaceMenuItem } from '../types.js';
 
 export interface MobileDrawersProps {
   /** Menu drawer source (icon-rail items). */
@@ -20,6 +31,10 @@ export interface MobileDrawersProps {
   menuActiveId?: string;
   /** Custom menu link renderer, sourced from icon rail config. */
   menuRenderLink?: IconRailProps['renderLink'];
+  /** Workspace-level menu items rendered after icon rail links on mobile. */
+  workspaceMenuItems?: WorkspaceMenuItem[];
+  /** Workspace-level footer rendered after workspace items and the theme toggle. */
+  workspaceMenuFooter?: ReactNode;
   /** Module drawer source (current app's context-rail module). */
   module?: ContextModule;
   /** App id used when rendering module custom content. */
@@ -46,6 +61,8 @@ export function MobileDrawers({
   menuItems = [],
   menuActiveId,
   menuRenderLink,
+  workspaceMenuItems,
+  workspaceMenuFooter,
   module,
   moduleAppId,
   panelViews = [],
@@ -73,6 +90,8 @@ export function MobileDrawers({
         items={menuItems}
         activeId={menuActiveId}
         renderLink={menuRenderLink}
+        workspaceItems={workspaceMenuItems}
+        workspaceFooter={workspaceMenuFooter}
       />
       <ModuleDrawer
         open={open === 'module-drawer'}
@@ -114,13 +133,20 @@ function MenuDrawer({
   items,
   activeId,
   renderLink,
+  workspaceItems,
+  workspaceFooter,
 }: {
   open: boolean;
   onClose: () => void;
   items: IconRailItem[];
   activeId?: string;
   renderLink?: IconRailProps['renderLink'];
+  workspaceItems?: WorkspaceMenuItem[];
+  workspaceFooter?: ReactNode;
 }) {
+  const hasIconItems = items.length > 0;
+  const hasWorkspaceItems = Array.isArray(workspaceItems) && workspaceItems.length > 0;
+
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()} direction="left">
       <DrawerContent>
@@ -130,17 +156,32 @@ function MenuDrawer({
             Switch between primary app areas.
           </DrawerDescription>
         </DrawerHeader>
-        <nav className="flex flex-col gap-0.5 p-2">
-          {items.map((item) => (
-            <MenuDrawerItem
-              key={item.id}
-              item={item}
-              isActive={item.id === activeId}
-              onClose={onClose}
-              renderLink={renderLink}
-            />
-          ))}
-        </nav>
+        <div className="flex flex-col gap-2 p-2">
+          {hasIconItems && (
+            <nav aria-label="Primary navigation" className="flex flex-col gap-0.5">
+              {items.map((item) => (
+                <MenuDrawerItem
+                  key={item.id}
+                  item={item}
+                  isActive={item.id === activeId}
+                  onClose={onClose}
+                  renderLink={renderLink}
+                />
+              ))}
+            </nav>
+          )}
+          {(hasIconItems || hasWorkspaceItems) && <div className="h-px bg-border" />}
+          <nav aria-label="Workspace menu" className="flex flex-col gap-0.5">
+            {workspaceItems?.map((item) => (
+              <Fragment key={item.id}>
+                <WorkspaceMenuDrawerItem item={item} onClose={onClose} />
+                {item.separatorAfter && <div className="my-1 h-px bg-border" />}
+              </Fragment>
+            ))}
+            <MobileThemeMenuItem onClose={onClose} />
+          </nav>
+          {workspaceFooter}
+        </div>
       </DrawerContent>
     </Drawer>
   );
@@ -206,6 +247,99 @@ function closeAfterLinkClick(link: ReactNode, onClose: () => void): ReactNode {
       onClose();
     },
   });
+}
+
+function renderWorkspaceIcon(icon: WorkspaceMenuItem['icon']): ReactNode {
+  if (icon == null) return null;
+  if (isValidElement(icon)) return icon;
+  if (typeof icon === 'function') {
+    return createElement(icon as LucideIcon, { size: 18, 'aria-hidden': true });
+  }
+  if (typeof icon === 'object') {
+    const candidate = icon as unknown as { $$typeof?: symbol };
+    if (candidate.$$typeof != null) {
+      return createElement(icon as unknown as LucideIcon, { size: 18, 'aria-hidden': true });
+    }
+  }
+  return icon;
+}
+
+function WorkspaceMenuDrawerItem({
+  item,
+  onClose,
+}: {
+  item: WorkspaceMenuItem;
+  onClose: () => void;
+}) {
+  const children = (
+    <>
+      {renderWorkspaceIcon(item.icon)}
+      <span>{item.label}</span>
+    </>
+  );
+  const className = cn(
+    menuItemClassName,
+    item.variant === 'destructive' && 'text-destructive hover:text-destructive'
+  );
+  const handleClick = () => {
+    item.onClick?.();
+    onClose();
+  };
+
+  if (item.href != null) {
+    return closeAfterLinkClick(
+      <a
+        href={item.href}
+        className={className}
+        data-variant={item.variant ?? 'default'}
+        onClick={() => item.onClick?.()}
+      >
+        {children}
+      </a>,
+      onClose
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      data-variant={item.variant ?? 'default'}
+      className={className}
+      onClick={handleClick}
+    >
+      {children}
+    </button>
+  );
+}
+
+type Theme = 'light' | 'dark' | 'system';
+
+const NEXT_THEME: Record<Theme, Theme> = { light: 'dark', dark: 'system', system: 'light' };
+const THEME_ICON: Record<Theme, typeof Sun> = { light: Sun, dark: Moon, system: Monitor };
+const THEME_LABEL: Record<Theme, string> = {
+  light: 'Switch to dark theme',
+  dark: 'Switch to system theme',
+  system: 'Switch to light theme',
+};
+
+function MobileThemeMenuItem({ onClose }: { onClose: () => void }) {
+  const { theme, setTheme } = useTheme();
+  const Icon = THEME_ICON[theme];
+
+  return (
+    <button
+      type="button"
+      aria-label={THEME_LABEL[theme]}
+      className={menuItemClassName}
+      onClick={() => {
+        setTheme(NEXT_THEME[theme]);
+        onClose();
+      }}
+    >
+      <Icon size={18} aria-hidden="true" />
+      <span>{THEME_LABEL[theme]}</span>
+    </button>
+  );
 }
 
 function ModuleDrawer({
@@ -308,7 +442,7 @@ function PanelsDrawer({
                 onClick={() => ctx.panel.setActiveView(view.id)}
                 aria-current={view.id === activeView ? 'true' : undefined}
                 className={cn(
-                  'rounded-md px-2 py-1 text-xs',
+                  'rounded-md px-2 py-1 text-sm',
                   view.id === activeView
                     ? 'bg-accent text-accent-foreground'
                     : 'text-muted-foreground hover:bg-accent'

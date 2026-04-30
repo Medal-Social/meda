@@ -1,6 +1,7 @@
 'use client';
 import { LayoutGrid, Menu, PanelTop, Sparkles } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { type ReactNode, useContext } from 'react';
+import { CommandPalette, CommandRegistryContext } from './command-palette.js';
 import { ContextRail } from './context-rail.js';
 import { IconRail } from './icon-rail.js';
 import { MobileBottomNav } from './internal/mobile-bottom-nav.js';
@@ -11,12 +12,14 @@ import { RightPanel } from './right-panel.js';
 import { ShellHeader } from './shell-header.js';
 import { ShellMain } from './shell-main.js';
 import type {
+  AppShellAppTabsConfig,
   AppShellContextRailConfig,
   AppShellIconRailConfig,
   AppShellRightPanelConfig,
   AppShellWorkspaceConfig,
   MobileBottomNavItem,
   PanelView,
+  ShellMainLayout,
 } from './types.js';
 import { useShellViewport } from './use-shell-viewport.js';
 
@@ -27,7 +30,12 @@ export interface AppShellWorkspaceProps {
   contextRail?: AppShellContextRailConfig;
   rightPanel?: AppShellRightPanelConfig;
   workspace?: AppShellWorkspaceConfig;
+  appTabs?: AppShellAppTabsConfig;
   globalActions?: ReactNode;
+  headerCenter?: ReactNode;
+  banners?: ReactNode;
+  mainLayout?: ShellMainLayout;
+  mainClassName?: string;
   children: ReactNode;
 }
 
@@ -36,7 +44,12 @@ export function AppShellWorkspace({
   contextRail,
   rightPanel,
   workspace,
+  appTabs,
   globalActions,
+  headerCenter,
+  banners,
+  mainLayout,
+  mainClassName,
   children,
 }: AppShellWorkspaceProps) {
   const viewport = useShellViewport();
@@ -45,10 +58,9 @@ export function AppShellWorkspace({
   const resolvedRightPanel = useResolvedPanelViews(staticPanelViews, rightPanel?.defaultView);
 
   // Derive the bottom-nav items from the variant config so each button maps
-  // to a drawer that actually has content. Without this filter, partial
-  // configs (e.g. iconRail only) would show Module/Panels/AI buttons that
-  // dispatch into the void.
-  const navItems = buildMobileNavItems(iconRail, contextRail, resolvedRightPanel.panelViews);
+  // to a drawer that actually has content. Menu is always available because
+  // the mobile drawer now carries workspace actions and the theme toggle.
+  const navItems = buildMobileNavItems(contextRail, resolvedRightPanel.panelViews);
   const hasDrawerContent = navItems.length > 0;
 
   // Mobile menu drawer needs both main and utility items — desktop IconRail
@@ -66,16 +78,26 @@ export function AppShellWorkspace({
   // rendered without an explicit-height ancestor (tests, direct imports). The
   // <AppShell> wrapper already enforces h-screen for the workspace variant, so
   // nested viewport-height divs collapse cleanly — no double-scroll.
-  return (
+  const commandRegistry = useContext(CommandRegistryContext);
+  const shell = (
     <div className="flex h-screen flex-col">
       {isMobile ? (
         <MobileHeader globalActions={globalActions} />
       ) : (
         <ShellHeader
           globalActions={globalActions}
+          headerCenter={headerCenter}
+          appTabsRenderLink={appTabs?.renderLink}
           workspaceMenuItems={workspace?.menuItems}
           workspaceMenuFooter={workspace?.menuFooter}
         />
+      )}
+      {banners ? (
+        <div data-meda-banners="" className="flex-shrink-0">
+          {banners}
+        </div>
+      ) : (
+        false
       )}
       <div className="relative flex flex-1 overflow-hidden">
         {!isMobile && iconRail && (
@@ -94,7 +116,9 @@ export function AppShellWorkspace({
             activeItemId={contextRail.activeItemId}
           />
         )}
-        <ShellMain layout="workspace">{children}</ShellMain>
+        <ShellMain layout={mainLayout ?? 'workspace'} className={mainClassName}>
+          {children}
+        </ShellMain>
         {!isMobile && resolvedRightPanel.panelViews.length > 0 && (
           <RightPanel panelViews={staticPanelViews} defaultView={rightPanel?.defaultView} />
         )}
@@ -105,6 +129,8 @@ export function AppShellWorkspace({
           menuItems={mobileMenuItems}
           menuActiveId={iconRail?.activeId}
           menuRenderLink={iconRail?.renderLink}
+          workspaceMenuItems={workspace?.menuItems}
+          workspaceMenuFooter={workspace?.menuFooter}
           module={contextRail?.module}
           moduleAppId={contextRail?.appId}
           panelViews={resolvedRightPanel.panelViews}
@@ -113,17 +139,17 @@ export function AppShellWorkspace({
       )}
     </div>
   );
+
+  return commandRegistry ? shell : <CommandPalette>{shell}</CommandPalette>;
 }
 
 function buildMobileNavItems(
-  iconRail: AppShellIconRailConfig | undefined,
   contextRail: AppShellContextRailConfig | undefined,
   panelViews: PanelView[]
 ): MobileBottomNavItem[] {
-  const items: MobileBottomNavItem[] = [];
-  if (iconRail) {
-    items.push({ id: 'menu', label: 'Menu', icon: Menu, opens: 'menu-drawer' });
-  }
+  const items: MobileBottomNavItem[] = [
+    { id: 'menu', label: 'Menu', icon: Menu, opens: 'menu-drawer' },
+  ];
   if (
     contextRail?.module &&
     ((contextRail.module.items ?? []).length > 0 || Boolean(contextRail.module.render))

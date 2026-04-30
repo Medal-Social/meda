@@ -1,32 +1,145 @@
 'use client';
-import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from 'next-themes';
-import type { ReactNode } from 'react';
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useInsertionEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { ThemeCtx } from './theme.js';
 import type { ThemeAdapter } from './types.js';
 
-function narrow(value: string | undefined): 'light' | 'dark' | 'system' {
-  if (value === 'light' || value === 'dark' || value === 'system') return value;
-  return 'system';
+type Theme = 'light' | 'dark' | 'system';
+type ResolvedTheme = 'light' | 'dark';
+
+const STORAGE_KEY = 'theme';
+const MEDIA_QUERY = '(prefers-color-scheme: dark)';
+const THEMES: ResolvedTheme[] = ['light', 'dark'];
+
+type LegacyMediaQueryList = MediaQueryList & {
+  addListener?: (listener: (event: MediaQueryListEvent) => void) => void;
+  removeListener?: (listener: (event: MediaQueryListEvent) => void) => void;
+};
+
+function narrow(value: string | null | undefined): Theme {
+  return value === 'light' || value === 'dark' || value === 'system' ? value : 'system';
 }
 
-function narrowResolved(value: string | undefined): 'light' | 'dark' {
-  return value === 'dark' ? 'dark' : 'light';
+function getMediaQueryList(): LegacyMediaQueryList | undefined {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+  return window.matchMedia(MEDIA_QUERY) as LegacyMediaQueryList;
 }
 
-function NextThemesBridge({ children }: { children: ReactNode }) {
-  const { theme, setTheme, resolvedTheme } = useNextTheme();
-  const value: ThemeAdapter = {
-    theme: narrow(theme),
-    setTheme: (t) => setTheme(t),
-    resolvedTheme: narrowResolved(resolvedTheme),
+function resolveSystemTheme(mql?: LegacyMediaQueryList): ResolvedTheme {
+  if (mql) return mql.matches ? 'dark' : 'light';
+  return getMediaQueryList()?.matches ? 'dark' : 'light';
+}
+
+function getStoredTheme(): Theme {
+  if (typeof window === 'undefined') return 'system';
+  try {
+    return narrow(window.localStorage.getItem(STORAGE_KEY));
+  } catch {
+    return 'system';
+  }
+}
+
+function applyTheme(theme: Theme, resolvedTheme: ResolvedTheme) {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  const applied = theme === 'system' ? resolvedTheme : theme;
+  root.classList.remove(...THEMES);
+  root.classList.add(applied);
+  root.style.colorScheme = applied;
+}
+
+function getClientThemeSnapshot() {
+  const theme = getStoredTheme();
+  return {
+    theme,
+    resolvedTheme: theme === 'system' ? resolveSystemTheme() : theme,
   };
-  return <ThemeCtx.Provider value={value}>{children}</ThemeCtx.Provider>;
+}
+
+function subscribeToSystemTheme(
+  mql: LegacyMediaQueryList | undefined,
+  listener: (event: MediaQueryListEvent) => void
+) {
+  if (!mql) return () => {};
+  if (typeof mql.addEventListener === 'function') {
+    mql.addEventListener('change', listener);
+    return () => mql.removeEventListener('change', listener);
+  }
+  if (typeof mql.addListener === 'function') {
+    mql.addListener(listener);
+    return () => mql.removeListener?.(listener);
+  }
+  return () => {};
 }
 
 export function NextThemesAdapter({ children }: { children: ReactNode }) {
-  return (
-    <NextThemesProvider attribute="class" enableSystem defaultTheme="system">
-      <NextThemesBridge>{children}</NextThemesBridge>
-    </NextThemesProvider>
+  const [theme, setThemeState] = useState<Theme>('system');
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light');
+  const [hydrated, setHydrated] = useState(false);
+
+  const setTheme = useCallback((next: Theme) => {
+    setThemeState(next);
+    const resolved = next === 'system' ? resolveSystemTheme() : next;
+    setResolvedTheme(resolved);
+    applyTheme(next, resolved);
+    try {
+      if (typeof window !== 'undefined') window.localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      // Ignore unavailable storage, matching next-themes' best-effort behavior.
+    }
+  }, []);
+
+  useInsertionEffect(() => {
+    const snapshot = getClientThemeSnapshot();
+    applyTheme(snapshot.theme, snapshot.resolvedTheme);
+  }, []);
+
+  useEffect(() => {
+    const stored = getClientThemeSnapshot();
+    setThemeState(stored.theme);
+    setResolvedTheme(stored.resolvedTheme);
+    setHydrated(true);
+    applyTheme(stored.theme, stored.resolvedTheme);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const mql = getMediaQueryList();
+
+    const sync = (_event?: MediaQueryListEvent) => {
+      const resolved = theme === 'system' ? resolveSystemTheme(mql) : theme;
+      setResolvedTheme(resolved);
+      applyTheme(theme, resolved);
+    };
+
+    sync();
+    return subscribeToSystemTheme(mql, sync);
+  }, [hydrated, theme]);
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY) return;
+      setThemeState(narrow(event.newValue));
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  const value = useMemo<ThemeAdapter>(
+    () => ({
+      theme,
+      setTheme,
+      resolvedTheme,
+    }),
+    [theme, setTheme, resolvedTheme]
   );
+
+  return <ThemeCtx.Provider value={value}>{children}</ThemeCtx.Provider>;
 }

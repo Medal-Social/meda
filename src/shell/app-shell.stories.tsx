@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Activity,
+  AlertTriangle,
   Building2,
   Calendar,
   HelpCircle,
@@ -29,9 +30,9 @@ const WORKSPACE: WorkspaceDefinition = {
   icon: <Building2 size={20} aria-hidden />,
 };
 const APPS: AppDefinition[] = [
-  { id: 'inbox', label: 'Inbox', icon: Inbox },
-  { id: 'mail', label: 'Mail', icon: Mail },
-  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'inbox', label: 'Inbox', icon: Inbox, to: '/inbox' },
+  { id: 'mail', label: 'Mail', icon: Mail, to: '/mail' },
+  { id: 'settings', label: 'Settings', icon: Settings, to: '/settings' },
 ];
 const RAIL_MAIN = [
   { id: 'inbox', label: 'Inbox', to: '/inbox', icon: Inbox },
@@ -138,6 +139,31 @@ function AdoptionControlPanel() {
   );
 }
 
+function SectionTabs() {
+  return (
+    <nav aria-label="Inbox sections" className="flex min-w-0 items-center gap-1">
+      {['Priority', 'Assigned', 'Snoozed'].map((item) => (
+        <button
+          key={item}
+          type="button"
+          className="rounded-md px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          {item}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+function SystemBanner() {
+  return (
+    <div className="flex items-center gap-2 border-b border-warning/40 bg-warning/12 px-4 py-2 text-sm text-foreground">
+      <AlertTriangle size={16} aria-hidden="true" className="text-foreground" />
+      Workspace banner slot: system health messages span above every rail.
+    </div>
+  );
+}
+
 const ALL_VIEWPORTS = {
   desktop: { viewport: 1280 },
   ipad: { viewport: 768 },
@@ -161,6 +187,12 @@ export const Workspace: Story = {
     <AppShell
       variant="workspace"
       iconRail={{ mainItems: RAIL_MAIN, utilityItems: RAIL_UTILITY, activeId: 'inbox' }}
+      workspace={{
+        menuItems: [
+          { id: 'settings', label: 'Settings', href: '/settings', icon: Settings },
+          { id: 'help', label: 'Help center', href: '/help', icon: HelpCircle },
+        ],
+      }}
       contextRail={{ appId: 'inbox', module: INBOX_MODULE, activeItemId: 'inbox' }}
       rightPanel={{ panelViews: PANEL_VIEWS, defaultView: 'inspector' }}
       globalActions={
@@ -270,6 +302,25 @@ export const WorkspaceWithAdoptionHooks: Story = {
           >
             {children}
           </a>
+        ),
+      }}
+      appTabs={{
+        renderLink: ({ app, linkProps }) =>
+          app.to ? (
+            <a {...linkProps} data-testid={`storybook-app-link-${app.id}`} />
+          ) : (
+            <a {...linkProps} />
+          ),
+      }}
+      headerCenter={<SectionTabs />}
+      banners={<SystemBanner />}
+      workspace={{
+        menuItems: [
+          { id: 'audit', label: 'Audit log', href: '/audit', icon: Activity, separatorAfter: true },
+          { id: 'settings', label: 'Workspace settings', href: '/settings', icon: Settings },
+        ],
+        menuFooter: (
+          <div className="px-2 py-1 text-xs text-muted-foreground">Signed in as Alex</div>
         ),
       }}
       contextRail={{ appId: 'inbox', module: DYNAMIC_INBOX_MODULE, activeItemId: 'inbox' }}

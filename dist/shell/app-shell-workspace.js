@@ -1,6 +1,8 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { LayoutGrid, Menu, PanelTop, Sparkles } from 'lucide-react';
+import { useContext } from 'react';
+import { CommandPalette, CommandRegistryContext } from './command-palette.js';
 import { ContextRail } from './context-rail.js';
 import { IconRail } from './icon-rail.js';
 import { MobileBottomNav } from './internal/mobile-bottom-nav.js';
@@ -12,16 +14,15 @@ import { ShellHeader } from './shell-header.js';
 import { ShellMain } from './shell-main.js';
 import { useShellViewport } from './use-shell-viewport.js';
 const EMPTY_PANEL_VIEWS = [];
-export function AppShellWorkspace({ iconRail, contextRail, rightPanel, globalActions, children, }) {
+export function AppShellWorkspace({ iconRail, contextRail, rightPanel, workspace, appTabs, globalActions, headerCenter, banners, mainLayout, mainClassName, children, }) {
     const viewport = useShellViewport();
     const isMobile = viewport === 'mobile';
     const staticPanelViews = rightPanel?.panelViews ?? EMPTY_PANEL_VIEWS;
     const resolvedRightPanel = useResolvedPanelViews(staticPanelViews, rightPanel?.defaultView);
     // Derive the bottom-nav items from the variant config so each button maps
-    // to a drawer that actually has content. Without this filter, partial
-    // configs (e.g. iconRail only) would show Module/Panels/AI buttons that
-    // dispatch into the void.
-    const navItems = buildMobileNavItems(iconRail, contextRail, resolvedRightPanel.panelViews);
+    // to a drawer that actually has content. Menu is always available because
+    // the mobile drawer now carries workspace actions and the theme toggle.
+    const navItems = buildMobileNavItems(contextRail, resolvedRightPanel.panelViews);
     const hasDrawerContent = navItems.length > 0;
     // Mobile menu drawer needs both main and utility items — desktop IconRail
     // shows both, so dropping utilityItems here would orphan items like Help/
@@ -37,13 +38,14 @@ export function AppShellWorkspace({ iconRail, contextRail, rightPanel, globalAct
     // rendered without an explicit-height ancestor (tests, direct imports). The
     // <AppShell> wrapper already enforces h-screen for the workspace variant, so
     // nested viewport-height divs collapse cleanly — no double-scroll.
-    return (_jsxs("div", { className: "flex h-screen flex-col", children: [isMobile ? (_jsx(MobileHeader, { globalActions: globalActions })) : (_jsx(ShellHeader, { globalActions: globalActions })), _jsxs("div", { className: "relative flex flex-1 overflow-hidden", children: [!isMobile && iconRail && (_jsx(IconRail, { mainItems: iconRail.mainItems, utilityItems: iconRail.utilityItems, footer: iconRail.footer, activeId: iconRail.activeId, renderLink: iconRail.renderLink })), !isMobile && contextRail && (_jsx(ContextRail, { appId: contextRail.appId, module: contextRail.module, activeItemId: contextRail.activeItemId })), _jsx(ShellMain, { layout: "workspace", children: children }), !isMobile && resolvedRightPanel.panelViews.length > 0 && (_jsx(RightPanel, { panelViews: staticPanelViews, defaultView: rightPanel?.defaultView }))] }), isMobile && hasDrawerContent && _jsx(MobileBottomNav, { items: navItems }), isMobile && hasDrawerContent && (_jsx(MobileDrawers, { menuItems: mobileMenuItems, menuActiveId: iconRail?.activeId, menuRenderLink: iconRail?.renderLink, module: contextRail?.module, moduleAppId: contextRail?.appId, panelViews: resolvedRightPanel.panelViews, defaultView: resolvedRightPanel.defaultView }))] }));
+    const commandRegistry = useContext(CommandRegistryContext);
+    const shell = (_jsxs("div", { className: "flex h-screen flex-col", children: [isMobile ? (_jsx(MobileHeader, { globalActions: globalActions })) : (_jsx(ShellHeader, { globalActions: globalActions, headerCenter: headerCenter, appTabsRenderLink: appTabs?.renderLink, workspaceMenuItems: workspace?.menuItems, workspaceMenuFooter: workspace?.menuFooter })), banners ? (_jsx("div", { "data-meda-banners": "", className: "flex-shrink-0", children: banners })) : (false), _jsxs("div", { className: "relative flex flex-1 overflow-hidden", children: [!isMobile && iconRail && (_jsx(IconRail, { mainItems: iconRail.mainItems, utilityItems: iconRail.utilityItems, footer: iconRail.footer, activeId: iconRail.activeId, renderLink: iconRail.renderLink })), !isMobile && contextRail && (_jsx(ContextRail, { appId: contextRail.appId, module: contextRail.module, activeItemId: contextRail.activeItemId })), _jsx(ShellMain, { layout: mainLayout ?? 'workspace', className: mainClassName, children: children }), !isMobile && resolvedRightPanel.panelViews.length > 0 && (_jsx(RightPanel, { panelViews: staticPanelViews, defaultView: rightPanel?.defaultView }))] }), isMobile && hasDrawerContent && _jsx(MobileBottomNav, { items: navItems }), isMobile && hasDrawerContent && (_jsx(MobileDrawers, { menuItems: mobileMenuItems, menuActiveId: iconRail?.activeId, menuRenderLink: iconRail?.renderLink, workspaceMenuItems: workspace?.menuItems, workspaceMenuFooter: workspace?.menuFooter, module: contextRail?.module, moduleAppId: contextRail?.appId, panelViews: resolvedRightPanel.panelViews, defaultView: resolvedRightPanel.defaultView }))] }));
+    return commandRegistry ? shell : _jsx(CommandPalette, { children: shell });
 }
-function buildMobileNavItems(iconRail, contextRail, panelViews) {
-    const items = [];
-    if (iconRail) {
-        items.push({ id: 'menu', label: 'Menu', icon: Menu, opens: 'menu-drawer' });
-    }
+function buildMobileNavItems(contextRail, panelViews) {
+    const items = [
+        { id: 'menu', label: 'Menu', icon: Menu, opens: 'menu-drawer' },
+    ];
     if (contextRail?.module &&
         ((contextRail.module.items ?? []).length > 0 || Boolean(contextRail.module.render))) {
         items.push({ id: 'module', label: 'Module', icon: LayoutGrid, opens: 'module-drawer' });

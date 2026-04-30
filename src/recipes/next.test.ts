@@ -19,6 +19,29 @@ describe('Next recipes', () => {
     expect(nextAppShellRecipe.files[0]?.content).not.toContain('panelViews: []');
   });
 
+  it('documents the current workspace shell extension points', () => {
+    const content = nextAppShellRecipe.files[0]?.content ?? '';
+
+    expect(content).toContain('headerCenter');
+    expect(content).toContain('banners');
+    expect(content).toContain('mainLayout');
+    expect(content).toContain('mainClassName');
+    expect(content).toContain('workspaceMenuItems');
+    expect(content).toContain('workspaceMenuFooter');
+    expect(content).toContain('appTabs');
+    expect(content).toContain('app.to');
+    expect(content).not.toContain('<CommandPalette');
+  });
+
+  it('uses .tsx targets for JSX-bearing recipe files', () => {
+    for (const file of nextAppShellRecipe.files) {
+      if (file.content.includes('<')) {
+        expect(file.path).toMatch(/\.tsx$/);
+        expect(file.target).toMatch(/\.tsx$/);
+      }
+    }
+  });
+
   it('documents accessibility and composition contracts', () => {
     expect(nextAppShellRecipe.accessibility.length).toBeGreaterThan(0);
     expect(nextAppShellRecipe.composition.length).toBeGreaterThan(0);

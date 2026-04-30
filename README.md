@@ -17,6 +17,28 @@ Peer deps: `react >= 19`, `react-dom >= 19`, and `lucide-react`.
 Meda ships a `styles.css` with its design tokens. Import it once in your entry stylesheet or entry script:
 
 ```css
+@import 'tailwindcss';
+@import '@medalsocial/meda/styles.css';
+
+:root {
+  /* Consumer overrides go after meda so equal-specificity tokens win by source order. */
+  --color-brand-500: oklch(0.62 0.18 245);
+  --auth-gradient-primary: var(--color-brand-500);
+}
+
+.dark {
+  --color-brand-500: oklch(0.72 0.16 245);
+}
+```
+
+Avoid placing token overrides before the Meda import; `tokens.css` defines the package defaults and later declarations are what override them:
+
+```css
+/* Wrong: meda's imported defaults overwrite this block. */
+:root {
+  --color-brand-500: oklch(0.62 0.18 245);
+}
+
 @import '@medalsocial/meda/styles.css';
 ```
 
@@ -58,10 +80,34 @@ import Link from 'next/link';
     mainItems,
     renderLink: ({ item, linkProps }) => <Link {...linkProps} href={item.to} prefetch />,
   }}
+  appTabs={{
+    renderLink: ({ app, linkProps }) =>
+      app.to ? <Link {...linkProps} href={app.to} prefetch /> : <a {...linkProps} />,
+  }}
 >
   {children}
 </AppShell>;
 ```
+
+Workspace shells also expose chrome-level composition slots:
+
+```tsx
+<AppShell
+  variant="workspace"
+  headerCenter={<SectionTabs />}
+  banners={<SystemHealthBanner />}
+  mainLayout="fullbleed"
+  mainClassName="marketing-main"
+  workspace={{
+    menuItems: [{ id: 'settings', label: 'Settings', href: '/settings' }],
+    menuFooter: <AccountSwitcher />,
+  }}
+>
+  {children}
+</AppShell>
+```
+
+`workspace.menuItems`, `workspace.menuFooter`, and the theme toggle are available from the mobile Menu drawer. Use `mainLayout`/`mainClassName` when a workspace shell needs the same mobile chrome but a custom main scroll region, such as a full-bleed marketing page. `useCommands()` works from workspace descendants without manually mounting `CommandPalette`; lower-level primitive compositions can still mount `CommandPalette` directly.
 
 For app-scoped brand tokens:
 

@@ -47,6 +47,7 @@ export { RailDropZones } from './rail-drop-zones.js';
 export { ResizableHandle, ResizableShell, ResizableShellPanel } from './resizable-shell.js';
 export { RightPanel } from './right-panel.js';
 // Header (and its individual children for advanced composition)
+export type { AppTabsProps } from './shell-header.js';
 export { AppTabs, PanelToggle, ShellHeader, WorkspaceSwitcher } from './shell-header.js';
 export { ShellMain } from './shell-main.js';
 export type { MedaShellProviderProps } from './shell-provider.js';
@@ -58,6 +59,7 @@ export { NextThemesAdapter } from './theme-next-themes.js';
 // Types
 export type {
   AppDefinition,
+  AppShellAppTabsConfig,
   AppShellAuthBranding,
   AppShellAuthConfig,
   AppShellContextRailConfig,
@@ -65,6 +67,7 @@ export type {
   AppShellRightPanelConfig,
   AppShellVariant,
   AppShellWorkspaceConfig,
+  AppTabRenderLinkArgs,
   CommandDefinition,
   ContextItem,
   ContextModule,

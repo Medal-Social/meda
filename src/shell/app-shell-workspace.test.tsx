@@ -7,6 +7,7 @@ vi.mock('./use-shell-viewport.js', () => ({
 }));
 
 import { AppShellWorkspace } from './app-shell-workspace.js';
+import { CommandPalette, useCommands } from './command-palette.js';
 import { PanelViewsProvider } from './panel-views-provider.js';
 import { MedaShellProvider, useMedaShell } from './shell-provider.js';
 import { useShellViewport } from './use-shell-viewport.js';
@@ -41,6 +42,11 @@ const config = {
 function MobileDrawerStateProbe() {
   const ctx = useMedaShell();
   return <output data-testid="mobile-drawer-state">{ctx.mobileDrawer.open ?? 'closed'}</output>;
+}
+
+function CommandRegistrationProbe() {
+  useCommands([{ id: 'refresh', label: 'Refresh', group: 'Page', run: () => {} }]);
+  return <div data-testid="command-registration-probe" />;
 }
 
 const routePanelViews = [
@@ -79,6 +85,122 @@ describe('AppShellWorkspace', () => {
     expect(screen.getByTestId('icon-rail')).toBeInTheDocument();
     expect(screen.getByTestId('context-rail')).toBeInTheDocument();
     expect(screen.queryByTestId('mobile-bottom-nav')).not.toBeInTheDocument();
+  });
+
+  it('forwards headerCenter into the desktop header', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+
+    render(
+      <Provider>
+        <AppShellWorkspace headerCenter={<nav aria-label="Section tabs">Queue</nav>}>
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    expect(screen.getByRole('navigation', { name: 'Section tabs' })).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Applications' })).not.toBeInTheDocument();
+  });
+
+  it('forwards app tab renderLink into the desktop header', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+
+    render(
+      <MedaShellProvider
+        workspace={{ id: 'w', name: 'W', icon: null }}
+        workspaces={[{ id: 'w', name: 'W', icon: null }]}
+        apps={[{ id: 'a', label: 'A', icon: Inbox, to: '/a' }]}
+        storage={{ load: () => null, save: () => {} }}
+        themeAdapter="default"
+      >
+        <AppShellWorkspace
+          appTabs={{
+            renderLink: ({ app, linkProps }) => (
+              <a {...linkProps} data-testid={`workspace-app-tab-${app.id}`} />
+            ),
+          }}
+        >
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </MedaShellProvider>
+    );
+
+    expect(screen.getByTestId('workspace-app-tab-a')).toHaveAttribute('href', '/a');
+  });
+
+  it('renders banners between the header and workspace row', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+
+    const { container } = render(
+      <Provider>
+        <AppShellWorkspace banners={<div role="status">Impersonating customer</div>}>
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    const banner = screen.getByRole('status');
+    const bannerRow = banner.closest('[data-meda-banners]');
+    const header = container.querySelector('header');
+    const workspaceRow = container.querySelector('.relative.flex.flex-1.overflow-hidden');
+
+    expect(bannerRow).toBeInTheDocument();
+    expect(bannerRow?.className).toContain('flex-shrink-0');
+    expect(header?.compareDocumentPosition(bannerRow as Element)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+    expect(bannerRow?.compareDocumentPosition(workspaceRow as Element)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+  });
+
+  it('passes main layout and className to the workspace scroll region', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+
+    const { container } = render(
+      <Provider>
+        <AppShellWorkspace mainLayout="fullbleed" mainClassName="custom-main">
+          <div>hi</div>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    const main = container.querySelector('main');
+    expect(main).toHaveAttribute('data-meda-shell-main-layout', 'fullbleed');
+    expect(main).toHaveClass('custom-main');
+  });
+
+  it('auto-mounts the command palette registry for workspace descendants', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+
+    render(
+      <Provider>
+        <AppShellWorkspace>
+          <CommandRegistrationProbe />
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    expect(screen.getByTestId('command-registration-probe')).toBeInTheDocument();
+  });
+
+  it('does not mount a second command palette when a consumer already provides one', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+
+    render(
+      <Provider>
+        <CommandPalette>
+          <AppShellWorkspace>
+            <CommandRegistrationProbe />
+          </AppShellWorkspace>
+        </CommandPalette>
+      </Provider>
+    );
+
+    expect(screen.getByTestId('command-registration-probe')).toBeInTheDocument();
+    expect(addEventListenerSpy.mock.calls.filter(([event]) => event === 'keydown')).toHaveLength(1);
+    addEventListenerSpy.mockRestore();
   });
 
   it('renders desktop right panel tabs from route-registered panel views without static rightPanel config', async () => {
@@ -138,10 +260,9 @@ describe('AppShellWorkspace', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Panels' }));
 
     expect(screen.getByRole('button', { name: 'Route Inspector' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Route Activity' })).toHaveAttribute(
-      'aria-current',
-      'true'
-    );
+    const activeTab = screen.getByRole('button', { name: 'Route Activity' });
+    expect(activeTab).toHaveAttribute('aria-current', 'true');
+    expect(activeTab.className).toContain('text-sm');
     expect(screen.getByText('Route activity content')).toBeInTheDocument();
   });
 
@@ -279,6 +400,93 @@ describe('AppShellWorkspace', () => {
 
     fireEvent.click(screen.getByTestId('spread-mobile-link-i'));
     expect(screen.getByTestId('mobile-drawer-state')).toHaveTextContent('closed');
+  });
+
+  it('renders workspace menu href items, theme toggle, and footer in the mobile menu', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('mobile');
+
+    render(
+      <Provider>
+        <MobileDrawerStateProbe />
+        <AppShellWorkspace
+          iconRail={{ mainItems: [{ id: 'i', label: 'Inbox', to: '/i', icon: Inbox }] }}
+          workspace={{
+            menuItems: [{ id: 'audit', label: 'Audit log', href: '/audit', icon: Inbox }],
+            menuFooter: <div>Workspace footer</div>,
+          }}
+        >
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
+
+    expect(screen.getByRole('link', { name: 'Audit log' })).toHaveAttribute('href', '/audit');
+    expect(screen.getByRole('button', { name: /switch to .* theme/i })).toBeInTheDocument();
+    expect(screen.getByText('Workspace footer')).toBeInTheDocument();
+    expect(screen.queryByText('Manage workspaces')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sign out')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Audit log' }));
+    expect(screen.getByTestId('mobile-drawer-state')).toHaveTextContent('closed');
+  });
+
+  it('renders workspace menu onClick items in the mobile menu and closes after click', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('mobile');
+    const handleSettings = vi.fn();
+
+    render(
+      <Provider>
+        <MobileDrawerStateProbe />
+        <AppShellWorkspace
+          iconRail={{ mainItems: [{ id: 'i', label: 'Inbox', to: '/i', icon: Inbox }] }}
+          workspace={{
+            menuItems: [
+              {
+                id: 'settings',
+                label: 'Settings',
+                onClick: handleSettings,
+                variant: 'destructive',
+                separatorAfter: true,
+              },
+            ],
+          }}
+        >
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
+
+    const settingsItem = screen.getByRole('button', { name: 'Settings' });
+    expect(settingsItem).toHaveAttribute('data-variant', 'destructive');
+
+    fireEvent.click(settingsItem);
+
+    expect(handleSettings).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('mobile-drawer-state')).toHaveTextContent('closed');
+  });
+
+  it('renders a mobile menu for workspace items even when iconRail is omitted', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('mobile');
+
+    render(
+      <Provider>
+        <AppShellWorkspace
+          workspace={{
+            menuItems: [{ id: 'audit', label: 'Audit log', href: '/audit' }],
+          }}
+        >
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
+
+    expect(screen.getByRole('link', { name: 'Audit log' })).toHaveAttribute('href', '/audit');
   });
 
   it('renders mobile context module custom content with the context rail app id', () => {
