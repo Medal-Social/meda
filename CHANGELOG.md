@@ -1,5 +1,19 @@
 # @medalsocial/meda
 
+## 1.6.0
+
+### Minor Changes
+
+- [#109](https://github.com/Medal-Social/meda/pull/109) [`9fbe80e`](https://github.com/Medal-Social/meda/commit/9fbe80eeff4ae7e240b796098a4f62061ff8210a) Thanks [@alioftech](https://github.com/alioftech)! - Add adoption-friendly workspace shell composition improvements: AppTabs now accepts rendered React node icons and router render links, workspace shells support header center and banner slots, the command palette is mounted automatically in workspace shells, mobile panel tabs are more readable, and auth/mobile drawer styling exposes safer override hooks.
+
+### Patch Changes
+
+- [#109](https://github.com/Medal-Social/meda/pull/109) [`afe8eaa`](https://github.com/Medal-Social/meda/commit/afe8eaa30a8ead4a4e2b62c5e96f59301d586dea) Thanks [@alioftech](https://github.com/alioftech)! - Expose workspace AppShell main layout/class hooks and update the Meda marketing site to use AppShell mobile chrome.
+
+- [#109](https://github.com/Medal-Social/meda/pull/109) [`9fbe80e`](https://github.com/Medal-Social/meda/commit/9fbe80eeff4ae7e240b796098a4f62061ff8210a) Thanks [@alioftech](https://github.com/alioftech)! - Surface workspace menu items, workspace menu footer content, and the theme toggle in the mobile workspace Menu drawer.
+
+- [#109](https://github.com/Medal-Social/meda/pull/109) [`9fbe80e`](https://github.com/Medal-Social/meda/commit/9fbe80eeff4ae7e240b796098a4f62061ff8210a) Thanks [@alioftech](https://github.com/alioftech)! - Replace the `themeAdapter="next-themes"` bridge internals so Meda no longer renders next-themes' inline script through React, avoiding the React 19 script-tag warning in consumer apps.
+
 ## 1.5.0
 
 ### Minor Changes
