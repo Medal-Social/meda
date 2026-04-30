@@ -6,6 +6,7 @@
       "!**/dist",
       "!**/demo/dist",
       "!**/node_modules",
+      "!**/.cache",
       "!**/coverage",
       "!**/registry/r",
       "!**/storybook-static",
