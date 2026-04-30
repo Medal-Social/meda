@@ -12,14 +12,14 @@ on:
     branches: [prod]
   workflow_dispatch:
 
-# GITHUB_TOKEN is left at zero perms — write actions use the Medal
-# Approvals App token minted in the job. Using GITHUB_TOKEN to open the
-# sync PR (and to push the sync branch) caused the resulting events to be
-# attributed to `github-actions[bot]`, and per GitHub's docs events
-# triggered by GITHUB_TOKEN do NOT cascade to other workflows. That
-# silently broke the chain: the sync PR was created but auto-approve and
-# auto-merge-promote-prs.yml never fired, leaving the PR stuck on
-# REVIEW_REQUIRED indefinitely.
+# Two-bot identity model:
+#   - Medal Social Release Bot (RELEASE_APP_*)    OPENS the sync PR
+#   - Medal Approvals (MEDAL_APPROVALS_*)         APPROVES the sync PR
+# These are different App identities, so Medal Approvals can approve a PR
+# opened by Release Bot without hitting "cannot approve your own PR".
+# GITHUB_TOKEN is intentionally left at zero perms — using it here would
+# attribute events to github-actions[bot], which per GitHub's docs does
+# NOT cascade to other workflows.
 permissions: {}
 
 jobs:
@@ -28,12 +28,12 @@ jobs:
     if: ${{ !contains(github.event.head_commit.message, '[skip auto-sync]') }}
     permissions: {}
     steps:
-      - name: Generate Medal Approvals token
+      - name: Generate Medal Social Release Bot token
         id: app-token
         uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v2.1.4
         with:
-          app-id: ${{ secrets.MEDAL_APPROVALS_APP_ID }}
-          private-key: ${{ secrets.MEDAL_APPROVALS_PRIVATE_KEY }}
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -41,14 +41,15 @@ jobs:
           # Need both branches available locally to compute divergence and
           # produce the merge.
           ref: prod
-          # Use App token so the push that creates the sync branch comes
-          # from the App identity (which DOES trigger downstream workflows).
+          # Use the Release Bot's App token so the push attributing the
+          # sync branch comes from a real App identity (which DOES trigger
+          # downstream workflows like auto-approve and auto-merge).
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Configure git identity
         run: |
-          git config user.name 'medal-approvals[bot]'
-          git config user.email 'medal-approvals[bot]@users.noreply.github.com'
+          git config user.name 'medal-social-release-bot[bot]'
+          git config user.email 'medal-social-release-bot[bot]@users.noreply.github.com'
 
       - name: Check whether prod has commits not on dev
         id: divergence
