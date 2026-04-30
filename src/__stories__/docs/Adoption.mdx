@@ -10,6 +10,24 @@ Meda's shell can be adopted at three layers:
 2. **Shell primitives**: import state providers and lower-level layout parts from `@medalsocial/meda/shell/primitives`.
 3. **Copyable recipes**: use `@medalsocial/meda/recipes/next` or the registry item when a host app needs local routing, analytics, or auth glue.
 
+## Foundation primitives
+
+Use root package imports for reusable loading, empty, and filtering surfaces:
+
+```tsx
+import { EmptyState, FilterRail, Skeleton } from '@medalsocial/meda';
+```
+
+These primitives are also exposed as copyable registry items:
+
+```bash
+npx shadcn add https://meda.medalsocial.com/r/meda-skeleton.json
+npx shadcn add https://meda.medalsocial.com/r/meda-empty-state.json
+npx shadcn add https://meda.medalsocial.com/r/meda-filter-rail.json
+```
+
+Storybook groups the visual examples under `Foundation/Primitives`.
+
 ## Next.js links
 
 Framework routers should preserve Meda's link props:

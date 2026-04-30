@@ -109,6 +109,24 @@ Workspace shells also expose chrome-level composition slots:
 
 `workspace.menuItems`, `workspace.menuFooter`, and the theme toggle are available from the mobile Menu drawer. Use `mainLayout`/`mainClassName` when a workspace shell needs the same mobile chrome but a custom main scroll region, such as a full-bleed marketing page. `useCommands()` works from workspace descendants without manually mounting `CommandPalette`; lower-level primitive compositions can still mount `CommandPalette` directly.
 
+## Foundation primitives
+
+Meda includes small foundation primitives for repeated loading, empty, and filtering surfaces:
+
+```tsx
+import { EmptyState, FilterRail, Skeleton } from '@medalsocial/meda';
+```
+
+`Skeleton` mirrors shadcn's simple loading placeholder shape. `EmptyState` standardizes zero/error states across panels and content areas. `FilterRail` provides a dense filter surface while leaving selected values, URL syncing, and query logic in the consuming app.
+
+The same primitives are available from the shadcn-compatible registry when an app wants local source ownership:
+
+```bash
+npx shadcn add https://meda.medalsocial.com/r/meda-skeleton.json
+npx shadcn add https://meda.medalsocial.com/r/meda-empty-state.json
+npx shadcn add https://meda.medalsocial.com/r/meda-filter-rail.json
+```
+
 For app-scoped brand tokens:
 
 ```ts
