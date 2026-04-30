@@ -75,7 +75,7 @@ function ContextRailToggle({ railId }) {
 // ---------------------------------------------------------------------------
 // ContextRail
 // ---------------------------------------------------------------------------
-export function ContextRail({ appId, module, hidden = false, collapsible = true, activeItemId, renderLink, className, }) {
+export function ContextRail({ appId, module, hidden = false, collapsible = true, activeItemId, renderLink, header = 'auto', scroll = 'auto', className, }) {
     const band = useShellViewport();
     const ctx = useMedaShell();
     // collapsible={false} means the rail must always render expanded — even if
@@ -92,6 +92,8 @@ export function ContextRail({ appId, module, hidden = false, collapsible = true,
     const [displayWidth, setDisplayWidth] = useState(null);
     const width = displayWidth ?? ctx.contextRail.width;
     const items = module?.items ?? [];
+    const hasRender = typeof module?.render === 'function';
+    const showHeader = header === 'visible' || (header === 'auto' && items.length > 0 && !hasRender);
     if (band === 'mobile')
         return null;
     if (hidden) {
@@ -113,22 +115,28 @@ export function ContextRail({ appId, module, hidden = false, collapsible = true,
     // transition then so the rail snaps to the cursor instead of lagging
     // behind it.
     const isDragging = displayWidth !== null;
-    return (_jsxs("aside", { id: railId, "data-testid": "context-rail", "aria-label": module.label, className: cn('relative h-full shrink-0 border-r border-shell-border bg-shell-context', !isDragging && 'transition-[width] duration-200 ease-in-out motion-reduce:transition-none', collapsed && 'w-0', className), style: { width: collapsed ? 0 : width }, children: [collapsible && _jsx(ContextRailToggle, { railId: railId }), _jsxs("div", { className: "h-full overflow-hidden", "aria-hidden": collapsed, inert: collapsed || undefined, children: [_jsxs("div", { className: "border-b border-shell-border px-4 py-3", children: [_jsx("h2", { className: "text-sm font-semibold text-foreground", children: module.label }), module.description && (_jsx("p", { className: "mt-0.5 text-xs text-muted-foreground", children: module.description }))] }), items.length > 0 && (_jsx("nav", { "aria-label": `${module.label} navigation`, className: "flex flex-col gap-0.5 p-2", children: items.map((item) => {
-                            const isActive = item.id === activeItemId;
-                            const klass = cn('flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors', isActive
-                                ? 'bg-primary/10 text-primary'
-                                : 'text-muted-foreground hover:bg-accent hover:text-foreground');
-                            const IconComp = item.icon;
-                            const inner = (_jsxs(_Fragment, { children: [_jsx(IconComp, { size: 16, "aria-hidden": "true", className: "shrink-0" }), _jsx("span", { className: "truncate", children: item.label }), item.shortcut && (_jsx("kbd", { className: "ml-auto font-mono text-[10px] text-muted-foreground", children: item.shortcut }))] }));
-                            const linkProps = {
-                                href: item.to,
-                                'aria-current': isActive ? 'page' : undefined,
-                                className: klass,
-                                children: inner,
-                            };
-                            if (renderLink) {
-                                return (_jsx(Fragment, { children: renderLink({ item, isActive, className: klass, children: inner, linkProps }) }, item.id));
-                            }
-                            return _jsx("a", { ...linkProps }, item.id);
-                        }) })), module.render?.({ workspaceId: ctx.workspace.id, appId })] }), !collapsed && (_jsx(ResizeHandle, { currentWidth: width, onResize: handleResize, onCommit: handleCommit }))] }));
+    return (_jsxs("aside", { id: railId, "data-testid": "context-rail", "aria-label": module.label, className: cn('relative h-full shrink-0 border-r border-shell-border bg-shell-context', !isDragging && 'transition-[width] duration-200 ease-in-out motion-reduce:transition-none', collapsed && 'w-0', className), style: { width: collapsed ? 0 : width }, children: [collapsible && _jsx(ContextRailToggle, { railId: railId }), _jsxs("div", { className: "flex h-full min-w-0 flex-col overflow-hidden", "aria-hidden": collapsed, inert: collapsed || undefined, children: [showHeader && (_jsxs("div", { className: "shrink-0 border-b border-shell-border px-4 py-3", children: [_jsx("h2", { className: "text-sm font-semibold text-foreground", children: module.label }), module.description && (_jsx("p", { className: "mt-0.5 text-xs text-muted-foreground", children: module.description }))] })), _jsxs("div", { "data-meda-context-rail-scroll-area": "", className: cn('min-h-0 flex-1', scroll === 'auto' ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden'), children: [items.length > 0 && (_jsx("nav", { "aria-label": `${module.label} navigation`, className: "flex flex-col gap-0.5 p-2", children: items.map((item) => {
+                                    const isActive = item.id === activeItemId;
+                                    const klass = cn('flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors', isActive
+                                        ? 'bg-primary/10 text-primary'
+                                        : 'text-muted-foreground hover:bg-accent hover:text-foreground');
+                                    const IconComp = item.icon;
+                                    const inner = (_jsxs(_Fragment, { children: [_jsx(IconComp, { size: 16, "aria-hidden": "true", className: "shrink-0" }), _jsx("span", { className: "truncate", children: item.label }), item.shortcut && (_jsx("kbd", { className: "ml-auto font-mono text-[10px] text-muted-foreground", children: item.shortcut }))] }));
+                                    const linkProps = {
+                                        href: item.to,
+                                        'aria-current': isActive ? 'page' : undefined,
+                                        className: klass,
+                                        children: inner,
+                                    };
+                                    if (renderLink) {
+                                        return (_jsx(Fragment, { children: renderLink({
+                                                item,
+                                                isActive,
+                                                className: klass,
+                                                children: inner,
+                                                linkProps,
+                                            }) }, item.id));
+                                    }
+                                    return _jsx("a", { ...linkProps }, item.id);
+                                }) })), module.render?.({ workspaceId: ctx.workspace.id, appId })] })] }), !collapsed && (_jsx(ResizeHandle, { currentWidth: width, onResize: handleResize, onCommit: handleCommit }))] }));
 }

@@ -7,11 +7,18 @@ const BREAKPOINTS = {
     wide: '(min-width: 1280px) and (max-width: 1535px)',
     ultrawide: '(min-width: 1536px)',
 };
-function detectViewport() {
+function getMatchMedia() {
     if (typeof window === 'undefined')
+        return null;
+    if (typeof window.matchMedia !== 'function')
+        return null;
+    return window.matchMedia.bind(window);
+}
+function detectViewport(matchMedia = getMatchMedia()) {
+    if (!matchMedia)
         return 'desktop';
     for (const [band, query] of Object.entries(BREAKPOINTS)) {
-        if (window.matchMedia(query).matches)
+        if (matchMedia(query).matches)
             return band;
     }
     return 'desktop';
@@ -21,9 +28,12 @@ export function useShellViewport() {
     // client's first paint — actual band resolves in the post-mount effect.
     const [viewport, setViewport] = useState('desktop');
     useEffect(() => {
-        setViewport(detectViewport());
+        const matchMedia = getMatchMedia();
+        setViewport(detectViewport(matchMedia));
+        if (!matchMedia)
+            return;
         const cleanups = Object.entries(BREAKPOINTS).map(([band, query]) => {
-            const mql = window.matchMedia(query);
+            const mql = matchMedia(query);
             const onChange = () => {
                 if (mql.matches)
                     setViewport(band);

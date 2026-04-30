@@ -50,6 +50,8 @@ export interface PanelView {
 export type PanelMode = 'closed' | 'panel' | 'expanded' | 'fullscreen';
 export type ShellMainLayout = 'workspace' | 'centered' | 'fullbleed';
 export type ShellViewport = 'mobile' | 'tablet' | 'desktop' | 'wide' | 'ultrawide';
+export type ContextRailHeader = 'auto' | 'visible' | 'hidden';
+export type ContextRailScroll = 'auto' | 'none';
 export interface MobileBottomNavItem {
     id: string;
     label: string | (() => string);
@@ -103,6 +105,8 @@ export interface AppShellContextRailConfig {
     appId: string;
     module: ContextModule;
     activeItemId?: string;
+    header?: ContextRailHeader;
+    scroll?: ContextRailScroll;
 }
 /** RightPanel configuration for `<AppShell variant="workspace">`. */
 export interface AppShellRightPanelConfig {

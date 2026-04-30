@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { ContextModule, ShellLinkRenderArgs } from './types.js';
+import type { ContextModule, ContextRailHeader, ContextRailScroll, ShellLinkRenderArgs } from './types.js';
 export interface ContextRailProps {
     /** Drives the persistence key for layout state. */
     appId: string;
@@ -12,6 +12,8 @@ export interface ContextRailProps {
     /** Optional active item id for nav active state (preferred over useMedaShell().selection). */
     activeItemId?: string;
     renderLink?: (args: ShellLinkRenderArgs) => ReactNode;
+    header?: ContextRailHeader;
+    scroll?: ContextRailScroll;
     className?: string;
 }
-export declare function ContextRail({ appId, module, hidden, collapsible, activeItemId, renderLink, className, }: ContextRailProps): import("react/jsx-runtime").JSX.Element | null;
+export declare function ContextRail({ appId, module, hidden, collapsible, activeItemId, renderLink, header, scroll, className, }: ContextRailProps): import("react/jsx-runtime").JSX.Element | null;
