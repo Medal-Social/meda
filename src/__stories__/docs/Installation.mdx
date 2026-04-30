@@ -57,4 +57,6 @@ export function App() {
 
 Workspace menu items render in the desktop workspace switcher and in the mobile Menu drawer. Workspace shells mount the command palette internally, so route components can call `useCommands()` without an extra `<CommandPalette />`.
 
+`useShellViewport()` falls back to `"desktop"` when `window.matchMedia` is unavailable, so tests only need to mock `matchMedia` when they assert a specific responsive band.
+
 Subpath imports such as `@medalsocial/meda/shell`, `/shell/primitives`, `/auth`, `/auth/better-auth`, `/recipes/next`, `/theme`, `/chat`, `/voice`, `/timeline`, and `/panel` keep the bundle focused.
