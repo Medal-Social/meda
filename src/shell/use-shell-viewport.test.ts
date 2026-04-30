@@ -78,6 +78,18 @@ describe('useShellViewport', () => {
     expect(result.current).toBe('ultrawide');
   });
 
+  it("returns 'desktop' when matchMedia is unavailable", () => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: undefined,
+    });
+
+    const { result } = renderHook(() => useShellViewport());
+    act(() => {});
+
+    expect(result.current).toBe('desktop');
+  });
+
   it("SSR-safe: returns 'desktop' before hydration", () => {
     // The vitest.setup.ts default matchMedia mock returns matches: false for
     // every query, so detectViewport() falls through to the 'desktop' default.
