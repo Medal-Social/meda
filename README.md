@@ -80,10 +80,32 @@ import Link from 'next/link';
     mainItems,
     renderLink: ({ item, linkProps }) => <Link {...linkProps} href={item.to} prefetch />,
   }}
+  appTabs={{
+    renderLink: ({ app, linkProps }) =>
+      app.to ? <Link {...linkProps} href={app.to} prefetch /> : <a {...linkProps} />,
+  }}
 >
   {children}
 </AppShell>;
 ```
+
+Workspace shells also expose chrome-level composition slots:
+
+```tsx
+<AppShell
+  variant="workspace"
+  headerCenter={<SectionTabs />}
+  banners={<SystemHealthBanner />}
+  workspace={{
+    menuItems: [{ id: 'settings', label: 'Settings', href: '/settings' }],
+    menuFooter: <AccountSwitcher />,
+  }}
+>
+  {children}
+</AppShell>
+```
+
+`workspace.menuItems`, `workspace.menuFooter`, and the theme toggle are available from the mobile Menu drawer. `useCommands()` works from workspace descendants without manually mounting `CommandPalette`; lower-level primitive compositions can still mount `CommandPalette` directly.
 
 For app-scoped brand tokens:
 

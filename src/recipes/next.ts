@@ -45,9 +45,11 @@ import {
   MedaShellProvider,
   PanelViewsProvider,
   type AppDefinition,
+  type AppShellAppTabsConfig,
   type IconRailItem,
   type PanelView,
   type WorkspaceDefinition,
+  type WorkspaceMenuItem,
 } from '@medalsocial/meda/shell'
 
 export function MedaNextWorkspaceShell({
@@ -57,6 +59,11 @@ export function MedaNextWorkspaceShell({
   activeIconId,
   panelViews = [],
   defaultPanelView,
+  appTabs,
+  headerCenter,
+  banners,
+  workspaceMenuItems,
+  workspaceMenuFooter,
   children,
 }: {
   workspace: WorkspaceDefinition
@@ -65,6 +72,11 @@ export function MedaNextWorkspaceShell({
   activeIconId?: string
   panelViews?: PanelView[]
   defaultPanelView?: string
+  appTabs?: AppShellAppTabsConfig
+  headerCenter?: ReactNode
+  banners?: ReactNode
+  workspaceMenuItems?: WorkspaceMenuItem[]
+  workspaceMenuFooter?: ReactNode
   children: ReactNode
 }) {
   return (
@@ -78,6 +90,15 @@ export function MedaNextWorkspaceShell({
             <Link {...linkProps} href={item.to} prefetch />
           ),
         }}
+        appTabs={
+          appTabs ?? {
+            renderLink: ({ app, linkProps }) =>
+              app.to ? <Link {...linkProps} href={app.to} prefetch /> : <a {...linkProps} />,
+          }
+        }
+        headerCenter={headerCenter}
+        banners={banners}
+        workspace={{ menuItems: workspaceMenuItems, menuFooter: workspaceMenuFooter }}
         rightPanel={{ panelViews, defaultView: defaultPanelView }}
       >
         <PanelViewsProvider views={panelViews} defaultView={defaultPanelView}>
@@ -134,6 +155,7 @@ export function MedaNextAuthShell({
   accessibility: [
     'Every drawer and panel keeps its accessible name from AppShell and RightPanel.',
     'Custom link renderers must forward all linkProps to preserve aria-current, labels, handlers, and className.',
+    'Workspace menu items render in desktop and mobile chrome, so critical actions stay reachable across viewports.',
     'Auth provider buttons keep the visible provider affordance separate from the accessible button name.',
     'Route-owned panel views should expose headings inside their rendered panel content.',
     'Reduced-motion behavior remains delegated to Meda shell motion tokens.',
@@ -141,6 +163,8 @@ export function MedaNextAuthShell({
   composition: [
     'MedaShellProvider owns workspace and app context for the copied shell adapter.',
     'AppShell receives route-owned rightPanel views on first render to avoid delayed panel UI.',
+    'AppShellWorkspace mounts CommandPalette internally; route children can call useCommands without an extra shell-level mount.',
+    'headerCenter and banners keep route-level chrome in the shell band instead of inside the main pane.',
     'PanelViewsProvider wraps children with the same panelViews and defaultPanelView for nested route registrations.',
     'renderLink composes Next Link by forwarding Meda linkProps before setting framework-specific props.',
   ],

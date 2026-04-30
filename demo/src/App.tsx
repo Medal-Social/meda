@@ -708,15 +708,16 @@ function ShellV2Demo() {
       description="The v2 shell composition. MedaShellProvider manages all state. AppShell + AppShellBody define the layout grid. Regions slot in as children."
       registryItem="meda-shell"
       code={`import {
-  AppShell, CommandPalette, MedaShellProvider,
+  AppShell, MedaShellProvider,
 } from '@medalsocial/meda';
 
 <MedaShellProvider workspace={ws} apps={apps} panelViews={panels}>
-  <CommandPalette />
   <AppShell
     variant="workspace"
     iconRail={{ mainItems: railItems, activeId: 'inbox' }}
     contextRail={{ appId: 'inbox', module, activeItemId: id }}
+    headerCenter={<SectionTabs />}
+    banners={<SystemBanner />}
     rightPanel={{ panelViews: panels }}
   >
     <YourPage />
