@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "meda-context-rail",
+  "type": "registry:component",
+  "title": "Meda Context Rail",
+  "description": "Install a Meda ContextRail wrapper.",
+  "dependencies": ["@medalsocial/meda"],
+  "files": [
+    {
+      "path": "registry/meda/meda-context-rail/meda-context-rail.tsx",
+      "content": "export { ContextRail as MedaContextRail } from '@medalsocial/meda'\n",
+      "type": "registry:component",
+      "target": "components/meda/meda-context-rail.tsx"
+    }
+  ]
+}
