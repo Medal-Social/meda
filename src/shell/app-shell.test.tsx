@@ -106,6 +106,37 @@ describe('AppShell', () => {
     expect(root.className).toContain('text-foreground');
     expect(root.className).toContain('custom-extra');
   });
+
+  it('passes workspace headerCenter and banners through to the workspace shell', () => {
+    render(
+      <MedaShellProvider workspace={ws} apps={apps}>
+        <AppShell
+          variant="workspace"
+          headerCenter={<nav aria-label="Section tabs">Activity</nav>}
+          banners={<div role="status">System maintenance</div>}
+        >
+          <div data-testid="x" />
+        </AppShell>
+      </MedaShellProvider>
+    );
+
+    expect(screen.getByRole('navigation', { name: 'Section tabs' })).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('System maintenance');
+  });
+
+  it('passes workspace main layout and className through to the scroll region', () => {
+    render(
+      <MedaShellProvider workspace={ws} apps={apps}>
+        <AppShell variant="workspace" mainLayout="fullbleed" mainClassName="site-main">
+          <div data-testid="x" />
+        </AppShell>
+      </MedaShellProvider>
+    );
+
+    const main = screen.getByTestId('x').closest('main');
+    expect(main).toHaveAttribute('data-meda-shell-main-layout', 'fullbleed');
+    expect(main).toHaveClass('site-main');
+  });
 });
 
 describe('AppShellBody', () => {

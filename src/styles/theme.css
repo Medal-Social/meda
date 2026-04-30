@@ -14,12 +14,19 @@
 @layer base {
   :root {
     color-scheme: light;
+    --auth-gradient-primary: var(--color-brand-500);
+    --auth-gradient-secondary: var(--color-brand-700);
+    --auth-gradient-base: var(--color-brand-800);
   }
 
   .dark,
   [data-theme="dark"] {
     color-scheme: dark;
   }
+}
+
+[data-vaul-drawer][data-state="open"] {
+  will-change: auto;
 }
 
 @theme inline {

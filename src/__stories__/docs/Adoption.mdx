@@ -25,12 +25,50 @@ import { AppShell } from '@medalsocial/meda/shell';
     activeId,
     renderLink: ({ item, linkProps }) => <Link {...linkProps} href={item.to} prefetch />,
   }}
+  appTabs={{
+    renderLink: ({ app, linkProps }) =>
+      app.to ? <Link {...linkProps} href={app.to} prefetch /> : <a {...linkProps} />,
+  }}
 >
   {children}
 </AppShell>;
 ```
 
-`linkProps` carries Meda's accessibility labels, active state, event handlers, and class names. Spread it before framework-specific props.
+`linkProps` carries Meda's accessibility labels, active state, event handlers, and class names. Spread it before framework-specific props. `AppDefinition.to` is optional; provide it when Meda's app tabs should navigate through the host router.
+
+## Workspace chrome
+
+Use `headerCenter` for section tabs or route-specific controls that should sit in the header, and `banners` for system-level messages that span above the rails:
+
+```tsx
+<AppShell
+  variant="workspace"
+  headerCenter={<SectionTabs />}
+  banners={impersonating ? <ImpersonationBanner /> : null}
+  mainLayout="fullbleed"
+  mainClassName="route-main"
+  workspace={{
+    menuItems: [{ id: 'audit', label: 'Audit log', href: '/audit' }],
+    menuFooter: <AccountMenuFooter />,
+  }}
+>
+  {children}
+</AppShell>
+```
+
+`workspace.menuItems`, `workspace.menuFooter`, and Meda's theme toggle render in the desktop workspace switcher and the mobile Menu drawer. Do not duplicate critical workspace actions into the icon rail only for mobile reachability.
+
+Use `mainLayout` and `mainClassName` when the route needs a custom main scroll region while still keeping AppShell's mobile header, bottom nav, drawers, and command palette. This is useful for full-bleed documentation or marketing surfaces that should use the same shell chrome as the product app.
+
+## Commands
+
+`<AppShell variant="workspace">` mounts `CommandPalette` internally, so descendants can register commands directly:
+
+```tsx
+useCommands([{ id: 'refresh', label: 'Refresh', group: 'Page', run: refresh }]);
+```
+
+When composing lower-level primitives without `AppShellWorkspace`, mount `<CommandPalette>` once near the shell root.
 
 ## Route-owned panels
 

@@ -43,9 +43,8 @@ export type MobileDrawerKind =
 // Theme adapter wiring
 // ---------------------------------------------------------------------------
 
-// Lazy-loaded so that importing next-themes only happens when the consumer
-// passes themeAdapter='next-themes'. Default-adapter consumers never trigger
-// the import.
+// Lazy-loaded so default-adapter consumers do not pay for the compatibility
+// bridge used when themeAdapter='next-themes'.
 const NextThemesAdapter = lazy(() =>
   import('./theme-next-themes.js').then((m) => ({ default: m.NextThemesAdapter }))
 );

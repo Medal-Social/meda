@@ -333,7 +333,6 @@ describe('MedaShellProvider — themeAdapter prop selects correct provider', () 
   });
 
   it("themeAdapter='next-themes' renders children without crashing", async () => {
-    // next-themes uses the deprecated addListener/removeListener matchMedia API
     vi.stubGlobal(
       'matchMedia',
       vi.fn().mockImplementation((query: string) => ({
@@ -355,7 +354,7 @@ describe('MedaShellProvider — themeAdapter prop selects correct provider', () 
     );
 
     // Children render (may need a tick for Suspense + lazy to resolve).
-    // Bumped timeout from default 1000ms — the next-themes adapter chunk is
+    // Bumped timeout from default 1000ms — the compatibility adapter chunk is
     // lazy-loaded and can miss the default window under heavy concurrent
     // test load (e.g. the pre-commit hook running the full suite).
     await screen.findByTestId('child', undefined, { timeout: 5000 });

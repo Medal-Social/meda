@@ -3,7 +3,23 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react';
 export interface AppDefinition {
     id: string;
     label: string;
-    icon: LucideIcon;
+    /**
+     * Either a Lucide-style icon component or a rendered React node such as a
+     * custom brand SVG.
+     */
+    icon: LucideIcon | ReactNode;
+    /** Optional route target for consumers that render app tabs as links. */
+    to?: string;
+}
+export interface AppTabRenderLinkArgs {
+    app: AppDefinition;
+    isActive: boolean;
+    className: string;
+    children: ReactNode;
+    linkProps: AnchorHTMLAttributes<HTMLAnchorElement>;
+}
+export interface AppShellAppTabsConfig {
+    renderLink?: (args: AppTabRenderLinkArgs) => ReactNode;
 }
 export interface WorkspaceDefinition {
     id: string;
@@ -93,6 +109,44 @@ export interface AppShellRightPanelConfig {
     panelViews: PanelView[];
     defaultView?: string;
 }
+/**
+ * A single configurable item in the WorkspaceSwitcher dropdown.
+ * Either `href` (renders as a link) or `onClick` (renders as a button) MUST
+ * be provided; supplying both makes the item a button that fires `onClick`
+ * AND navigates to `href` afterwards.
+ */
+interface WorkspaceMenuItemBase {
+    id: string;
+    label: ReactNode;
+    icon?: LucideIcon | ReactNode;
+    /** Insert a `<DropdownMenuSeparator />` immediately after this item. */
+    separatorAfter?: boolean;
+    /** Visual intent — `destructive` paints with the destructive token. */
+    variant?: 'default' | 'destructive';
+}
+export type WorkspaceMenuItem = WorkspaceMenuItemBase & ({
+    href: string;
+    onClick?: () => void;
+} | {
+    onClick: () => void;
+    href?: string;
+});
+/**
+ * Workspace dropdown configuration for `<AppShell variant="workspace">`.
+ *
+ * When `menuItems` is provided, it REPLACES the package-default menu
+ * ("Manage workspaces", "Settings", "Profile", "Sign out"). The theme toggle
+ * is still inserted automatically by meda — between the items and the footer
+ * — so consumers don't have to reimplement theme cycling.
+ *
+ * When `menuItems` is omitted, the package defaults render unchanged (the
+ * existing 1.x behavior). This is fully additive and non-breaking.
+ */
+export interface AppShellWorkspaceConfig {
+    menuItems?: WorkspaceMenuItem[];
+    /** Extra slot rendered after all items and the theme toggle. */
+    menuFooter?: ReactNode;
+}
 export interface AppShellAuthConfig {
     title: ReactNode;
     description?: ReactNode;
@@ -108,3 +162,4 @@ export interface AppShellAuthBranding {
     appName?: ReactNode;
     tagline?: ReactNode;
 }
+export {};

@@ -13,7 +13,7 @@ import {
 import { cn } from '../lib/utils.js';
 import { useMedaShell } from './shell-provider.js';
 import { useTheme } from './theme.js';
-import type { WorkspaceMenuItem } from './types.js';
+import type { AppShellAppTabsConfig, WorkspaceMenuItem } from './types.js';
 import { useShellViewport } from './use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
@@ -66,7 +66,7 @@ export interface WorkspaceSwitcherProps {
   workspaceMenuFooter?: ReactNode;
 }
 
-function renderConfiguredIcon(icon: WorkspaceMenuItem['icon']): ReactNode {
+function renderShellIcon(icon: WorkspaceMenuItem['icon']): ReactNode {
   if (icon == null) return null;
   if (isValidElement(icon)) return icon;
   if (typeof icon === 'function') {
@@ -103,7 +103,7 @@ function renderConfiguredItem(item: WorkspaceMenuItem): ReactNode {
       className={item.variant === 'destructive' ? 'text-destructive' : undefined}
       onClick={handleSelect}
     >
-      {renderConfiguredIcon(item.icon)}
+      {renderShellIcon(item.icon)}
       {item.label}
     </DropdownMenuItem>
   );
@@ -187,7 +187,9 @@ export function WorkspaceSwitcher({
 // AppTabs
 // ---------------------------------------------------------------------------
 
-export function AppTabs() {
+export interface AppTabsProps extends AppShellAppTabsConfig {}
+
+export function AppTabs({ renderLink }: AppTabsProps = {}) {
   const { apps, activeAppId, setActiveApp } = useMedaShell();
 
   return (
@@ -196,27 +198,52 @@ export function AppTabs() {
     <nav aria-label="Applications" className="flex items-center">
       {apps.map((app) => {
         const isActive = app.id === activeAppId;
-        const Icon = app.icon;
+        const className = cn(
+          'flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors',
+          isActive
+            ? 'border-b-2 border-primary text-foreground'
+            : 'text-muted-foreground hover:text-foreground'
+        );
+        const children = (
+          <>
+            {renderShellIcon(app.icon)}
+            {app.label}
+          </>
+        );
+        const handleClick = () => {
+          setActiveApp(app.id);
+        };
+
+        if (renderLink && app.to) {
+          return (
+            <Fragment key={app.id}>
+              {renderLink({
+                app,
+                isActive,
+                className,
+                children,
+                linkProps: {
+                  href: app.to,
+                  className,
+                  children,
+                  'aria-current': isActive ? 'page' : undefined,
+                  onClick: handleClick,
+                },
+              })}
+            </Fragment>
+          );
+        }
+
         return (
           <button
             key={app.id}
             type="button"
             aria-current={isActive ? 'page' : undefined}
-            onClick={() => {
-              setActiveApp(app.id);
-              // TODO(Phase 18.x): renderLink integration so clicking a tab also navigates
-              // the consumer's router; setActiveApp alone updates context.
-            }}
+            onClick={handleClick}
             onMouseEnter={() => {}}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors',
-              isActive
-                ? 'border-b-2 border-primary text-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
+            className={className}
           >
-            <Icon size={16} aria-hidden="true" />
-            {app.label}
+            {children}
           </button>
         );
       })}
@@ -261,6 +288,12 @@ export function PanelToggle() {
 
 export interface ShellHeaderProps {
   globalActions?: ReactNode;
+  /**
+   * Optional center-region content. Replaces the default application tabs when
+   * provided.
+   */
+  headerCenter?: ReactNode;
+  appTabsRenderLink?: AppShellAppTabsConfig['renderLink'];
   className?: string;
   /**
    * Forwarded to the internal `<WorkspaceSwitcher>`. See
@@ -272,6 +305,8 @@ export interface ShellHeaderProps {
 
 export function ShellHeader({
   globalActions,
+  headerCenter,
+  appTabsRenderLink,
   className,
   workspaceMenuItems,
   workspaceMenuFooter,
@@ -283,18 +318,22 @@ export function ShellHeader({
     <header
       className={cn(
         'flex h-[var(--shell-header-height)] w-full items-center justify-between',
-        'border-b border-border bg-background px-3',
+        'gap-3 border-b border-border bg-background px-3',
         className
       )}
     >
-      {/* Left region: WorkspaceSwitcher then AppTabs (no separator between them) */}
-      <div className="flex items-center">
+      {/* Left region: workspace identity and switcher. */}
+      <div className="flex shrink-0 items-center">
         <WorkspaceSwitcher menuItems={workspaceMenuItems} menuFooter={workspaceMenuFooter} />
-        <AppTabs />
+      </div>
+
+      {/* Center region: consumer chrome or the default application tabs. */}
+      <div className="flex min-w-0 flex-1 items-center">
+        {headerCenter !== undefined ? headerCenter : <AppTabs renderLink={appTabsRenderLink} />}
       </div>
 
       {/* Right region: optional globalActions slot then mandatory PanelToggle */}
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         {globalActions}
         <PanelToggle />
       </div>

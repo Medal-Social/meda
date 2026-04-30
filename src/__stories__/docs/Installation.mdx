@@ -12,7 +12,7 @@ Meda is published to npm as `@medalsocial/meda`. It supports React 19+ and ships
 pnpm add @medalsocial/meda lucide-react
 ```
 
-`lucide-react`, `react`, and `react-dom` are peer dependencies. Install `next-themes` only when using the optional `themeAdapter="next-themes"` shell bridge.
+`lucide-react`, `react`, and `react-dom` are peer dependencies. The optional `themeAdapter="next-themes"` shell bridge is built into Meda for compatibility and does not require installing `next-themes`.
 
 ## Import the runtime CSS
 
@@ -40,16 +40,21 @@ const iconRail = {
   mainItems: [{ id: 'inbox', label: 'Inbox', icon: Inbox, to: '/inbox' }],
   utilityItems: [{ id: 'settings', label: 'Settings', icon: Settings, to: '/settings' }],
 };
+const workspaceMenu = {
+  menuItems: [{ id: 'settings', label: 'Settings', href: '/settings', icon: Settings }],
+};
 
 export function App() {
   return (
     <MedaShellProvider workspace={workspace} apps={apps}>
-      <AppShell variant="workspace" iconRail={iconRail}>
+      <AppShell variant="workspace" iconRail={iconRail} workspace={workspaceMenu}>
         {/* app content */}
       </AppShell>
     </MedaShellProvider>
   );
 }
 ```
+
+Workspace menu items render in the desktop workspace switcher and in the mobile Menu drawer. Workspace shells mount the command palette internally, so route components can call `useCommands()` without an extra `<CommandPalette />`.
 
 Subpath imports such as `@medalsocial/meda/shell`, `/shell/primitives`, `/auth`, `/auth/better-auth`, `/recipes/next`, `/theme`, `/chat`, `/voice`, `/timeline`, and `/panel` keep the bundle focused.

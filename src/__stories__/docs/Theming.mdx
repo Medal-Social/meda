@@ -73,3 +73,17 @@ const css = createMedaThemeCss(autoTheme);
 ```
 
 Apply the generated CSS under `[data-meda-app="auto"]`, then set that attribute on the app root.
+
+## Auth gradient tokens
+
+The auth shell marketing panel uses dedicated gradient tokens so product branding does not require overriding the entire brand ramp:
+
+```css
+:root {
+  --auth-gradient-primary: var(--color-brand-500);
+  --auth-gradient-secondary: var(--color-brand-700);
+  --auth-gradient-base: var(--color-brand-800);
+}
+```
+
+Override those after importing `@medalsocial/meda/styles.css` when an auth screen needs a custom campaign gradient without changing buttons, focus rings, or other semantic brand usage.
