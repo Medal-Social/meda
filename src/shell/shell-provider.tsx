@@ -262,68 +262,103 @@ export function MedaShellProvider(props: MedaShellProviderProps) {
   });
   const isMobile = useShellViewport() === 'mobile';
 
+  const setPanelMode = useCallback(
+    (mode: PanelMode) =>
+      setLayoutState((prev) => ({
+        ...prev,
+        rightPanel: { ...prev.rightPanel, mode },
+      })),
+    [setLayoutState]
+  );
+
+  const setPanelActiveView = useCallback(
+    (activeView: string | null) =>
+      setLayoutState((prev) => ({
+        ...prev,
+        rightPanel: { ...prev.rightPanel, activeView },
+      })),
+    [setLayoutState]
+  );
+
+  const setPanelWidth = useCallback(
+    (width: number) =>
+      setLayoutState((prev) => ({
+        ...prev,
+        rightPanel: { ...prev.rightPanel, width },
+      })),
+    [setLayoutState]
+  );
+
+  const openPanel = useCallback(() => {
+    if (isMobile) setMobileDrawerOpen('panels-drawer');
+    setLayoutState((prev) => ({
+      ...prev,
+      rightPanel: {
+        ...prev.rightPanel,
+        mode: prev.rightPanel.mode === 'closed' ? 'panel' : prev.rightPanel.mode,
+      },
+    }));
+  }, [isMobile, setLayoutState]);
+
+  const closePanel = useCallback(() => {
+    if (isMobile) setMobileDrawerOpen((open) => (open === 'panels-drawer' ? null : open));
+    setLayoutState((prev) => ({
+      ...prev,
+      rightPanel: { ...prev.rightPanel, mode: 'closed' },
+    }));
+  }, [isMobile, setLayoutState]);
+
+  const togglePanel = useCallback(() => {
+    if (isMobile) {
+      setMobileDrawerOpen((open) => (open === 'panels-drawer' ? null : 'panels-drawer'));
+    }
+    setLayoutState((prev) => ({
+      ...prev,
+      rightPanel: {
+        ...prev.rightPanel,
+        mode: prev.rightPanel.mode === 'closed' ? 'panel' : 'closed',
+      },
+    }));
+  }, [isMobile, setLayoutState]);
+
+  const focusPanel = useCallback(
+    (viewId: string) =>
+      setLayoutState((prev) => {
+        const nextMode: PanelMode =
+          prev.rightPanel.mode === 'closed' ? 'panel' : prev.rightPanel.mode;
+        return {
+          ...prev,
+          rightPanel: { ...prev.rightPanel, mode: nextMode, activeView: viewId },
+        };
+      }),
+    [setLayoutState]
+  );
+
   const panel = useMemo(
     () => ({
       mode: layoutState.rightPanel.mode,
       activeView: layoutState.rightPanel.activeView,
       width: layoutState.rightPanel.width,
-      setMode: (mode: PanelMode) =>
-        setLayoutState((prev) => ({
-          ...prev,
-          rightPanel: { ...prev.rightPanel, mode },
-        })),
-      setActiveView: (activeView: string | null) =>
-        setLayoutState((prev) => ({
-          ...prev,
-          rightPanel: { ...prev.rightPanel, activeView },
-        })),
-      setWidth: (width: number) =>
-        setLayoutState((prev) => ({
-          ...prev,
-          rightPanel: { ...prev.rightPanel, width },
-        })),
-      open: () => {
-        if (isMobile) setMobileDrawerOpen('panels-drawer');
-        setLayoutState((prev) => ({
-          ...prev,
-          rightPanel: {
-            ...prev.rightPanel,
-            mode: prev.rightPanel.mode === 'closed' ? 'panel' : prev.rightPanel.mode,
-          },
-        }));
-      },
-      close: () => {
-        if (isMobile) setMobileDrawerOpen((open) => (open === 'panels-drawer' ? null : open));
-        setLayoutState((prev) => ({
-          ...prev,
-          rightPanel: { ...prev.rightPanel, mode: 'closed' },
-        }));
-      },
-      toggle: () => {
-        if (isMobile) {
-          setMobileDrawerOpen((open) => (open === 'panels-drawer' ? null : 'panels-drawer'));
-        }
-        setLayoutState((prev) => ({
-          ...prev,
-          rightPanel: {
-            ...prev.rightPanel,
-            mode: prev.rightPanel.mode === 'closed' ? 'panel' : 'closed',
-          },
-        }));
-      },
-      // focus(viewId) — opens panel + switches to view in one call.
-      // Only flips closed → panel; preserves expanded / fullscreen modes.
-      focus: (viewId: string) =>
-        setLayoutState((prev) => {
-          const nextMode: PanelMode =
-            prev.rightPanel.mode === 'closed' ? 'panel' : prev.rightPanel.mode;
-          return {
-            ...prev,
-            rightPanel: { ...prev.rightPanel, mode: nextMode, activeView: viewId },
-          };
-        }),
+      setMode: setPanelMode,
+      setActiveView: setPanelActiveView,
+      setWidth: setPanelWidth,
+      open: openPanel,
+      close: closePanel,
+      toggle: togglePanel,
+      focus: focusPanel,
     }),
-    [isMobile, layoutState, setLayoutState]
+    [
+      layoutState.rightPanel.mode,
+      layoutState.rightPanel.activeView,
+      layoutState.rightPanel.width,
+      setPanelMode,
+      setPanelActiveView,
+      setPanelWidth,
+      openPanel,
+      closePanel,
+      togglePanel,
+      focusPanel,
+    ]
   );
 
   const contextRail = useMemo(
