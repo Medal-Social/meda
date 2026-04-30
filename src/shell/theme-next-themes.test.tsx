@@ -18,9 +18,9 @@ function ThemeConsumer() {
   );
 }
 
-describe('NextThemesAdapter — bridges next-themes useTheme to meda ThemeAdapter shape', () => {
+describe('NextThemesAdapter — exposes a next-themes-compatible meda ThemeAdapter shape', () => {
   it('exposes theme and resolvedTheme via meda ThemeCtx', () => {
-    // Stub matchMedia so next-themes system detection works in jsdom
+    // Stub matchMedia so system theme detection works in jsdom
     vi.stubGlobal(
       'matchMedia',
       vi.fn().mockImplementation((query: string) => ({
@@ -71,5 +71,29 @@ describe('NextThemesAdapter — bridges next-themes useTheme to meda ThemeAdapte
     // resolvedTheme should always be 'light' or 'dark', never undefined
     const resolved = screen.getByTestId('resolved').textContent;
     expect(resolved === 'light' || resolved === 'dark').toBe(true);
+  });
+
+  it('does not render an inline script tag through React', () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockImplementation((query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }))
+    );
+
+    const { container } = render(
+      <NextThemesAdapter>
+        <ThemeConsumer />
+      </NextThemesAdapter>
+    );
+
+    expect(container.querySelector('script')).toBeNull();
   });
 });

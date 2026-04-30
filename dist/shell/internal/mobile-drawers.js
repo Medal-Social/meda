@@ -1,15 +1,17 @@
 'use client';
 import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-runtime";
-import { cloneElement, isValidElement, useEffect } from 'react';
+import { Monitor, Moon, Sun } from 'lucide-react';
+import { cloneElement, createElement, Fragment, isValidElement, useEffect, } from 'react';
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, } from '../../components/ui/drawer.js';
 import { cn } from '../../lib/utils.js';
 import { useMedaShell } from '../shell-provider.js';
+import { useTheme } from '../theme.js';
 /**
  * Renders all four mobile drawer slots (Menu / Module / Panels / AI) plus
  * any custom-content drawers. Mount once near the AppShell root; drawers
  * open/close via `ctx.mobileDrawer.open` provider state.
  */
-export function MobileDrawers({ menuItems = [], menuActiveId, menuRenderLink, module, moduleAppId, panelViews = [], defaultView, customContent = {}, }) {
+export function MobileDrawers({ menuItems = [], menuActiveId, menuRenderLink, workspaceMenuItems, workspaceMenuFooter, module, moduleAppId, panelViews = [], defaultView, customContent = {}, }) {
     const ctx = useMedaShell();
     const open = ctx.mobileDrawer.open;
     const setOpen = ctx.mobileDrawer.setOpen;
@@ -22,13 +24,15 @@ export function MobileDrawers({ menuItems = [], menuActiveId, menuRenderLink, mo
         workspaceId: ctx.workspace.id,
         appId: moduleAppId ?? ctx.activeAppId,
     };
-    return (_jsxs(_Fragment, { children: [_jsx(MenuDrawer, { open: open === 'menu-drawer', onClose: close, items: menuItems, activeId: menuActiveId, renderLink: menuRenderLink }), _jsx(ModuleDrawer, { open: open === 'module-drawer', onClose: close, module: module, renderCtx: moduleRenderCtx }), _jsx(PanelsDrawer, { open: open === 'panels-drawer', onClose: close, panelViews: panelViews, defaultView: defaultView, renderCtx: renderCtx }), _jsx(AiDrawer, { open: open === 'ai-drawer', onClose: close, panelViews: panelViews, renderCtx: renderCtx }), Object.entries(customContent).map(([id, renderFn]) => (_jsx(Drawer, { open: open === id, onOpenChange: (o) => !o && close(), direction: "bottom", children: _jsx(DrawerContent, { children: renderFn(close) }) }, id)))] }));
+    return (_jsxs(_Fragment, { children: [_jsx(MenuDrawer, { open: open === 'menu-drawer', onClose: close, items: menuItems, activeId: menuActiveId, renderLink: menuRenderLink, workspaceItems: workspaceMenuItems, workspaceFooter: workspaceMenuFooter }), _jsx(ModuleDrawer, { open: open === 'module-drawer', onClose: close, module: module, renderCtx: moduleRenderCtx }), _jsx(PanelsDrawer, { open: open === 'panels-drawer', onClose: close, panelViews: panelViews, defaultView: defaultView, renderCtx: renderCtx }), _jsx(AiDrawer, { open: open === 'ai-drawer', onClose: close, panelViews: panelViews, renderCtx: renderCtx }), Object.entries(customContent).map(([id, renderFn]) => (_jsx(Drawer, { open: open === id, onOpenChange: (o) => !o && close(), direction: "bottom", children: _jsx(DrawerContent, { children: renderFn(close) }) }, id)))] }));
 }
 // ---------------------------------------------------------------------------
 // Internal sub-drawers
 // ---------------------------------------------------------------------------
-function MenuDrawer({ open, onClose, items, activeId, renderLink, }) {
-    return (_jsx(Drawer, { open: open, onOpenChange: (o) => !o && onClose(), direction: "left", children: _jsxs(DrawerContent, { children: [_jsxs(DrawerHeader, { children: [_jsx(DrawerTitle, { children: "Menu" }), _jsx(DrawerDescription, { className: "sr-only", children: "Switch between primary app areas." })] }), _jsx("nav", { className: "flex flex-col gap-0.5 p-2", children: items.map((item) => (_jsx(MenuDrawerItem, { item: item, isActive: item.id === activeId, onClose: onClose, renderLink: renderLink }, item.id))) })] }) }));
+function MenuDrawer({ open, onClose, items, activeId, renderLink, workspaceItems, workspaceFooter, }) {
+    const hasIconItems = items.length > 0;
+    const hasWorkspaceItems = Array.isArray(workspaceItems) && workspaceItems.length > 0;
+    return (_jsx(Drawer, { open: open, onOpenChange: (o) => !o && onClose(), direction: "left", children: _jsxs(DrawerContent, { children: [_jsxs(DrawerHeader, { children: [_jsx(DrawerTitle, { children: "Menu" }), _jsx(DrawerDescription, { className: "sr-only", children: "Switch between primary app areas." })] }), _jsxs("div", { className: "flex flex-col gap-2 p-2", children: [hasIconItems && (_jsx("nav", { "aria-label": "Primary navigation", className: "flex flex-col gap-0.5", children: items.map((item) => (_jsx(MenuDrawerItem, { item: item, isActive: item.id === activeId, onClose: onClose, renderLink: renderLink }, item.id))) })), (hasIconItems || hasWorkspaceItems) && _jsx("div", { className: "h-px bg-border" }), _jsxs("nav", { "aria-label": "Workspace menu", className: "flex flex-col gap-0.5", children: [workspaceItems?.map((item) => (_jsxs(Fragment, { children: [_jsx(WorkspaceMenuDrawerItem, { item: item, onClose: onClose }), item.separatorAfter && _jsx("div", { className: "my-1 h-px bg-border" })] }, item.id))), _jsx(MobileThemeMenuItem, { onClose: onClose })] }), workspaceFooter] })] }) }));
 }
 const menuItemClassName = 'flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground';
 function MenuDrawerItem({ item, isActive, onClose, renderLink, }) {
@@ -63,6 +67,49 @@ function closeAfterLinkClick(link, onClose) {
         },
     });
 }
+function renderWorkspaceIcon(icon) {
+    if (icon == null)
+        return null;
+    if (isValidElement(icon))
+        return icon;
+    if (typeof icon === 'function') {
+        return createElement(icon, { size: 18, 'aria-hidden': true });
+    }
+    if (typeof icon === 'object' && icon !== null) {
+        const candidate = icon;
+        if (candidate.$$typeof != null) {
+            return createElement(icon, { size: 18, 'aria-hidden': true });
+        }
+    }
+    return icon;
+}
+function WorkspaceMenuDrawerItem({ item, onClose, }) {
+    const children = (_jsxs(_Fragment, { children: [renderWorkspaceIcon(item.icon), _jsx("span", { children: item.label })] }));
+    const className = cn(menuItemClassName, item.variant === 'destructive' && 'text-destructive hover:text-destructive');
+    const handleClick = () => {
+        item.onClick?.();
+        onClose();
+    };
+    if (item.href != null) {
+        return closeAfterLinkClick(_jsx("a", { href: item.href, className: className, "data-variant": item.variant ?? 'default', onClick: () => item.onClick?.(), children: children }), onClose);
+    }
+    return (_jsx("button", { type: "button", "data-variant": item.variant ?? 'default', className: className, onClick: handleClick, children: children }));
+}
+const NEXT_THEME = { light: 'dark', dark: 'system', system: 'light' };
+const THEME_ICON = { light: Sun, dark: Moon, system: Monitor };
+const THEME_LABEL = {
+    light: 'Switch to dark theme',
+    dark: 'Switch to system theme',
+    system: 'Switch to light theme',
+};
+function MobileThemeMenuItem({ onClose }) {
+    const { theme, setTheme } = useTheme();
+    const Icon = THEME_ICON[theme];
+    return (_jsxs("button", { type: "button", "aria-label": THEME_LABEL[theme], className: menuItemClassName, onClick: () => {
+            setTheme(NEXT_THEME[theme]);
+            onClose();
+        }, children: [_jsx(Icon, { size: 18, "aria-hidden": "true" }), _jsx("span", { children: THEME_LABEL[theme] })] }));
+}
 function ModuleDrawer({ open, onClose, module, renderCtx, }) {
     const items = module?.items ?? [];
     if (!module || (items.length === 0 && !module.render))
@@ -90,7 +137,7 @@ function PanelsDrawer({ open, onClose, panelViews, defaultView, renderCtx, }) {
     const active = panelViews.find((v) => v.id === activeView) ??
         (defaultView ? panelViews.find((v) => v.id === defaultView) : undefined) ??
         panelViews[0];
-    return (_jsx(Drawer, { open: open, onOpenChange: (o) => !o && onClose(), direction: "bottom", children: _jsxs(DrawerContent, { children: [_jsxs(DrawerHeader, { children: [_jsx(DrawerTitle, { children: active?.label ?? 'Panels' }), _jsx(DrawerDescription, { className: "sr-only", children: "Contextual panels for the current module." })] }), panelViews.length > 1 && (_jsx("div", { className: "flex items-center gap-1 border-b border-border px-3 py-2", children: panelViews.map((view) => (_jsx("button", { type: "button", onClick: () => ctx.panel.setActiveView(view.id), "aria-current": view.id === activeView ? 'true' : undefined, className: cn('rounded-md px-2 py-1 text-xs', view.id === activeView
+    return (_jsx(Drawer, { open: open, onOpenChange: (o) => !o && onClose(), direction: "bottom", children: _jsxs(DrawerContent, { children: [_jsxs(DrawerHeader, { children: [_jsx(DrawerTitle, { children: active?.label ?? 'Panels' }), _jsx(DrawerDescription, { className: "sr-only", children: "Contextual panels for the current module." })] }), panelViews.length > 1 && (_jsx("div", { className: "flex items-center gap-1 border-b border-border px-3 py-2", children: panelViews.map((view) => (_jsx("button", { type: "button", onClick: () => ctx.panel.setActiveView(view.id), "aria-current": view.id === activeView ? 'true' : undefined, className: cn('rounded-md px-2 py-1 text-sm', view.id === activeView
                             ? 'bg-accent text-accent-foreground'
                             : 'text-muted-foreground hover:bg-accent'), children: view.label }, view.id))) })), _jsx("div", { className: "flex-1 overflow-y-auto p-3", children: active?.render(renderCtx) })] }) }));
 }

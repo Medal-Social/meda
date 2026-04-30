@@ -1,6 +1,7 @@
 'use client';
 import { LayoutGrid, Menu, PanelTop, Sparkles } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { CommandPalette } from './command-palette.js';
 import { ContextRail } from './context-rail.js';
 import { IconRail } from './icon-rail.js';
 import { MobileBottomNav } from './internal/mobile-bottom-nav.js';
@@ -11,6 +12,7 @@ import { RightPanel } from './right-panel.js';
 import { ShellHeader } from './shell-header.js';
 import { ShellMain } from './shell-main.js';
 import type {
+  AppShellAppTabsConfig,
   AppShellContextRailConfig,
   AppShellIconRailConfig,
   AppShellRightPanelConfig,
@@ -27,7 +29,10 @@ export interface AppShellWorkspaceProps {
   contextRail?: AppShellContextRailConfig;
   rightPanel?: AppShellRightPanelConfig;
   workspace?: AppShellWorkspaceConfig;
+  appTabs?: AppShellAppTabsConfig;
   globalActions?: ReactNode;
+  headerCenter?: ReactNode;
+  banners?: ReactNode;
   children: ReactNode;
 }
 
@@ -36,7 +41,10 @@ export function AppShellWorkspace({
   contextRail,
   rightPanel,
   workspace,
+  appTabs,
   globalActions,
+  headerCenter,
+  banners,
   children,
 }: AppShellWorkspaceProps) {
   const viewport = useShellViewport();
@@ -45,10 +53,9 @@ export function AppShellWorkspace({
   const resolvedRightPanel = useResolvedPanelViews(staticPanelViews, rightPanel?.defaultView);
 
   // Derive the bottom-nav items from the variant config so each button maps
-  // to a drawer that actually has content. Without this filter, partial
-  // configs (e.g. iconRail only) would show Module/Panels/AI buttons that
-  // dispatch into the void.
-  const navItems = buildMobileNavItems(iconRail, contextRail, resolvedRightPanel.panelViews);
+  // to a drawer that actually has content. Menu is always available because
+  // the mobile drawer now carries workspace actions and the theme toggle.
+  const navItems = buildMobileNavItems(contextRail, resolvedRightPanel.panelViews);
   const hasDrawerContent = navItems.length > 0;
 
   // Mobile menu drawer needs both main and utility items — desktop IconRail
@@ -67,63 +74,74 @@ export function AppShellWorkspace({
   // <AppShell> wrapper already enforces h-screen for the workspace variant, so
   // nested viewport-height divs collapse cleanly — no double-scroll.
   return (
-    <div className="flex h-screen flex-col">
-      {isMobile ? (
-        <MobileHeader globalActions={globalActions} />
-      ) : (
-        <ShellHeader
-          globalActions={globalActions}
-          workspaceMenuItems={workspace?.menuItems}
-          workspaceMenuFooter={workspace?.menuFooter}
-        />
-      )}
-      <div className="relative flex flex-1 overflow-hidden">
-        {!isMobile && iconRail && (
-          <IconRail
-            mainItems={iconRail.mainItems}
-            utilityItems={iconRail.utilityItems}
-            footer={iconRail.footer}
-            activeId={iconRail.activeId}
-            renderLink={iconRail.renderLink}
+    <CommandPalette>
+      <div className="flex h-screen flex-col">
+        {isMobile ? (
+          <MobileHeader globalActions={globalActions} />
+        ) : (
+          <ShellHeader
+            globalActions={globalActions}
+            headerCenter={headerCenter}
+            appTabsRenderLink={appTabs?.renderLink}
+            workspaceMenuItems={workspace?.menuItems}
+            workspaceMenuFooter={workspace?.menuFooter}
           />
         )}
-        {!isMobile && contextRail && (
-          <ContextRail
-            appId={contextRail.appId}
-            module={contextRail.module}
-            activeItemId={contextRail.activeItemId}
-          />
+        {banners ? (
+          <div data-meda-banners="" className="flex-shrink-0">
+            {banners}
+          </div>
+        ) : (
+          false
         )}
-        <ShellMain layout="workspace">{children}</ShellMain>
-        {!isMobile && resolvedRightPanel.panelViews.length > 0 && (
-          <RightPanel panelViews={staticPanelViews} defaultView={rightPanel?.defaultView} />
+        <div className="relative flex flex-1 overflow-hidden">
+          {!isMobile && iconRail && (
+            <IconRail
+              mainItems={iconRail.mainItems}
+              utilityItems={iconRail.utilityItems}
+              footer={iconRail.footer}
+              activeId={iconRail.activeId}
+              renderLink={iconRail.renderLink}
+            />
+          )}
+          {!isMobile && contextRail && (
+            <ContextRail
+              appId={contextRail.appId}
+              module={contextRail.module}
+              activeItemId={contextRail.activeItemId}
+            />
+          )}
+          <ShellMain layout="workspace">{children}</ShellMain>
+          {!isMobile && resolvedRightPanel.panelViews.length > 0 && (
+            <RightPanel panelViews={staticPanelViews} defaultView={rightPanel?.defaultView} />
+          )}
+        </div>
+        {isMobile && hasDrawerContent && <MobileBottomNav items={navItems} />}
+        {isMobile && hasDrawerContent && (
+          <MobileDrawers
+            menuItems={mobileMenuItems}
+            menuActiveId={iconRail?.activeId}
+            menuRenderLink={iconRail?.renderLink}
+            workspaceMenuItems={workspace?.menuItems}
+            workspaceMenuFooter={workspace?.menuFooter}
+            module={contextRail?.module}
+            moduleAppId={contextRail?.appId}
+            panelViews={resolvedRightPanel.panelViews}
+            defaultView={resolvedRightPanel.defaultView}
+          />
         )}
       </div>
-      {isMobile && hasDrawerContent && <MobileBottomNav items={navItems} />}
-      {isMobile && hasDrawerContent && (
-        <MobileDrawers
-          menuItems={mobileMenuItems}
-          menuActiveId={iconRail?.activeId}
-          menuRenderLink={iconRail?.renderLink}
-          module={contextRail?.module}
-          moduleAppId={contextRail?.appId}
-          panelViews={resolvedRightPanel.panelViews}
-          defaultView={resolvedRightPanel.defaultView}
-        />
-      )}
-    </div>
+    </CommandPalette>
   );
 }
 
 function buildMobileNavItems(
-  iconRail: AppShellIconRailConfig | undefined,
   contextRail: AppShellContextRailConfig | undefined,
   panelViews: PanelView[]
 ): MobileBottomNavItem[] {
-  const items: MobileBottomNavItem[] = [];
-  if (iconRail) {
-    items.push({ id: 'menu', label: 'Menu', icon: Menu, opens: 'menu-drawer' });
-  }
+  const items: MobileBottomNavItem[] = [
+    { id: 'menu', label: 'Menu', icon: Menu, opens: 'menu-drawer' },
+  ];
   if (
     contextRail?.module &&
     ((contextRail.module.items ?? []).length > 0 || Boolean(contextRail.module.render))

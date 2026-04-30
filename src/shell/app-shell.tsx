@@ -7,6 +7,7 @@ import { AppShellChat } from './app-shell-chat.js';
 import { AppShellWorkspace } from './app-shell-workspace.js';
 import { useMedaShell } from './shell-provider.js';
 import type {
+  AppShellAppTabsConfig,
   AppShellAuthBranding,
   AppShellAuthConfig,
   AppShellContextRailConfig,
@@ -40,7 +41,22 @@ export type AppShellProps = AppShellBaseProps &
          * `menuItems` is provided. The theme toggle is preserved automatically.
          */
         workspace?: AppShellWorkspaceConfig;
+        /**
+         * Optional application-tab rendering config, used for router-specific
+         * link integration.
+         */
+        appTabs?: AppShellAppTabsConfig;
         globalActions?: ReactNode;
+        /**
+         * Optional center-region header content. Replaces the default
+         * application tabs when provided.
+         */
+        headerCenter?: ReactNode;
+        /**
+         * Optional chrome-level content rendered below the header and above
+         * the workspace rail row.
+         */
+        banners?: ReactNode;
       }
     | {
         variant: 'chat';
@@ -77,7 +93,10 @@ export function AppShell(props: AppShellProps) {
           contextRail={props.contextRail}
           rightPanel={props.rightPanel}
           workspace={props.workspace}
+          appTabs={props.appTabs}
           globalActions={props.globalActions}
+          headerCenter={props.headerCenter}
+          banners={props.banners}
         >
           {props.children}
         </AppShellWorkspace>

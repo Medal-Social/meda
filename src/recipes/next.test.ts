@@ -19,6 +19,15 @@ describe('Next recipes', () => {
     expect(nextAppShellRecipe.files[0]?.content).not.toContain('panelViews: []');
   });
 
+  it('uses .tsx targets for JSX-bearing recipe files', () => {
+    for (const file of nextAppShellRecipe.files) {
+      if (file.content.includes('<')) {
+        expect(file.path).toMatch(/\.tsx$/);
+        expect(file.target).toMatch(/\.tsx$/);
+      }
+    }
+  });
+
   it('documents accessibility and composition contracts', () => {
     expect(nextAppShellRecipe.accessibility.length).toBeGreaterThan(0);
     expect(nextAppShellRecipe.composition.length).toBeGreaterThan(0);

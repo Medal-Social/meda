@@ -5,7 +5,25 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react';
 export interface AppDefinition {
   id: string;
   label: string;
-  icon: LucideIcon;
+  /**
+   * Either a Lucide-style icon component or a rendered React node such as a
+   * custom brand SVG.
+   */
+  icon: LucideIcon | ReactNode;
+  /** Optional route target for consumers that render app tabs as links. */
+  to?: string;
+}
+
+export interface AppTabRenderLinkArgs {
+  app: AppDefinition;
+  isActive: boolean;
+  className: string;
+  children: ReactNode;
+  linkProps: AnchorHTMLAttributes<HTMLAnchorElement>;
+}
+
+export interface AppShellAppTabsConfig {
+  renderLink?: (args: AppTabRenderLinkArgs) => ReactNode;
 }
 
 export interface WorkspaceDefinition {

@@ -39,7 +39,10 @@ export function AppShellAuth({
       data-testid="app-shell-auth"
       className="grid min-h-screen overflow-hidden bg-background text-foreground lg:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)]"
     >
-      <div className="relative flex min-h-[24rem] flex-col overflow-hidden bg-[radial-gradient(circle_at_24%_18%,var(--color-info-500)_0,transparent_25%),radial-gradient(circle_at_84%_24%,var(--color-brand-400)_0,transparent_28%),linear-gradient(135deg,var(--color-brand-800),var(--color-brand-700)_42%,var(--color-brand-500))] px-6 py-6 text-white sm:min-h-[30rem] sm:px-8 lg:min-h-screen lg:px-10 lg:py-8">
+      <div
+        data-meda-auth-marketing-panel=""
+        className="relative flex min-h-[24rem] flex-col overflow-hidden bg-[radial-gradient(circle_at_24%_18%,var(--auth-gradient-primary)_0,transparent_25%),radial-gradient(circle_at_84%_24%,var(--auth-gradient-secondary)_0,transparent_28%),linear-gradient(135deg,var(--auth-gradient-base),var(--auth-gradient-secondary)_42%,var(--auth-gradient-primary))] px-6 py-6 text-white sm:min-h-[30rem] sm:px-8 lg:min-h-screen lg:px-10 lg:py-8"
+      >
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.07]"
           style={{

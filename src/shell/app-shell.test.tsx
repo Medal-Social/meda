@@ -106,6 +106,23 @@ describe('AppShell', () => {
     expect(root.className).toContain('text-foreground');
     expect(root.className).toContain('custom-extra');
   });
+
+  it('passes workspace headerCenter and banners through to the workspace shell', () => {
+    render(
+      <MedaShellProvider workspace={ws} apps={apps}>
+        <AppShell
+          variant="workspace"
+          headerCenter={<nav aria-label="Section tabs">Activity</nav>}
+          banners={<div role="status">System maintenance</div>}
+        >
+          <div data-testid="x" />
+        </AppShell>
+      </MedaShellProvider>
+    );
+
+    expect(screen.getByRole('navigation', { name: 'Section tabs' })).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('System maintenance');
+  });
 });
 
 describe('AppShellBody', () => {

@@ -26,4 +26,16 @@ describe('theme.css', () => {
   it('declares an @source directive that scans meda component output', () => {
     expect(themeCss).toMatch(/@source\s+["']\.\.\/\*\*\/\*\.js["']/);
   });
+
+  it('declares dedicated auth gradient tokens for consumer overrides', () => {
+    expect(themeCss).toContain('--auth-gradient-primary: var(--color-brand-500);');
+    expect(themeCss).toContain('--auth-gradient-secondary: var(--color-brand-700);');
+    expect(themeCss).toContain('--auth-gradient-base: var(--color-brand-800);');
+  });
+
+  it('neutralizes vaul drawer layer hints after mobile drawers are open', () => {
+    expect(themeCss).toMatch(
+      /\[data-vaul-drawer\]\[data-state=["']open["']\]\s*\{[^}]*will-change:\s*auto;/s
+    );
+  });
 });

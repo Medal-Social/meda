@@ -65,13 +65,14 @@ function renderWithProvider(
   opts: {
     workspaces?: WorkspaceDefinition[];
     defaultActiveApp?: string;
+    apps?: AppDefinition[];
   } = {}
 ) {
   return render(
     <MedaShellProvider
       workspace={ws}
       workspaces={opts.workspaces ?? [ws, ws2]}
-      apps={apps}
+      apps={opts.apps ?? apps}
       defaultActiveApp={opts.defaultActiveApp}
     >
       {ui}
@@ -117,14 +118,18 @@ describe('ShellHeader — has h-[var(--shell-header-height)] class', () => {
   });
 });
 
-describe('ShellHeader — has no center slot', () => {
-  it('renders only left and right regions (no third div in between)', () => {
-    const { container } = renderWithProvider(<ShellHeader />);
+describe('ShellHeader — headerCenter slot', () => {
+  it('renders provided center content instead of default app tabs', () => {
+    renderWithProvider(<ShellHeader headerCenter={<nav aria-label="Section tabs">Inbox</nav>} />);
 
-    const header = container.querySelector('header');
-    // Direct div children of the header — should be 2 (left, right) not 3
-    const divChildren = Array.from(header?.children ?? []).filter((c) => c.tagName === 'DIV');
-    expect(divChildren.length).toBe(2);
+    expect(screen.getByRole('navigation', { name: 'Section tabs' })).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Applications' })).not.toBeInTheDocument();
+  });
+
+  it('renders the default app tabs when headerCenter is omitted', () => {
+    renderWithProvider(<ShellHeader />);
+
+    expect(screen.getByRole('navigation', { name: 'Applications' })).toBeInTheDocument();
   });
 });
 
@@ -417,6 +422,50 @@ describe('AppTabs — clicking inactive tab calls setActiveApp(id)', () => {
     expect(billingBtn.className).toContain('border-b-2');
     expect(billingBtn.className).toContain('border-primary');
     expect(billingBtn).toHaveAttribute('aria-current', 'page');
+  });
+});
+
+describe('AppTabs — renderLink routing integration', () => {
+  it('renders app tabs through renderLink and keeps active app state in sync', () => {
+    const routedApps: AppDefinition[] = [
+      { id: 'app-a', label: 'Analytics', icon: Menu, to: '/analytics' },
+      { id: 'app-b', label: 'Billing', icon: Menu, to: '/billing' },
+    ];
+
+    renderWithProvider(
+      <AppTabs
+        renderLink={({ app, linkProps }) => (
+          <a {...linkProps} data-testid={`app-tab-link-${app.id}`} />
+        )}
+      />,
+      { apps: routedApps, defaultActiveApp: 'app-a' }
+    );
+
+    const billingLink = screen.getByTestId('app-tab-link-app-b');
+    expect(billingLink).toHaveAttribute('href', '/billing');
+
+    fireEvent.click(billingLink);
+
+    expect(billingLink).toHaveAttribute('aria-current', 'page');
+    expect(billingLink.className).toContain('border-primary');
+  });
+});
+
+describe('AppTabs — supports non-Lucide icon shapes', () => {
+  it('renders ReactNode app icons without treating them as components', () => {
+    renderWithProvider(<AppTabs />, {
+      apps: [
+        {
+          id: 'custom',
+          label: 'Custom',
+          icon: <span data-testid="custom-app-icon">C</span>,
+        },
+      ],
+      defaultActiveApp: 'custom',
+    });
+
+    expect(screen.getByTestId('custom-app-icon')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /custom/i })).toBeInTheDocument();
   });
 });
 

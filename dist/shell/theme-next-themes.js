@@ -1,24 +1,75 @@
 'use client';
 import { jsx as _jsx } from "react/jsx-runtime";
-import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from 'next-themes';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ThemeCtx } from './theme.js';
+const STORAGE_KEY = 'theme';
+const MEDIA_QUERY = '(prefers-color-scheme: dark)';
+const THEMES = ['light', 'dark'];
 function narrow(value) {
-    if (value === 'light' || value === 'dark' || value === 'system')
-        return value;
-    return 'system';
+    return value === 'light' || value === 'dark' || value === 'system' ? value : 'system';
 }
-function narrowResolved(value) {
-    return value === 'dark' ? 'dark' : 'light';
+function resolveSystemTheme(mql) {
+    if (mql)
+        return mql.matches ? 'dark' : 'light';
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function')
+        return 'light';
+    return window.matchMedia(MEDIA_QUERY).matches ? 'dark' : 'light';
 }
-function NextThemesBridge({ children }) {
-    const { theme, setTheme, resolvedTheme } = useNextTheme();
-    const value = {
-        theme: narrow(theme),
-        setTheme: (t) => setTheme(t),
-        resolvedTheme: narrowResolved(resolvedTheme),
-    };
-    return _jsx(ThemeCtx.Provider, { value: value, children: children });
+function getStoredTheme() {
+    if (typeof window === 'undefined')
+        return 'system';
+    try {
+        return narrow(window.localStorage.getItem(STORAGE_KEY));
+    }
+    catch {
+        return 'system';
+    }
+}
+function applyTheme(theme, resolvedTheme) {
+    if (typeof document === 'undefined')
+        return;
+    const root = document.documentElement;
+    const applied = theme === 'system' ? resolvedTheme : theme;
+    root.classList.remove(...THEMES);
+    root.classList.add(applied);
+    root.style.colorScheme = applied;
 }
 export function NextThemesAdapter({ children }) {
-    return (_jsx(NextThemesProvider, { attribute: "class", enableSystem: true, defaultTheme: "system", children: _jsx(NextThemesBridge, { children: children }) }));
+    const [theme, setThemeState] = useState(getStoredTheme);
+    const [resolvedTheme, setResolvedTheme] = useState(() => theme === 'system' ? resolveSystemTheme() : theme);
+    const setTheme = useCallback((next) => {
+        setThemeState(next);
+        try {
+            window.localStorage.setItem(STORAGE_KEY, next);
+        }
+        catch {
+            // Ignore unavailable storage, matching next-themes' best-effort behavior.
+        }
+    }, []);
+    useEffect(() => {
+        const mql = typeof window.matchMedia === 'function' ? window.matchMedia(MEDIA_QUERY) : undefined;
+        const sync = () => {
+            const resolved = theme === 'system' ? resolveSystemTheme(mql) : theme;
+            setResolvedTheme(resolved);
+            applyTheme(theme, resolved);
+        };
+        sync();
+        mql?.addEventListener('change', sync);
+        return () => mql?.removeEventListener('change', sync);
+    }, [theme]);
+    useEffect(() => {
+        const handleStorage = (event) => {
+            if (event.key !== STORAGE_KEY)
+                return;
+            setThemeState(narrow(event.newValue));
+        };
+        window.addEventListener('storage', handleStorage);
+        return () => window.removeEventListener('storage', handleStorage);
+    }, []);
+    const value = useMemo(() => ({
+        theme,
+        setTheme,
+        resolvedTheme,
+    }), [theme, setTheme, resolvedTheme]);
+    return _jsx(ThemeCtx.Provider, { value: value, children: children });
 }

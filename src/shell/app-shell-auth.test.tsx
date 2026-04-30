@@ -22,4 +22,17 @@ describe('AppShellAuth', () => {
     );
     expect(screen.getAllByText('Meda').length).toBeGreaterThan(0);
   });
+
+  it('uses dedicated auth gradient tokens for the marketing panel background', () => {
+    const { container } = render(
+      <AppShellAuth title="Sign in" brandName="Meda">
+        <input aria-label="email" />
+      </AppShellAuth>
+    );
+
+    const marketingPanel = container.querySelector('[data-meda-auth-marketing-panel]');
+    expect(marketingPanel?.className).toContain('--auth-gradient-primary');
+    expect(marketingPanel?.className).toContain('--auth-gradient-secondary');
+    expect(marketingPanel?.className).toContain('--auth-gradient-base');
+  });
 });

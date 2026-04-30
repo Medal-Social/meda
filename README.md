@@ -17,6 +17,28 @@ Peer deps: `react >= 19`, `react-dom >= 19`, and `lucide-react`.
 Meda ships a `styles.css` with its design tokens. Import it once in your entry stylesheet or entry script:
 
 ```css
+@import 'tailwindcss';
+@import '@medalsocial/meda/styles.css';
+
+:root {
+  /* Consumer overrides go after meda so equal-specificity tokens win by source order. */
+  --color-brand-500: oklch(0.62 0.18 245);
+  --auth-gradient-primary: var(--color-brand-500);
+}
+
+.dark {
+  --color-brand-500: oklch(0.72 0.16 245);
+}
+```
+
+Avoid placing token overrides before the Meda import; `tokens.css` defines the package defaults and later declarations are what override them:
+
+```css
+/* Wrong: meda's imported defaults overwrite this block. */
+:root {
+  --color-brand-500: oklch(0.62 0.18 245);
+}
+
 @import '@medalsocial/meda/styles.css';
 ```
 
