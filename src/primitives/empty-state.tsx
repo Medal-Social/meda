@@ -15,10 +15,9 @@ export interface EmptyStateProps extends Omit<ComponentPropsWithoutRef<'div'>, '
 }
 
 function isIconComponent(icon: EmptyStateProps['icon']): icon is LucideIcon {
-  return (
-    typeof icon === 'function' ||
-    (typeof icon === 'object' && icon !== null && '$$typeof' in icon && !isValidElement(icon))
-  );
+  if (typeof icon === 'function') return true;
+  if (!icon || typeof icon !== 'object') return false;
+  return '$$typeof' in icon && !isValidElement(icon);
 }
 
 function renderIcon(icon: EmptyStateProps['icon']) {
