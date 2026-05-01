@@ -3,6 +3,7 @@ export * from './brand/public.js';
 export * from './chat/public.js';
 export * from './marketing/public.js';
 export * from './panel/public.js';
+export * from './primitives/index.js';
 export * from './shell/index.js';
 export * from './theme/index.js';
 export * from './timeline/public.js';
