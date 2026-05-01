@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import type { IconRailItem, IconRailProps } from '../icon-rail.js';
-import type { ContextModule, PanelView, WorkspaceMenuItem } from '../types.js';
+import type { ContextModule, ContextRailHeader, ContextRailScroll, PanelView, WorkspaceMenuItem } from '../types.js';
 export interface MobileDrawersProps {
     /** Menu drawer source (icon-rail items). */
     menuItems?: IconRailItem[];
@@ -16,6 +16,10 @@ export interface MobileDrawersProps {
     module?: ContextModule;
     /** App id used when rendering module custom content. */
     moduleAppId?: string;
+    /** Header behavior mirrored from the desktop ContextRail. */
+    moduleHeader?: ContextRailHeader;
+    /** Scroll behavior mirrored from the desktop ContextRail. */
+    moduleScroll?: ContextRailScroll;
     /** Panels drawer source. */
     panelViews?: PanelView[];
     /**
@@ -33,4 +37,4 @@ export interface MobileDrawersProps {
  * any custom-content drawers. Mount once near the AppShell root; drawers
  * open/close via `ctx.mobileDrawer.open` provider state.
  */
-export declare function MobileDrawers({ menuItems, menuActiveId, menuRenderLink, workspaceMenuItems, workspaceMenuFooter, module, moduleAppId, panelViews, defaultView, customContent, }: MobileDrawersProps): import("react/jsx-runtime").JSX.Element;
+export declare function MobileDrawers({ menuItems, menuActiveId, menuRenderLink, workspaceMenuItems, workspaceMenuFooter, module, moduleAppId, moduleHeader, moduleScroll, panelViews, defaultView, customContent, }: MobileDrawersProps): import("react/jsx-runtime").JSX.Element;

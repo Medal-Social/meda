@@ -27,5 +27,5 @@ export type { MedaShellProviderProps } from './shell-provider.js';
 export { MedaShellProvider, useMedaShell, useShellSelection } from './shell-provider.js';
 export { DefaultThemeProvider, ThemeToggle, useTheme } from './theme.js';
 export { NextThemesAdapter } from './theme-next-themes.js';
-export type { AppDefinition, AppShellAppTabsConfig, AppShellAuthBranding, AppShellAuthConfig, AppShellContextRailConfig, AppShellIconRailConfig, AppShellRightPanelConfig, AppShellVariant, AppShellWorkspaceConfig, AppTabRenderLinkArgs, CommandDefinition, ContextItem, ContextModule, MobileBottomNavItem, PanelMode, PanelView, ShellLinkRenderArgs, ShellMainLayout, ShellRenderContext, ShellViewport, ThemeAdapter, WorkspaceDefinition, WorkspaceMenuItem, } from './types.js';
+export type { AppDefinition, AppShellAppTabsConfig, AppShellAuthBranding, AppShellAuthConfig, AppShellContextRailConfig, AppShellIconRailConfig, AppShellRightPanelConfig, AppShellVariant, AppShellWorkspaceConfig, AppTabRenderLinkArgs, CommandDefinition, ContextItem, ContextModule, ContextRailHeader, ContextRailScroll, MobileBottomNavItem, PanelMode, PanelView, ShellLinkRenderArgs, ShellMainLayout, ShellRenderContext, ShellViewport, ThemeAdapter, WorkspaceDefinition, WorkspaceMenuItem, } from './types.js';
 export { useShellViewport } from './use-shell-viewport.js';

@@ -11,7 +11,7 @@ import { useTheme } from '../theme.js';
  * any custom-content drawers. Mount once near the AppShell root; drawers
  * open/close via `ctx.mobileDrawer.open` provider state.
  */
-export function MobileDrawers({ menuItems = [], menuActiveId, menuRenderLink, workspaceMenuItems, workspaceMenuFooter, module, moduleAppId, panelViews = [], defaultView, customContent = {}, }) {
+export function MobileDrawers({ menuItems = [], menuActiveId, menuRenderLink, workspaceMenuItems, workspaceMenuFooter, module, moduleAppId, moduleHeader, moduleScroll, panelViews = [], defaultView, customContent = {}, }) {
     const ctx = useMedaShell();
     const open = ctx.mobileDrawer.open;
     const setOpen = ctx.mobileDrawer.setOpen;
@@ -24,7 +24,7 @@ export function MobileDrawers({ menuItems = [], menuActiveId, menuRenderLink, wo
         workspaceId: ctx.workspace.id,
         appId: moduleAppId ?? ctx.activeAppId,
     };
-    return (_jsxs(_Fragment, { children: [_jsx(MenuDrawer, { open: open === 'menu-drawer', onClose: close, items: menuItems, activeId: menuActiveId, renderLink: menuRenderLink, workspaceItems: workspaceMenuItems, workspaceFooter: workspaceMenuFooter }), _jsx(ModuleDrawer, { open: open === 'module-drawer', onClose: close, module: module, renderCtx: moduleRenderCtx }), _jsx(PanelsDrawer, { open: open === 'panels-drawer', onClose: close, panelViews: panelViews, defaultView: defaultView, renderCtx: renderCtx }), _jsx(AiDrawer, { open: open === 'ai-drawer', onClose: close, panelViews: panelViews, renderCtx: renderCtx }), Object.entries(customContent).map(([id, renderFn]) => (_jsx(Drawer, { open: open === id, onOpenChange: (o) => !o && close(), direction: "bottom", children: _jsx(DrawerContent, { children: renderFn(close) }) }, id)))] }));
+    return (_jsxs(_Fragment, { children: [_jsx(MenuDrawer, { open: open === 'menu-drawer', onClose: close, items: menuItems, activeId: menuActiveId, renderLink: menuRenderLink, workspaceItems: workspaceMenuItems, workspaceFooter: workspaceMenuFooter }), _jsx(ModuleDrawer, { open: open === 'module-drawer', onClose: close, module: module, renderCtx: moduleRenderCtx, header: moduleHeader, scroll: moduleScroll }), _jsx(PanelsDrawer, { open: open === 'panels-drawer', onClose: close, panelViews: panelViews, defaultView: defaultView, renderCtx: renderCtx }), _jsx(AiDrawer, { open: open === 'ai-drawer', onClose: close, panelViews: panelViews, renderCtx: renderCtx }), Object.entries(customContent).map(([id, renderFn]) => (_jsx(Drawer, { open: open === id, onOpenChange: (o) => !o && close(), direction: "bottom", children: _jsx(DrawerContent, { children: renderFn(close) }) }, id)))] }));
 }
 // ---------------------------------------------------------------------------
 // Internal sub-drawers
@@ -110,14 +110,17 @@ function MobileThemeMenuItem({ onClose }) {
             onClose();
         }, children: [_jsx(Icon, { size: 18, "aria-hidden": "true" }), _jsx("span", { children: THEME_LABEL[theme] })] }));
 }
-function ModuleDrawer({ open, onClose, module, renderCtx, }) {
+function ModuleDrawer({ open, onClose, module, renderCtx, header = 'auto', scroll = 'auto', }) {
     const items = module?.items ?? [];
     if (!module || (items.length === 0 && !module.render))
         return null;
-    return (_jsx(Drawer, { open: open, onOpenChange: (o) => !o && onClose(), direction: "left", children: _jsxs(DrawerContent, { children: [_jsxs(DrawerHeader, { children: [_jsx(DrawerTitle, { children: module.label }), module.description && (_jsx(DrawerDescription, { className: "text-muted-foreground text-xs", children: module.description }))] }), items.length > 0 && (_jsx("nav", { className: "flex flex-col gap-0.5 p-2", children: items.map((item) => {
-                        const Icon = item.icon;
-                        return (_jsxs("a", { href: item.to, onClick: onClose, className: "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground", children: [_jsx(Icon, { size: 16, "aria-hidden": "true" }), _jsx("span", { children: item.label })] }, item.id));
-                    }) })), module.render?.(renderCtx)] }) }));
+    const hasRender = typeof module.render === 'function';
+    const showHeader = header === 'visible' || (header === 'auto' && items.length > 0 && !hasRender);
+    const title = (_jsxs(_Fragment, { children: [_jsx(DrawerTitle, { className: showHeader ? undefined : 'sr-only', children: module.label }), module.description && (_jsx(DrawerDescription, { className: showHeader ? 'text-muted-foreground text-xs' : 'sr-only', children: module.description }))] }));
+    return (_jsx(Drawer, { open: open, onOpenChange: (o) => !o && onClose(), direction: "left", children: _jsxs(DrawerContent, { children: [showHeader ? _jsx(DrawerHeader, { children: title }) : title, _jsxs("div", { "data-meda-context-rail-scroll-area": "", className: cn('min-h-0 flex-1', scroll === 'auto' ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden'), children: [items.length > 0 && (_jsx("nav", { className: "flex flex-col gap-0.5 p-2", children: items.map((item) => {
+                                const Icon = item.icon;
+                                return (_jsxs("a", { href: item.to, onClick: onClose, className: "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground", children: [_jsx(Icon, { size: 16, "aria-hidden": "true" }), _jsx("span", { children: item.label })] }, item.id));
+                            }) })), module.render?.(renderCtx)] })] }) }));
 }
 function PanelsDrawer({ open, onClose, panelViews, defaultView, renderCtx, }) {
     const ctx = useMedaShell();

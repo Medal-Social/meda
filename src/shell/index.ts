@@ -71,6 +71,8 @@ export type {
   CommandDefinition,
   ContextItem,
   ContextModule,
+  ContextRailHeader,
+  ContextRailScroll,
   MobileBottomNavItem,
   PanelMode,
   PanelView,

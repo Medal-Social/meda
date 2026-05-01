@@ -78,6 +78,30 @@ Use `headerCenter` for section tabs or route-specific controls that should sit i
 
 Use `mainLayout` and `mainClassName` when the route needs a custom main scroll region while still keeping AppShell's mobile header, bottom nav, drawers, and command palette. This is useful for full-bleed documentation or marketing surfaces that should use the same shell chrome as the product app.
 
+### Context rail defaults
+
+`ContextRail` scrolls overflowing content by default. Navigation-style rails keep Meda's visible label header, while custom rendered rails hide that automatic header so the rendered content can own its heading.
+
+```tsx
+<AppShell
+  variant="workspace"
+  contextRail={{
+    appId: "inbox",
+    module: {
+      id: "customer",
+      label: "Customer",
+      render: () => <CustomerRail />,
+    },
+    header: "hidden",
+    scroll: "auto",
+  }}
+>
+  <InboxRoute />
+</AppShell>
+```
+
+Use `header="visible"` to force Meda's label header back on, or `scroll="none"` when a custom rail manages its own scroll container.
+
 ## Commands
 
 `<AppShell variant="workspace">` mounts `CommandPalette` internally, so descendants can register commands directly:

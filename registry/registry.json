@@ -35,6 +35,21 @@
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "meda-context-rail",
+      "type": "registry:component",
+      "title": "Meda Context Rail",
+      "description": "Install a Meda ContextRail wrapper.",
+      "dependencies": ["@medalsocial/meda"],
+      "files": [
+        {
+          "path": "registry/meda/meda-context-rail/meda-context-rail.tsx",
+          "type": "registry:component",
+          "target": "components/meda/meda-context-rail.tsx"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
       "name": "meda-workbench-layout",
       "type": "registry:component",
       "title": "Meda Workbench Layout",

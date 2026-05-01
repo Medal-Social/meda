@@ -9,6 +9,7 @@ const files = [
   'registry.json',
   'r/meda-shell.json',
   'r/meda-shell-state.json',
+  'r/meda-context-rail.json',
   'r/meda-workbench-layout.json',
   'r/meda-skeleton.json',
   'r/meda-empty-state.json',

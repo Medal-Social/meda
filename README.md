@@ -109,6 +109,8 @@ Workspace shells also expose chrome-level composition slots:
 
 `workspace.menuItems`, `workspace.menuFooter`, and the theme toggle are available from the mobile Menu drawer. Use `mainLayout`/`mainClassName` when a workspace shell needs the same mobile chrome but a custom main scroll region, such as a full-bleed marketing page. `useCommands()` works from workspace descendants without manually mounting `CommandPalette`; lower-level primitive compositions can still mount `CommandPalette` directly.
 
+`ContextRail` is usable for both navigation rails and custom rendered rails. Navigation rails show Meda's label header by default. Custom rendered rails hide the automatic visible header by default so consumers can render their own heading without duplication. Rail bodies scroll vertically by default; use `contextRail={{ header: "visible" }}` or `contextRail={{ scroll: "none" }}` when you need explicit control.
+
 ## Foundation primitives
 
 Meda includes small foundation primitives for repeated loading, empty, and filtering surfaces:
@@ -126,7 +128,6 @@ npx shadcn add https://meda.medalsocial.com/r/meda-skeleton.json
 npx shadcn add https://meda.medalsocial.com/r/meda-empty-state.json
 npx shadcn add https://meda.medalsocial.com/r/meda-filter-rail.json
 ```
-
 For app-scoped brand tokens:
 
 ```ts
