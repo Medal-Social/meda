@@ -135,6 +135,8 @@ export function AppShellWorkspace({
           workspaceMenuFooter={workspace?.menuFooter}
           module={contextRail?.module}
           moduleAppId={contextRail?.appId}
+          moduleHeader={contextRail?.header}
+          moduleScroll={contextRail?.scroll}
           panelViews={resolvedRightPanel.panelViews}
           defaultView={resolvedRightPanel.defaultView}
         />

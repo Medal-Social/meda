@@ -4,6 +4,7 @@ node_modules/
 # Build caches
 .turbo/
 .cache/
+.fallow/
 .parcel-cache/
 .wrangler/
 *.tsbuildinfo

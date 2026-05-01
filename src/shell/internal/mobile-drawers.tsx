@@ -22,7 +22,14 @@ import { cn } from '../../lib/utils.js';
 import type { IconRailItem, IconRailProps } from '../icon-rail.js';
 import { useMedaShell } from '../shell-provider.js';
 import { useTheme } from '../theme.js';
-import type { ContextModule, PanelView, ShellRenderContext, WorkspaceMenuItem } from '../types.js';
+import type {
+  ContextModule,
+  ContextRailHeader,
+  ContextRailScroll,
+  PanelView,
+  ShellRenderContext,
+  WorkspaceMenuItem,
+} from '../types.js';
 
 export interface MobileDrawersProps {
   /** Menu drawer source (icon-rail items). */
@@ -39,6 +46,10 @@ export interface MobileDrawersProps {
   module?: ContextModule;
   /** App id used when rendering module custom content. */
   moduleAppId?: string;
+  /** Header behavior mirrored from the desktop ContextRail. */
+  moduleHeader?: ContextRailHeader;
+  /** Scroll behavior mirrored from the desktop ContextRail. */
+  moduleScroll?: ContextRailScroll;
   /** Panels drawer source. */
   panelViews?: PanelView[];
   /**
@@ -65,6 +76,8 @@ export function MobileDrawers({
   workspaceMenuFooter,
   module,
   moduleAppId,
+  moduleHeader,
+  moduleScroll,
   panelViews = [],
   defaultView,
   customContent = {},
@@ -98,6 +111,8 @@ export function MobileDrawers({
         onClose={close}
         module={module}
         renderCtx={moduleRenderCtx}
+        header={moduleHeader}
+        scroll={moduleScroll}
       />
       <PanelsDrawer
         open={open === 'panels-drawer'}
@@ -347,44 +362,63 @@ function ModuleDrawer({
   onClose,
   module,
   renderCtx,
+  header = 'auto',
+  scroll = 'auto',
 }: {
   open: boolean;
   onClose: () => void;
   module?: ContextModule;
   renderCtx: ShellRenderContext;
+  header?: ContextRailHeader;
+  scroll?: ContextRailScroll;
 }) {
   const items = module?.items ?? [];
   if (!module || (items.length === 0 && !module.render)) return null;
+
+  const hasRender = typeof module.render === 'function';
+  const showHeader = header === 'visible' || (header === 'auto' && items.length > 0 && !hasRender);
+  const title = (
+    <>
+      <DrawerTitle className={showHeader ? undefined : 'sr-only'}>{module.label}</DrawerTitle>
+      {module.description && (
+        <DrawerDescription className={showHeader ? 'text-muted-foreground text-xs' : 'sr-only'}>
+          {module.description}
+        </DrawerDescription>
+      )}
+    </>
+  );
+
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()} direction="left">
       <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>{module.label}</DrawerTitle>
-          {module.description && (
-            <DrawerDescription className="text-muted-foreground text-xs">
-              {module.description}
-            </DrawerDescription>
+        {showHeader ? <DrawerHeader>{title}</DrawerHeader> : title}
+        <div
+          data-meda-context-rail-scroll-area=""
+          className={cn(
+            'min-h-0 flex-1',
+            scroll === 'auto' ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden'
           )}
-        </DrawerHeader>
-        {items.length > 0 && (
-          <nav className="flex flex-col gap-0.5 p-2">
-            {items.map((item) => {
-              const Icon = item.icon;
-              return (
-                <a
-                  key={item.id}
-                  href={item.to}
-                  onClick={onClose}
-                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-                >
-                  <Icon size={16} aria-hidden="true" />
-                  <span>{item.label}</span>
-                </a>
-              );
-            })}
-          </nav>
-        )}
-        {module.render?.(renderCtx)}
+        >
+          {items.length > 0 && (
+            <nav className="flex flex-col gap-0.5 p-2">
+              {items.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <a
+                    key={item.id}
+                    href={item.to}
+                    onClick={onClose}
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+                  >
+                    <Icon size={16} aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </a>
+                );
+              })}
+            </nav>
+          )}
+          {module.render?.(renderCtx)}
+        </div>
       </DrawerContent>
     </Drawer>
   );
