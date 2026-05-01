@@ -1,6 +1,6 @@
 'use client';
 
-import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import { type ComponentPropsWithoutRef, type ReactNode, useId } from 'react';
 import { cn } from '../lib/utils.js';
 
 export interface FilterRailProps extends Omit<ComponentPropsWithoutRef<'aside'>, 'title'> {
@@ -60,14 +60,19 @@ function FilterRailRoot({
   children,
   className,
   'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
   ...props
 }: FilterRailProps) {
-  const label = ariaLabel ?? (typeof title === 'string' ? title : undefined);
+  const titleId = useId();
+  const label =
+    ariaLabel ?? (ariaLabelledBy ? undefined : typeof title === 'string' ? title : undefined);
+  const labelledBy = ariaLabelledBy ?? (label ? undefined : title ? titleId : undefined);
 
   return (
     <aside
       data-slot="filter-rail"
       aria-label={label}
+      aria-labelledby={labelledBy}
       className={cn(
         'flex min-h-0 w-full flex-col border-border bg-card text-card-foreground',
         className
@@ -81,7 +86,11 @@ function FilterRailRoot({
         >
           <div className="min-w-0">
             {title ? (
-              <h2 data-slot="filter-rail-title" className="text-sm font-semibold text-foreground">
+              <h2
+                id={titleId}
+                data-slot="filter-rail-title"
+                className="text-sm font-semibold text-foreground"
+              >
                 {title}
               </h2>
             ) : null}

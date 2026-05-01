@@ -44,6 +44,19 @@ describe('FilterRail', () => {
     expect(screen.queryByRole('heading', { name: 'Queue filters' })).not.toBeInTheDocument();
   });
 
+  it('labels the landmark from a non-string visible title', () => {
+    render(
+      <FilterRail title={<span>Filters</span>}>
+        <FilterRail.Group title="Priority">
+          <button type="button">High</button>
+        </FilterRail.Group>
+      </FilterRail>
+    );
+
+    expect(screen.getByRole('complementary', { name: 'Filters' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Filters' })).toBeInTheDocument();
+  });
+
   it('applies custom classes to the rail and group', () => {
     render(
       <FilterRail title="Filters" className="custom-rail">

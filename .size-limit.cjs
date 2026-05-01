@@ -39,6 +39,12 @@
 //   palette. Measured 2.07 kB brotli — 66 B over the previous limit. Bumped
 //   to 2.5 kB for ~20% headroom.
 //
+// main barrel raised 105 kB → 106 kB (PR #118):
+//   Foundation primitives are intentionally exported from the package root so
+//   package consumers and shadcn registry consumers share the same public API.
+//   Measured 105.33 kB brotli — 333 B over the previous limit. Bumped tightly
+//   to keep CI honest while allowing the new primitive surface area.
+//
 // Sub-entry split for shell (provider / desktop / mobile / palette) is
 // deferred to v1.x — decision pinned to real consumer adoption data, not
 // upfront speculation. See plan file Decision C history for context.
@@ -46,7 +52,7 @@ module.exports = [
   {
     name: 'main barrel',
     path: 'dist/index.js',
-    limit: '105 kB',
+    limit: '106 kB',
   },
   {
     name: 'chat',

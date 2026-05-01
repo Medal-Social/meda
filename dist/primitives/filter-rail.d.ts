@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import { type ComponentPropsWithoutRef, type ReactNode } from 'react';
 export interface FilterRailProps extends Omit<ComponentPropsWithoutRef<'aside'>, 'title'> {
     title?: ReactNode;
     description?: ReactNode;
@@ -13,7 +13,7 @@ export interface FilterRailGroupProps extends Omit<ComponentPropsWithoutRef<'fie
     children?: ReactNode;
 }
 declare function FilterRailGroup({ title, description, children, className, ...props }: FilterRailGroupProps): import("react/jsx-runtime").JSX.Element;
-declare function FilterRailRoot({ title, description, search, actions, footer, children, className, 'aria-label': ariaLabel, ...props }: FilterRailProps): import("react/jsx-runtime").JSX.Element;
+declare function FilterRailRoot({ title, description, search, actions, footer, children, className, 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledBy, ...props }: FilterRailProps): import("react/jsx-runtime").JSX.Element;
 export declare const FilterRail: typeof FilterRailRoot & {
     Group: typeof FilterRailGroup;
 };
