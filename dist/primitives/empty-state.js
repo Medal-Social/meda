@@ -3,8 +3,11 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { isValidElement } from 'react';
 import { cn } from '../lib/utils.js';
 function isIconComponent(icon) {
-    return (typeof icon === 'function' ||
-        (typeof icon === 'object' && icon !== null && '$$typeof' in icon && !isValidElement(icon)));
+    if (typeof icon === 'function')
+        return true;
+    if (!icon || typeof icon !== 'object')
+        return false;
+    return '$$typeof' in icon && !isValidElement(icon);
 }
 function renderIcon(icon) {
     if (!icon)
