@@ -478,6 +478,51 @@ describe('MedaShellProvider — panel.focus', () => {
     expect(result.current.panel.activeView).toBe('ai');
   });
 
+  it('panel.focus identity remains stable after focus updates layout state', () => {
+    const { result } = renderHook(() => useMedaShell(), {
+      wrapper: makePanelWrapper('closed'),
+    });
+
+    const firstFocus = result.current.panel.focus;
+
+    act(() => {
+      result.current.panel.focus('ai');
+    });
+
+    expect(result.current.panel.activeView).toBe('ai');
+    expect(result.current.panel.focus).toBe(firstFocus);
+  });
+
+  it('panel action identities remain stable after panel state updates', () => {
+    const { result } = renderHook(() => useMedaShell(), {
+      wrapper: makePanelWrapper('closed'),
+    });
+
+    const firstActions = {
+      setMode: result.current.panel.setMode,
+      setActiveView: result.current.panel.setActiveView,
+      setWidth: result.current.panel.setWidth,
+      open: result.current.panel.open,
+      close: result.current.panel.close,
+      toggle: result.current.panel.toggle,
+      focus: result.current.panel.focus,
+    };
+
+    act(() => {
+      result.current.panel.setWidth(460);
+      result.current.panel.focus('ai');
+      result.current.panel.toggle();
+    });
+
+    expect(result.current.panel.setMode).toBe(firstActions.setMode);
+    expect(result.current.panel.setActiveView).toBe(firstActions.setActiveView);
+    expect(result.current.panel.setWidth).toBe(firstActions.setWidth);
+    expect(result.current.panel.open).toBe(firstActions.open);
+    expect(result.current.panel.close).toBe(firstActions.close);
+    expect(result.current.panel.toggle).toBe(firstActions.toggle);
+    expect(result.current.panel.focus).toBe(firstActions.focus);
+  });
+
   it('panel.focus preserves same-tick panel width updates', () => {
     const { result } = renderHook(() => useMedaShell(), {
       wrapper: makePanelWrapper('closed'),
@@ -664,6 +709,38 @@ describe('MedaShellProvider — panel helper methods', () => {
     });
 
     expect(result.current.mobileDrawer.open).toBeNull();
+  });
+});
+
+describe('MedaShellProvider — panelViews.register identity', () => {
+  const routeViews = [
+    {
+      id: 'route-view',
+      label: 'Route View',
+      icon: Menu,
+      render: () => <div>Route view</div>,
+    },
+  ];
+
+  it('panelViews.register identity remains stable after registrations change', () => {
+    const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+
+    const firstRegister = result.current.panelViews.register;
+    let cleanup: (() => void) | undefined;
+
+    act(() => {
+      cleanup = result.current.panelViews.register('route', routeViews, 'route-view');
+    });
+
+    expect(result.current.panelViews.registrations).toHaveLength(1);
+    expect(result.current.panelViews.register).toBe(firstRegister);
+
+    act(() => {
+      cleanup?.();
+    });
+
+    expect(result.current.panelViews.registrations).toHaveLength(0);
+    expect(result.current.panelViews.register).toBe(firstRegister);
   });
 });
 

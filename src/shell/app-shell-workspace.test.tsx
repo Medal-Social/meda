@@ -87,6 +87,34 @@ describe('AppShellWorkspace', () => {
     expect(screen.queryByTestId('mobile-bottom-nav')).not.toBeInTheDocument();
   });
 
+  it('passes contextRail header and scroll options to ContextRail on desktop', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+
+    render(
+      <Provider>
+        <AppShellWorkspace
+          contextRail={{
+            appId: 'a',
+            header: 'hidden',
+            scroll: 'none',
+            module: {
+              id: 'custom',
+              label: 'Custom Module',
+              items: [{ id: 'inbox', label: 'Inbox', icon: Inbox, to: '/inbox' }],
+            },
+          }}
+        >
+          <div>Main</div>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    expect(screen.queryByRole('heading', { name: 'Custom Module' })).not.toBeInTheDocument();
+    const rail = screen.getByLabelText('Custom Module');
+    const scrollArea = rail.querySelector('[data-meda-context-rail-scroll-area]');
+    expect(scrollArea).toHaveClass('overflow-hidden');
+  });
+
   it('forwards headerCenter into the desktop header', () => {
     (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
 
@@ -518,6 +546,69 @@ describe('AppShellWorkspace', () => {
 
     expect(screen.getByTestId('mobile-module-custom-content')).toHaveTextContent('w:context-app');
     expect(screen.queryAllByRole('link')).toHaveLength(0);
+  });
+
+  it('hides the mobile module drawer visible header by default for custom render modules', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('mobile');
+
+    render(
+      <Provider>
+        <AppShellWorkspace
+          iconRail={config.iconRail}
+          contextRail={{
+            appId: 'context-app',
+            module: {
+              id: 'custom-module',
+              label: 'Custom Module',
+              render: () => <h2>Consumer heading</h2>,
+            },
+          }}
+        >
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Module' }));
+
+    expect(screen.getByRole('heading', { name: 'Consumer heading' })).toBeInTheDocument();
+    const hiddenTitle = screen.getByText('Custom Module');
+    expect(hiddenTitle.closest('[data-slot="drawer-header"]')).toBeNull();
+    expect(hiddenTitle).toHaveClass('sr-only');
+  });
+
+  it('passes mobile module drawer header and scroll options through contextRail config', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('mobile');
+
+    render(
+      <Provider>
+        <AppShellWorkspace
+          iconRail={config.iconRail}
+          contextRail={{
+            appId: 'context-app',
+            header: 'visible',
+            scroll: 'none',
+            module: {
+              id: 'custom-module',
+              label: 'Custom Module',
+              description: 'Custom module details',
+              render: () => <h2>Consumer heading</h2>,
+            },
+          }}
+        >
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Module' }));
+
+    expect(screen.getByText('Custom Module').closest('[data-slot="drawer-header"]')).not.toBeNull();
+    expect(screen.getByText('Custom module details')).toBeInTheDocument();
+
+    const scrollArea = document.querySelector('[data-meda-context-rail-scroll-area]');
+    expect(scrollArea).toHaveClass('overflow-hidden');
+    expect(scrollArea).not.toHaveClass('overflow-y-auto');
   });
 
   it('renders mobile context module items before custom content', () => {

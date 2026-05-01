@@ -50,9 +50,12 @@ const INBOX_MODULE: ContextModule = {
 const DYNAMIC_INBOX_MODULE: ContextModule = {
   ...INBOX_MODULE,
   render: () => (
-    <div className="border-t border-border px-3 py-4">
-      <p className="text-xs font-medium uppercase text-muted-foreground">Conversation queue</p>
-      <div className="mt-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">
+    <div className="space-y-3 px-3 py-4 text-sm">
+      <h2 className="text-sm font-semibold text-foreground">Conversation queue</h2>
+      <p className="text-muted-foreground">
+        Custom rail content owns its heading and scrolls inside the rail by default.
+      </p>
+      <div className="rounded-md border border-border bg-background px-3 py-2 text-foreground">
         6 priority conversations
       </div>
     </div>

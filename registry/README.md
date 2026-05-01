@@ -10,6 +10,7 @@ Current purpose:
 Current items:
 - `meda-shell`
 - `meda-shell-state`
+- `meda-context-rail`
 - `meda-workbench-layout`
 - `meda-skeleton`
 - `meda-empty-state`

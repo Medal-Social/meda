@@ -1,16 +1,23 @@
 name: Auto-sync prod → dev
 
-# After the Changesets Release PR merges to prod, the version-bump commit
-# lands on prod and dev falls behind. This workflow opens (and auto-merges)
-# a chore PR that brings dev back in sync with prod, eliminating the
-# manual merge-up step.
+# After the Changesets Release PR merges to prod and the Release workflow
+# publishes successfully, the version-bump commit lands on prod and dev falls
+# behind. This workflow opens (and auto-merges) a chore PR that brings dev
+# back in sync with prod, eliminating the manual merge-up step.
 #
 # Escape hatch: include `[skip auto-sync]` in the prod commit message to
-# suppress this workflow for that push.
+# suppress this workflow for that prod push. Manual dispatch always attempts
+# the sync after checking whether prod is ahead of dev.
 on:
-  push:
+  workflow_run:
+    workflows: ['Release']
+    types: [completed]
     branches: [prod]
   workflow_dispatch:
+
+concurrency:
+  group: auto-sync-prod-to-dev
+  cancel-in-progress: false
 
 # Two-bot identity model:
 #   - Medal Social Release Bot (RELEASE_APP_*)    OPENS the sync PR
@@ -25,10 +32,45 @@ permissions: {}
 jobs:
   sync:
     runs-on: ubuntu-latest
-    if: ${{ !contains(github.event.head_commit.message, '[skip auto-sync]') }}
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'prod')
     permissions: {}
     steps:
+      - name: Classify trigger
+        id: trigger
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_CONCLUSION: ${{ github.event.workflow_run.conclusion || '' }}
+          RELEASE_EVENT: ${{ github.event.workflow_run.event || '' }}
+          RELEASE_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch || '' }}
+          RELEASE_HEAD_MESSAGE: ${{ github.event.workflow_run.head_commit.message || '' }}
+        run: |
+          should_sync=false
+          reason='not a successful Release workflow on prod'
+
+          if [ "$EVENT_NAME" = 'workflow_dispatch' ]; then
+            should_sync=true
+            reason='manual dispatch'
+          elif [ "$RELEASE_CONCLUSION" = 'success' ] &&
+            [ "$RELEASE_EVENT" = 'push' ] &&
+            [ "$RELEASE_HEAD_BRANCH" = 'prod' ]; then
+            if printf '%s' "$RELEASE_HEAD_MESSAGE" | grep -Fq '[skip auto-sync]'; then
+              reason='prod push requested auto-sync skip'
+            else
+              should_sync=true
+              reason='successful Release workflow on prod'
+            fi
+          fi
+
+          echo "should_sync=$should_sync" >> "$GITHUB_OUTPUT"
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
+          echo "Auto-sync classification: $reason (should_sync=$should_sync)"
+
       - name: Generate Medal Social Release Bot token
+        if: steps.trigger.outputs.should_sync == 'true'
         id: app-token
         uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v2.1.4
         with:
@@ -36,6 +78,7 @@ jobs:
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        if: steps.trigger.outputs.should_sync == 'true'
         with:
           fetch-depth: 0
           # Need both branches available locally to compute divergence and
@@ -47,11 +90,13 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Configure git identity
+        if: steps.trigger.outputs.should_sync == 'true'
         run: |
           git config user.name 'medal-social-release-bot[bot]'
           git config user.email 'medal-social-release-bot[bot]@users.noreply.github.com'
 
       - name: Check whether prod has commits not on dev
+        if: steps.trigger.outputs.should_sync == 'true'
         id: divergence
         run: |
           git fetch origin dev:refs/remotes/origin/dev
@@ -62,8 +107,54 @@ jobs:
             echo "needs_sync=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Create sync branch and merge dev into it
+      - name: Check for an existing auto-sync PR
         if: steps.divergence.outputs.needs_sync == 'true'
+        id: existing-sync-pr
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          sync_target_sha="$(git rev-parse HEAD)"
+          existing_pr=''
+
+          while IFS=$'\t' read -r head_ref head_repo url; do
+            if [ -z "$head_ref" ]; then
+              continue
+            fi
+
+            if [ "$head_repo" != '${{ github.repository }}' ]; then
+              echo "Ignoring auto-sync-looking PR from $head_repo: $url"
+              continue
+            fi
+
+            if ! git fetch --quiet origin "refs/heads/$head_ref" 2>/dev/null; then
+              echo "Ignoring auto-sync PR with missing origin branch $head_ref: $url"
+              continue
+            fi
+
+            if git merge-base --is-ancestor "$sync_target_sha" FETCH_HEAD; then
+              existing_pr="$url"
+              echo "Existing auto-sync PR already contains prod commit $sync_target_sha: $url"
+              break
+            fi
+
+            echo "Existing auto-sync PR does not contain prod commit $sync_target_sha: $url"
+          done < <(gh pr list \
+            --repo "${{ github.repository }}" \
+            --base dev \
+            --state open \
+            --limit 100 \
+            --json headRefName,headRepository,url \
+            --jq '.[] | select(.headRefName | startswith("chore/auto-sync-prod-to-dev-")) | [.headRefName, .headRepository.nameWithOwner, .url] | @tsv')
+
+          if [ -n "$existing_pr" ]; then
+            echo "has_existing=true" >> "$GITHUB_OUTPUT"
+            echo "existing_pr=$existing_pr" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_existing=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create sync branch and merge dev into it
+        if: steps.divergence.outputs.needs_sync == 'true' && steps.existing-sync-pr.outputs.has_existing != 'true'
         id: branch
         run: |
           BRANCH="chore/auto-sync-prod-to-dev-${{ github.run_id }}"
@@ -78,7 +169,7 @@ jobs:
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
       - name: Open PR and enable auto-merge
-        if: steps.divergence.outputs.needs_sync == 'true'
+        if: steps.divergence.outputs.needs_sync == 'true' && steps.existing-sync-pr.outputs.has_existing != 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           BRANCH: ${{ steps.branch.outputs.branch }}
@@ -88,7 +179,7 @@ jobs:
             --base dev \
             --head "$BRANCH" \
             --title 'chore: auto-sync prod → dev' \
-            --body 'Automated sync after a release landed on `prod`. Brings `dev` back in line with `prod` so the next feat → dev → prod cycle starts from a clean ancestry.')
+            --body 'Automated sync after a successful Changesets release on `prod`. Brings `dev` back in line with `prod` so the next feat → dev → prod cycle starts from a clean ancestry.')
           echo "Opened: $PR_URL"
           gh pr merge --auto --merge \
             --repo "${{ github.repository }}" \

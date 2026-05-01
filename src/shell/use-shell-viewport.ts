@@ -10,10 +10,18 @@ const BREAKPOINTS = {
   ultrawide: '(min-width: 1536px)',
 } as const;
 
-function detectViewport(): ShellViewport {
-  if (typeof window === 'undefined') return 'desktop';
+type MatchMedia = (query: string) => MediaQueryList;
+
+function getMatchMedia(): MatchMedia | null {
+  if (typeof window === 'undefined') return null;
+  if (typeof window.matchMedia !== 'function') return null;
+  return window.matchMedia.bind(window);
+}
+
+function detectViewport(matchMedia: MatchMedia | null = getMatchMedia()): ShellViewport {
+  if (!matchMedia) return 'desktop';
   for (const [band, query] of Object.entries(BREAKPOINTS) as [ShellViewport, string][]) {
-    if (window.matchMedia(query).matches) return band;
+    if (matchMedia(query).matches) return band;
   }
   return 'desktop';
 }
@@ -24,11 +32,13 @@ export function useShellViewport(): ShellViewport {
   const [viewport, setViewport] = useState<ShellViewport>('desktop');
 
   useEffect(() => {
-    setViewport(detectViewport());
+    const matchMedia = getMatchMedia();
+    setViewport(detectViewport(matchMedia));
+    if (!matchMedia) return;
 
     const cleanups = (Object.entries(BREAKPOINTS) as [ShellViewport, string][]).map(
       ([band, query]) => {
-        const mql = window.matchMedia(query);
+        const mql = matchMedia(query);
         const onChange = () => {
           if (mql.matches) setViewport(band);
         };

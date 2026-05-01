@@ -141,6 +141,12 @@ const registryItems = [
       'MedaShellProvider: workspace/app/panel/command-palette state in one context. Zero dependencies on your router.',
   },
   {
+    name: 'meda-context-rail',
+    title: 'Context Rail',
+    description:
+      'Navigation rails keep Meda headers, custom rails own their headings, and long rail content scrolls by default.',
+  },
+  {
     name: 'meda-workbench-layout',
     title: 'Extras',
     description:
