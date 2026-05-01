@@ -14,9 +14,9 @@ export interface EmptyStateProps extends Omit<ComponentPropsWithoutRef<'div'>, '
   variant?: EmptyStateVariant;
 }
 
-function isIconComponent(icon: EmptyStateProps['icon']): icon is LucideIcon {
+function isIconComponent(icon: NonNullable<EmptyStateProps['icon']>): icon is LucideIcon {
   if (typeof icon === 'function') return true;
-  if (!icon || typeof icon !== 'object') return false;
+  if (typeof icon !== 'object') return false;
   return '$$typeof' in icon && !isValidElement(icon);
 }
 
