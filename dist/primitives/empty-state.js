@@ -5,7 +5,7 @@ import { cn } from '../lib/utils.js';
 function isIconComponent(icon) {
     if (typeof icon === 'function')
         return true;
-    if (!icon || typeof icon !== 'object')
+    if (typeof icon !== 'object')
         return false;
     return '$$typeof' in icon && !isValidElement(icon);
 }
