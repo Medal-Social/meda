@@ -1,5 +1,13 @@
 # @medalsocial/meda
 
+## 1.7.0
+
+### Minor Changes
+
+- [#118](https://github.com/Medal-Social/meda/pull/118) [`38008d7`](https://github.com/Medal-Social/meda/commit/38008d783f21848b7fb88b223a565c73b75d60b7) Thanks [@alioftech](https://github.com/alioftech)! - Add foundation primitives for loading, empty, and filtering surfaces.
+
+  This release adds `Skeleton`, `EmptyState`, and `FilterRail` as root package exports and shadcn-compatible registry entries. These primitives standardize common Meda loading, zero-state, and dense filtering surfaces while leaving application state and query logic with consumers.
+
 ## 1.6.0
 
 ### Minor Changes
