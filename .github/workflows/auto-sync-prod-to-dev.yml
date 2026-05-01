@@ -1,14 +1,17 @@
 name: Auto-sync prod → dev
 
-# After the Changesets Release PR merges to prod, the version-bump commit
-# lands on prod and dev falls behind. This workflow opens (and auto-merges)
-# a chore PR that brings dev back in sync with prod, eliminating the
-# manual merge-up step.
+# After the Changesets Release PR merges to prod and the Release workflow
+# publishes successfully, the version-bump commit lands on prod and dev falls
+# behind. This workflow opens (and auto-merges) a chore PR that brings dev
+# back in sync with prod, eliminating the manual merge-up step.
 #
 # Escape hatch: include `[skip auto-sync]` in the prod commit message to
-# suppress this workflow for that push.
+# suppress this workflow for that release push, or run workflow_dispatch
+# manually to bypass the release-commit gate.
 on:
-  push:
+  workflow_run:
+    workflows: ['Release']
+    types: [completed]
     branches: [prod]
   workflow_dispatch:
 
@@ -25,10 +28,43 @@ permissions: {}
 jobs:
   sync:
     runs-on: ubuntu-latest
-    if: ${{ !contains(github.event.head_commit.message, '[skip auto-sync]') }}
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'prod')
     permissions: {}
     steps:
+      - name: Classify trigger
+        id: trigger
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_CONCLUSION: ${{ github.event.workflow_run.conclusion || '' }}
+          RELEASE_EVENT: ${{ github.event.workflow_run.event || '' }}
+          RELEASE_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch || '' }}
+          RELEASE_HEAD_MESSAGE: ${{ github.event.workflow_run.head_commit.message || '' }}
+        run: |
+          should_sync=false
+          reason='not a successful Changesets release push'
+
+          if [ "$EVENT_NAME" = 'workflow_dispatch' ]; then
+            should_sync=true
+            reason='manual dispatch'
+          elif [ "$RELEASE_CONCLUSION" = 'success' ] &&
+            [ "$RELEASE_EVENT" = 'push' ] &&
+            [ "$RELEASE_HEAD_BRANCH" = 'prod' ] &&
+            printf '%s' "$RELEASE_HEAD_MESSAGE" | grep -Fq 'chore: release @medalsocial/meda' &&
+            ! printf '%s' "$RELEASE_HEAD_MESSAGE" | grep -Fq '[skip auto-sync]'; then
+            should_sync=true
+            reason='successful Changesets release push'
+          fi
+
+          echo "should_sync=$should_sync" >> "$GITHUB_OUTPUT"
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
+          echo "Auto-sync classification: $reason (should_sync=$should_sync)"
+
       - name: Generate Medal Social Release Bot token
+        if: steps.trigger.outputs.should_sync == 'true'
         id: app-token
         uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v2.1.4
         with:
@@ -36,6 +72,7 @@ jobs:
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        if: steps.trigger.outputs.should_sync == 'true'
         with:
           fetch-depth: 0
           # Need both branches available locally to compute divergence and
@@ -47,11 +84,13 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Configure git identity
+        if: steps.trigger.outputs.should_sync == 'true'
         run: |
           git config user.name 'medal-social-release-bot[bot]'
           git config user.email 'medal-social-release-bot[bot]@users.noreply.github.com'
 
       - name: Check whether prod has commits not on dev
+        if: steps.trigger.outputs.should_sync == 'true'
         id: divergence
         run: |
           git fetch origin dev:refs/remotes/origin/dev
@@ -88,7 +127,7 @@ jobs:
             --base dev \
             --head "$BRANCH" \
             --title 'chore: auto-sync prod → dev' \
-            --body 'Automated sync after a release landed on `prod`. Brings `dev` back in line with `prod` so the next feat → dev → prod cycle starts from a clean ancestry.')
+            --body 'Automated sync after a successful Changesets release on `prod`. Brings `dev` back in line with `prod` so the next feat → dev → prod cycle starts from a clean ancestry.')
           echo "Opened: $PR_URL"
           gh pr merge --auto --merge \
             --repo "${{ github.repository }}" \
