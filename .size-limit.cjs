@@ -67,8 +67,17 @@
 module.exports = [
   {
     name: 'main barrel',
+    // Provisional: re-measured after all surfaces merge (post-preview + calendar
+    // + workflow-builder + email-builder). Held at post-preview's 135 kB
+    // high-water mark; re-measure and bump after all merges complete.
     path: 'dist/index.js',
     limit: '135 kB',
+  },
+  {
+    name: 'calendar',
+    path: 'dist/calendar/index.js',
+    // Measured 11.05 kB brotli with deps; +20% headroom = ~13.3 kB.
+    limit: '13 kB',
   },
   {
     name: 'chat',
