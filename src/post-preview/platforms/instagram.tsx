@@ -239,16 +239,26 @@ function FeedPreview({
               </div>
               <div className="-translate-x-1/2 absolute bottom-4 left-1/2 flex gap-1">
                 {mediaUrls.slice(0, 5).map((url, i) => (
-                  <span
+                  <button
                     key={url}
-                    role="img"
+                    type="button"
                     aria-label={`Go to slide ${i + 1}`}
                     {...(i === carouselIndex ? { 'aria-current': 'true' as const } : {})}
+                    onClick={() => setCarouselIndex(i)}
                     className={cn(
-                      'h-1.5 w-1.5 rounded-full transition-colors',
-                      i === carouselIndex ? 'bg-blue-500' : 'bg-white/60'
+                      // Visible dot stays small; expand the touch target via padding so the
+                      // hit area is at least 44x44px without breaking the IG visual.
+                      'inline-flex min-h-11 min-w-11 items-center justify-center p-2'
                     )}
-                  />
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        'h-1.5 w-1.5 rounded-full transition-colors',
+                        i === carouselIndex ? 'bg-blue-500' : 'bg-white/60'
+                      )}
+                    />
+                  </button>
                 ))}
                 {mediaUrls.length > 5 && (
                   <span className="h-1.5 w-1.5 rounded-full bg-white/40" aria-hidden="true" />
