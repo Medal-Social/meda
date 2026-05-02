@@ -24,7 +24,7 @@ export type PlatformId =
   | 'bluesky'
   | 'discord'
   | 'telegram'
-  | 'google-business'
+  | 'google_business'
   | 'generic';
 
 export interface PostPreviewSlots {

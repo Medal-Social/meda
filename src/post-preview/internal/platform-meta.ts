@@ -18,7 +18,7 @@ export const PLATFORM_META: Record<PlatformId, PlatformMeta> = {
   bluesky: { displayName: 'Bluesky', brandColor: '#0085FF', characterLimit: 300 },
   tiktok: { displayName: 'TikTok', brandColor: '#000000', characterLimit: 4000 },
   youtube: { displayName: 'YouTube', brandColor: '#FF0000', characterLimit: 5000 },
-  'google-business': {
+  google_business: {
     displayName: 'Google Business',
     brandColor: '#4285F4',
     characterLimit: 1500,
