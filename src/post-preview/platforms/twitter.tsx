@@ -198,6 +198,7 @@ export function TwitterPreview({
   avatarUrl,
   content,
   mediaUrls,
+  characterLimit,
   editable = false,
   onContentChange,
   className,
@@ -264,6 +265,19 @@ export function TwitterPreview({
                     onCancel: mention.close,
                   })
                 : null}
+              {characterLimit !== undefined && (
+                <div
+                  data-slot="twitter-character-counter"
+                  className={cn(
+                    'mt-1 text-right text-xs',
+                    content.length > characterLimit ? 'text-red-500' : t.muted
+                  )}
+                >
+                  <span>{characterLimit - content.length}</span>
+                  <span className="mx-1">/</span>
+                  <span>{characterLimit}</span>
+                </div>
+              )}
             </div>
           ) : (
             <p className="mt-1 whitespace-pre-wrap break-words text-[15px]">
