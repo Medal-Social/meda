@@ -15,10 +15,10 @@ describe('email-builder public surface', () => {
   });
 
   it('subpath barrel does not expose internal pieces', () => {
-    expect((Subpath as Record<string, unknown>)['BlockPalette']).toBeUndefined();
-    expect((Subpath as Record<string, unknown>)['PropertyInspector']).toBeUndefined();
-    expect((Subpath as Record<string, unknown>)['BuilderCanvas']).toBeUndefined();
-    expect((Subpath as Record<string, unknown>)['BLOCK_REGISTRY']).toBeUndefined();
-    expect((Subpath as Record<string, unknown>)['createBlock']).toBeUndefined();
+    expect((Subpath as Record<string, unknown>).BlockPalette).toBeUndefined();
+    expect((Subpath as Record<string, unknown>).PropertyInspector).toBeUndefined();
+    expect((Subpath as Record<string, unknown>).BuilderCanvas).toBeUndefined();
+    expect((Subpath as Record<string, unknown>).BLOCK_REGISTRY).toBeUndefined();
+    expect((Subpath as Record<string, unknown>).createBlock).toBeUndefined();
   });
 });
