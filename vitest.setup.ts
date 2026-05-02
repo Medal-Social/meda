@@ -61,6 +61,30 @@ if (typeof globalThis.DOMMatrixReadOnly === 'undefined') {
   };
 }
 
+// Mock window.localStorage — jsdom provides it, but some environments
+// (e.g. happy-dom or stripped-down jsdom configs) drop it. The shell theme
+// hook reads/writes 'meda:theme' on mount, which would crash mounting tests.
+if (typeof window.localStorage?.getItem !== 'function') {
+  const store = new Map<string, string>();
+  Object.defineProperty(window, 'localStorage', {
+    configurable: true,
+    value: {
+      getItem: (key: string) => (store.has(key) ? (store.get(key) ?? null) : null),
+      setItem: (key: string, value: string) => {
+        store.set(key, String(value));
+      },
+      removeItem: (key: string) => {
+        store.delete(key);
+      },
+      clear: () => store.clear(),
+      key: (index: number) => Array.from(store.keys())[index] ?? null,
+      get length() {
+        return store.size;
+      },
+    },
+  });
+}
+
 // Mock window.matchMedia (not available in jsdom)
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
