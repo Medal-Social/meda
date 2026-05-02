@@ -1,1 +1,12 @@
+export { BlueSkyChrome } from './bluesky-chrome.js';
+export { DiscordChrome } from './discord-chrome.js';
+export { FacebookChrome } from './facebook-chrome.js';
+export { GoogleBusinessChrome } from './google-business-chrome.js';
+export { InstagramChrome } from './instagram-chrome.js';
+export { LinkedInChrome } from './linkedin-chrome.js';
 export { PhoneStatusBar, PlatformChrome } from './platform-chrome.js';
+export { TelegramChrome } from './telegram-chrome.js';
+export { ThreadsChrome } from './threads-chrome.js';
+export { TikTokChrome } from './tiktok-chrome.js';
+export { TwitterChrome } from './twitter-chrome.js';
+export { YouTubeChrome } from './youtube-chrome.js';

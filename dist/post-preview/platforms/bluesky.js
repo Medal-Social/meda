@@ -1,0 +1,21 @@
+'use client';
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Heart, MessageCircle, MoreHorizontal, Repeat2, Share } from 'lucide-react';
+import { cn } from '../../lib/utils.js';
+import { Avatar } from '../internal/avatar.js';
+import { Textarea } from '../internal/textarea.js';
+export const DEFAULT_BLUESKY_LABELS = {
+    placeholder: "What's up?",
+    share: 'Share',
+    moreOptions: 'More options',
+};
+/**
+ * BlueSky feed-card preview. Auto-formats the username with `.bsky.social`
+ * if no domain is present.
+ */
+export function BlueSkyPreview({ displayName, username, avatarUrl, content, mediaUrls, editable = false, onContentChange, className, labels, }) {
+    const l = { ...DEFAULT_BLUESKY_LABELS, ...labels };
+    const handle = username.startsWith('@') ? username.slice(1) : username;
+    const formattedHandle = handle.includes('.') ? handle : `${handle}.bsky.social`;
+    return (_jsx("div", { "data-slot": "post-preview", "data-platform": "bluesky", className: cn('@container bg-white p-4 text-gray-900 @[420px]:text-[15px]', className), children: _jsxs("div", { className: "flex gap-3", children: [_jsx(Avatar, { src: avatarUrl, displayName: displayName, className: "h-11 w-11 flex-shrink-0" }), _jsxs("div", { className: "min-w-0 flex-1", children: [_jsxs("div", { className: "flex items-center justify-between", children: [_jsxs("div", { className: "flex items-baseline gap-1", children: [_jsx("span", { className: "cursor-pointer font-bold text-[15px] text-gray-900 hover:underline", children: displayName }), _jsxs("span", { className: "text-[14px] text-gray-500", children: ["@", formattedHandle] }), _jsx("span", { className: "text-[14px] text-gray-400", children: "\u00B7 now" })] }), _jsx("button", { type: "button", "aria-label": l.moreOptions, className: "-m-1.5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-1.5 text-gray-400 hover:bg-gray-100", children: _jsx(MoreHorizontal, { className: "h-4 w-4" }) })] }), editable ? (_jsx(Textarea, { value: content, onChange: (e) => onContentChange?.(e.target.value), placeholder: l.placeholder, className: "mt-1 min-h-[60px] text-[15px] text-gray-900 placeholder:text-gray-500" })) : (_jsx("p", { className: "mt-1 whitespace-pre-wrap break-words text-[15px]", children: content })), mediaUrls && mediaUrls.length > 0 && (_jsx("div", { className: cn('mt-3 overflow-hidden rounded-xl border border-gray-200', mediaUrls.length === 1 && 'aspect-video', mediaUrls.length === 2 && 'grid grid-cols-2 gap-0.5', mediaUrls.length >= 3 && 'grid grid-cols-2 gap-0.5'), children: mediaUrls.slice(0, 4).map((url, i) => (_jsx("div", { className: cn('bg-gray-100', mediaUrls.length === 1 && 'aspect-video', mediaUrls.length === 2 && 'aspect-square', mediaUrls.length >= 3 && 'aspect-square'), children: _jsx("img", { src: url, alt: `Media ${i + 1}`, loading: "lazy", decoding: "async", className: "h-full w-full object-cover" }) }, url))) })), _jsxs("div", { className: "mt-3 flex items-center gap-1 text-gray-500", children: [_jsxs("button", { type: "button", "aria-label": "Comments", className: "-ml-2 inline-flex min-h-11 min-w-11 items-center gap-1.5 rounded-full p-2 hover:bg-blue-50 hover:text-[#1185FE]", children: [_jsx(MessageCircle, { className: "h-[18px] w-[18px]" }), _jsx("span", { className: "text-[13px]", children: "0" })] }), _jsxs("button", { type: "button", "aria-label": "Repost", className: "inline-flex min-h-11 min-w-11 items-center gap-1.5 rounded-full p-2 hover:bg-green-50 hover:text-green-600", children: [_jsx(Repeat2, { className: "h-[18px] w-[18px]" }), _jsx("span", { className: "text-[13px]", children: "0" })] }), _jsxs("button", { type: "button", "aria-label": "Like", className: "inline-flex min-h-11 min-w-11 items-center gap-1.5 rounded-full p-2 hover:bg-red-50 hover:text-red-500", children: [_jsx(Heart, { className: "h-[18px] w-[18px]" }), _jsx("span", { className: "text-[13px]", children: "0" })] }), _jsx("button", { type: "button", "aria-label": l.share, className: "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 hover:bg-blue-50 hover:text-[#1185FE]", children: _jsx(Share, { className: "h-[18px] w-[18px]" }) })] })] })] }) }));
+}

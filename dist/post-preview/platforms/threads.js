@@ -1,0 +1,24 @@
+'use client';
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Heart, MessageCircle, MoreHorizontal, Repeat2, Send } from 'lucide-react';
+import { cn } from '../../lib/utils.js';
+import { Avatar } from '../internal/avatar.js';
+import { Textarea } from '../internal/textarea.js';
+export const DEFAULT_THREADS_LABELS = {
+    placeholder: 'Start a thread...',
+    replies: (count) => `${count} replies`,
+    like: 'Like',
+    comment: 'Comment',
+    repost: 'Repost',
+    share: 'Share',
+    moreOptions: 'More options',
+};
+/**
+ * Threads feed-card preview. Honors a parent `.dark` class for the dark
+ * variant the platform itself uses.
+ */
+export function ThreadsPreview({ displayName, username, avatarUrl, content, mediaUrls, editable = false, onContentChange, className, labels, }) {
+    const l = { ...DEFAULT_THREADS_LABELS, ...labels };
+    const formattedUsername = username.startsWith('@') ? username.slice(1) : username;
+    return (_jsxs("div", { "data-slot": "post-preview", "data-platform": "threads", className: cn('@container bg-white p-4 text-gray-900 @[420px]:text-[15px] dark:bg-[#101010] dark:text-white', className), children: [_jsxs("div", { className: "flex gap-3", children: [_jsxs("div", { className: "flex flex-col items-center", children: [_jsx(Avatar, { src: avatarUrl, displayName: displayName, className: "h-9 w-9" }), _jsx("div", { className: "mt-2 min-h-[20px] w-0.5 flex-1 bg-gray-200 dark:bg-gray-700" })] }), _jsxs("div", { className: "min-w-0 flex-1", children: [_jsxs("div", { className: "flex items-center justify-between", children: [_jsxs("div", { className: "flex items-center gap-1", children: [_jsx("span", { className: "font-semibold text-[15px]", children: formattedUsername }), _jsx("span", { className: "text-[15px] text-gray-500", children: "\u00B7 now" })] }), _jsx("button", { type: "button", "aria-label": l.moreOptions, className: "-m-1.5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800", children: _jsx(MoreHorizontal, { className: "h-4 w-4" }) })] }), editable ? (_jsx(Textarea, { value: content, onChange: (e) => onContentChange?.(e.target.value), placeholder: l.placeholder, className: "mt-1 min-h-[60px] text-[15px] placeholder:text-gray-500" })) : (_jsx("p", { className: "mt-1 whitespace-pre-wrap break-words text-[15px]", children: content })), mediaUrls && mediaUrls.length > 0 && (_jsx("div", { className: cn('mt-3 overflow-hidden rounded-xl', mediaUrls.length === 1 && 'aspect-video', mediaUrls.length === 2 && 'grid grid-cols-2 gap-1', mediaUrls.length >= 3 && 'grid grid-cols-2 gap-1'), children: mediaUrls.slice(0, 4).map((url, i) => (_jsx("div", { className: cn('bg-gray-100 dark:bg-gray-800', mediaUrls.length === 1 && 'aspect-video', mediaUrls.length >= 2 && 'aspect-square'), children: _jsx("img", { src: url, alt: `Media ${i + 1}`, loading: "lazy", decoding: "async", className: "h-full w-full rounded-lg object-cover" }) }, url))) })), _jsxs("div", { className: "mt-3 flex items-center gap-4 text-gray-500", children: [_jsx("button", { type: "button", "aria-label": l.like, className: "-m-2 inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800", children: _jsx(Heart, { className: "h-5 w-5" }) }), _jsx("button", { type: "button", "aria-label": l.comment, className: "-m-2 inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800", children: _jsx(MessageCircle, { className: "h-5 w-5" }) }), _jsx("button", { type: "button", "aria-label": l.repost, className: "-m-2 inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800", children: _jsx(Repeat2, { className: "h-5 w-5" }) }), _jsx("button", { type: "button", "aria-label": l.share, className: "-m-2 inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800", children: _jsx(Send, { className: "h-5 w-5" }) })] })] })] }), _jsxs("div", { className: "mt-3 ml-12 flex items-center gap-3", children: [_jsxs("div", { className: "flex -space-x-1.5", children: [_jsx("div", { className: "h-5 w-5 rounded-full border-2 border-white bg-gray-300 dark:border-[#101010] dark:bg-gray-600" }), _jsx("div", { className: "h-5 w-5 rounded-full border-2 border-white bg-gray-400 dark:border-[#101010] dark:bg-gray-500" })] }), _jsx("span", { className: "text-[15px] text-gray-500", children: l.replies(0) })] })] }));
+}
