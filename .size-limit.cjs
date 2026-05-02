@@ -138,80 +138,19 @@ module.exports = [
     path: 'dist/styles/tokens.css',
     limit: '2 kB',
   },
-  // post-preview surface — per-platform budgets prove tree-shaking holds:
-  // importing one preview must not pull in the others. Roll-up entry covers
-  // the case where a consumer imports the entire subpath.
+  // post-preview surface — single PostPreview entry. The component routes
+  // to all 12 platform internals, so the full-barrel import pulls in the
+  // matrix; the second entry exercises tree-shaking on the named export.
+  // Bumping these limits requires a written rationale (see CONTRIBUTING.md).
   {
-    name: 'post-preview / Twitter',
+    name: 'post-preview',
     path: 'dist/post-preview/index.js',
-    import: '{ TwitterPreview, TwitterChrome }',
-    limit: '13 kB',
+    limit: '45 kB',
   },
   {
-    name: 'post-preview / LinkedIn',
+    name: 'post-preview / one platform (instagram)',
     path: 'dist/post-preview/index.js',
-    import: '{ LinkedInPreview, LinkedInChrome }',
-    limit: '13 kB',
+    import: '{ PostPreview }',
+    limit: '30 kB',
   },
-  {
-    name: 'post-preview / Instagram',
-    path: 'dist/post-preview/index.js',
-    import: '{ InstagramPreview, InstagramChrome }',
-    limit: '13 kB',
-  },
-  {
-    name: 'post-preview / Facebook',
-    path: 'dist/post-preview/index.js',
-    import: '{ FacebookPreview, FacebookChrome }',
-    limit: '13 kB',
-  },
-  {
-    name: 'post-preview / Threads',
-    path: 'dist/post-preview/index.js',
-    import: '{ ThreadsPreview, ThreadsChrome }',
-    limit: '13 kB',
-  },
-  {
-    name: 'post-preview / BlueSky',
-    path: 'dist/post-preview/index.js',
-    import: '{ BlueSkyPreview, BlueSkyChrome }',
-    limit: '13 kB',
-  },
-  {
-    name: 'post-preview / TikTok',
-    path: 'dist/post-preview/index.js',
-    import: '{ TikTokPreview, TikTokChrome }',
-    limit: '13 kB',
-  },
-  {
-    name: 'post-preview / YouTube',
-    path: 'dist/post-preview/index.js',
-    import: '{ YouTubePreview, YouTubeChrome }',
-    limit: '13 kB',
-  },
-  {
-    name: 'post-preview / GoogleBusiness',
-    path: 'dist/post-preview/index.js',
-    import: '{ GoogleBusinessPreview, GoogleBusinessChrome }',
-    limit: '13 kB',
-  },
-  {
-    name: 'post-preview / Telegram',
-    path: 'dist/post-preview/index.js',
-    import: '{ TelegramPreview, TelegramChrome }',
-    limit: '13 kB',
-  },
-  {
-    name: 'post-preview / Discord',
-    path: 'dist/post-preview/index.js',
-    import: '{ DiscordPreview, DiscordChrome }',
-    limit: '13 kB',
-  },
-  {
-    name: 'post-preview / Generic',
-    path: 'dist/post-preview/index.js',
-    import: '{ GenericPreview, PlatformChrome }',
-    limit: '13 kB',
-  },
-  { name: 'post-preview / all', path: 'dist/post-preview/index.js', import: '*', limit: '30 kB' },
 ];
