@@ -138,9 +138,10 @@ module.exports = [
     path: 'dist/styles/tokens.css',
     limit: '2 kB',
   },
-  // post-preview surface — single PostPreview entry. The component routes
-  // to all 12 platform internals, so the full-barrel import pulls in the
-  // matrix; the second entry exercises tree-shaking on the named export.
+  // post-preview surface — single PostPreview entry. Because PostPreview
+  // statically dispatches across all 12 platforms, importing the named
+  // export pulls in essentially the same matrix as the full barrel — the
+  // second entry confirms there is no hidden re-export overhead.
   // Bumping these limits requires a written rationale (see CONTRIBUTING.md).
   {
     name: 'post-preview',
@@ -148,7 +149,7 @@ module.exports = [
     limit: '45 kB',
   },
   {
-    name: 'post-preview / one platform (instagram)',
+    name: 'post-preview / PostPreview only',
     path: 'dist/post-preview/index.js',
     import: '{ PostPreview }',
     limit: '30 kB',

@@ -18,3 +18,8 @@ media library, and pickers.
 from their barrels — those remain internal. `WorkflowCard` and
 `WorkflowCardCompact` continue to be exported as standalone list-row
 components.
+
+Note: the Google Business platform identifier is `'google_business'`
+(underscore) rather than the hyphenated form initially proposed in the
+design doc — the underscore matches the existing internal convention
+across `platform-meta.ts`, `data-platform` attributes, and test fixtures.

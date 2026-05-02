@@ -80,7 +80,7 @@ export function PostPreview(props: PostPreviewProps): React.ReactElement {
   });
 
   const toolbarNode = showToolbar ? (
-    <div className="meda-post-preview__toolbar" role="toolbar">
+    <div className="meda-post-preview__toolbar" role="toolbar" aria-label="Post editor">
       {renderMediaPicker?.({
         platform,
         current: rest.mediaUrls,
