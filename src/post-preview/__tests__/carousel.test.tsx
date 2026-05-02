@@ -29,4 +29,29 @@ describe('Instagram carousel', () => {
     const dots = screen.getAllByRole('button', { name: /go to slide/i });
     expect(dots[1]).toHaveAttribute('aria-current', 'true');
   });
+
+  it('advances on ArrowRight key press', () => {
+    render(<InstagramPreview {...BASE_FIXTURE} mediaUrls={mediaUrls} />);
+    const track = document.querySelector('[data-slot="instagram-carousel-track"]') as HTMLElement;
+    expect(track).not.toBeNull();
+    fireEvent.keyDown(track, { key: 'ArrowRight' });
+    const dots = screen.getAllByRole('button', { name: /go to slide/i });
+    expect(dots[1]).toHaveAttribute('aria-current', 'true');
+  });
+
+  it('goes back on ArrowLeft key press from a non-first slide', () => {
+    render(<InstagramPreview {...BASE_FIXTURE} mediaUrls={mediaUrls} />);
+    const track = document.querySelector('[data-slot="instagram-carousel-track"]') as HTMLElement;
+    fireEvent.keyDown(track, { key: 'ArrowRight' });
+    fireEvent.keyDown(track, { key: 'ArrowRight' });
+    fireEvent.keyDown(track, { key: 'ArrowLeft' });
+    const dots = screen.getAllByRole('button', { name: /go to slide/i });
+    expect(dots[1]).toHaveAttribute('aria-current', 'true');
+  });
+
+  it('declares touch-action: pan-y on the swipeable track', () => {
+    render(<InstagramPreview {...BASE_FIXTURE} mediaUrls={mediaUrls} />);
+    const track = document.querySelector('[data-slot="instagram-carousel-track"]') as HTMLElement;
+    expect(track.style.touchAction).toBe('pan-y');
+  });
 });

@@ -10,6 +10,7 @@ import {
   Music,
   Send,
 } from 'lucide-react';
+import type { KeyboardEvent } from 'react';
 import { useCallback, useState } from 'react';
 import { cn } from '../../lib/utils.js';
 import { Avatar } from '../internal/avatar.js';
@@ -201,7 +202,26 @@ function FeedPreview({
       {hasMedia ? (
         <div
           data-slot="instagram-carousel-track"
-          className="relative aspect-square bg-gray-100"
+          className="relative aspect-square bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          style={{ touchAction: 'pan-y' }}
+          {...(isCarousel && mediaUrls.length > 1
+            ? {
+                role: 'region' as const,
+                'aria-label': labels.carouselCounter(carouselIndex + 1, mediaUrls.length),
+                tabIndex: 0,
+                onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
+                  if (event.key === 'ArrowLeft') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    goToPrev();
+                  } else if (event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    goToNext();
+                  }
+                },
+              }
+            : {})}
           {...swipe}
         >
           <img
