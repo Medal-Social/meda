@@ -56,6 +56,10 @@
       "types": "./dist/kanban/index.d.ts",
       "import": "./dist/kanban/index.js"
     },
+    "./calendar": {
+      "types": "./dist/calendar/index.d.ts",
+      "import": "./dist/calendar/index.js"
+    },
     "./list": {
       "types": "./dist/list/index.d.ts",
       "import": "./dist/list/index.js"

@@ -51,8 +51,18 @@
 module.exports = [
   {
     name: 'main barrel',
+    // Bumped 106 kB → 110 kB: calendar surface re-exported from the root adds
+    // ~3 kB brotli (Calendar/MonthView/WeekView/DayView/Toolbar + EventPill).
+    // Measured 108.83 kB; 110 kB leaves ~1 kB headroom. The dedicated
+    // `calendar` entry below tracks the real surface cost.
     path: 'dist/index.js',
-    limit: '106 kB',
+    limit: '110 kB',
+  },
+  {
+    name: 'calendar',
+    path: 'dist/calendar/index.js',
+    // Measured 11.05 kB brotli with deps; +20% headroom = ~13.3 kB.
+    limit: '13 kB',
   },
   {
     name: 'chat',
