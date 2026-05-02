@@ -1,5 +1,6 @@
 'use client';
 
+import { MoreHorizontal } from 'lucide-react';
 import { cn } from '../../lib/utils.js';
 import { Avatar } from '../internal/avatar.js';
 import { PLATFORM_META } from '../internal/platform-meta.js';
@@ -69,9 +70,18 @@ export function GenericPreview({
         <Avatar src={avatarUrl} displayName={displayName} className="h-10 w-10 flex-shrink-0" />
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-[14px]">{displayName}</span>
-            <span className="text-[13px] text-gray-500">@{username}</span>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="truncate font-semibold text-[14px]">{displayName}</span>
+              <span className="truncate text-[13px] text-gray-500">@{username}</span>
+            </div>
+            <button
+              type="button"
+              aria-label={l.moreOptions}
+              className="-m-1.5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-full p-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-800"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
           </div>
 
           {editable ? (

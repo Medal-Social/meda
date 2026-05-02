@@ -91,14 +91,14 @@ export function DiscordPreview({
           <button
             type="button"
             aria-label={l.reply}
-            className="p-1.5 text-[#747681] hover:bg-[#F2F3F5] hover:text-[#313338]"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center p-1.5 text-[#747681] hover:bg-[#F2F3F5] hover:text-[#313338]"
           >
             <Smile className="h-5 w-5" />
           </button>
           <button
             type="button"
             aria-label={l.moreOptions}
-            className="p-1.5 text-[#747681] hover:bg-[#F2F3F5] hover:text-[#313338]"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center p-1.5 text-[#747681] hover:bg-[#F2F3F5] hover:text-[#313338]"
           >
             <MoreHorizontal className="h-5 w-5" />
           </button>
@@ -180,7 +180,7 @@ export function DiscordPreview({
             <div className="mt-2 flex items-center gap-1">
               <button
                 type="button"
-                className="flex items-center gap-1 rounded border border-transparent bg-[#F2F3F5] px-2 py-0.5 text-[14px] hover:border-[#5865F2] hover:bg-[#E8E9EB]"
+                className="flex min-h-11 items-center gap-1 rounded border border-transparent bg-[#F2F3F5] px-3 py-0.5 text-[14px] hover:border-[#5865F2] hover:bg-[#E8E9EB]"
               >
                 <span aria-hidden="true">👍</span>
                 <span className="text-[#5C5E66] text-[12px]">1</span>
@@ -188,7 +188,7 @@ export function DiscordPreview({
               <button
                 type="button"
                 aria-label={l.addReaction}
-                className="inline-flex h-6 w-6 items-center justify-center rounded border border-transparent bg-[#F2F3F5] hover:border-[#5865F2] hover:bg-[#E8E9EB]"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded border border-transparent bg-[#F2F3F5] hover:border-[#5865F2] hover:bg-[#E8E9EB]"
               >
                 <Plus className="h-4 w-4 text-[#747681]" />
               </button>

@@ -171,14 +171,14 @@ export function TelegramPreview({
         <div className="mt-2 flex items-center gap-2">
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[13px] shadow-sm"
+            className="inline-flex min-h-11 items-center gap-1 rounded-full bg-white px-3 py-1 text-[13px] shadow-sm"
           >
             <span aria-hidden="true">👍</span>
             <span className="text-gray-500">0</span>
           </button>
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[13px] shadow-sm"
+            className="inline-flex min-h-11 items-center gap-1 rounded-full bg-white px-3 py-1 text-[13px] shadow-sm"
           >
             <span aria-hidden="true">❤️</span>
             <span className="text-gray-500">0</span>
