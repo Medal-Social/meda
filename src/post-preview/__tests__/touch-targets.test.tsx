@@ -16,22 +16,25 @@ import {
   TwitterPreview,
   YouTubePreview,
 } from '../index.js';
+import type { PostPreviewBaseProps } from '../types.js';
 
 const MIN_TOUCH = 44;
 
-const platforms: Array<[string, (props: object) => ReactElement]> = [
-  ['twitter', (p) => <TwitterPreview {...(p as never)} />],
-  ['linkedin', (p) => <LinkedInPreview {...(p as never)} />],
-  ['instagram', (p) => <InstagramPreview {...(p as never)} />],
-  ['facebook', (p) => <FacebookPreview {...(p as never)} />],
-  ['threads', (p) => <ThreadsPreview {...(p as never)} />],
-  ['bluesky', (p) => <BlueSkyPreview {...(p as never)} />],
-  ['tiktok', (p) => <TikTokPreview {...(p as never)} />],
-  ['youtube', (p) => <YouTubePreview {...(p as never)} />],
-  ['google_business', (p) => <GoogleBusinessPreview {...(p as never)} />],
-  ['telegram', (p) => <TelegramPreview {...(p as never)} />],
-  ['discord', (p) => <DiscordPreview {...(p as never)} />],
-  ['generic', (p) => <GenericPreview {...(p as never)} platform="custom" />],
+type Props = PostPreviewBaseProps;
+
+const platforms: Array<[string, (props: Props) => ReactElement]> = [
+  ['twitter', (p) => <TwitterPreview {...p} />],
+  ['linkedin', (p) => <LinkedInPreview {...p} />],
+  ['instagram', (p) => <InstagramPreview {...p} />],
+  ['facebook', (p) => <FacebookPreview {...p} />],
+  ['threads', (p) => <ThreadsPreview {...p} />],
+  ['bluesky', (p) => <BlueSkyPreview {...p} />],
+  ['tiktok', (p) => <TikTokPreview {...p} />],
+  ['youtube', (p) => <YouTubePreview {...p} />],
+  ['google_business', (p) => <GoogleBusinessPreview {...p} />],
+  ['telegram', (p) => <TelegramPreview {...p} />],
+  ['discord', (p) => <DiscordPreview {...p} />],
+  ['generic', (p) => <GenericPreview {...p} platform="custom" />],
 ];
 
 describe('post-preview touch targets', () => {

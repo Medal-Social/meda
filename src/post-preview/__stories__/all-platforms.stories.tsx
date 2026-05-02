@@ -13,6 +13,7 @@ import {
   TwitterPreview,
   YouTubePreview,
 } from '../index.js';
+import type { PostPreviewBaseProps } from '../types.js';
 import { BASE_FIXTURE, FIXTURE_MEDIA } from './fixtures.js';
 
 const meta: Meta = {
@@ -38,7 +39,7 @@ const platforms = [
   { name: 'Discord', Component: DiscordPreview },
   {
     name: 'Generic',
-    Component: (p: object) => <GenericPreview {...(p as never)} platform="custom" />,
+    Component: (p: PostPreviewBaseProps) => <GenericPreview {...p} platform="custom" />,
   },
 ] as const;
 

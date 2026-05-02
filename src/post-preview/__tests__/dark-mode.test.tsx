@@ -9,13 +9,16 @@ import {
   LinkedInPreview,
   ThreadsPreview,
 } from '../index.js';
+import type { PostPreviewBaseProps } from '../types.js';
 
-const opt: Array<[string, (p: object) => ReactElement]> = [
-  ['facebook', (p) => <FacebookPreview {...(p as never)} />],
-  ['google_business', (p) => <GoogleBusinessPreview {...(p as never)} />],
-  ['instagram', (p) => <InstagramPreview {...(p as never)} />],
-  ['linkedin', (p) => <LinkedInPreview {...(p as never)} />],
-  ['threads', (p) => <ThreadsPreview {...(p as never)} />],
+type Props = PostPreviewBaseProps;
+
+const opt: Array<[string, (p: Props) => ReactElement]> = [
+  ['facebook', (p) => <FacebookPreview {...p} />],
+  ['google_business', (p) => <GoogleBusinessPreview {...p} />],
+  ['instagram', (p) => <InstagramPreview {...p} />],
+  ['linkedin', (p) => <LinkedInPreview {...p} />],
+  ['threads', (p) => <ThreadsPreview {...p} />],
 ];
 
 describe('post-preview dark mode', () => {

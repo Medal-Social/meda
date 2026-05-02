@@ -17,20 +17,23 @@ import {
   TwitterPreview,
   YouTubePreview,
 } from './index.js';
+import type { PostPreviewBaseProps } from './types.js';
 
-const platforms: Array<[string, (p: object) => ReactElement]> = [
-  ['BlueSky', (p) => <BlueSkyPreview {...(p as never)} />],
-  ['Discord', (p) => <DiscordPreview {...(p as never)} />],
-  ['Facebook', (p) => <FacebookPreview {...(p as never)} />],
-  ['Generic', (p) => <GenericPreview {...(p as never)} platform="custom" />],
-  ['GoogleBusiness', (p) => <GoogleBusinessPreview {...(p as never)} />],
-  ['Instagram', (p) => <InstagramPreview {...(p as never)} />],
-  ['LinkedIn', (p) => <LinkedInPreview {...(p as never)} />],
-  ['Telegram', (p) => <TelegramPreview {...(p as never)} />],
-  ['Threads', (p) => <ThreadsPreview {...(p as never)} />],
-  ['TikTok', (p) => <TikTokPreview {...(p as never)} />],
-  ['Twitter', (p) => <TwitterPreview {...(p as never)} />],
-  ['YouTube', (p) => <YouTubePreview {...(p as never)} />],
+type Props = PostPreviewBaseProps;
+
+const platforms: Array<[string, (p: Props) => ReactElement]> = [
+  ['BlueSky', (p) => <BlueSkyPreview {...p} />],
+  ['Discord', (p) => <DiscordPreview {...p} />],
+  ['Facebook', (p) => <FacebookPreview {...p} />],
+  ['Generic', (p) => <GenericPreview {...p} platform="custom" />],
+  ['GoogleBusiness', (p) => <GoogleBusinessPreview {...p} />],
+  ['Instagram', (p) => <InstagramPreview {...p} />],
+  ['LinkedIn', (p) => <LinkedInPreview {...p} />],
+  ['Telegram', (p) => <TelegramPreview {...p} />],
+  ['Threads', (p) => <ThreadsPreview {...p} />],
+  ['TikTok', (p) => <TikTokPreview {...p} />],
+  ['Twitter', (p) => <TwitterPreview {...p} />],
+  ['YouTube', (p) => <YouTubePreview {...p} />],
 ];
 
 // Platform brand chromes use authentic swatches that intentionally fail

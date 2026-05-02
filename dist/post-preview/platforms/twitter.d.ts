@@ -37,4 +37,4 @@ export interface TwitterPreviewProps extends PostPreviewBaseProps {
  * Twitter / X feed-card preview. Supports light, dim, and lights-out
  * themes plus an optional `@mention` picker render slot.
  */
-export declare function TwitterPreview({ displayName, username, avatarUrl, content, mediaUrls, editable, onContentChange, className, labels, theme, renderMentionPicker, }: TwitterPreviewProps): import("react/jsx-runtime").JSX.Element;
+export declare function TwitterPreview({ displayName, username, avatarUrl, content, mediaUrls, characterLimit, editable, onContentChange, className, labels, theme, renderMentionPicker, }: TwitterPreviewProps): import("react/jsx-runtime").JSX.Element;
