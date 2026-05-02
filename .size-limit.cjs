@@ -67,8 +67,8 @@
 module.exports = [
   {
     name: 'main barrel',
-    // Provisional: re-measured after all surfaces merge (post-preview + calendar
-    // + workflow-builder + email-builder). Held at post-preview's 135 kB
+    // Provisional: re-measured after all surfaces (post-preview + calendar +
+    // workflow-builder + email-builder) merge. Held at post-preview's 135 kB
     // high-water mark; re-measure and bump after all merges complete.
     path: 'dist/index.js',
     limit: '135 kB',
@@ -103,6 +103,14 @@ module.exports = [
     name: 'voice',
     path: 'dist/voice/index.js',
     limit: '60 kB',
+  },
+  {
+    // workflow-builder. @xyflow/react is a peer dep — size-limit treats peer
+    // deps as external, so the measured ship size for the workflow surface is
+    // ~12 kB (just our wrappers). Limit set at measured + ~20% headroom.
+    name: 'workflow-builder',
+    path: 'dist/workflow-builder/index.js',
+    limit: '15 kB',
   },
   {
     name: 'theme.css',

@@ -42,6 +42,25 @@ process.on('uncaughtException', (err: unknown) => {
   throw err;
 });
 
+// Mock ResizeObserver — required by @xyflow/react canvas measurement and a
+// handful of Base UI primitives. jsdom does not provide one.
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  // biome-ignore lint/suspicious/noExplicitAny: minimal polyfill stub
+  (globalThis as any).ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
+// jsdom does not implement DOMMatrixReadOnly used by xyflow internals.
+if (typeof globalThis.DOMMatrixReadOnly === 'undefined') {
+  // biome-ignore lint/suspicious/noExplicitAny: minimal polyfill stub
+  (globalThis as any).DOMMatrixReadOnly = class {
+    m22 = 1;
+  };
+}
+
 // Mock window.matchMedia (not available in jsdom)
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

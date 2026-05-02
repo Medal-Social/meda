@@ -60,6 +60,10 @@
       "types": "./dist/calendar/index.d.ts",
       "import": "./dist/calendar/index.js"
     },
+    "./workflow-builder": {
+      "types": "./dist/workflow-builder/index.d.ts",
+      "import": "./dist/workflow-builder/index.js"
+    },
     "./list": {
       "types": "./dist/list/index.d.ts",
       "import": "./dist/list/index.js"
@@ -143,6 +147,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@react-three/fiber": "^9.0.0",
+    "@xyflow/react": "^12.0.0",
     "lucide-react": "^1.8.0",
     "next-themes": "^0.4.0",
     "react": ">=19",
@@ -160,6 +165,9 @@
     },
     "@react-three/fiber": {
       "optional": true
+    },
+    "@xyflow/react": {
+      "optional": false
     },
     "next-themes": {
       "optional": true
@@ -202,6 +210,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/browser-playwright": "4.1.4",
     "@vitest/coverage-v8": "4.1.4",
+    "@xyflow/react": "^12.10.2",
     "chromatic": "^16.6.0",
     "husky": "^9.1.7",
     "jsdom": "^29.0.2",

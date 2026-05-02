@@ -9,3 +9,4 @@ export * from './primitives/index.js';
 export * from './shell/index.js';
 export * from './theme/index.js';
 export * from './timeline/public.js';
+export * from './workflow-builder/public.js';
