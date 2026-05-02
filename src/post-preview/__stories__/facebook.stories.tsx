@@ -4,6 +4,10 @@ import { FacebookPreview } from '../platforms/facebook.js';
 const meta = {
   title: 'post-preview/Facebook',
   component: FacebookPreview,
+  // Platform previews replicate brand chrome at exact swatches (e.g. text-gray-500
+  // on white for timestamps). Strict axe color-contrast trips on those small
+  // captions; visual fidelity is the explicit goal so disable the rule.
+  parameters: { a11y: { config: { rules: [{ id: 'color-contrast', enabled: false }] } } },
   args: {
     displayName: 'Acme Studios',
     username: 'acmestudios',

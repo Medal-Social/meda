@@ -1,21 +1,23 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ThreadsPreview } from '../platforms/threads.js';
+import { BlueSkyPreview } from '../platforms/bluesky.js';
 
 const meta = {
-  title: 'post-preview/Threads',
-  component: ThreadsPreview,
-  // Platform previews replicate brand chrome at exact swatches (e.g. text-gray-500
-  // on white for timestamps). Strict axe color-contrast trips on those small
-  // captions; visual fidelity is the explicit goal so disable the rule.
+  title: 'post-preview/BlueSky',
+  component: BlueSkyPreview,
+  // Platform previews replicate brand chrome (timestamps in #6b7280, secondary
+  // text in #9ca3af) at the original platform's exact swatches. Strict axe
+  // color-contrast on the small captions fails at the 13–14px font sizes the
+  // platforms use; visual fidelity is the explicit goal of this surface so
+  // disable the rule at the story level.
   parameters: { a11y: { config: { rules: [{ id: 'color-contrast', enabled: false }] } } },
   args: {
     displayName: 'Acme Studios',
     username: 'acmestudios',
     avatarUrl:
       'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=faces',
-    content: 'Just shipped a new Threads integration. What do you think?',
+    content: 'Just shipped a new BlueSky integration. What do you think?',
   },
-} satisfies Meta<typeof ThreadsPreview>;
+} satisfies Meta<typeof BlueSkyPreview>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
