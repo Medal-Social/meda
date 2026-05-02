@@ -72,6 +72,10 @@
       "types": "./dist/panel/index.d.ts",
       "default": "./dist/panel/index.js"
     },
+    "./post-preview": {
+      "types": "./dist/post-preview/index.d.ts",
+      "default": "./dist/post-preview/index.js"
+    },
     "./styles": {
       "default": "./dist/styles/theme.css"
     },
