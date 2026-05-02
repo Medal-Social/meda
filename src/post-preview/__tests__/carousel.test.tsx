@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { BASE_FIXTURE, FIXTURE_MEDIA } from '../__stories__/fixtures.js';
-import { InstagramPreview } from '../index.js';
+import { InstagramPreview } from '../platforms/index.js';
 
 describe('Instagram carousel', () => {
   const mediaUrls = [FIXTURE_MEDIA.square, FIXTURE_MEDIA.landscape, FIXTURE_MEDIA.portrait];

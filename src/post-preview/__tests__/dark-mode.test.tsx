@@ -8,7 +8,7 @@ import {
   InstagramPreview,
   LinkedInPreview,
   ThreadsPreview,
-} from '../index.js';
+} from '../platforms/index.js';
 import type { PostPreviewBaseProps } from '../types.js';
 
 type Props = PostPreviewBaseProps;

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { TwitterPreview } from '../index.js';
+import { TwitterPreview } from '../platforms/index.js';
 import { BASE_FIXTURE } from './fixtures.js';
 
 const meta: Meta = {

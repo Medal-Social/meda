@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { BASE_FIXTURE } from '../__stories__/fixtures.js';
-import { TwitterPreview } from '../index.js';
+import { TwitterPreview } from '../platforms/index.js';
 
 describe('post-preview responsive', () => {
   it('outer wrapper carries an @container class so children can use container queries', () => {

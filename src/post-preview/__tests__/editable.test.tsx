@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { BASE_FIXTURE } from '../__stories__/fixtures.js';
-import { TwitterPreview } from '../index.js';
+import { TwitterPreview } from '../platforms/index.js';
 
 describe('post-preview editable mode', () => {
   it('renders a textbox when editable is true', () => {

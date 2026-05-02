@@ -15,7 +15,7 @@ import {
   TikTokPreview,
   TwitterPreview,
   YouTubePreview,
-} from '../index.js';
+} from '../platforms/index.js';
 import type { PostPreviewBaseProps } from '../types.js';
 
 const MIN_TOUCH = 44;

@@ -16,7 +16,7 @@ import {
   TikTokPreview,
   TwitterPreview,
   YouTubePreview,
-} from './index.js';
+} from './platforms/index.js';
 import type { PostPreviewBaseProps } from './types.js';
 
 type Props = PostPreviewBaseProps;

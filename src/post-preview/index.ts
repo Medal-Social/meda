@@ -1,37 +1,9 @@
 // open/meda/src/post-preview/index.ts
 //
-// Subpath barrel for `@medalsocial/meda/post-preview`. Re-exports the
-// platform components, chromes, and types that make up the public API.
+// Subpath barrel for `@medalsocial/meda/post-preview`. Single top-level
+// `PostPreview` component dispatches per-platform via the `platform` prop.
+// Per-platform components, chromes, and helpers remain internal.
 
-export type {
-  BlueSkyChromeProps,
-  DiscordChromeProps,
-  FacebookChromeProps,
-  GoogleBusinessChromeProps,
-  InstagramChromeProps,
-  LinkedInChromeProps,
-  PlatformChromeProps,
-  TelegramChromeProps,
-  ThreadsChromeProps,
-  TikTokChromeProps,
-  TwitterChromeProps,
-  YouTubeChromeProps,
-} from './chrome/index.js';
-export {
-  BlueSkyChrome,
-  DiscordChrome,
-  FacebookChrome,
-  GoogleBusinessChrome,
-  InstagramChrome,
-  LinkedInChrome,
-  PhoneStatusBar,
-  PlatformChrome,
-  TelegramChrome,
-  ThreadsChrome,
-  TikTokChrome,
-  TwitterChrome,
-  YouTubeChrome,
-} from './chrome/index.js';
 export type {
   BlueSkyLabels,
   BlueSkyPreviewProps,
@@ -68,7 +40,6 @@ export type {
   YouTubePreviewProps,
 } from './platforms/index.js';
 export {
-  BlueSkyPreview,
   DEFAULT_BLUESKY_LABELS,
   DEFAULT_DISCORD_LABELS,
   DEFAULT_FACEBOOK_LABELS,
@@ -81,20 +52,11 @@ export {
   DEFAULT_TIKTOK_LABELS,
   DEFAULT_TWITTER_LABELS,
   DEFAULT_YOUTUBE_LABELS,
-  DiscordPreview,
-  FacebookPreview,
-  GenericPreview,
-  GoogleBusinessPreview,
-  InstagramPreview,
-  LinkedInPreview,
-  TelegramPreview,
-  ThreadsPreview,
-  TikTokPreview,
-  TwitterPreview,
-  YouTubePreview,
 } from './platforms/index.js';
+export { PostPreview, type PostPreviewProps } from './post-preview.js';
 export type {
   PlatformId,
   PostPreviewBaseProps,
   PostPreviewFrame,
+  PostPreviewSlots,
 } from './types.js';

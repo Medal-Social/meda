@@ -6,7 +6,7 @@ import {
   type LinkedInMentionPickerContext,
   LinkedInPreview,
   type LinkedInPreviewProps,
-} from '../index.js';
+} from '../platforms/index.js';
 
 function Harness(props: Omit<LinkedInPreviewProps, 'content' | 'onContentChange'>) {
   const [value, setValue] = useState('');

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { BASE_FIXTURE } from '../__stories__/fixtures.js';
-import { InstagramPreview, TwitterPreview } from '../index.js';
+import { InstagramPreview, TwitterPreview } from '../platforms/index.js';
 
 describe('post-preview labels override', () => {
   it('Instagram uses provided labels when supplied', () => {

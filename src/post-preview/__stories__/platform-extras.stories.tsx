@@ -7,7 +7,7 @@ import {
   LinkedInPreview,
   type TelegramPollState,
   TelegramPreview,
-} from '../index.js';
+} from '../platforms/index.js';
 import { BASE_FIXTURE } from './fixtures.js';
 
 const meta: Meta = {

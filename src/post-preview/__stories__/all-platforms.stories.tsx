@@ -12,7 +12,7 @@ import {
   TikTokPreview,
   TwitterPreview,
   YouTubePreview,
-} from '../index.js';
+} from '../platforms/index.js';
 import type { PostPreviewBaseProps } from '../types.js';
 import { BASE_FIXTURE, FIXTURE_MEDIA } from './fixtures.js';
 
