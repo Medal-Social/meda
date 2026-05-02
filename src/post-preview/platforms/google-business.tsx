@@ -50,7 +50,7 @@ export function GoogleBusinessPreview({
       data-slot="post-preview"
       data-platform="google_business"
       className={cn(
-        '@container overflow-hidden rounded-lg border border-gray-200 bg-white text-gray-900 @[420px]:text-[14px]',
+        '@container overflow-hidden rounded-lg border border-gray-200 bg-white text-gray-900 @[420px]:text-[14px] dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100',
         className
       )}
     >

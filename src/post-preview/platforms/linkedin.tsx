@@ -216,7 +216,10 @@ export function LinkedInPreview({
     <div
       data-slot="post-preview"
       data-platform="linkedin"
-      className={cn('@container bg-white text-gray-900 @[420px]:text-[15px]', className)}
+      className={cn(
+        '@container bg-white text-gray-900 @[420px]:text-[15px] dark:bg-[#1B1F23] dark:text-[#E7E9EA]',
+        className
+      )}
     >
       <div className="p-4 pb-0">
         <div className="flex gap-3">

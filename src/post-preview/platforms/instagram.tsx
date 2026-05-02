@@ -175,7 +175,10 @@ function FeedPreview({
       data-slot="post-preview"
       data-platform="instagram"
       data-instagram-post-type={isCarousel ? 'carousel' : 'feed'}
-      className={cn('@container bg-white text-gray-900 @[420px]:text-[15px]', className)}
+      className={cn(
+        '@container bg-white text-gray-900 @[420px]:text-[15px] dark:bg-black dark:text-white',
+        className
+      )}
     >
       <div className="flex items-center justify-between p-3">
         <div className="flex items-center gap-3">

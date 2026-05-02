@@ -56,7 +56,10 @@ export function FacebookPreview({
     <div
       data-slot="post-preview"
       data-platform="facebook"
-      className={cn('@container bg-white text-gray-900 @[420px]:text-[15px]', className)}
+      className={cn(
+        '@container bg-white text-gray-900 @[420px]:text-[15px] dark:bg-[#242526] dark:text-[#E4E6EB]',
+        className
+      )}
     >
       <div className="p-4">
         <div className="flex items-start justify-between">
