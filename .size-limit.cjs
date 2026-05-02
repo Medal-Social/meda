@@ -45,6 +45,22 @@
 //   Measured 105.33 kB brotli — 333 B over the previous limit. Bumped tightly
 //   to keep CI honest while allowing the new primitive surface area.
 //
+// main barrel raised 106 kB → 135 kB (post-preview surface):
+//   src/index.ts now re-exports `post-preview/public.js`, which references all
+//   12 platform components and chromes via the post-preview barrel. Measured
+//   121.08 kB brotli with the new surface. Bumped to 135 kB for ~12% headroom.
+//   Consumers who don't want the cost should import from the
+//   `@medalsocial/meda/post-preview` subpath directly — the per-platform
+//   budgets below prove that path stays small.
+//
+// post-preview per-platform budgets (new — post-preview surface):
+//   Each platform component + chrome lands at 9–10.5 kB brotli when imported
+//   in isolation. 13 kB per entry leaves ~25–40% headroom for label / locale
+//   additions and minor chrome polish without forcing churn on this file.
+//   The roll-up `post-preview / all` entry exercises the full subpath barrel
+//   and measures 23.64 kB; 30 kB is a comfortable ceiling that still catches
+//   accidental cross-platform coupling regressions.
+//
 // Sub-entry split for shell (provider / desktop / mobile / palette) is
 // deferred to v1.x — decision pinned to real consumer adoption data, not
 // upfront speculation. See plan file Decision C history for context.
@@ -52,7 +68,7 @@ module.exports = [
   {
     name: 'main barrel',
     path: 'dist/index.js',
-    limit: '106 kB',
+    limit: '135 kB',
   },
   {
     name: 'chat',
@@ -93,4 +109,80 @@ module.exports = [
     path: 'dist/styles/tokens.css',
     limit: '2 kB',
   },
+  // post-preview surface — per-platform budgets prove tree-shaking holds:
+  // importing one preview must not pull in the others. Roll-up entry covers
+  // the case where a consumer imports the entire subpath.
+  {
+    name: 'post-preview / Twitter',
+    path: 'dist/post-preview/index.js',
+    import: '{ TwitterPreview, TwitterChrome }',
+    limit: '13 kB',
+  },
+  {
+    name: 'post-preview / LinkedIn',
+    path: 'dist/post-preview/index.js',
+    import: '{ LinkedInPreview, LinkedInChrome }',
+    limit: '13 kB',
+  },
+  {
+    name: 'post-preview / Instagram',
+    path: 'dist/post-preview/index.js',
+    import: '{ InstagramPreview, InstagramChrome }',
+    limit: '13 kB',
+  },
+  {
+    name: 'post-preview / Facebook',
+    path: 'dist/post-preview/index.js',
+    import: '{ FacebookPreview, FacebookChrome }',
+    limit: '13 kB',
+  },
+  {
+    name: 'post-preview / Threads',
+    path: 'dist/post-preview/index.js',
+    import: '{ ThreadsPreview, ThreadsChrome }',
+    limit: '13 kB',
+  },
+  {
+    name: 'post-preview / BlueSky',
+    path: 'dist/post-preview/index.js',
+    import: '{ BlueSkyPreview, BlueSkyChrome }',
+    limit: '13 kB',
+  },
+  {
+    name: 'post-preview / TikTok',
+    path: 'dist/post-preview/index.js',
+    import: '{ TikTokPreview, TikTokChrome }',
+    limit: '13 kB',
+  },
+  {
+    name: 'post-preview / YouTube',
+    path: 'dist/post-preview/index.js',
+    import: '{ YouTubePreview, YouTubeChrome }',
+    limit: '13 kB',
+  },
+  {
+    name: 'post-preview / GoogleBusiness',
+    path: 'dist/post-preview/index.js',
+    import: '{ GoogleBusinessPreview, GoogleBusinessChrome }',
+    limit: '13 kB',
+  },
+  {
+    name: 'post-preview / Telegram',
+    path: 'dist/post-preview/index.js',
+    import: '{ TelegramPreview, TelegramChrome }',
+    limit: '13 kB',
+  },
+  {
+    name: 'post-preview / Discord',
+    path: 'dist/post-preview/index.js',
+    import: '{ DiscordPreview, DiscordChrome }',
+    limit: '13 kB',
+  },
+  {
+    name: 'post-preview / Generic',
+    path: 'dist/post-preview/index.js',
+    import: '{ GenericPreview, PlatformChrome }',
+    limit: '13 kB',
+  },
+  { name: 'post-preview / all', path: 'dist/post-preview/index.js', import: '*', limit: '30 kB' },
 ];
