@@ -7,8 +7,9 @@ import {
   type NodeChange,
 } from '@xyflow/react';
 import { useState } from 'react';
-import { WorkflowBuilder, WorkflowHeader } from '../index.js';
+import { WorkflowBuilder } from '../index.js';
 import type { WorkflowEdge, WorkflowNode } from '../types.js';
+import { WorkflowHeader } from '../workflow-header.js';
 import { SAMPLE_EDGES, SAMPLE_NODES } from './fixtures.js';
 
 const meta: Meta<typeof WorkflowBuilder> = {

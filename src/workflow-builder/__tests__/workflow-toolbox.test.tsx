@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { WorkflowToolbox } from '../index.js';
+import { WorkflowToolbox } from '../workflow-toolbox.js';
 
 describe('WorkflowToolbox', () => {
   it('renders default items', () => {

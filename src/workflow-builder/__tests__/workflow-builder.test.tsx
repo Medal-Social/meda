@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { WorkflowBuilder, WorkflowHeader } from '../index.js';
+import { WorkflowBuilder } from '../index.js';
+import { WorkflowHeader } from '../workflow-header.js';
 
 describe('WorkflowBuilder', () => {
   it('renders empty-canvas hint when there are no nodes', () => {

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { WorkflowHeader } from '../index.js';
+import { WorkflowHeader } from '../workflow-header.js';
 
 describe('WorkflowHeader', () => {
   it('renders name and status', () => {

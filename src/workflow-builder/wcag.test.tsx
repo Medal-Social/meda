@@ -1,8 +1,10 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { axe } from 'vitest-axe';
-import { WorkflowCard, WorkflowHeader, WorkflowToolbox } from './index.js';
+import { WorkflowCard } from './index.js';
 import type { WorkflowSummary } from './types.js';
+import { WorkflowHeader } from './workflow-header.js';
+import { WorkflowToolbox } from './workflow-toolbox.js';
 
 const sample: WorkflowSummary = {
   id: 'wf1',
