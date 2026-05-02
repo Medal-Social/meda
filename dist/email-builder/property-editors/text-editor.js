@@ -1,0 +1,8 @@
+'use client';
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { EMAIL_FONT_OPTIONS } from '../internal/email-font-options.js';
+import { AlignmentToggle, ColorInput, Field, NumberInput, SelectInput, SpacingEditor, TextAreaInput, } from './_shared.js';
+export function TextPropertyEditor({ value, onChange, renderEditor }) {
+    const onContent = (content) => onChange({ content });
+    return (_jsxs("div", { "data-slot": "email-builder-property-text", className: "flex flex-col gap-3", children: [_jsx(Field, { label: "Content", htmlFor: "text-content", children: renderEditor ? (renderEditor({ value: value.content, onChange: onContent })) : (_jsx(TextAreaInput, { id: "text-content", value: value.content, onChange: onContent, rows: 5 })) }), _jsx(Field, { label: "Alignment", children: _jsx(AlignmentToggle, { value: value.alignment, onChange: (alignment) => onChange({ alignment }) }) }), _jsx(Field, { label: "Color", htmlFor: "text-color", children: _jsx(ColorInput, { id: "text-color", value: value.color, onChange: (color) => onChange({ color }) }) }), _jsx(Field, { label: "Font family", children: _jsx(SelectInput, { value: value.fontFamily, options: EMAIL_FONT_OPTIONS.map((o) => ({ value: o.value, label: o.label })), onChange: (fontFamily) => onChange({ fontFamily }) }) }), _jsx(Field, { label: "Font size (px)", children: _jsx(NumberInput, { value: value.fontSize, min: 10, max: 48, onChange: (fontSize) => onChange({ fontSize }) }) }), _jsx(Field, { label: "Padding", children: _jsx(SpacingEditor, { value: value.padding, onChange: (padding) => onChange({ padding }) }) })] }));
+}

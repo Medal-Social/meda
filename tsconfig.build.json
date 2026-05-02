@@ -21,6 +21,8 @@
     "src/**/*.stories.ts",
     "src/**/*.stories.tsx",
     "src/__stories__/**",
-    "src/__tests__/**"
+    "src/__tests__/**",
+    "src/**/__stories__/**",
+    "src/**/__tests__/**"
   ]
 }

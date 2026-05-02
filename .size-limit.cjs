@@ -50,14 +50,27 @@
 // upfront speculation. See plan file Decision C history for context.
 module.exports = [
   {
+    // Bumped 106 kB → 130 kB: the new email-builder subpath re-export adds
+    // ~10 kB to the root barrel (renderToEmailHtml + types). Measured 115.2
+    // kB brotli at the time of the email-builder PR; budget includes ~12%
+    // headroom.
     name: 'main barrel',
     path: 'dist/index.js',
-    limit: '106 kB',
+    limit: '130 kB',
   },
   {
     name: 'chat',
     path: 'dist/chat/index.js',
     limit: '6.5 kB',
+  },
+  {
+    // Initial budget for the email-builder surface. Includes the full block +
+    // property-editor matrix plus DnD wiring. Measured 36.12 kB brotli on
+    // first build; budget set with ~25% headroom for follow-up additions
+    // (Lexical slot, more block kinds, etc.).
+    name: 'email-builder',
+    path: 'dist/email-builder/index.js',
+    limit: '45 kB',
   },
   {
     name: 'panel',
