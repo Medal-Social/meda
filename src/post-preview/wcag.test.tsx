@@ -17,6 +17,7 @@ import {
   TwitterPreview,
   YouTubePreview,
 } from './platforms/index.js';
+import { PostPreview } from './post-preview.js';
 import type { PostPreviewBaseProps } from './types.js';
 
 type Props = PostPreviewBaseProps;
@@ -54,4 +55,25 @@ describe('post-preview accessibility (axe)', () => {
       expect(results).toHaveNoViolations();
     });
   }
+
+  it('PostPreview (instagram) has no violations', async () => {
+    const { container } = render(
+      <PostPreview platform="instagram" displayName="Acme" username="acme" content="Hello" />
+    );
+    expect(await axe(container, AXE_OPTIONS)).toHaveNoViolations();
+  });
+
+  it('PostPreview (twitter) has no violations', async () => {
+    const { container } = render(
+      <PostPreview platform="twitter" displayName="Acme" username="acme" content="Hello" />
+    );
+    expect(await axe(container, AXE_OPTIONS)).toHaveNoViolations();
+  });
+
+  it('PostPreview (generic) has no violations', async () => {
+    const { container } = render(
+      <PostPreview platform="generic" displayName="Acme" username="acme" content="Hello" />
+    );
+    expect(await axe(container, AXE_OPTIONS)).toHaveNoViolations();
+  });
 });
