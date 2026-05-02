@@ -18,7 +18,12 @@ export const PLATFORM_META: Record<PlatformId, PlatformMeta> = {
   bluesky: { displayName: 'Bluesky', brandColor: '#0085FF', characterLimit: 300 },
   tiktok: { displayName: 'TikTok', brandColor: '#000000', characterLimit: 4000 },
   youtube: { displayName: 'YouTube', brandColor: '#FF0000', characterLimit: 5000 },
-  google_business: { displayName: 'Google Business', brandColor: '#4285F4', characterLimit: 1500 },
+  'google-business': {
+    displayName: 'Google Business',
+    brandColor: '#4285F4',
+    characterLimit: 1500,
+  },
   telegram: { displayName: 'Telegram', brandColor: '#26A5E4', characterLimit: 4096 },
   discord: { displayName: 'Discord', brandColor: '#5865F2', characterLimit: 2000 },
+  generic: { displayName: 'Generic', brandColor: '#6B7280', characterLimit: 63206 },
 };

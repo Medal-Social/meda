@@ -1,3 +1,5 @@
+import type * as React from 'react';
+
 /**
  * Public types for the post-preview surface.
  *
@@ -12,17 +14,45 @@
  * this list should use `GenericPreview` as a fallback.
  */
 export type PlatformId =
-  | 'twitter'
-  | 'linkedin'
   | 'instagram'
+  | 'twitter'
   | 'facebook'
-  | 'threads'
-  | 'bluesky'
+  | 'linkedin'
   | 'tiktok'
   | 'youtube'
-  | 'google_business'
+  | 'threads'
+  | 'bluesky'
+  | 'discord'
   | 'telegram'
-  | 'discord';
+  | 'google-business'
+  | 'generic';
+
+export interface PostPreviewSlots {
+  /** When 'edit', enables editable mode. Sugar for `editable: true`. */
+  mode?: 'preview' | 'edit';
+  /** Replaces the platform's content textarea when in edit mode. */
+  renderEditor?: (ctx: {
+    platform: PlatformId;
+    value: string;
+    onChange: (next: string) => void;
+  }) => React.ReactNode;
+  /** Renders a media picker trigger in the edit toolbar. */
+  renderMediaPicker?: (ctx: {
+    platform: PlatformId;
+    current: string[] | undefined;
+    onPick: (next: string[]) => void;
+  }) => React.ReactNode;
+  /** Renders an emoji picker trigger in the edit toolbar. */
+  renderEmojiPicker?: (ctx: { onSelect: (emoji: string) => void }) => React.ReactNode;
+  /** Renders a mention picker trigger in the edit toolbar. */
+  renderMentionPicker?: (ctx: {
+    platform: PlatformId;
+    query: string;
+    onSelect: (mention: unknown) => void;
+  }) => React.ReactNode;
+  /** Called when renderMediaPicker invokes onPick. */
+  onMediaUrlsChange?: (mediaUrls: string[]) => void;
+}
 
 /**
  * Visual frame mode for any platform preview.
