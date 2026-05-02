@@ -67,11 +67,14 @@
 module.exports = [
   {
     name: 'main barrel',
-    // Provisional: re-measured after all surfaces (post-preview + calendar +
-    // workflow-builder + email-builder) merge. Held at post-preview's 135 kB
-    // high-water mark; re-measure and bump after all merges complete.
+    // Bumped 135 kB → 145 kB (consolidated post-preview + calendar +
+    // workflow-builder + email-builder surfaces all re-exported from the root).
+    // Measured 137.76 kB brotli with all four surfaces; budget includes ~5%
+    // headroom. Consumers who don't want the cost should import from the
+    // per-surface subpaths (`@medalsocial/meda/post-preview`,
+    // `@medalsocial/meda/calendar`, etc.) — those budgets stay tight.
     path: 'dist/index.js',
-    limit: '135 kB',
+    limit: '145 kB',
   },
   {
     name: 'calendar',
@@ -83,6 +86,15 @@ module.exports = [
     name: 'chat',
     path: 'dist/chat/index.js',
     limit: '6.5 kB',
+  },
+  {
+    // Initial budget for the email-builder surface. Includes the full block +
+    // property-editor matrix plus DnD wiring. Measured 36.12 kB brotli on
+    // first build; budget set with ~25% headroom for follow-up additions
+    // (Lexical slot, more block kinds, etc.).
+    name: 'email-builder',
+    path: 'dist/email-builder/index.js',
+    limit: '45 kB',
   },
   {
     name: 'panel',

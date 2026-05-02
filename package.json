@@ -76,6 +76,10 @@
       "types": "./dist/chat/index.d.ts",
       "default": "./dist/chat/index.js"
     },
+    "./email-builder": {
+      "types": "./dist/email-builder/index.d.ts",
+      "default": "./dist/email-builder/index.js"
+    },
     "./panel": {
       "types": "./dist/panel/index.d.ts",
       "default": "./dist/panel/index.js"
