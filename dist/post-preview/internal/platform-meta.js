@@ -11,17 +11,3 @@ export const PLATFORM_META = {
     telegram: { displayName: 'Telegram', brandColor: '#26A5E4', characterLimit: 4096 },
     discord: { displayName: 'Discord', brandColor: '#5865F2', characterLimit: 2000 },
 };
-/**
- * Resolve a Lucide icon to use as a platform glyph. Returns `undefined`
- * when no built-in glyph is appropriate; consumers should render their
- * own brand SVG in that case (e.g. inside chrome components).
- *
- * This indirection lets platform-meta stay icon-agnostic while still
- * enabling chromes to render a default glyph.
- */
-export function platformIconHint(platform) {
-    // Lucide does not ship official social brand glyphs; chromes render their
-    // own inline SVGs. Return undefined to make the absence explicit.
-    void platform;
-    return undefined;
-}
