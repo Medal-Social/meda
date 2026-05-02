@@ -17,3 +17,12 @@ export const BASE_FIXTURE: PostPreviewBaseProps = {
     'Just shipped a new platform integration — three months of work, finally live. ' +
     'Try it out and let us know what you think! #launch #shipit',
 };
+
+export const genericFixture = {
+  displayName: 'Acme Studios',
+  username: 'acme',
+  content: 'A quick demo of the unified PostPreview component.',
+  mediaUrls: [],
+};
+export const instagramFixture = { ...genericFixture };
+export const twitterFixture = { ...genericFixture };
