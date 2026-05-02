@@ -54,3 +54,9 @@ test/fixtures/nextjs-consumer/next-env.d.ts
 
 # Superpowers brainstorm sessions
 .superpowers/
+
+# Git worktrees
+.worktrees/
+
+# Git worktrees
+.worktrees/
