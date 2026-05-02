@@ -1,0 +1,22 @@
+'use client';
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { useState } from 'react';
+import { cn } from '../lib/utils.js';
+import { defaultWorkflowBuilderLabels } from './types.js';
+import { WorkflowCanvas } from './workflow-canvas.js';
+import { WorkflowToolbox } from './workflow-toolbox.js';
+/**
+ * Top-level workflow builder surface — composes the canvas, toolbox and
+ * (optional) header / inspector slots into a responsive layout.
+ *
+ * Container queries adapt the layout: at narrower container widths the
+ * toolbox collapses behind a tab bar (mobile) and at wider widths it sits to
+ * the left of the canvas.
+ */
+export function WorkflowBuilder({ nodes, edges, onNodesChange, onEdgesChange, onConnect, onAddNode, onSelectionChange, onNodeClick, showToolbox = true, readOnly = false, headerSlot, inspectorSlot, customNodeTypes, customEdgeTypes, labels, className, }) {
+    const resolvedLabels = { ...defaultWorkflowBuilderLabels, ...(labels ?? {}) };
+    const [mobileDrawer, setMobileDrawer] = useState(null);
+    return (_jsxs("div", { "data-slot": "workflow-builder", className: cn('@container/workflow flex h-full w-full flex-col overflow-hidden bg-background', className), children: [headerSlot, _jsxs("div", { className: "relative flex flex-1 overflow-hidden", children: [showToolbox ? (_jsx("div", { className: "hidden w-64 flex-shrink-0 @[640px]/workflow:flex", children: _jsx(WorkflowToolbox, { onAddNode: onAddNode, readOnly: readOnly, labels: resolvedLabels }) })) : null, _jsxs("div", { className: "relative flex flex-1 flex-col", children: [_jsx(WorkflowCanvas, { nodes: nodes, edges: edges, onNodesChange: onNodesChange, onEdgesChange: onEdgesChange, onConnect: onConnect, onNodeClick: onNodeClick, onSelectionChange: onSelectionChange, readOnly: readOnly, customNodeTypes: customNodeTypes, customEdgeTypes: customEdgeTypes }), nodes.length === 0 ? (_jsx("div", { "data-slot": "workflow-empty-canvas", className: "pointer-events-none absolute inset-0 flex items-center justify-center text-center", children: _jsx("p", { className: "max-w-xs rounded-md bg-background/80 px-4 py-3 text-muted-foreground text-sm shadow-sm backdrop-blur", children: resolvedLabels.emptyCanvas }) })) : null] }), inspectorSlot ? (_jsx("div", { className: "hidden w-72 flex-shrink-0 border-border border-l @[960px]/workflow:flex", children: inspectorSlot })) : null] }), showToolbox || inspectorSlot ? (_jsxs("nav", { "data-slot": "workflow-mobile-tab-bar", className: "flex border-border border-t bg-background @[640px]/workflow:hidden", "aria-label": "Workflow panels", children: [showToolbox ? (_jsx("button", { type: "button", onClick: () => setMobileDrawer((current) => (current === 'toolbox' ? null : 'toolbox')), className: "flex h-12 min-h-11 flex-1 items-center justify-center font-medium text-sm transition-colors hover:bg-accent", "aria-pressed": mobileDrawer === 'toolbox', children: resolvedLabels.openToolbox })) : null, inspectorSlot ? (_jsx("button", { type: "button", onClick: () => setMobileDrawer((current) => (current === 'inspector' ? null : 'inspector')), className: "flex h-12 min-h-11 flex-1 items-center justify-center border-border border-l font-medium text-sm transition-colors hover:bg-accent", "aria-pressed": mobileDrawer === 'inspector', children: resolvedLabels.openInspector })) : null] })) : null, mobileDrawer ? (_jsxs("div", { "data-slot": "workflow-mobile-drawer", "data-panel": mobileDrawer, className: "@[640px]/workflow:hidden absolute inset-x-0 bottom-12 max-h-[60%] overflow-hidden border-border border-t bg-background shadow-lg", children: [_jsxs("div", { className: "flex items-center justify-between border-border border-b px-4 py-2", children: [_jsx("span", { className: "font-medium text-sm", children: mobileDrawer === 'toolbox'
+                                    ? resolvedLabels.openToolbox
+                                    : resolvedLabels.openInspector }), _jsx("button", { type: "button", onClick: () => setMobileDrawer(null), className: "inline-flex h-9 min-h-9 min-w-11 items-center rounded-md px-2 text-muted-foreground text-sm transition-colors hover:bg-accent hover:text-foreground", children: resolvedLabels.closeDrawer })] }), _jsxs("div", { className: "max-h-[50vh] overflow-y-auto", children: [mobileDrawer === 'toolbox' && showToolbox ? (_jsx(WorkflowToolbox, { onAddNode: onAddNode, readOnly: readOnly, labels: resolvedLabels })) : null, mobileDrawer === 'inspector' ? inspectorSlot : null] })] })) : null] }));
+}

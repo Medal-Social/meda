@@ -7,3 +7,4 @@ export * from './primitives/index.js';
 export * from './shell/index.js'; // v2 surface
 export * from './theme/index.js';
 export * from './timeline/public.js';
+export * from './workflow-builder/public.js';
