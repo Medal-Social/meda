@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PostPreview, type PostPreviewProps } from '../post-preview.js';
-import { genericFixture } from './fixtures.js';
+import { BASE_FIXTURE, FIXTURE_MEDIA } from './fixtures.js';
 
 const PLATFORMS: PostPreviewProps['platform'][] = [
   'instagram',
@@ -17,13 +17,12 @@ const PLATFORMS: PostPreviewProps['platform'][] = [
   'generic',
 ];
 
-// Use a plain object type for the controls so Storybook's argTypes/args system
-// can merge partial overrides without fighting the discriminated union.
 interface StoryArgs {
   platform: PostPreviewProps['platform'];
   mode: 'preview' | 'edit';
   displayName: string;
   username: string;
+  avatarUrl?: string;
   content: string;
   mediaUrls: string[];
 }
@@ -31,21 +30,23 @@ interface StoryArgs {
 const defaults: StoryArgs = {
   platform: 'instagram',
   mode: 'preview',
-  ...genericFixture,
+  ...BASE_FIXTURE,
+  mediaUrls: [FIXTURE_MEDIA.square],
 };
 
 function render(args: StoryArgs) {
   const props = args as unknown as PostPreviewProps;
-  return <PostPreview {...props} />;
+  return (
+    <div style={{ width: '100%', maxWidth: 480, margin: '0 auto' }}>
+      <PostPreview {...props} />
+    </div>
+  );
 }
 
 const meta: Meta<StoryArgs> = {
   title: 'PostPreview',
   component: PostPreview as Meta<StoryArgs>['component'],
   parameters: {
-    layout: 'centered',
-    // Platform previews replicate brand chrome at exact swatches; visual fidelity
-    // is the goal so disable strict color-contrast on platform UI elements.
     a11y: { config: { rules: [{ id: 'color-contrast', enabled: false }] } },
   },
   argTypes: {
@@ -75,10 +76,20 @@ export const Edit: Story = {
 export const WithSlots: Story = {
   args: { mode: 'edit' },
   render: (args) => (
-    <PostPreview
-      {...(args as unknown as PostPreviewProps)}
-      renderEmojiPicker={() => <button type="button">😀</button>}
-      renderMediaPicker={() => <button type="button">Image</button>}
-    />
+    <div style={{ width: '100%', maxWidth: 480, margin: '0 auto' }}>
+      <PostPreview
+        {...(args as unknown as PostPreviewProps)}
+        renderEmojiPicker={() => (
+          <button type="button" aria-label="Insert emoji">
+            😀
+          </button>
+        )}
+        renderMediaPicker={() => (
+          <button type="button" aria-label="Add media">
+            Image
+          </button>
+        )}
+      />
+    </div>
   ),
 };
