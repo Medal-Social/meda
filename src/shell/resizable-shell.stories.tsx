@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ResizableHandle, ResizableShell, ResizableShellPanel } from './resizable-shell.js';
 
 const meta = {
-  title: 'AppShell/Internals/ResizableShell',
+  title: 'Shell/Internals/ResizableShell',
   component: ResizableShell,
   tags: ['autodocs'],
   parameters: {

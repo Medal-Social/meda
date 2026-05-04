@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FilterRail } from './filter-rail.js';
 
 const meta = {
-  title: 'Foundation/Primitives/FilterRail',
+  title: 'Foundations/Primitives/FilterRail',
   component: FilterRail,
   parameters: {
     layout: 'padded',
