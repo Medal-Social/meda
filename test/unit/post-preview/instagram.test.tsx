@@ -58,4 +58,80 @@ describe('InstagramPreview', () => {
     expect(container.querySelector('[data-slot="instagram-carousel-track"]')).not.toBeNull();
     expect(container.querySelector('[data-instagram-post-type="carousel"]')).not.toBeNull();
   });
+
+  it('renders story layout when instagramPostType="story"', () => {
+    const { container } = render(<InstagramPreview {...FIXTURE} instagramPostType="story" />);
+    expect(
+      container.querySelector('[data-platform="instagram"][data-instagram-post-type="story"]')
+    ).not.toBeNull();
+  });
+
+  it('renders story layout with media when instagramPostType="story" and mediaUrls provided', () => {
+    const { container } = render(
+      <InstagramPreview
+        {...FIXTURE}
+        instagramPostType="story"
+        mediaUrls={['https://example.com/story.jpg']}
+      />
+    );
+    const img = container.querySelector('img[alt="Story"]');
+    expect(img).not.toBeNull();
+  });
+
+  it('renders username with @ stripped when username starts with @', () => {
+    render(<InstagramPreview {...FIXTURE} username="@acmestudios" />);
+    // Should display 'acmestudios' not '@acmestudios'
+    expect(screen.getAllByText('acmestudios').length).toBeGreaterThan(0);
+  });
+
+  it('renders reel with empty content (null branch for content)', () => {
+    const { container } = render(
+      <InstagramPreview {...FIXTURE} instagramPostType="reel" content="" />
+    );
+    // No content paragraph rendered
+    expect(container.querySelector('[data-instagram-post-type="reel"]')).not.toBeNull();
+    // The content <p> should not exist
+    const reelEl = container.querySelector('[data-instagram-post-type="reel"]');
+    const contentP = reelEl?.querySelector('.line-clamp-2');
+    expect(contentP).toBeNull();
+  });
+
+  it('renders reel without media (placeholder) when no mediaUrls', () => {
+    const { container } = render(
+      <InstagramPreview {...FIXTURE} instagramPostType="reel" mediaUrls={undefined} />
+    );
+    expect(container.querySelector('[data-instagram-post-type="reel"]')).not.toBeNull();
+    // No img element for the reel background
+    const img = container.querySelector('img[alt="Reel"]');
+    expect(img).toBeNull();
+  });
+
+  it('renders reel with media when instagramPostType="reel" and mediaUrls provided', () => {
+    const { container } = render(
+      <InstagramPreview
+        {...FIXTURE}
+        instagramPostType="reel"
+        mediaUrls={['https://example.com/reel.mp4']}
+      />
+    );
+    const img = container.querySelector('img[alt="Reel"]');
+    expect(img).not.toBeNull();
+  });
+
+  it('renders media placeholder when no media provided for feed', () => {
+    const { container } = render(<InstagramPreview {...FIXTURE} mediaUrls={undefined} />);
+    // Should show the add image placeholder label
+    expect(container.querySelector('[data-platform="instagram"]')).not.toBeNull();
+    expect(screen.getByText('Add an image to preview')).toBeInTheDocument();
+  });
+
+  it('shows overflow dot when carousel has more than 5 slides', () => {
+    const urls = Array.from({ length: 6 }, (_, i) => `https://example.com/${i}.jpg`);
+    const { container } = render(<InstagramPreview {...FIXTURE} mediaUrls={urls} />);
+    // Overflow dot is rendered for >5 media in carousel dot nav
+    const overflowDot = container.querySelector(
+      'span[aria-hidden="true"].rounded-full.bg-white\\/40'
+    );
+    expect(overflowDot).not.toBeNull();
+  });
 });

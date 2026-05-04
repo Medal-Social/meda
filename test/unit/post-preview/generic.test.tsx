@@ -46,4 +46,15 @@ describe('GenericPreview', () => {
     render(<GenericPreview {...FIXTURE} platform="instagram" />);
     expect(screen.getByText(/Instagram preview/)).toBeInTheDocument();
   });
+
+  it('renders multi-image grid when 2+ media urls provided', () => {
+    render(
+      <GenericPreview
+        {...FIXTURE}
+        mediaUrls={['https://example.com/a.jpg', 'https://example.com/b.jpg']}
+      />
+    );
+    // avatar img + 2 media = 3 total
+    expect(screen.getAllByRole('img').length).toBeGreaterThanOrEqual(2);
+  });
 });

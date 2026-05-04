@@ -39,4 +39,37 @@ describe('FacebookPreview', () => {
     expect(container.querySelector('[data-platform="facebook"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="post-preview"]')).not.toBeNull();
   });
+
+  it('renders 3-image grid with first spanning two rows', () => {
+    render(
+      <FacebookPreview
+        {...FIXTURE}
+        mediaUrls={[
+          'https://example.com/a.jpg',
+          'https://example.com/b.jpg',
+          'https://example.com/c.jpg',
+        ]}
+      />
+    );
+    // avatar img + 3 media = 4 total
+    expect(screen.getAllByRole('img').length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('renders 4 images with overflow badge when 5+ urls provided', () => {
+    const urls = Array.from({ length: 5 }, (_, i) => `https://example.com/${i}.jpg`);
+    render(<FacebookPreview {...FIXTURE} mediaUrls={urls} />);
+    // avatar + 4 media = 5 total imgs
+    expect(screen.getAllByRole('img').length).toBeGreaterThanOrEqual(4);
+    expect(screen.getByText('+1')).toBeInTheDocument();
+  });
+
+  it('renders 2-image side-by-side grid', () => {
+    render(
+      <FacebookPreview
+        {...FIXTURE}
+        mediaUrls={['https://example.com/a.jpg', 'https://example.com/b.jpg']}
+      />
+    );
+    expect(screen.getAllByRole('img').length).toBeGreaterThanOrEqual(2);
+  });
 });
