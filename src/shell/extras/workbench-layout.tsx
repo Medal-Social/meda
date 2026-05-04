@@ -28,20 +28,25 @@ export function WorkbenchLayout({
   className,
 }: WorkbenchLayoutProps) {
   const maxWidth = getWorkbenchMaxWidth(viewportBand);
-  const layout = !aside
-    ? 'single'
-    : viewportBand === 'mobile' || viewportBand === 'tablet'
-      ? 'stacked'
-      : viewportBand === 'desktop'
-        ? 'split'
-        : 'multi-zone';
+  let layout: 'single' | 'stacked' | 'split' | 'multi-zone';
+  if (!aside) {
+    layout = 'single';
+  } else if (viewportBand === 'mobile' || viewportBand === 'tablet') {
+    layout = 'stacked';
+  } else if (viewportBand === 'desktop') {
+    layout = 'split';
+  } else {
+    layout = 'multi-zone';
+  }
 
-  const columnStyle =
-    layout === 'split'
-      ? { gridTemplateColumns: 'minmax(0, 1fr) minmax(280px, 320px)' }
-      : layout === 'multi-zone'
-        ? { gridTemplateColumns: 'minmax(0, 1fr) minmax(300px, 360px)' }
-        : undefined;
+  let columnStyle: { gridTemplateColumns: string } | undefined;
+  if (layout === 'split') {
+    columnStyle = { gridTemplateColumns: 'minmax(0, 1fr) minmax(280px, 320px)' };
+  } else if (layout === 'multi-zone') {
+    columnStyle = { gridTemplateColumns: 'minmax(0, 1fr) minmax(300px, 360px)' };
+  } else {
+    columnStyle = undefined;
+  }
 
   return (
     <section
@@ -56,7 +61,7 @@ export function WorkbenchLayout({
         data-layout={layout}
         className={joinClasses(
           'w-full gap-5',
-          layout === 'stacked' ? 'flex flex-col' : layout === 'single' ? 'flex flex-col' : 'grid'
+          layout === 'stacked' || layout === 'single' ? 'flex flex-col' : 'grid'
         )}
         style={columnStyle}
       >

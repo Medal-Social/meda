@@ -53,17 +53,20 @@ export function MonthView({
     );
   }, [locale, weekStartsOn]);
 
-  const cellClick = onDateClick
-    ? (d: Date) => onDateClick(d)
-    : onSlotClick
-      ? (d: Date) => {
-          const start = new Date(d);
-          start.setHours(0, 0, 0, 0);
-          const end = new Date(d);
-          end.setHours(23, 59, 59, 999);
-          onSlotClick({ start, end });
-        }
-      : undefined;
+  let cellClick: ((d: Date) => void) | undefined;
+  if (onDateClick) {
+    cellClick = (d: Date) => onDateClick(d);
+  } else if (onSlotClick) {
+    cellClick = (d: Date) => {
+      const start = new Date(d);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(d);
+      end.setHours(23, 59, 59, 999);
+      onSlotClick({ start, end });
+    };
+  } else {
+    cellClick = undefined;
+  }
 
   return (
     <div

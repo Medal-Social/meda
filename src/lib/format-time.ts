@@ -18,8 +18,8 @@ export function formatClock(date: Date, opts: FormatClockOptions = {}): string {
 }
 
 export function formatDuration(ms: number): string {
-  if (ms < 0) ms = 0;
-  const totalSec = Math.floor(ms / 1000);
+  const clampedMs = ms < 0 ? 0 : ms;
+  const totalSec = Math.floor(clampedMs / 1000);
   const h = Math.floor(totalSec / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;

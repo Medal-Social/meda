@@ -41,7 +41,12 @@ export function DefaultThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const apply = () => {
-      const resolved = theme === 'system' ? (mq.matches ? 'dark' : 'light') : theme;
+      let resolved: 'light' | 'dark';
+      if (theme !== 'system') {
+        resolved = theme;
+      } else {
+        resolved = mq.matches ? 'dark' : 'light';
+      }
       setResolvedTheme(resolved);
       document.documentElement.classList.toggle('dark', resolved === 'dark');
     };

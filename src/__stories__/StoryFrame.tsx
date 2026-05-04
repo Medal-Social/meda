@@ -14,8 +14,14 @@ export function StoryFrame({
   width?: number | string;
   bg?: 'transparent' | 'card' | 'background';
 }) {
-  const bgClass =
-    bg === 'card' ? 'bg-card' : bg === 'background' ? 'bg-background' : 'bg-transparent';
+  let bgClass: string;
+  if (bg === 'card') {
+    bgClass = 'bg-card';
+  } else if (bg === 'background') {
+    bgClass = 'bg-background';
+  } else {
+    bgClass = 'bg-transparent';
+  }
   return (
     <div className={['p-4', bgClass].join(' ')} style={{ width }}>
       {children}

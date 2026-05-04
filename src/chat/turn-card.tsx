@@ -25,12 +25,14 @@ export function TurnCard({ turn, startedAtRef, tz, onPlay, className }: TurnCard
 
   // amber-700 (not -500) for the 11px system speaker label so it clears
   // WCAG AA (4.5:1) against the card background.
-  const speakerColor =
-    turn.speaker === 'assistant'
-      ? 'text-primary'
-      : turn.speaker === 'system'
-        ? 'text-amber-700'
-        : 'text-foreground';
+  let speakerColor: string;
+  if (turn.speaker === 'assistant') {
+    speakerColor = 'text-primary';
+  } else if (turn.speaker === 'system') {
+    speakerColor = 'text-amber-700';
+  } else {
+    speakerColor = 'text-foreground';
+  }
 
   return (
     <div

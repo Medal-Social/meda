@@ -64,9 +64,18 @@ function FilterRailRoot({
   ...props
 }: FilterRailProps) {
   const titleId = useId();
-  const label =
-    ariaLabel ?? (ariaLabelledBy ? undefined : typeof title === 'string' ? title : undefined);
-  const labelledBy = ariaLabelledBy ?? (label ? undefined : title ? titleId : undefined);
+  let label: string | undefined;
+  if (ariaLabel) {
+    label = ariaLabel;
+  } else if (!ariaLabelledBy && typeof title === 'string') {
+    label = title;
+  }
+  let labelledBy: string | undefined;
+  if (ariaLabelledBy) {
+    labelledBy = ariaLabelledBy;
+  } else if (!label && title) {
+    labelledBy = titleId;
+  }
 
   return (
     <aside

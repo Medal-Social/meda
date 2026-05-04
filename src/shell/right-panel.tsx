@@ -208,8 +208,14 @@ export function RightPanel({
 
   const activePanelView = resolvedPanelViews.find((v) => v.id === activeView);
 
-  const cycleAriaLabel =
-    mode === 'panel' ? 'Expand panel' : mode === 'expanded' ? 'Maximize panel' : 'Restore panel';
+  let cycleAriaLabel: string;
+  if (mode === 'panel') {
+    cycleAriaLabel = 'Expand panel';
+  } else if (mode === 'expanded') {
+    cycleAriaLabel = 'Maximize panel';
+  } else {
+    cycleAriaLabel = 'Restore panel';
+  }
 
   const handleResize = (w: number) => setDisplayWidth(w);
   const handleCommit = (w: number) => {

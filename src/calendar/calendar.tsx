@@ -81,21 +81,21 @@ export function Calendar({
         labels={labels}
       />
 
-      {view === 'month' ? (
+      {view === 'month' && (
         <MonthView
           {...sharedProps}
           weekStartsOn={weekStartsOn}
           onDateClick={onDateChange ? (d) => onDateChange(d) : undefined}
         />
-      ) : view === 'week' ? (
+      )}
+      {view === 'week' && (
         <WeekView
           {...sharedProps}
           weekStartsOn={weekStartsOn}
           onDateClick={onDateChange ? (d) => onDateChange(d) : undefined}
         />
-      ) : (
-        <DayView {...sharedProps} />
       )}
+      {view === 'day' && <DayView {...sharedProps} />}
     </div>
   );
 }
