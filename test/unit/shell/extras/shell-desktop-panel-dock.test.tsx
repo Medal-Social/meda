@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ShellDesktopPanelDock } from '../../../../src/shell/extras/shell-desktop-panel-dock';
+import { ShellDesktopPanelDock } from '../../../src/shell/../../../src/shell/extras/shell-desktop-panel-dock';
 
 afterEach(() => {
   cleanup();
@@ -70,5 +70,28 @@ describe('ShellDesktopPanelDock', () => {
     fireEvent.pointerUp(window);
 
     expect(handleWidthChange).toHaveBeenLastCalledWith(440);
+  });
+
+  it('ignores non-left-button pointerDown on the resize handle', () => {
+    const handleWidthChange = vi.fn();
+
+    render(
+      <ShellDesktopPanelDock
+        defaultView="info"
+        panelOpen
+        width={360}
+        onWidthChange={handleWidthChange}
+        renderPanel={() => <div>Panel</div>}
+      />
+    );
+
+    const dragHandle = screen.getByLabelText('Resize panel');
+    // button=2 = right-click — should be ignored
+    fireEvent.pointerDown(dragHandle, { button: 2, clientX: 700 });
+    fireEvent.pointerMove(window, { clientX: 620 });
+    fireEvent.pointerUp(window);
+
+    // onWidthChange should NOT have been called
+    expect(handleWidthChange).not.toHaveBeenCalled();
   });
 });

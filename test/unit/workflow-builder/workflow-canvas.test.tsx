@@ -1,14 +1,6 @@
 import { render } from '@testing-library/react';
-<<<<<<< HEAD:test/unit/workflow-builder/workflow-canvas.test.tsx
-import { describe, expect, it } from 'vitest';
-import { WorkflowCanvas } from '../../../src/workflow-builder/workflow-canvas.js';
-||||||| parent of cb699fc (Push workflow-builder coverage to 100%):src/workflow-builder/__tests__/workflow-canvas.test.tsx
-import { describe, expect, it } from 'vitest';
-import { WorkflowCanvas } from '../workflow-canvas.js';
-=======
 import { describe, expect, it, vi } from 'vitest';
-import { WorkflowCanvas } from '../workflow-canvas.js';
->>>>>>> cb699fc (Push workflow-builder coverage to 100%):src/workflow-builder/__tests__/workflow-canvas.test.tsx
+import { WorkflowCanvas } from '../../../src/workflow-builder/workflow-canvas.js';
 
 describe('WorkflowCanvas', () => {
   it('renders without crashing with empty data', () => {

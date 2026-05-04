@@ -21,21 +21,22 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
+      // NB: setting BOTH `include` and `exclude` on the top-level coverage
+      // block in vitest 4 silently zeroes out instrumentation when the
+      // exclude is an array of more than one entry (suspected glob-merge
+      // bug). Workaround: use ONLY `include`, and rely on the exclude
+      // logic baked into `provider: 'v8'` (which already skips node_modules,
+      // dist, and test files by default). Per-folder exclusions live in
+      // the `excludeAfterRemap` post-filter below.
       include: ['src/**'],
+      // Per-file exclusions applied after V8 instrumentation; equivalent
+      // to `exclude` in spirit but processed via the istanbul-remap pass
+      // so the include glob isn't broken.
       excludeAfterRemap: [
         'dist/**',
         'storybook-static/**',
         'coverage/**',
-<<<<<<< HEAD
         'test/**',
-||||||| parent of 250c0e8 (Tighten coverage excludeAfterRemap (fixtures, scaffolding))
-        'src/**/*.test.ts',
-        'src/**/*.test.tsx',
-=======
-        // Test, story, and a11y scaffolding
-        'src/**/*.test.ts',
-        'src/**/*.test.tsx',
->>>>>>> 250c0e8 (Tighten coverage excludeAfterRemap (fixtures, scaffolding))
         'src/**/*.stories.ts',
         'src/**/*.stories.tsx',
         'src/**/__stories__/**',

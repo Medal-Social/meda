@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { ShellScrollableContent } from '../../../../src/shell/extras/shell-scrollable-content';
+import { ShellScrollableContent } from '../../../src/shell/../../../src/shell/extras/shell-scrollable-content';
 
 afterEach(() => {
   cleanup();
@@ -40,5 +40,27 @@ describe('ShellScrollableContent', () => {
 
     expect(screen.getByTestId('shell-content-fullbleed')).toHaveStyle({ maxWidth: '1760px' });
     expect(screen.queryByTestId('shell-content-workspace')).not.toBeInTheDocument();
+  });
+
+  it('omits the style attribute when maxWidth is not provided for fullbleed layout', () => {
+    render(
+      <ShellScrollableContent layout="fullbleed">
+        <div>Fullbleed uncapped</div>
+      </ShellScrollableContent>
+    );
+
+    const el = screen.getByTestId('shell-content-fullbleed');
+    expect(el.getAttribute('style')).toBeNull();
+  });
+
+  it('omits the style attribute when maxWidth is not provided for workspace layout', () => {
+    render(
+      <ShellScrollableContent layout="workspace">
+        <div>Workspace uncapped</div>
+      </ShellScrollableContent>
+    );
+
+    const el = screen.getByTestId('shell-content-workspace');
+    expect(el.getAttribute('style')).toBeNull();
   });
 });

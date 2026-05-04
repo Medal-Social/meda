@@ -1,26 +1,10 @@
-<<<<<<< HEAD:test/unit/email-builder/builder-canvas.test.tsx
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { createBlock } from '../../../src/email-builder/block-registry.js';
 import { BuilderCanvas } from '../../../src/email-builder/builder-canvas.js';
 import { BuilderDndWrapper } from '../../../src/email-builder/internal/dnd-wrapper.js';
+import type { EmailBlock } from '../../../src/email-builder/types.js';
 import { defaultEmailBuilderLabels } from '../../../src/email-builder/types.js';
-||||||| parent of 5f920f1 (Expand builder-canvas tests and add v8 ignore for unreachable branches):src/email-builder/__tests__/builder-canvas.test.tsx
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import { createBlock } from '../block-registry.js';
-import { BuilderCanvas } from '../builder-canvas.js';
-import { BuilderDndWrapper } from '../internal/dnd-wrapper.js';
-import { defaultEmailBuilderLabels } from '../types.js';
-=======
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-import { createBlock } from '../block-registry.js';
-import { BuilderCanvas } from '../builder-canvas.js';
-import { BuilderDndWrapper } from '../internal/dnd-wrapper.js';
-import type { EmailBlock } from '../types.js';
-import { defaultEmailBuilderLabels } from '../types.js';
->>>>>>> 5f920f1 (Expand builder-canvas tests and add v8 ignore for unreachable branches):src/email-builder/__tests__/builder-canvas.test.tsx
 
 const labels = defaultEmailBuilderLabels;
 

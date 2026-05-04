@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { resolveWorkflowIcon } from '../internal/trigger-icons.js';
+import { resolveWorkflowIcon } from '../../../src/workflow-builder/internal/trigger-icons.js';
 import {
   getDefaultNodeSentence,
   NODE_HEIGHT,
   NODE_KIND_STYLES,
   NODE_WIDTH,
-} from '../internal/trigger-sentence.js';
+} from '../../../src/workflow-builder/internal/trigger-sentence.js';
 
 describe('getDefaultNodeSentence', () => {
   it('returns "When <label>" for trigger with label', () => {

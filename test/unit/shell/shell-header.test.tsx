@@ -8,9 +8,9 @@ import {
   PanelToggle,
   ShellHeader,
   WorkspaceSwitcher,
-} from '../../../src/shell/shell-header.js';
-import { MedaShellProvider } from '../../../src/shell/shell-provider.js';
-import type { AppDefinition, WorkspaceDefinition } from '../../../src/shell/types.js';
+} from '../../../src/shell/../../src/shell/shell-header.js';
+import { MedaShellProvider } from '../../../src/shell/../../src/shell/shell-provider.js';
+import type { AppDefinition, WorkspaceDefinition } from '../../../src/shell/../../src/shell/types.js';
 
 // ---------------------------------------------------------------------------
 // Mock useShellViewport — default 'desktop', overridden per-test where needed
@@ -20,7 +20,7 @@ vi.mock('../../../src/shell/use-shell-viewport.js', () => ({
   useShellViewport: vi.fn(() => 'desktop'),
 }));
 
-import { useShellViewport } from '../../../src/shell/use-shell-viewport.js';
+import { useShellViewport } from '../../../src/shell/../../src/shell/use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
 // Browser stubs — DefaultThemeProvider reads localStorage + matchMedia
@@ -355,6 +355,26 @@ describe('WorkspaceSwitcher — menuItems replaces hardcoded defaults', () => {
   });
 });
 
+describe('WorkspaceSwitcher — theme toggle cycles theme on click', () => {
+  it('clicking the theme toggle item changes the theme', () => {
+    renderWithProvider(<WorkspaceSwitcher />);
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    // ThemeToggleMenuItem renders a "Switch to ... theme" menu item
+    const themeItem = screen.getByText(/switch to .* theme/i);
+    const labelBefore = themeItem.textContent;
+
+    fireEvent.click(themeItem);
+
+    // After click the menu closes, re-open to check new theme label
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+
+    const labelAfter = screen.getByText(/switch to .* theme/i).textContent;
+    expect(labelAfter).not.toBe(labelBefore);
+  });
+});
+
 describe('WorkspaceSwitcher — Escape closes the menu', () => {
   it('pressing Escape after opening removes menu items from DOM', () => {
     renderWithProvider(<WorkspaceSwitcher />);
@@ -565,5 +585,40 @@ describe('ShellHeader — renders on desktop viewport', () => {
     (useShellViewport as any).mockReturnValue('desktop');
     renderWithProvider(<ShellHeader />);
     expect(screen.getByRole('banner')).toBeInTheDocument();
+  });
+});
+
+describe('WorkspaceSwitcher — workspace.icon renders in trigger when set', () => {
+  it('shows a workspace icon span when workspace.icon is a ReactNode', () => {
+    const wsWithIcon: import('./types.js').WorkspaceDefinition = {
+      id: 'ws-icon',
+      name: 'Iconic WS',
+      icon: <span data-testid="ws-icon">WS</span>,
+    };
+
+    render(
+      <MedaShellProvider workspace={wsWithIcon} apps={apps}>
+        <WorkspaceSwitcher />
+      </MedaShellProvider>
+    );
+
+    expect(screen.getByTestId('ws-icon')).toBeInTheDocument();
+  });
+
+  it('shows icon for workspace in the dropdown list when workspace.icon is set', () => {
+    const wsIconEntry: import('./types.js').WorkspaceDefinition = {
+      id: 'ws-with-icon',
+      name: 'Icon WS',
+      icon: <span data-testid="list-ws-icon">X</span>,
+    };
+
+    render(
+      <MedaShellProvider workspace={ws} workspaces={[ws, wsIconEntry]} apps={apps}>
+        <WorkspaceSwitcher />
+      </MedaShellProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /acme corp/i }));
+    expect(screen.getByTestId('list-ws-icon')).toBeInTheDocument();
   });
 });

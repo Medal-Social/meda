@@ -1,20 +1,10 @@
 import type { DragEndEvent } from '@dnd-kit/core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
-<<<<<<< HEAD:test/unit/email-builder/email-builder.test.tsx
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { createBlock } from '../../../src/email-builder/block-registry.js';
 import { EmailBuilder } from '../../../src/email-builder/email-builder.js';
 import type { EmailDocument } from '../../../src/email-builder/types.js';
-||||||| parent of bf72329 (Expand EmailBuilder tests to 100% coverage (DnD mock, export, mobile drawers, brand prop)):src/email-builder/__tests__/email-builder.test.tsx
-import { describe, expect, it } from 'vitest';
-import { EmailBuilder } from '../email-builder.js';
-import type { EmailDocument } from '../types.js';
-=======
-import { describe, expect, it, vi } from 'vitest';
-import { createBlock } from '../block-registry.js';
-import { EmailBuilder } from '../email-builder.js';
-import type { EmailDocument } from '../types.js';
->>>>>>> bf72329 (Expand EmailBuilder tests to 100% coverage (DnD mock, export, mobile drawers, brand prop)):src/email-builder/__tests__/email-builder.test.tsx
 
 // Helper to create a synthetic DragEndEvent
 function makeDragEndEvent(activeId: string, overId: string | null): DragEndEvent {

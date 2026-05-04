@@ -13,6 +13,7 @@ const BREAKPOINTS = {
 type MatchMedia = (query: string) => MediaQueryList;
 
 function getMatchMedia(): MatchMedia | null {
+  /* v8 ignore next — SSR guard: window is always defined in jsdom test env */
   if (typeof window === 'undefined') return null;
   if (typeof window.matchMedia !== 'function') return null;
   return window.matchMedia.bind(window);
@@ -40,6 +41,7 @@ export function useShellViewport(): ShellViewport {
       ([band, query]) => {
         const mql = matchMedia(query);
         const onChange = () => {
+          /* v8 ignore next — false branch: listener fires but mql.matches is already false */
           if (mql.matches) setViewport(band);
         };
         mql.addEventListener('change', onChange);

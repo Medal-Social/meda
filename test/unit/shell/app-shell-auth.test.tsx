@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { AppShellAuth } from '../../../src/shell/app-shell-auth.js';
+import '@testing-library/jest-dom/vitest';
+import { AppShellAuth } from './app-shell-auth.js';
 
 describe('AppShellAuth', () => {
   it('renders the title, description, and form children', () => {
@@ -34,5 +35,21 @@ describe('AppShellAuth', () => {
     expect(marketingPanel?.className).toContain('--auth-gradient-primary');
     expect(marketingPanel?.className).toContain('--auth-gradient-secondary');
     expect(marketingPanel?.className).toContain('--auth-gradient-base');
+  });
+
+  it('renders the actions slot when actions are provided', () => {
+    render(
+      <AppShellAuth
+        title="Sign in"
+        actions={
+          <button type="button" data-testid="auth-action">
+            Back
+          </button>
+        }
+      >
+        <input aria-label="email" />
+      </AppShellAuth>
+    );
+    expect(screen.getByTestId('auth-action')).toBeInTheDocument();
   });
 });

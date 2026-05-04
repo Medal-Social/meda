@@ -1,7 +1,7 @@
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DefaultThemeProvider, ThemeToggle, useTheme } from '../../../src/shell/theme.js';
+import { DefaultThemeProvider, ThemeToggle, useTheme } from '../../../src/shell/../../src/shell/theme.js';
 
 // Ensure next-themes is never loaded when the default adapter is used.
 vi.mock('next-themes', () => {
@@ -68,6 +68,22 @@ describe('useTheme', () => {
     const { result } = renderHook(() => useTheme(), { wrapper });
     act(() => {});
     expect(result.current.theme).toBe('system');
+  });
+
+  it('hydrates theme from a valid stored value in localStorage on mount', async () => {
+    // Provide a storage that returns 'dark' for the meda:theme key.
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key: string) => (key === 'meda:theme' ? 'dark' : null)),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+    });
+
+    const { result } = renderHook(() => useTheme(), { wrapper });
+    act(() => {});
+
+    // After the mount effect runs, theme should be hydrated to 'dark'.
+    expect(result.current.theme).toBe('dark');
   });
 
   it("setTheme('dark') applies class=\"dark\" to html and persists to localStorage key 'meda:theme'", () => {

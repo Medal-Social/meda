@@ -7,13 +7,13 @@ import {
   CommandRegistryContext,
   useCommandGroup,
   useCommands,
-} from '../../../src/shell/command-palette.js';
-import { MedaShellProvider, useMedaShell } from '../../../src/shell/shell-provider.js';
+} from '../../../src/shell/../../src/shell/command-palette.js';
+import { MedaShellProvider, useMedaShell } from '../../../src/shell/../../src/shell/shell-provider.js';
 import type {
   AppDefinition,
   CommandDefinition,
   WorkspaceDefinition,
-} from '../../../src/shell/types.js';
+} from '../../../src/shell/../../src/shell/types.js';
 
 // ---------------------------------------------------------------------------
 // Browser stubs
@@ -645,5 +645,174 @@ describe('useCommandGroup — orders groups by priority', () => {
       });
     }).toThrow('useCommandGroup must be used inside <CommandPalette>');
     errSpy.mockRestore();
+  });
+
+  it('groups with no useCommandGroup registration use group id as label (default priority=100)', async () => {
+    // Commands in groups not registered via useCommandGroup — exercises the
+    // ga?.priority ?? 100 and ga?.label ?? a branches (ga is undefined).
+    const cmdX: CommandDefinition = {
+      id: 'unregistered-x',
+      label: 'X Cmd',
+      group: 'unregistered-b',
+      run: vi.fn(),
+    };
+    const cmdY: CommandDefinition = {
+      id: 'unregistered-y',
+      label: 'Y Cmd',
+      group: 'unregistered-a',
+      run: vi.fn(),
+    };
+
+    function Setup() {
+      useCommands([cmdX, cmdY]);
+      // No useCommandGroup calls — both groups have undefined registration
+      const ctx = useMedaShell();
+      return (
+        <button type="button" onClick={() => ctx.commandPalette.setOpen(true)} data-testid="open">
+          open
+        </button>
+      );
+    }
+
+    render(
+      <MedaShellProvider workspace={workspace} apps={apps}>
+        <CommandPalette>
+          <Setup />
+        </CommandPalette>
+      </MedaShellProvider>
+    );
+
+    fireEvent.click(screen.getByTestId('open'));
+
+    await waitFor(() => {
+      // Groups render with their id as label since no useCommandGroup was called
+      expect(screen.getByText('X Cmd')).toBeInTheDocument();
+      expect(screen.getByText('Y Cmd')).toBeInTheDocument();
+    });
+  });
+
+  it('sorts groups with equal priority by label (localeCompare fallback)', async () => {
+    const cmdZ: CommandDefinition = {
+      id: 'grp-z-cmd',
+      label: 'Z Cmd',
+      group: 'group-z',
+      run: vi.fn(),
+    };
+    const cmdA: CommandDefinition = {
+      id: 'grp-a-cmd',
+      label: 'A Cmd',
+      group: 'group-a',
+      run: vi.fn(),
+    };
+
+    function Setup() {
+      useCommands([cmdZ, cmdA]);
+      // Both groups have the same priority so they sort by label
+      useCommandGroup({ id: 'group-z', label: 'Zebra Group', priority: 50 });
+      useCommandGroup({ id: 'group-a', label: 'Alpha Group', priority: 50 });
+      const ctx = useMedaShell();
+      return (
+        <button type="button" onClick={() => ctx.commandPalette.setOpen(true)} data-testid="open">
+          open
+        </button>
+      );
+    }
+
+    render(
+      <MedaShellProvider workspace={workspace} apps={apps}>
+        <CommandPalette>
+          <Setup />
+        </CommandPalette>
+      </MedaShellProvider>
+    );
+
+    fireEvent.click(screen.getByTestId('open'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Alpha Group')).toBeInTheDocument();
+      expect(screen.getByText('Zebra Group')).toBeInTheDocument();
+    });
+
+    // Alpha Group (a) should appear before Zebra Group (z)
+    const headings = screen.getAllByText(/Alpha Group|Zebra Group/);
+    expect(headings[0].textContent).toBe('Alpha Group');
+    expect(headings[1].textContent).toBe('Zebra Group');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CommandPalette — handleSelect executes command and closes palette
+// ---------------------------------------------------------------------------
+
+describe('CommandPalette — selecting a command runs it and closes the palette', () => {
+  function CommandSetup({ commands }: { commands: CommandDefinition[] }) {
+    useCommands(commands);
+    const ctx = useMedaShell();
+    return (
+      <button type="button" onClick={() => ctx.commandPalette.setOpen(true)} data-testid="open">
+        open
+      </button>
+    );
+  }
+
+  it('clicking a command item executes the command and closes the palette', async () => {
+    const runFn = vi.fn();
+    const cmd: CommandDefinition = {
+      id: 'exec-cmd',
+      label: 'Execute Me',
+      group: 'actions',
+      run: runFn,
+    };
+
+    render(
+      <MedaShellProvider workspace={workspace} apps={apps}>
+        <CommandPalette>
+          <CommandSetup commands={[cmd]} />
+          <PaletteStateReader />
+        </CommandPalette>
+      </MedaShellProvider>
+    );
+
+    fireEvent.click(screen.getByTestId('open'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Execute Me')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Execute Me'));
+
+    await waitFor(() => {
+      expect(runFn).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('command item with a Lucide icon renders the icon svg', async () => {
+    const cmd: CommandDefinition = {
+      id: 'icon-cmd',
+      label: 'Icon Command',
+      group: 'actions',
+      icon: Inbox,
+      run: vi.fn(),
+    };
+
+    render(
+      <MedaShellProvider workspace={workspace} apps={apps}>
+        <CommandPalette>
+          <CommandSetup commands={[cmd]} />
+        </CommandPalette>
+      </MedaShellProvider>
+    );
+
+    fireEvent.click(screen.getByTestId('open'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Icon Command')).toBeInTheDocument();
+    });
+
+    // Icon is an SVG rendered by Lucide next to the label
+    const item =
+      screen.getByText('Icon Command').closest('[data-value]') ??
+      screen.getByText('Icon Command').parentElement;
+    expect(item?.querySelector('svg')).not.toBeNull();
   });
 });

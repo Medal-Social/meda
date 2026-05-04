@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ShellStorageAdapter } from '../../../src/shell/layout-state';
-import { createLocalStorageAdapter, useShellLayoutState } from '../../../src/shell/layout-state';
+import type { ShellStorageAdapter } from '../../../src/shell/../../src/shell/layout-state';
+import { createLocalStorageAdapter, useShellLayoutState } from '../../../src/shell/../../src/shell/layout-state';
 
 function createStorageMock() {
   const store = new Map<string, string>();
@@ -71,6 +71,15 @@ describe('storage adapter', () => {
   it('restore returns null when no stored value', () => {
     const adapter = createLocalStorageAdapter();
     expect(adapter.load('meda:nonexistent')).toBeNull();
+  });
+
+  it('returns null when localStorage.getItem returns invalid JSON (swallows parse error)', () => {
+    const adapter = createLocalStorageAdapter();
+
+    // Prime localStorage with a non-parseable value so JSON.parse throws.
+    (localStorage.getItem as ReturnType<typeof vi.fn>).mockReturnValue('not-valid-json{{');
+
+    expect(adapter.load('meda:test')).toBeNull();
   });
 
   it('SSR-safe: no window access at module load; load/save no-op when window is undefined', () => {
@@ -237,6 +246,39 @@ describe('useShellLayoutState', () => {
 
   it('useShellLayoutState — ignores malformed stored value (falls through to defaults)', () => {
     const storage = makeStubStorage({ contextRail: 'wat' } as unknown);
+    const { result } = renderHook(() =>
+      useShellLayoutState({ workspaceId: 'w1', appId: 'a1', storage })
+    );
+    expect(result.current[0]).toEqual(DEFAULTS);
+  });
+
+  it('ignores stored value when rightPanel is missing', () => {
+    const storage = makeStubStorage({
+      contextRail: { width: 260, collapsed: false },
+      // no rightPanel
+    });
+    const { result } = renderHook(() =>
+      useShellLayoutState({ workspaceId: 'w1', appId: 'a1', storage })
+    );
+    expect(result.current[0]).toEqual(DEFAULTS);
+  });
+
+  it('ignores stored value when rightPanel.mode is invalid', () => {
+    const storage = makeStubStorage({
+      contextRail: { width: 260, collapsed: false },
+      rightPanel: { width: 340, mode: 'invalid-mode', activeView: null },
+    });
+    const { result } = renderHook(() =>
+      useShellLayoutState({ workspaceId: 'w1', appId: 'a1', storage })
+    );
+    expect(result.current[0]).toEqual(DEFAULTS);
+  });
+
+  it('ignores stored value when rightPanel.activeView is a non-null non-string', () => {
+    const storage = makeStubStorage({
+      contextRail: { width: 260, collapsed: false },
+      rightPanel: { width: 340, mode: 'closed', activeView: 42 },
+    });
     const { result } = renderHook(() =>
       useShellLayoutState({ workspaceId: 'w1', appId: 'a1', storage })
     );

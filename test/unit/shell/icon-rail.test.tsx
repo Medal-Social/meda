@@ -3,10 +3,10 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { Inbox, Settings } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IconRailItem } from '../../../src/shell/icon-rail.js';
-import { IconRail } from '../../../src/shell/icon-rail.js';
-import { MedaShellProvider } from '../../../src/shell/shell-provider.js';
-import type { AppDefinition, WorkspaceDefinition } from '../../../src/shell/types.js';
+import type { IconRailItem } from '../../../src/shell/../../src/shell/icon-rail.js';
+import { IconRail } from '../../../src/shell/../../src/shell/icon-rail.js';
+import { MedaShellProvider } from '../../../src/shell/../../src/shell/shell-provider.js';
+import type { AppDefinition, WorkspaceDefinition } from '../../../src/shell/../../src/shell/types.js';
 
 // ---------------------------------------------------------------------------
 // Mock useShellViewport — default 'desktop', overridden per-test where needed
@@ -16,7 +16,7 @@ vi.mock('../../../src/shell/use-shell-viewport.js', () => ({
   useShellViewport: vi.fn(() => 'desktop'),
 }));
 
-import { useShellViewport } from '../../../src/shell/use-shell-viewport.js';
+import { useShellViewport } from '../../../src/shell/../../src/shell/use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
 // Browser stubs
@@ -332,5 +332,47 @@ describe('IconRail — renders on desktop viewport', () => {
       </Wrapper>
     );
     expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument();
+  });
+});
+
+describe('IconRail — badge branch coverage', () => {
+  it('renders a badge element when item.badge is provided', () => {
+    const badgedItems: IconRailItem[] = [
+      {
+        id: 'inbox',
+        label: 'Inbox',
+        to: '/inbox',
+        icon: Inbox,
+        badge: <span data-testid="inbox-badge">3</span>,
+      },
+    ];
+    render(
+      <Wrapper>
+        <IconRail mainItems={badgedItems} />
+      </Wrapper>
+    );
+    expect(screen.getByTestId('inbox-badge')).toBeInTheDocument();
+  });
+});
+
+describe('IconRail — footer with utility items and pinnedBottom=false', () => {
+  it('footer does not have mt-auto when utility items exist and rail is unpinned', () => {
+    render(
+      <Wrapper>
+        <IconRail
+          mainItems={mainItems}
+          utilityItems={utilityItems}
+          footer={<span data-testid="rail-footer">Footer</span>}
+        />
+      </Wrapper>
+    );
+
+    // Click divider to toggle pinnedBottom from true to false
+    const dividerBtn = screen.getByTestId('rail-divider');
+    fireEvent.click(dividerBtn);
+
+    // Footer wrapper should NOT have mt-auto (pinnedBottom=false AND utilityItems.length > 0)
+    const footer = screen.getByTestId('rail-footer').parentElement;
+    expect(footer?.className).not.toContain('mt-auto');
   });
 });

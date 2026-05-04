@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { Position } from '@xyflow/react';
 import { describe, expect, it } from 'vitest';
-import { DefaultWorkflowEdge } from '../edges/default-edge.js';
+import { DefaultWorkflowEdge } from '../../../src/workflow-builder/edges/default-edge.js';
 
 // DefaultWorkflowEdge expects standard EdgeProps. We supply the minimum
 // geometric values; markerEnd and style are optional.

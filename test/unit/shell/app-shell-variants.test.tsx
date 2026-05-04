@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { Inbox } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
-import { AppShell } from '../../../src/shell/app-shell.js';
-import { MedaShellProvider } from '../../../src/shell/shell-provider.js';
+import { AppShell, AppShellBody } from './app-shell.js';
+import { MedaShellProvider } from './shell-provider.js';
 
 const baseProvider = (children: React.ReactNode) => (
   <MedaShellProvider
@@ -97,5 +97,42 @@ describe('AppShell variant', () => {
       )
     );
     expect(screen.getByTestId('transcript')).toBeInTheDocument();
+  });
+
+  it('falls back to branding.brandName when auth.title and branding.appName are both absent', () => {
+    render(
+      baseProvider(
+        <AppShell variant="auth" branding={{ brandName: 'FallbackBrand' }}>
+          <input aria-label="email" />
+        </AppShell>
+      )
+    );
+    // When appName is absent, title falls back to brandName
+    expect(screen.getByRole('heading', { name: 'FallbackBrand' })).toBeInTheDocument();
+  });
+
+  it('falls back to "Sign in" when no auth title, appName, or brandName is provided', () => {
+    render(
+      baseProvider(
+        <AppShell variant="auth">
+          <input aria-label="email" />
+        </AppShell>
+      )
+    );
+    // No auth or branding provided — title falls back to 'Sign in'
+    expect(screen.getByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
+  });
+});
+
+describe('AppShellBody', () => {
+  it('renders children inside a relative overflow-hidden div', () => {
+    render(
+      <AppShellBody>
+        <div data-testid="body-child">content</div>
+      </AppShellBody>
+    );
+    expect(screen.getByTestId('body-child')).toBeInTheDocument();
+    const wrapper = screen.getByTestId('body-child').parentElement;
+    expect(wrapper?.className).toContain('overflow-hidden');
   });
 });

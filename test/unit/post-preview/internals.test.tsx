@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { Avatar } from '../internal/avatar.js';
-import { splitContent } from '../internal/format-content.js';
-import { useSwipe } from '../internal/use-swipe.js';
+import { Avatar } from '../../../src/post-preview/internal/avatar.js';
+import { splitContent } from '../../../src/post-preview/internal/format-content.js';
+import { useSwipe } from '../../../src/post-preview/internal/use-swipe.js';
 
 // ---------------------------------------------------------------------------
 // Avatar

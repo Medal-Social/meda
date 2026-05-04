@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   getResolvedShellPanelWidth,
   getShellContentMaxWidth,
-} from '../../../src/shell/shell-layout-utils';
+} from '../../../src/shell/../../src/shell/shell-layout-utils';
 
 describe('shell-layout-utils', () => {
   it('returns workspace content caps by viewport band', () => {
@@ -42,5 +42,20 @@ describe('shell-layout-utils', () => {
         sidebarWidth: 320,
       })
     ).toBe(280);
+  });
+
+  it('returns undefined for fullbleed layout on an unrecognised viewport band', () => {
+    expect(getShellContentMaxWidth('fullbleed', 'tablet')).toBeUndefined();
+  });
+
+  it('returns the clamped preferred width when viewportWidth is non-finite', () => {
+    expect(
+      getResolvedShellPanelWidth({
+        preferredWidth: 400,
+        viewportWidth: Number.NaN,
+        sidebarOpen: false,
+        sidebarWidth: 0,
+      })
+    ).toBe(400);
   });
 });

@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { PostPreview } from '../post-preview.js';
+import { PostPreview } from '../../../src/post-preview/post-preview.js';
 
 const BASE = {
   displayName: 'Acme Studios',

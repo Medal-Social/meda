@@ -2,7 +2,7 @@ import { act, fireEvent, render, renderHook, screen } from '@testing-library/rea
 import { LayoutGrid, Menu } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ShellStorageAdapter } from '../../../src/shell/layout-state.js';
+import type { ShellStorageAdapter } from '../../../src/shell/../../src/shell/layout-state.js';
 
 vi.mock('../../../src/shell/use-shell-viewport.js', () => ({
   useShellViewport: vi.fn(() => 'desktop'),
@@ -12,15 +12,15 @@ import {
   MedaShellProvider,
   useMedaShell,
   useShellSelection,
-} from '../../../src/shell/shell-provider.js';
-import { useTheme } from '../../../src/shell/theme.js';
+} from '../../../src/shell/../../src/shell/shell-provider.js';
+import { useTheme } from '../../../src/shell/../../src/shell/theme.js';
 import type {
   AppDefinition,
   MobileBottomNavItem,
   ThemeAdapter,
   WorkspaceDefinition,
-} from '../../../src/shell/types.js';
-import { useShellViewport } from '../../../src/shell/use-shell-viewport.js';
+} from '../../../src/shell/../../src/shell/types.js';
+import { useShellViewport } from '../../../src/shell/../../src/shell/use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
 // Global browser stubs — DefaultThemeProvider reads localStorage + matchMedia
@@ -832,5 +832,84 @@ describe('MedaShellProvider — commandPalette.open / setOpen round-trip', () =>
     const setOpenRef = result.current.commandPalette.setOpen;
     rerender();
     expect(result.current.commandPalette.setOpen).toBe(setOpenRef);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MedaShellProvider — panelViews re-registration (update existing entry)
+// ---------------------------------------------------------------------------
+
+describe('MedaShellProvider — panelViews re-registration updates existing entry', () => {
+  it('re-registering the same id with new views replaces the entry', () => {
+    const viewsV1 = [{ id: 'v1', label: 'View 1', icon: Menu, render: () => <div>V1</div> }];
+    const viewsV2 = [{ id: 'v2', label: 'View 2', icon: Menu, render: () => <div>V2</div> }];
+
+    const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+
+    // Register the first version
+    act(() => {
+      result.current.panelViews.register('section', viewsV1, 'v1');
+    });
+
+    expect(result.current.panelViews.registrations).toHaveLength(1);
+    expect(result.current.panelViews.registrations[0].views).toBe(viewsV1);
+
+    // Re-register the same id with different views — exercises the map update branch (line 233)
+    act(() => {
+      result.current.panelViews.register('section', viewsV2, 'v2');
+    });
+
+    expect(result.current.panelViews.registrations).toHaveLength(1);
+    expect(result.current.panelViews.registrations[0].views).toBe(viewsV2);
+  });
+
+  it('re-registering with identical views and defaultView is a no-op (idempotency guard)', () => {
+    const views = [{ id: 'v1', label: 'View 1', icon: Menu, render: () => <div>V1</div> }];
+    const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+
+    let cleanup1: (() => void) | undefined;
+
+    act(() => {
+      cleanup1 = result.current.panelViews.register('section', views, 'v1');
+    });
+
+    const regsBefore = result.current.panelViews.registrations;
+
+    // Re-register with exact same views + defaultView — should return same prev (idempotency)
+    act(() => {
+      result.current.panelViews.register('section', views, 'v1');
+    });
+
+    // Registrations array reference stays the same (early return from idempotency check)
+    expect(result.current.panelViews.registrations).toBe(regsBefore);
+
+    cleanup1?.();
+  });
+
+  it('calling cleanup twice does not crash (second call is a no-op)', () => {
+    const views = [{ id: 'v1', label: 'View 1', icon: Menu, render: () => <div>V1</div> }];
+    const { result } = renderHook(() => useMedaShell(), { wrapper: Wrapper });
+
+    let cleanup: (() => void) | undefined;
+
+    act(() => {
+      cleanup = result.current.panelViews.register('section', views, 'v1');
+    });
+
+    expect(result.current.panelViews.registrations).toHaveLength(1);
+
+    // First cleanup removes the registration
+    act(() => {
+      cleanup?.();
+    });
+
+    expect(result.current.panelViews.registrations).toHaveLength(0);
+
+    // Second cleanup is a no-op (exercises the false branch of prev.some(...))
+    expect(() => {
+      act(() => {
+        cleanup?.();
+      });
+    }).not.toThrow();
   });
 });

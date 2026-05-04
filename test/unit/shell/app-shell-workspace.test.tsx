@@ -6,11 +6,11 @@ vi.mock('../../../src/shell/use-shell-viewport.js', () => ({
   useShellViewport: vi.fn(),
 }));
 
-import { AppShellWorkspace } from '../../../src/shell/app-shell-workspace.js';
-import { CommandPalette, useCommands } from '../../../src/shell/command-palette.js';
-import { PanelViewsProvider } from '../../../src/shell/panel-views-provider.js';
-import { MedaShellProvider, useMedaShell } from '../../../src/shell/shell-provider.js';
-import { useShellViewport } from '../../../src/shell/use-shell-viewport.js';
+import { AppShellWorkspace } from '../../../src/shell/../../src/shell/app-shell-workspace.js';
+import { CommandPalette, useCommands } from '../../../src/shell/../../src/shell/command-palette.js';
+import { PanelViewsProvider } from '../../../src/shell/../../src/shell/panel-views-provider.js';
+import { MedaShellProvider, useMedaShell } from '../../../src/shell/../../src/shell/shell-provider.js';
+import { useShellViewport } from '../../../src/shell/../../src/shell/use-shell-viewport.js';
 
 const Provider = ({ children }: { children: React.ReactNode }) => (
   <MedaShellProvider
@@ -664,5 +664,31 @@ describe('AppShellWorkspace', () => {
 
     expect(screen.getByRole('button', { name: 'Menu' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Module' })).not.toBeInTheDocument();
+  });
+});
+
+describe('AppShellWorkspace — mobile bottom nav includes AI button when panelViews has ai view', () => {
+  it('includes AI in mobile bottom nav when a panelView with id "ai" is present', () => {
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
+    (useShellViewport as any).mockReturnValue('mobile');
+
+    render(
+      <Provider>
+        <AppShellWorkspace
+          iconRail={{ mainItems: [{ id: 'i', label: 'Inbox', to: '/i', icon: Inbox }] }}
+          rightPanel={{
+            panelViews: [
+              { id: 'inspector', label: 'Inspector', icon: Inbox, render: () => null },
+              { id: 'ai', label: 'AI', icon: Inbox, render: () => null },
+            ],
+          }}
+        >
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    // AI button appears in mobile bottom nav
+    expect(screen.getByRole('button', { name: 'AI' })).toBeInTheDocument();
   });
 });

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { ShellRouteContext } from '../../../src/shell/extras/types';
+import type { ShellRouteContext } from '../../../src/shell/../../src/shell/extras/types';
 import {
   getShellActionsFromMatches,
   getShellContentLayoutFromMatches,
   getShellPanelViewsFromMatches,
   getShellTabsFromMatches,
-} from '../../../src/shell/shell-route-utils';
+} from '../../../src/shell/../../src/shell/shell-route-utils';
 
 describe('shell-route-utils', () => {
   it('resolves content layout from the last route handle', () => {
@@ -70,5 +70,75 @@ describe('shell-route-utils', () => {
 
     expect(getShellActionsFromMatches(matches, '/lab')).toBe(action);
     expect(getShellPanelViewsFromMatches(matches)).toEqual(['overview', 'activity']);
+  });
+
+  it('evaluates functional shell actions against route params and pathname', () => {
+    const result = getShellActionsFromMatches(
+      [
+        {
+          handle: {
+            shellActions: ({
+              params,
+              pathname,
+            }: {
+              params: Record<string, string | undefined>;
+              pathname: string;
+            }) => `${params.id ?? 'unknown'}:${pathname}`,
+          },
+          params: { id: 'frame-42' },
+        },
+      ],
+      '/lab/frame-42'
+    );
+
+    expect(result).toBe('frame-42:/lab/frame-42');
+  });
+
+  it('returns null from getShellActionsFromMatches when no handle present', () => {
+    expect(getShellActionsFromMatches([], '/lab')).toBeNull();
+  });
+
+  it('returns empty array from getShellTabsFromMatches when no handle present', () => {
+    expect(getShellTabsFromMatches([], '/lab')).toEqual([]);
+  });
+
+  it('evaluates functional shell tabs with empty params when match has no params', () => {
+    const tabs = getShellTabsFromMatches(
+      [
+        {
+          handle: {
+            shellTabs: ({
+              params,
+            }: {
+              params: Record<string, string | undefined>;
+              pathname: string;
+            }) => [{ id: params.id ?? 'fallback', label: 'Tab', to: '/tab' }],
+          },
+          // no params field — exercises the `params ?? {}` branch
+        },
+      ],
+      '/tab'
+    );
+    expect(tabs).toEqual([{ id: 'fallback', label: 'Tab', to: '/tab' }]);
+  });
+
+  it('evaluates functional shell actions with empty params when match has no params', () => {
+    const result = getShellActionsFromMatches(
+      [
+        {
+          handle: {
+            shellActions: ({
+              params,
+            }: {
+              params: Record<string, string | undefined>;
+              pathname: string;
+            }) => params.id ?? 'no-id',
+          },
+          // no params field — exercises the `params ?? {}` branch
+        },
+      ],
+      '/test'
+    );
+    expect(result).toBe('no-id');
   });
 });

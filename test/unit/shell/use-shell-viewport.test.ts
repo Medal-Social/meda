@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { useShellViewport } from '../../../src/shell/use-shell-viewport.js';
+import { useShellViewport } from '../../../src/shell/../../src/shell/use-shell-viewport.js';
 
 const QUERIES = {
   mobile: '(max-width: 767px)',
@@ -98,5 +98,50 @@ describe('useShellViewport', () => {
     const { result } = renderHook(() => useShellViewport());
     act(() => {});
     expect(result.current).toBe('desktop');
+  });
+
+  it('updates viewport when MediaQueryList fires a change event with matches=true', () => {
+    // Map query → { mql, listeners[] }
+    const registry = new Map<string, { mql: { matches: boolean }; listeners: (() => void)[] }>();
+
+    // Build a matchMedia stub that stores mql references so we can mutate
+    // `matches` before firing the change listener (the hook reads mql.matches
+    // from the closure, not from the event argument).
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => {
+        const entry = { mql: { matches: false }, listeners: [] as (() => void)[] };
+        registry.set(query, entry);
+
+        return {
+          get matches() {
+            return entry.mql.matches;
+          },
+          media: query,
+          onchange: null,
+          addEventListener: vi.fn((_event: string, listener: () => void) => {
+            entry.listeners.push(listener);
+          }),
+          removeEventListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        };
+      }),
+    });
+
+    const { result } = renderHook(() => useShellViewport());
+    act(() => {});
+
+    // Mutate matches=true on the mobile MQL, then fire its listeners
+    const mobileEntry = registry.get(QUERIES.mobile);
+    if (!mobileEntry) throw new Error('mobile MQL not registered');
+
+    act(() => {
+      mobileEntry.mql.matches = true;
+      for (const listener of mobileEntry.listeners) {
+        listener();
+      }
+    });
+
+    expect(result.current).toBe('mobile');
   });
 });

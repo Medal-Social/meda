@@ -2,23 +2,9 @@ import { render, screen } from '@testing-library/react';
 import { ReactFlowProvider } from '@xyflow/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
-<<<<<<< HEAD:test/unit/workflow-builder/nodes.test.tsx
-import {
-  ActionNode,
-  ConditionNode,
-  DelayNode,
-  EndNode,
-  TriggerNode,
-} from '../../../src/workflow-builder/nodes/index.js';
+import { BaseWorkflowNode } from '../../../src/workflow-builder/nodes/base-node.js';
+import { ActionNode, ConditionNode, DelayNode, EndNode, TriggerNode } from '../../../src/workflow-builder/nodes/index.js';
 import type { WorkflowNode } from '../../../src/workflow-builder/types.js';
-||||||| parent of cb699fc (Push workflow-builder coverage to 100%):src/workflow-builder/__tests__/nodes.test.tsx
-import { ActionNode, ConditionNode, DelayNode, EndNode, TriggerNode } from '../nodes/index.js';
-import type { WorkflowNode } from '../types.js';
-=======
-import { BaseWorkflowNode } from '../nodes/base-node.js';
-import { ActionNode, ConditionNode, DelayNode, EndNode, TriggerNode } from '../nodes/index.js';
-import type { WorkflowNode } from '../types.js';
->>>>>>> cb699fc (Push workflow-builder coverage to 100%):src/workflow-builder/__tests__/nodes.test.tsx
 
 function wrap(children: ReactNode) {
   return <ReactFlowProvider>{children}</ReactFlowProvider>;

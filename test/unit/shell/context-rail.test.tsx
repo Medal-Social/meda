@@ -3,14 +3,14 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { Inbox } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ContextRail } from '../../../src/shell/context-rail.js';
-import { MedaShellProvider } from '../../../src/shell/shell-provider.js';
+import { ContextRail } from '../../../src/shell/../../src/shell/context-rail.js';
+import { MedaShellProvider } from '../../../src/shell/../../src/shell/shell-provider.js';
 import type {
   AppDefinition,
   ContextItem,
   ContextModule,
   WorkspaceDefinition,
-} from '../../../src/shell/types.js';
+} from '../../../src/shell/../../src/shell/types.js';
 
 // ---------------------------------------------------------------------------
 // Mock useShellViewport — default 'desktop', overridden per-test where needed
@@ -20,7 +20,7 @@ vi.mock('../../../src/shell/use-shell-viewport.js', () => ({
   useShellViewport: vi.fn(() => 'desktop'),
 }));
 
-import { useShellViewport } from '../../../src/shell/use-shell-viewport.js';
+import { useShellViewport } from '../../../src/shell/../../src/shell/use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
 // Browser stubs
@@ -688,6 +688,44 @@ describe('collapse toggle', () => {
     expect(screen.queryByTestId('context-rail-toggle')).not.toBeInTheDocument();
     // Aside renders at the persisted width, NOT at width 0
     const aside = screen.getByRole('complementary', { name: 'Mail' });
+    expect(aside).toHaveStyle({ width: '260px' });
+  });
+});
+
+describe('ContextRail — resize handle no-op when not dragging', () => {
+  it('pointerMove without prior pointerDown does not change width', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+
+    const aside = screen.getByRole('complementary', { name: 'Mail' });
+    const handle = screen.getByRole('separator', { name: 'Resize context rail' });
+
+    // Fire pointerMove without a preceding pointerDown
+    act(() => {
+      fireEvent.pointerMove(handle, { clientX: 100, pointerId: 1 });
+    });
+
+    // Width must remain at the default 260px
+    expect(aside).toHaveStyle({ width: '260px' });
+  });
+
+  it('pointerUp without prior pointerDown does not commit width', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+
+    const aside = screen.getByRole('complementary', { name: 'Mail' });
+    const handle = screen.getByRole('separator', { name: 'Resize context rail' });
+
+    act(() => {
+      fireEvent.pointerUp(handle, { clientX: 100, pointerId: 1 });
+    });
+
     expect(aside).toHaveStyle({ width: '260px' });
   });
 });
