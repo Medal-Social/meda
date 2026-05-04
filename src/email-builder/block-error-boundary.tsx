@@ -25,6 +25,7 @@ export class BlockErrorBoundary extends Component<Props, State> {
   }
 
   override render(): ReactNode {
+    /* v8 ignore next -- v8 counts an implicit undefined branch on null-initialised class field */
     if (this.state.error) {
       return (
         <div
