@@ -120,9 +120,6 @@ vi.mock('@react-three/fiber', () => ({
   useThree: () => ({ size: { width: 144, height: 144 }, gl: {} }),
 }));
 
-// Mock @react-three/drei (no-op any imports)
-vi.mock('@react-three/drei', () => ({}));
-
 // Mock the Scene component so R3F JSX doesn't reach jsdom
 vi.mock('./src/voice/voice-orb-scene.js', () => ({
   Scene: () => null,
