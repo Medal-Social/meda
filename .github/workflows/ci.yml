@@ -79,7 +79,23 @@ jobs:
       # prepack on publish), so we build before running the demo tests.
       - run: pnpm build
 
-      - run: pnpm test
+      - name: Run tests with coverage
+        run: pnpm test:coverage
+
+      # Upload lcov coverage to DeepSource so we can track it over time.
+      # Requires the `DEEPSOURCE_DSN` repo secret and the Test Coverage
+      # analyzer enabled in DeepSource UI. Skipped on forks (no secret).
+      - name: Install DeepSource CLI
+        if: ${{ env.DEEPSOURCE_DSN != '' }}
+        env:
+          DEEPSOURCE_DSN: ${{ secrets.DEEPSOURCE_DSN }}
+        run: curl -fsSL https://cli.deepsource.com/install | BINDIR=./bin sh
+
+      - name: Report coverage to DeepSource
+        if: ${{ env.DEEPSOURCE_DSN != '' }}
+        env:
+          DEEPSOURCE_DSN: ${{ secrets.DEEPSOURCE_DSN }}
+        run: ./bin/deepsource report --analyzer test-coverage --key javascript --value-file ./coverage/lcov.info
 
   build:
     runs-on: ubuntu-latest
