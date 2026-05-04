@@ -155,7 +155,7 @@ function formatTime(d: Date): string {
 
 function buildTicks(start: Date, end: Date, range: LaneTimelineRange): TimeTick[] {
   const span = end.getTime() - start.getTime();
-  const tickCount = range === '7d' ? 7 : range === '24h' ? 8 : 7;
+  const tickCount = range === '24h' ? 8 : 7;
   const out: TimeTick[] = [];
   for (let i = 0; i <= tickCount; i++) {
     const t = new Date(start.getTime() + (span * i) / tickCount);

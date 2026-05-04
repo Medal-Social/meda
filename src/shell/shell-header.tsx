@@ -240,7 +240,7 @@ export function AppTabs({ renderLink }: AppTabsProps = {}) {
             type="button"
             aria-current={isActive ? 'page' : undefined}
             onClick={handleClick}
-            onMouseEnter={() => {}}
+            onMouseEnter={() => undefined}
             className={className}
           >
             {children}

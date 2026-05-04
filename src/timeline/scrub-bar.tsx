@@ -83,7 +83,7 @@ export function ScrubBar({
             <TransportBtn
               label={isPlayingValue ? 'Pause' : 'Play'}
               variant="primary"
-              onClick={onPlayPause ?? (() => {})}
+              onClick={onPlayPause ?? (() => undefined)}
             >
               {isPlayingValue ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
             </TransportBtn>

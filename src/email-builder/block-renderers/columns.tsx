@@ -5,6 +5,12 @@ import { getColumnWidths } from '../block-registry.js';
 import { BlockRenderer } from '../block-renderer.js';
 import type { ColumnsBlockProps, EmailBlock } from '../types.js';
 
+function getAlignItems(alignment: ColumnsBlockProps['verticalAlignment']): string {
+  if (alignment === 'top') return 'flex-start';
+  if (alignment === 'middle') return 'center';
+  return 'flex-end';
+}
+
 export function ColumnsBlock({
   props,
   columnChildren,
@@ -19,12 +25,7 @@ export function ColumnsBlock({
     display: 'flex',
     flexDirection: props.mobileStacking ? undefined : 'row',
     gap: props.gap,
-    alignItems:
-      props.verticalAlignment === 'top'
-        ? 'flex-start'
-        : props.verticalAlignment === 'middle'
-          ? 'center'
-          : 'flex-end',
+    alignItems: getAlignItems(props.verticalAlignment),
     flexWrap: 'wrap',
   };
   return (

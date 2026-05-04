@@ -60,9 +60,8 @@ export const DayView: Story = {
           view="day"
           events={SAMPLE_EVENTS}
           onDateChange={setDate}
-          onEventClick={(e) => {
+          onEventClick={() => {
             // Inert in story; real apps wire this to a detail drawer.
-            console.log('event clicked', e.id);
           }}
         />
       </div>

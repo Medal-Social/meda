@@ -36,6 +36,14 @@ function DayCellBase({
   const visibleEvents = events.slice(0, MAX_VISIBLE_ITEMS);
   const hiddenCount = events.length - MAX_VISIBLE_ITEMS;
   const isCellInteractive = typeof onCellClick === 'function';
+  let dayNumberClass: string;
+  if (isTodayDate) {
+    dayNumberClass = 'border border-primary/40 bg-primary/15 text-primary';
+  } else if (isCurrentMonth) {
+    dayNumberClass = 'text-foreground';
+  } else {
+    dayNumberClass = 'text-muted-foreground';
+  }
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: month-view cells offer optional tap-to-open as a passive convenience; inner event pills are the keyboard-accessible controls (avoids nested-interactive)
@@ -67,11 +75,7 @@ function DayCellBase({
         <span
           className={cn(
             'inline-flex size-6 items-center justify-center rounded-full font-medium text-xs',
-            isTodayDate
-              ? 'border border-primary/40 bg-primary/15 text-primary'
-              : isCurrentMonth
-                ? 'text-foreground'
-                : 'text-muted-foreground'
+            dayNumberClass
           )}
         >
           {dayNumber}

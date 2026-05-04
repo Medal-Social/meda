@@ -27,6 +27,12 @@ const DEFAULT_PX_PER_SEC = 1.2;
 const DEFAULT_FUTURE_PAD_SEC = 300;
 const DEFAULT_PAST_SPAN_SEC = 6 * 60 * 60;
 
+function getSegmentColorClass(event: TimelineEvent): string {
+  if (event.isLive) return 'bg-success-600 shadow-[0_0_12px_rgba(16,185,129,0.5)]';
+  if (event.kind === 'error') return 'bg-destructive';
+  return 'bg-info-500 shadow-[0_0_8px_rgba(56,189,248,0.35)]';
+}
+
 /** Convert a unix-ms instant to canvas y (px). y=0 at canvas top. */
 function instantToY(
   instantMs: number,
@@ -124,14 +130,7 @@ export function TimelineTape({
           aria-hidden="true"
           data-tape-segment-id={event.id}
           data-tape-segment-live={String(event.isLive ?? false)}
-          className={cn(
-            'absolute w-1 rounded-sm',
-            event.isLive
-              ? 'bg-success-600 shadow-[0_0_12px_rgba(16,185,129,0.5)]'
-              : event.kind === 'error'
-                ? 'bg-destructive'
-                : 'bg-info-500 shadow-[0_0_8px_rgba(56,189,248,0.35)]'
-          )}
+          className={cn('absolute w-1 rounded-sm', getSegmentColorClass(event))}
           style={{ left: 44, top: `${top}px`, height: `${height}px` }}
         />
       ))}
