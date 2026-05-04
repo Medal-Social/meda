@@ -39,7 +39,7 @@ export function WorkflowBuilder({
     <div
       data-slot="workflow-builder"
       className={cn(
-        '@container/workflow flex h-full w-full flex-col overflow-hidden bg-background',
+        '@container/workflow relative flex h-full w-full flex-col overflow-hidden bg-background',
         className
       )}
     >

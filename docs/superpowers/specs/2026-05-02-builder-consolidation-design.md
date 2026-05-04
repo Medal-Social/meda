@@ -50,7 +50,7 @@ type PostPreviewSlots = {
   renderEditor?:        (ctx: { platform: PlatformId; value: string; onChange: (next: string) => void }) => ReactNode;
   renderMediaPicker?:   (ctx: { platform: PlatformId; current: string[] | undefined; onPick: (next: string[]) => void }) => ReactNode;
   renderEmojiPicker?:   (ctx: { onSelect: (emoji: string) => void }) => ReactNode;
-  renderMentionPicker?: (ctx: { platform: PlatformId; query: string; onSelect: (mention: unknown) => void }) => ReactNode;
+  renderMentionPicker?: (ctx: { platform: PlatformId }) => ReactNode;
 };
 
 type PostPreviewProps = PostPreviewSlots & (

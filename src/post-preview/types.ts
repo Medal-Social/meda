@@ -44,12 +44,14 @@ export interface PostPreviewSlots {
   }) => React.ReactNode;
   /** Renders an emoji picker trigger in the edit toolbar. */
   renderEmojiPicker?: (ctx: { onSelect: (emoji: string) => void }) => React.ReactNode;
-  /** Renders a mention picker trigger in the edit toolbar. */
-  renderMentionPicker?: (ctx: {
-    platform: PlatformId;
-    query: string;
-    onSelect: (mention: unknown) => void;
-  }) => React.ReactNode;
+  /**
+   * Renders a mention picker trigger in the edit toolbar. The consumer owns
+   * the mention search state and content insertion; the slot only receives
+   * the active platform so it can scope its own data source. Use
+   * `renderEditor` together with platform-specific mention props (e.g.
+   * `LinkedInMentionPickerContext`) to wire selection back into content.
+   */
+  renderMentionPicker?: (ctx: { platform: PlatformId }) => React.ReactNode;
   /** Called when renderMediaPicker invokes onPick. */
   onMediaUrlsChange?: (mediaUrls: string[]) => void;
 }

@@ -56,7 +56,7 @@ export function renderToEmailHtml(
   const preheader = doc.envelope?.preheader ?? '';
   const subject = doc.envelope?.subject ?? '';
 
-  const body = doc.blocks.map((b) => renderBlock(b, brand)).join('\n');
+  const body = doc.blocks.map((b) => renderBlock(b, brand, contentWidth)).join('\n');
 
   return `<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -82,7 +82,7 @@ ${body}
 </html>`;
 }
 
-function renderBlock(block: EmailBlock, brand: EmailBrand): string {
+function renderBlock(block: EmailBlock, brand: EmailBrand, contentWidth: number): string {
   switch (block.kind) {
     case 'heading':
       return renderHeading(block.props as HeadingBlockProps, brand);
@@ -97,7 +97,7 @@ function renderBlock(block: EmailBlock, brand: EmailBrand): string {
     case 'spacer':
       return renderSpacer(block.props as SpacerBlockProps);
     case 'columns':
-      return renderColumns(block as EmailBlock<'columns'>, brand);
+      return renderColumns(block as EmailBlock<'columns'>, brand, contentWidth);
     case 'social':
       return renderSocial(block.props as SocialBlockProps);
     case 'footer':
@@ -178,7 +178,11 @@ function renderSpacer(p: SpacerBlockProps): string {
 </tr>`;
 }
 
-function renderColumns(block: EmailBlock<'columns'>, brand: EmailBrand): string {
+function renderColumns(
+  block: EmailBlock<'columns'>,
+  brand: EmailBrand,
+  contentWidth: number
+): string {
   const p = block.props;
   const widths = getColumnWidths(p.layout);
   const children = block.children ?? [];
@@ -186,10 +190,12 @@ function renderColumns(block: EmailBlock<'columns'>, brand: EmailBrand): string 
     p.backgroundColor !== 'transparent' ? ` background-color: ${esc(p.backgroundColor)};` : '';
   const cells = widths
     .map((width, i) => {
-      const colBlocks = (children[i] ?? []).map((b) => renderBlock(b, brand)).join('\n');
+      const colBlocks = (children[i] ?? [])
+        .map((b) => renderBlock(b, brand, contentWidth))
+        .join('\n');
       const padRight =
         i < widths.length - 1 && p.gap > 0 ? ` style="padding-right: ${p.gap}px;"` : '';
-      return `<td valign="${p.verticalAlignment}" width="${Math.round((width / 100) * 600)}"${padRight}>
+      return `<td valign="${p.verticalAlignment}" width="${Math.round((width / 100) * contentWidth)}"${padRight}>
         <table cellspacing="0" cellpadding="0" border="0" width="100%">
 ${colBlocks}
         </table>

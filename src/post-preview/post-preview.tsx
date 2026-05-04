@@ -89,11 +89,7 @@ export function PostPreview(props: PostPreviewProps): React.ReactElement {
       {renderEmojiPicker?.({
         onSelect: (emoji) => rest.onContentChange?.((rest.content ?? '') + emoji),
       })}
-      {renderMentionPicker?.({
-        platform,
-        query: '',
-        onSelect: () => undefined,
-      })}
+      {renderMentionPicker?.({ platform })}
     </div>
   ) : null;
 
