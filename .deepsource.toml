@@ -30,8 +30,8 @@ enabled = true
   plugins = ["react"]
   environment = ["nodejs", "vitest", "browser"]
 
-# Secrets analyzer disabled — see comment above.
-# Re-enable if/when this package introduces server code with real credentials.
-[[analyzers]]
-name = "secrets"
-enabled = false
+# Note: the "secrets" analyzer is intentionally NOT included here.
+# Any "secret" it would flag (hex brand colors like '#0A66C2', placeholder
+# URLs, fixture tokens) is necessarily a false positive in this package.
+# Re-enable by adding an `[[analyzers]] name = "secrets"` block if this
+# package ever introduces server code with real credentials.
