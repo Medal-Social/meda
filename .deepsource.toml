@@ -8,6 +8,8 @@ version = 1
 
 exclude_patterns = [
   "dist/**",
+  "**/dist/**",
+  "**/*.d.ts",
   "**/__tests__/**",
   "**/__stories__/**",
   "**/*.test.ts",
