@@ -63,7 +63,7 @@ describe('chat a11y', () => {
             speaker: 'assistant',
             speakerLabel: 'Morpheus',
             text: 'Hi',
-            startedAt: NOW + 4_000,
+            startedAt: NOW + 4000,
             latency: { sttMs: 240, claudeMs: 1400, ttsMs: 380 },
           },
         ]}
