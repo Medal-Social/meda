@@ -54,4 +54,14 @@ describe('Instagram carousel', () => {
     const track = document.querySelector('[data-slot="instagram-carousel-track"]') as HTMLElement;
     expect(track.style.touchAction).toBe('pan-y');
   });
+
+  it('ignores keydown events that are not ArrowLeft or ArrowRight', () => {
+    render(<InstagramPreview {...BASE_FIXTURE} mediaUrls={mediaUrls} />);
+    const track = document.querySelector('[data-slot="instagram-carousel-track"]') as HTMLElement;
+    // Fire Enter key — should not change slide (no-op for else-if false path)
+    fireEvent.keyDown(track, { key: 'Enter' });
+    const dots = screen.getAllByRole('button', { name: /go to slide/i });
+    // Slide index should remain at 0 (first dot active)
+    expect(dots[0]).toHaveAttribute('aria-current', 'true');
+  });
 });
