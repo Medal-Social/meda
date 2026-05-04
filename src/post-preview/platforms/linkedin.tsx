@@ -42,6 +42,8 @@ export interface LinkedInLabels {
   send: string;
 }
 
+// skipcq: SCT-1000 — `LinkedInLabels` is a TypeScript label-strings interface,
+// not a client credential. DeepSource's secrets regex misclassifies the name.
 export const DEFAULT_LINKEDIN_LABELS: LinkedInLabels = {
   placeholder: 'Share your thoughts...',
   now: 'now',
