@@ -18,14 +18,14 @@ const PHASE_LABEL: Record<TurnPhase, string> = {
 };
 
 export function VoiceStatusPill({ phase, thinkingForMs, className }: VoiceStatusPillProps) {
-  const tone =
-    phase === 'listening'
-      ? 'bg-primary text-primary-foreground'
-      : phase === 'speaking'
-        ? 'bg-success text-success-foreground'
-        : phase === 'error'
-          ? 'bg-destructive text-destructive-foreground'
-          : 'bg-muted text-muted-foreground';
+  const TONE_MAP: Record<TurnPhase, string> = {
+    listening: 'bg-primary text-primary-foreground',
+    speaking: 'bg-success text-success-foreground',
+    error: 'bg-destructive text-destructive-foreground',
+    idle: 'bg-muted text-muted-foreground',
+    thinking: 'bg-muted text-muted-foreground',
+  };
+  const tone = TONE_MAP[phase];
   const seconds = thinkingForMs ? (thinkingForMs / 1000).toFixed(1) : null;
   return (
     <span

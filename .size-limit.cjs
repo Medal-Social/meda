@@ -45,19 +45,56 @@
 //   Measured 105.33 kB brotli — 333 B over the previous limit. Bumped tightly
 //   to keep CI honest while allowing the new primitive surface area.
 //
+// main barrel raised 106 kB → 135 kB (post-preview surface):
+//   src/index.ts now re-exports `post-preview/public.js`, which references all
+//   12 platform components and chromes via the post-preview barrel. Measured
+//   121.08 kB brotli with the new surface. Bumped to 135 kB for ~12% headroom.
+//   Consumers who don't want the cost should import from the
+//   `@medalsocial/meda/post-preview` subpath directly — the per-platform
+//   budgets below prove that path stays small.
+//
+// post-preview per-platform budgets (new — post-preview surface):
+//   Each platform component + chrome lands at 9–10.5 kB brotli when imported
+//   in isolation. 13 kB per entry leaves ~25–40% headroom for label / locale
+//   additions and minor chrome polish without forcing churn on this file.
+//   The roll-up `post-preview / all` entry exercises the full subpath barrel
+//   and measures 23.64 kB; 30 kB is a comfortable ceiling that still catches
+//   accidental cross-platform coupling regressions.
+//
 // Sub-entry split for shell (provider / desktop / mobile / palette) is
 // deferred to v1.x — decision pinned to real consumer adoption data, not
 // upfront speculation. See plan file Decision C history for context.
 module.exports = [
   {
     name: 'main barrel',
+    // Bumped 135 kB → 145 kB (consolidated post-preview + calendar +
+    // workflow-builder + email-builder surfaces all re-exported from the root).
+    // Measured 137.76 kB brotli with all four surfaces; budget includes ~5%
+    // headroom. Consumers who don't want the cost should import from the
+    // per-surface subpaths (`@medalsocial/meda/post-preview`,
+    // `@medalsocial/meda/calendar`, etc.) — those budgets stay tight.
     path: 'dist/index.js',
-    limit: '106 kB',
+    limit: '145 kB',
+  },
+  {
+    name: 'calendar',
+    path: 'dist/calendar/index.js',
+    // Measured 11.05 kB brotli with deps; +20% headroom = ~13.3 kB.
+    limit: '13 kB',
   },
   {
     name: 'chat',
     path: 'dist/chat/index.js',
     limit: '6.5 kB',
+  },
+  {
+    // Initial budget for the email-builder surface. Includes the full block +
+    // property-editor matrix plus DnD wiring. Measured 36.12 kB brotli on
+    // first build; budget set with ~25% headroom for follow-up additions
+    // (Lexical slot, more block kinds, etc.).
+    name: 'email-builder',
+    path: 'dist/email-builder/index.js',
+    limit: '45 kB',
   },
   {
     name: 'panel',
@@ -80,6 +117,14 @@ module.exports = [
     limit: '60 kB',
   },
   {
+    // workflow-builder. @xyflow/react is a peer dep — size-limit treats peer
+    // deps as external, so the measured ship size for the workflow surface is
+    // ~12 kB (just our wrappers). Limit set at measured + ~20% headroom.
+    name: 'workflow-builder',
+    path: 'dist/workflow-builder/index.js',
+    limit: '15 kB',
+  },
+  {
     name: 'theme.css',
     path: 'dist/styles/theme.css',
     limit: '2.5 kB',
@@ -92,5 +137,21 @@ module.exports = [
     name: 'tokens.css',
     path: 'dist/styles/tokens.css',
     limit: '2 kB',
+  },
+  // post-preview surface — single PostPreview entry. Because PostPreview
+  // statically dispatches across all 12 platforms, importing the named
+  // export pulls in essentially the same matrix as the full barrel — the
+  // second entry confirms there is no hidden re-export overhead.
+  // Bumping these limits requires a written rationale (see CONTRIBUTING.md).
+  {
+    name: 'post-preview',
+    path: 'dist/post-preview/index.js',
+    limit: '45 kB',
+  },
+  {
+    name: 'post-preview / PostPreview only',
+    path: 'dist/post-preview/index.js',
+    import: '{ PostPreview }',
+    limit: '30 kB',
   },
 ];

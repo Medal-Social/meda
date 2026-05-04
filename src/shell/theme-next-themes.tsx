@@ -66,7 +66,7 @@ function subscribeToSystemTheme(
   mql: LegacyMediaQueryList | undefined,
   listener: (event: MediaQueryListEvent) => void
 ) {
-  if (!mql) return () => {};
+  if (!mql) return () => undefined;
   if (typeof mql.addEventListener === 'function') {
     mql.addEventListener('change', listener);
     return () => mql.removeEventListener('change', listener);
@@ -75,7 +75,7 @@ function subscribeToSystemTheme(
     mql.addListener(listener);
     return () => mql.removeListener?.(listener);
   }
-  return () => {};
+  return () => undefined;
 }
 
 export function NextThemesAdapter({ children }: { children: ReactNode }) {

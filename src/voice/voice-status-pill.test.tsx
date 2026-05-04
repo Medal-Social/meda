@@ -9,16 +9,14 @@ describe('VoiceStatusPill', () => {
       const { container, unmount } = render(<VoiceStatusPill phase={p} />);
       const statusEl = container.querySelector('[role="status"]');
       expect(statusEl).toBeInTheDocument();
-      const expectedText =
-        p === 'idle'
-          ? 'Idle'
-          : p === 'listening'
-            ? 'Listening'
-            : p === 'thinking'
-              ? 'Thinking'
-              : p === 'speaking'
-                ? 'Speaking'
-                : 'Error';
+      const PHASE_EXPECTED: Record<string, string> = {
+        idle: 'Idle',
+        listening: 'Listening',
+        thinking: 'Thinking',
+        speaking: 'Speaking',
+        error: 'Error',
+      };
+      const expectedText = PHASE_EXPECTED[p];
       expect(statusEl?.textContent).toContain(expectedText);
       unmount();
     });

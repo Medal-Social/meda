@@ -1,0 +1,214 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Docs/PostPreview" />
+
+# PostPreview
+
+Channel-aware previews of social posts across 12 platforms. Use these to render a faithful, brand-accurate facsimile of how a draft will look once published — in composers, scheduling tools, approval queues, analytics surfaces, and embed snippets.
+
+The surface is framework-neutral: no Convex coupling, no router assumptions, no analytics calls. Bring your own data; pass it in via props.
+
+## Installation
+
+```bash
+pnpm add @medalsocial/meda
+```
+
+Import from the dedicated subpath so consumers only pay for what they use:
+
+```tsx
+import { InstagramPreview } from '@medalsocial/meda/post-preview';
+```
+
+The components are also re-exported from the package root for convenience:
+
+```tsx
+import { InstagramPreview } from '@medalsocial/meda';
+```
+
+The subpath import is preferred for app-level entry points because it keeps unrelated meda surfaces (shell, chat, voice) out of the import graph.
+
+## Quick example
+
+```tsx
+import { InstagramPreview } from '@medalsocial/meda/post-preview';
+
+export function Example() {
+  return (
+    <InstagramPreview
+      displayName="Acme Studios"
+      username="acme"
+      avatarUrl="/avatars/acme.png"
+      content="New drop today. Tap the link in bio."
+      mediaUrls={['/media/drop-1.jpg']}
+    />
+  );
+}
+```
+
+## API reference
+
+### `PostPreviewBaseProps`
+
+Every platform component accepts these shared props.
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `displayName` | `string` | Channel display name (e.g. "Acme Studios"). |
+| `username` | `string` | Channel handle. Leading `@` is optional and stripped. |
+| `avatarUrl` | `string?` | Channel avatar URL. Falls back to initials when omitted. |
+| `content` | `string` | Post body text. Plain text; per-platform formatting (mentions, hashtags) is applied at render time. |
+| `mediaUrls` | `string[]?` | Image / video URLs for the post media. |
+| `characterLimit` | `number?` | Override for the per-platform character limit display. |
+| `frame` | `'card' \| 'device'` | Visual frame mode. `card` (default) fits container width; `device` wraps in a phone shell. |
+| `editable` | `boolean?` | Enable inline editing of `content`. Requires `onContentChange`. |
+| `onContentChange` | `(content: string) => void` | Called on every keystroke when `editable` is true. |
+| `className` | `string?` | Class applied to the outer wrapper element. |
+
+### Per-platform extras
+
+Some platforms accept additional props beyond the shared base.
+
+- **Twitter** — `theme: 'light' | 'dim' | 'lights-out'`, `renderMentionPicker(ctx: TwitterMentionPickerContext)`.
+- **LinkedIn** — `mentions: LinkedInMentionData[]`, `onMentionsChange(mentions)`, `renderMentionPicker(ctx: LinkedInMentionPickerContext)`.
+- **Instagram** — `instagramPostType: 'feed' | 'reel' | 'story'`.
+- **Telegram** — `poll: TelegramPollState`, `pinMessage: boolean`, `replyMarkup: TelegramInlineKeyboardMarkup`.
+- **Discord** — `embeds: DiscordEmbedDraft[]`, `suppressEmbeds: boolean`.
+
+Default labels for every platform are exported as `DEFAULT_<PLATFORM>_LABELS` and can be overridden via the `labels` prop for localization.
+
+## Which platform component?
+
+| `PlatformId` | Component |
+|--------------|-----------|
+| `twitter` | `TwitterPreview` |
+| `linkedin` | `LinkedInPreview` |
+| `instagram` | `InstagramPreview` |
+| `facebook` | `FacebookPreview` |
+| `threads` | `ThreadsPreview` |
+| `bluesky` | `BlueSkyPreview` |
+| `tiktok` | `TikTokPreview` |
+| `youtube` | `YouTubePreview` |
+| `google_business` | `GoogleBusinessPreview` |
+| `telegram` | `TelegramPreview` |
+| `discord` | `DiscordPreview` |
+| (fallback) | `GenericPreview` |
+
+Use `GenericPreview` for any platform without a dedicated component.
+
+## Recipes
+
+### Editable mode with character counter
+
+```tsx
+import { useState } from 'react';
+import { TwitterPreview } from '@medalsocial/meda/post-preview';
+
+export function ComposeTweet() {
+  const [draft, setDraft] = useState('');
+  return (
+    <TwitterPreview
+      displayName="Acme"
+      username="acme"
+      content={draft}
+      editable
+      characterLimit={280}
+      onContentChange={setDraft}
+    />
+  );
+}
+```
+
+The platform shows a counter once content approaches the limit and visually flags overflow.
+
+### Dark mode opt-in
+
+Wrap the preview in any element carrying the `dark` class (or `data-theme="dark"`):
+
+```tsx
+<div className="dark">
+  <InstagramPreview
+    displayName="Acme"
+    username="acme"
+    content="Late-night post."
+    mediaUrls={['/media/night.jpg']}
+  />
+</div>
+```
+
+Each platform respects its own native dark palette (Twitter additionally exposes `theme="dim"` and `theme="lights-out"`).
+
+### Composing with a custom channel picker
+
+The consumer owns the variant state and renders the matching component. This keeps the preview surface tree-shakeable — only the platforms a route actually renders are pulled into the bundle.
+
+```tsx
+import { useState } from 'react';
+import {
+  InstagramPreview,
+  LinkedInPreview,
+  TwitterPreview,
+  type PlatformId,
+} from '@medalsocial/meda/post-preview';
+
+const PREVIEWS: Partial<Record<PlatformId, React.ComponentType<any>>> = {
+  twitter: TwitterPreview,
+  linkedin: LinkedInPreview,
+  instagram: InstagramPreview,
+};
+
+export function ChannelComposer({ draft }: { draft: { displayName: string; username: string; content: string } }) {
+  const [platform, setPlatform] = useState<PlatformId>('twitter');
+  const Preview = PREVIEWS[platform] ?? null;
+  return (
+    <div>
+      <ChannelPicker value={platform} onChange={setPlatform} />
+      {Preview ? <Preview {...draft} /> : null}
+    </div>
+  );
+}
+```
+
+### Wiring a LinkedIn mention picker
+
+`renderMentionPicker` receives the current trigger context and returns custom UI (e.g. a portaled combobox). Apply selections via `onMentionsChange`.
+
+```tsx
+import { LinkedInPreview, type LinkedInMentionData } from '@medalsocial/meda/post-preview';
+
+export function LinkedInComposer() {
+  const [draft, setDraft] = useState('');
+  const [mentions, setMentions] = useState<LinkedInMentionData[]>([]);
+
+  return (
+    <LinkedInPreview
+      displayName="Acme"
+      username="acme"
+      content={draft}
+      editable
+      onContentChange={setDraft}
+      mentions={mentions}
+      onMentionsChange={setMentions}
+      renderMentionPicker={(ctx) => (
+        <MentionCombobox
+          query={ctx.query}
+          anchor={ctx.anchorRect}
+          onSelect={(m) => ctx.commit(m)}
+          onDismiss={ctx.dismiss}
+        />
+      )}
+    />
+  );
+}
+```
+
+The same shape applies to Twitter (`TwitterMentionPickerContext`).
+
+## Accessibility
+
+- Action buttons (like / share / reply, carousel controls, picker triggers) meet the 44 by 44 CSS pixel touch target minimum.
+- Every action button carries a localized `aria-label` sourced from the platform `labels` prop, so screen readers announce intent rather than icon glyphs.
+- Carousels (Instagram, TikTok, YouTube) are keyboard-navigable: arrow keys move between slides, focus is trapped within the active slide content, and indicators expose `aria-current`.
+- Editable previews delegate to a `contenteditable` region with appropriate `role` and `aria-multiline` semantics; the character counter is announced via `aria-live="polite"` once the limit is approached.
+
+**Color contrast caveat.** Each platform reproduces its native brand palette so consumers see what their post will actually look like once published. Some of these palettes (notably TikTok, YouTube, and the Twitter "dim" theme) do not pass WCAG AA contrast for secondary text. Visual fidelity is the explicit design goal; if you need a strict-contrast surface for an in-product summary, render `GenericPreview` instead, which uses meda's neutral semantic tokens.

@@ -64,9 +64,21 @@ function FilterRailRoot({
   ...props
 }: FilterRailProps) {
   const titleId = useId();
-  const label =
-    ariaLabel ?? (ariaLabelledBy ? undefined : typeof title === 'string' ? title : undefined);
-  const labelledBy = ariaLabelledBy ?? (label ? undefined : title ? titleId : undefined);
+  // Use `!== undefined` (not truthy) so that callers passing an explicit
+  // empty string clear the attribute instead of falling through to the
+  // title-derived fallback.
+  let label: string | undefined;
+  if (ariaLabel !== undefined) {
+    label = ariaLabel;
+  } else if (ariaLabelledBy === undefined && typeof title === 'string') {
+    label = title;
+  }
+  let labelledBy: string | undefined;
+  if (ariaLabelledBy !== undefined) {
+    labelledBy = ariaLabelledBy;
+  } else if (label === undefined && title) {
+    labelledBy = titleId;
+  }
 
   return (
     <aside

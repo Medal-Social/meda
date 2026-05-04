@@ -205,8 +205,8 @@ describe('useMicCapture', () => {
 // ---------------------------------------------------------------------------
 describe('worklet resampleAndAppend offset persistence', () => {
   it('preserves fractional offset across calls (no drift)', () => {
-    const TARGET_RATE = 16000;
-    const ratio = 44100 / TARGET_RATE; // ~2.75625
+    const TARGET_RATE = 16_000;
+    const ratio = 44_100 / TARGET_RATE; // ~2.75625
 
     // Reconstructed fixed implementation
     const state = {
@@ -241,8 +241,8 @@ describe('worklet resampleAndAppend offset persistence', () => {
   });
 
   it('resets-to-zero implementation produces wrong count (control check)', () => {
-    const TARGET_RATE = 16000;
-    const ratio = 44100 / TARGET_RATE;
+    const TARGET_RATE = 16_000;
+    const ratio = 44_100 / TARGET_RATE;
 
     // Old (buggy) implementation: always start i from 0
     const buggyState = {

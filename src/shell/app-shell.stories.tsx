@@ -174,7 +174,7 @@ const ALL_VIEWPORTS = {
 };
 
 const meta = {
-  title: 'AppShell',
+  title: 'Shell/AppShell',
   component: AppShell,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

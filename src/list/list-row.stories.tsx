@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ListCell, ListRow } from './list-row.js';
 
 const meta: Meta<typeof ListRow> = {
-  title: 'List/ListRow',
+  title: 'Data Views/List/ListRow',
   component: ListRow,
   parameters: { layout: 'padded' },
 };

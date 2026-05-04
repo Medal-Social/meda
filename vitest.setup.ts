@@ -42,6 +42,49 @@ process.on('uncaughtException', (err: unknown) => {
   throw err;
 });
 
+// Mock ResizeObserver — required by @xyflow/react canvas measurement and a
+// handful of Base UI primitives. jsdom does not provide one.
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  // biome-ignore lint/suspicious/noExplicitAny: minimal polyfill stub
+  (globalThis as any).ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
+// jsdom does not implement DOMMatrixReadOnly used by xyflow internals.
+if (typeof globalThis.DOMMatrixReadOnly === 'undefined') {
+  // biome-ignore lint/suspicious/noExplicitAny: minimal polyfill stub
+  (globalThis as any).DOMMatrixReadOnly = class {
+    m22 = 1;
+  };
+}
+
+// Mock window.localStorage — jsdom provides it, but some environments
+// (e.g. happy-dom or stripped-down jsdom configs) drop it. The shell theme
+// hook reads/writes 'meda:theme' on mount, which would crash mounting tests.
+if (typeof window.localStorage?.getItem !== 'function') {
+  const store = new Map<string, string>();
+  Object.defineProperty(window, 'localStorage', {
+    configurable: true,
+    value: {
+      getItem: (key: string) => (store.has(key) ? (store.get(key) ?? null) : null),
+      setItem: (key: string, value: string) => {
+        store.set(key, String(value));
+      },
+      removeItem: (key: string) => {
+        store.delete(key);
+      },
+      clear: () => store.clear(),
+      key: (index: number) => Array.from(store.keys())[index] ?? null,
+      get length() {
+        return store.size;
+      },
+    },
+  });
+}
+
 // Mock window.matchMedia (not available in jsdom)
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -76,9 +119,6 @@ vi.mock('@react-three/fiber', () => ({
   useFrame: vi.fn(),
   useThree: () => ({ size: { width: 144, height: 144 }, gl: {} }),
 }));
-
-// Mock @react-three/drei (no-op any imports)
-vi.mock('@react-three/drei', () => ({}));
 
 // Mock the Scene component so R3F JSX doesn't reach jsdom
 vi.mock('./src/voice/voice-orb-scene.js', () => ({

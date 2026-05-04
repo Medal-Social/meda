@@ -56,6 +56,14 @@
       "types": "./dist/kanban/index.d.ts",
       "import": "./dist/kanban/index.js"
     },
+    "./calendar": {
+      "types": "./dist/calendar/index.d.ts",
+      "import": "./dist/calendar/index.js"
+    },
+    "./workflow-builder": {
+      "types": "./dist/workflow-builder/index.d.ts",
+      "import": "./dist/workflow-builder/index.js"
+    },
     "./list": {
       "types": "./dist/list/index.d.ts",
       "import": "./dist/list/index.js"
@@ -68,9 +76,17 @@
       "types": "./dist/chat/index.d.ts",
       "default": "./dist/chat/index.js"
     },
+    "./email-builder": {
+      "types": "./dist/email-builder/index.d.ts",
+      "default": "./dist/email-builder/index.js"
+    },
     "./panel": {
       "types": "./dist/panel/index.d.ts",
       "default": "./dist/panel/index.js"
+    },
+    "./post-preview": {
+      "types": "./dist/post-preview/index.d.ts",
+      "default": "./dist/post-preview/index.js"
     },
     "./styles": {
       "default": "./dist/styles/theme.css"
@@ -116,6 +132,7 @@
     "worker:deploy": "pnpm worker:build && wrangler deploy",
     "test": "vitest run --environment jsdom",
     "test:run": "vitest run --environment jsdom",
+    "test:coverage": "vitest run --environment jsdom --project unit --coverage",
     "test:integration": "vitest run --config vitest.config.integration.ts",
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006 --no-open",
@@ -135,6 +152,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@react-three/fiber": "^9.0.0",
+    "@xyflow/react": "^12.0.0",
     "lucide-react": "^1.8.0",
     "next-themes": "^0.4.0",
     "react": ">=19",
@@ -153,61 +171,65 @@
     "@react-three/fiber": {
       "optional": true
     },
+    "@xyflow/react": {
+      "optional": false
+    },
     "next-themes": {
       "optional": true
     }
   },
   "dependencies": {
-    "@base-ui/react": "^1.4.0",
-    "@fontsource-variable/geist": "^5.2.8",
-    "@fontsource-variable/geist-mono": "^5.2.7",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "cmdk": "^1.1.1",
-    "react-resizable-panels": "^4.10.0",
-    "tailwind-merge": "^3.5.0",
-    "three": "^0.170.0",
-    "vaul": "^1.1.2"
+    "@base-ui/react": "1.4.1",
+    "@fontsource-variable/geist": "5.2.8",
+    "@fontsource-variable/geist-mono": "5.2.7",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "cmdk": "1.1.1",
+    "react-resizable-panels": "4.11.0",
+    "tailwind-merge": "3.5.0",
+    "three": "0.184.0",
+    "vaul": "1.1.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.12",
-    "@changesets/changelog-github": "^0.5.1",
-    "@changesets/cli": "^2.29.0",
-    "@dnd-kit/core": "^6.3.1",
-    "@dnd-kit/sortable": "^10.0.0",
-    "@dnd-kit/utilities": "^3.2.2",
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.6.0",
-    "@size-limit/preset-small-lib": "^12.1.0",
-    "@storybook/addon-a11y": "^10.3.5",
-    "@storybook/addon-docs": "10.3.5",
-    "@storybook/addon-mcp": "^0.6.0",
-    "@storybook/addon-themes": "^10.3.5",
-    "@storybook/addon-vitest": "^10.3.5",
-    "@storybook/react-vite": "^10.3.5",
-    "@tailwindcss/vite": "^4.2.4",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@types/three": "^0.184.0",
-    "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/browser-playwright": "4.1.4",
-    "@vitest/coverage-v8": "4.1.4",
-    "chromatic": "^16.6.0",
-    "husky": "^9.1.7",
-    "jsdom": "^29.0.2",
-    "next-themes": "^0.4.0",
-    "playwright": "^1.59.1",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "size-limit": "^12.1.0",
-    "storybook": "^10.3.5",
-    "tailwindcss": "^4.2.4",
-    "typescript": "~6.0.2",
-    "vite": "^8.0.4",
-    "vitest": "^4.1.4",
-    "vitest-axe": "^0.1.0",
-    "wrangler": "^4.0.0"
+    "@biomejs/biome": "2.4.14",
+    "@changesets/changelog-github": "0.6.0",
+    "@changesets/cli": "2.31.0",
+    "@dnd-kit/core": "6.3.1",
+    "@dnd-kit/sortable": "10.0.0",
+    "@dnd-kit/utilities": "3.2.2",
+    "@react-three/fiber": "9.6.1",
+    "@size-limit/preset-small-lib": "12.1.0",
+    "@storybook/addon-a11y": "10.3.6",
+    "@storybook/addon-docs": "10.3.6",
+    "@storybook/addon-mcp": "0.6.0",
+    "@storybook/addon-themes": "10.3.6",
+    "@storybook/addon-vitest": "10.3.6",
+    "@storybook/react-vite": "10.3.6",
+    "@tailwindcss/vite": "4.2.4",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@types/three": "0.184.0",
+    "@vitejs/plugin-react": "6.0.1",
+    "@vitest/browser-playwright": "4.1.5",
+    "@vitest/coverage-istanbul": "4.1.5",
+    "@vitest/coverage-v8": "4.1.5",
+    "@xyflow/react": "12.10.2",
+    "chromatic": "16.6.3",
+    "husky": "9.1.7",
+    "jsdom": "29.1.1",
+    "next-themes": "0.4.6",
+    "playwright": "1.59.1",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
+    "size-limit": "12.1.0",
+    "storybook": "10.3.6",
+    "tailwindcss": "4.2.4",
+    "typescript": "~6.0.3",
+    "vite": "8.0.10",
+    "vitest": "4.1.5",
+    "vitest-axe": "0.1.0",
+    "wrangler": "4.87.0"
   }
 }

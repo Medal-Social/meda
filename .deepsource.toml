@@ -1,0 +1,49 @@
+version = 1
+
+# meda is a public, open-source UI component package published to npm.
+# It has no application code, no auth flows, no API clients — by design,
+# there are no secrets in this repository. Any "secret" the analyzer
+# finds (hex brand colors like '#0A66C2', placeholder URLs, fixture
+# tokens) is necessarily a false positive.
+
+exclude_patterns = [
+  "dist/**/*",
+  "dist/**",
+  "**/dist/**",
+  "**/*.d.ts",
+  "dist/post-preview/platforms/linkedin.d.ts",
+  "**/__tests__/**",
+  "**/__stories__/**",
+  "**/*.test.ts",
+  "**/*.test.tsx",
+  "**/*.stories.ts",
+  "**/*.stories.tsx",
+  "**/*.spec.ts",
+  "**/*.spec.tsx",
+  "**/*.mdx",
+  "docs/**",
+  ".changeset/**",
+  "CHANGELOG.md",
+]
+
+[[analyzers]]
+name = "javascript"
+enabled = true
+
+  [analyzers.meta]
+  plugins = ["react"]
+  environment = ["nodejs", "vitest", "browser"]
+
+# Test coverage tracked over time. CI uploads `coverage/lcov.info` after
+# `pnpm test:coverage`. Requires:
+#   1. Test Coverage analyzer enabled at app.deepsource.com → repo settings
+#   2. `DEEPSOURCE_DSN` GitHub Actions secret set on the repo
+[[analyzers]]
+name = "test-coverage"
+enabled = true
+
+# Note: the "secrets" analyzer is intentionally NOT included here.
+# Any "secret" it would flag (hex brand colors like '#0A66C2', placeholder
+# URLs, fixture tokens) is necessarily a false positive in this package.
+# Re-enable by adding an `[[analyzers]] name = "secrets"` block if this
+# package ever introduces server code with real credentials.
