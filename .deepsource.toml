@@ -7,9 +7,11 @@ version = 1
 # tokens) is necessarily a false positive.
 
 exclude_patterns = [
+  "dist/**/*",
   "dist/**",
   "**/dist/**",
   "**/*.d.ts",
+  "dist/post-preview/platforms/linkedin.d.ts",
   "**/__tests__/**",
   "**/__stories__/**",
   "**/*.test.ts",
