@@ -83,7 +83,7 @@ const LEGEND: LaneLegendItem[] = [
 ];
 
 const meta: Meta<typeof LaneTimeline> = {
-  title: 'Timeline/LaneTimeline',
+  title: 'Data Views/Timeline/LaneTimeline',
   component: LaneTimeline,
   parameters: {
     layout: 'fullscreen',

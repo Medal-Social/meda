@@ -3,7 +3,7 @@ import { MonthView } from '../month-view.js';
 import { REFERENCE_MONTH, SAMPLE_EVENTS } from './fixtures.js';
 
 const meta: Meta<typeof MonthView> = {
-  title: 'Calendar/MonthView',
+  title: 'Data Views/Calendar/MonthView',
   component: MonthView,
   parameters: { layout: 'fullscreen' },
 };

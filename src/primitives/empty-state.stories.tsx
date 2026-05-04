@@ -3,7 +3,7 @@ import { AlertTriangle, Inbox } from 'lucide-react';
 import { EmptyState } from './empty-state.js';
 
 const meta = {
-  title: 'Foundation/Primitives/EmptyState',
+  title: 'Foundations/Primitives/EmptyState',
   component: EmptyState,
   parameters: {
     layout: 'padded',

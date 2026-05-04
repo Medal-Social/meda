@@ -14,7 +14,7 @@ function ControlledBuilder({ initial }: { initial: EmailDocument }) {
 }
 
 const meta: Meta<typeof EmailBuilder> = {
-  title: 'Email Builder/EmailBuilder',
+  title: 'Apps/Email/EmailBuilder',
   component: EmailBuilder,
   parameters: { layout: 'fullscreen' },
 };

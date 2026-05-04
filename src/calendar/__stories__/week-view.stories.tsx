@@ -3,7 +3,7 @@ import { WeekView } from '../week-view.js';
 import { REFERENCE_MONTH, SAMPLE_EVENTS } from './fixtures.js';
 
 const meta: Meta<typeof WeekView> = {
-  title: 'Calendar/WeekView',
+  title: 'Data Views/Calendar/WeekView',
   component: WeekView,
   parameters: { layout: 'fullscreen' },
 };

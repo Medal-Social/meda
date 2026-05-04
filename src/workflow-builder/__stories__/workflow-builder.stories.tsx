@@ -13,7 +13,7 @@ import { WorkflowHeader } from '../workflow-header.js';
 import { SAMPLE_EDGES, SAMPLE_NODES } from './fixtures.js';
 
 const meta: Meta<typeof WorkflowBuilder> = {
-  title: 'WorkflowBuilder/WorkflowBuilder',
+  title: 'Apps/Workflow/Builder',
   component: WorkflowBuilder,
   parameters: { layout: 'fullscreen' },
 };

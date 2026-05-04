@@ -5,7 +5,7 @@ import type { CalendarView } from '../types.js';
 import { REFERENCE_MONTH, SAMPLE_EVENTS } from './fixtures.js';
 
 const meta: Meta<typeof Calendar> = {
-  title: 'Calendar/Calendar',
+  title: 'Data Views/Calendar/Calendar',
   component: Calendar,
   parameters: { layout: 'fullscreen' },
 };

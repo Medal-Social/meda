@@ -3,7 +3,7 @@ import { WorkflowCard, WorkflowCardCompact } from '../index.js';
 import { SAMPLE_WORKFLOWS } from './fixtures.js';
 
 const meta: Meta<typeof WorkflowCard> = {
-  title: 'WorkflowBuilder/WorkflowCard',
+  title: 'Apps/Workflow/Card',
   component: WorkflowCard,
 };
 export default meta;

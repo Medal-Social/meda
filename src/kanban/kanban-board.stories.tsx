@@ -46,7 +46,7 @@ const INITIAL_TASKS: Task[] = [
 
 // biome-ignore lint/suspicious/noExplicitAny: KanbanBoard is generic; Meta<typeof KanbanBoard> requires non-generic type
 const meta: Meta<any> = {
-  title: 'Kanban/KanbanBoard',
+  title: 'Data Views/Board/KanbanBoard',
   component: KanbanBoard,
   parameters: { layout: 'fullscreen' },
 };

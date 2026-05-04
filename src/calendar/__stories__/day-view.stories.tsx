@@ -3,7 +3,7 @@ import { DayView } from '../day-view.js';
 import { REFERENCE_MONTH, SAMPLE_EVENTS } from './fixtures.js';
 
 const meta: Meta<typeof DayView> = {
-  title: 'Calendar/DayView',
+  title: 'Data Views/Calendar/DayView',
   component: DayView,
   parameters: { layout: 'fullscreen' },
 };

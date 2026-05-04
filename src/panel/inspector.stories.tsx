@@ -4,7 +4,7 @@ import { InspectorField } from './inspector-field.js';
 import { InspectorJSON } from './inspector-json.js';
 
 const meta = {
-  title: 'Studios/Inspector',
+  title: 'Foundations/Primitives/Inspector',
   component: Inspector,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

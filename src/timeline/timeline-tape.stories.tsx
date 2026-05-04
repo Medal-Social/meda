@@ -3,7 +3,7 @@ import { NOW_MS, SAMPLE_EVENTS } from '../__stories__/fixtures.js';
 import { TimelineTape } from './timeline-tape.js';
 
 const meta = {
-  title: 'Studios/Timeline',
+  title: 'Data Views/Timeline/TimelineTape',
   component: TimelineTape,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

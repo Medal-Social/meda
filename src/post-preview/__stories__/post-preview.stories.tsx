@@ -44,7 +44,7 @@ function render(args: StoryArgs) {
 }
 
 const meta: Meta<StoryArgs> = {
-  title: 'PostPreview',
+  title: 'Apps/Post/Preview',
   component: PostPreview as Meta<StoryArgs>['component'],
   parameters: {
     a11y: { config: { rules: [{ id: 'color-contrast', enabled: false }] } },
