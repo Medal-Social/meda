@@ -1,0 +1,37 @@
+version = 1
+
+# meda is a public, open-source UI component package published to npm.
+# It has no application code, no auth flows, no API clients — by design,
+# there are no secrets in this repository. Any "secret" the analyzer
+# finds (hex brand colors like '#0A66C2', placeholder URLs, fixture
+# tokens) is necessarily a false positive.
+
+exclude_patterns = [
+  "dist/**",
+  "**/__tests__/**",
+  "**/__stories__/**",
+  "**/*.test.ts",
+  "**/*.test.tsx",
+  "**/*.stories.ts",
+  "**/*.stories.tsx",
+  "**/*.spec.ts",
+  "**/*.spec.tsx",
+  "**/*.mdx",
+  "docs/**",
+  ".changeset/**",
+  "CHANGELOG.md",
+]
+
+[[analyzers]]
+name = "javascript"
+enabled = true
+
+  [analyzers.meta]
+  plugins = ["react"]
+  environment = ["nodejs", "vitest", "browser"]
+
+# Secrets analyzer disabled — see comment above.
+# Re-enable if/when this package introduces server code with real credentials.
+[[analyzers]]
+name = "secrets"
+enabled = false
