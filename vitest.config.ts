@@ -21,30 +21,37 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
-      // NB: setting BOTH `include` and `exclude` on the top-level coverage
-      // block in vitest 4 silently zeroes out instrumentation when the
-      // exclude is an array of more than one entry (suspected glob-merge
-      // bug). Workaround: use ONLY `include`, and rely on the exclude
-      // logic baked into `provider: 'v8'` (which already skips node_modules,
-      // dist, and test files by default). Per-folder exclusions live in
-      // the `excludeAfterRemap` post-filter below.
       include: ['src/**'],
-      // Per-file exclusions applied after V8 instrumentation; equivalent
-      // to `exclude` in spirit but processed via the istanbul-remap pass
-      // so the include glob isn't broken.
       excludeAfterRemap: [
         'dist/**',
         'storybook-static/**',
         'coverage/**',
+<<<<<<< HEAD
         'test/**',
+||||||| parent of 250c0e8 (Tighten coverage excludeAfterRemap (fixtures, scaffolding))
+        'src/**/*.test.ts',
+        'src/**/*.test.tsx',
+=======
+        // Test, story, and a11y scaffolding
+        'src/**/*.test.ts',
+        'src/**/*.test.tsx',
+>>>>>>> 250c0e8 (Tighten coverage excludeAfterRemap (fixtures, scaffolding))
         'src/**/*.stories.ts',
         'src/**/*.stories.tsx',
         'src/**/__stories__/**',
+        // Story fixtures (data shapes for stories — no behavior)
+        'src/**/fixtures.ts',
+        'src/**/fixtures.tsx',
+        // Scaffolding files
+        'src/__stories__/StoryFrame.tsx',
+        // Pure barrel / type files (re-exports and aliases)
         'src/**/index.ts',
         'src/**/public.ts',
         'src/**/types.ts',
         'src/**/*.types.ts',
         'src/**/*.d.ts',
+        // Defaults-only constant modules with no behavior to assert
+        'src/email-builder/starter-shell.ts',
         // Three.js / WebGL scene + shader. Renders into a <Canvas> via
         // react-three-fiber; cannot exercise meaningfully without a real
         // GPU and is mocked away from jsdom render trees by
