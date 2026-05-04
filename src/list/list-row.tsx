@@ -68,7 +68,6 @@ export function ListRow({
       }
     : {};
   return (
-    // biome-ignore lint/a11y/useSemanticElements: clickable row needs flex layout not available on button
     // biome-ignore lint/a11y/noStaticElementInteractions: mouse/focus handlers are passive prefetch hooks; interactive role added only when onClick is set
     <div
       {...interactiveProps}

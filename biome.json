@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.12/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
   "files": {
     "includes": [
       "**",
@@ -17,7 +17,56 @@
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
-    "rules": { "recommended": true }
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error",
+        "noUnusedFunctionParameters": "error",
+        "noUnusedPrivateClassMembers": "error",
+        "noInvalidUseBeforeDeclaration": "error",
+        "useExhaustiveDependencies": "error",
+        "useHookAtTopLevel": "error",
+        "useValidTypeof": "error"
+      },
+      "suspicious": {
+        "noConsole": "error",
+        "noDebugger": "error",
+        "noDoubleEquals": "error",
+        "noEvolvingTypes": "error",
+        "noExplicitAny": "error",
+        "noArrayIndexKey": "error",
+        "noAssignInExpressions": "error",
+        "noConfusingVoidType": "warn",
+        "noConstEnum": "error",
+        "noDuplicateCase": "error",
+        "noDuplicateClassMembers": "error",
+        "noDuplicateJsxProps": "error",
+        "noDuplicateObjectKeys": "error",
+        "noEmptyBlockStatements": "warn",
+        "noFallthroughSwitchClause": "error",
+        "noFocusedTests": "error",
+        "noGlobalIsFinite": "error",
+        "noGlobalIsNan": "error",
+        "noImplicitAnyLet": "warn",
+        "noRedeclare": "error",
+        "noShadowRestrictedNames": "error",
+        "noSkippedTests": "warn",
+        "noTsIgnore": "error",
+        "noUnsafeNegation": "error",
+        "useAwait": "warn",
+        "useErrorMessage": "error"
+      },
+      "style": {
+        "noNonNullAssertion": "warn",
+        "noNestedTernary": "error",
+        "noParameterAssign": "error",
+        "useBlockStatements": "off",
+        "useConst": "error",
+        "useImportType": "error",
+        "useNumericSeparators": "error"
+      }
+    }
   },
   "formatter": {
     "enabled": true,
@@ -32,6 +81,34 @@
       "trailingCommas": "es5"
     }
   },
+  "overrides": [
+    {
+      "includes": ["scripts/**", "demo/**"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noConsole": "off" }
+        }
+      }
+    },
+    {
+      "includes": [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx",
+        "vitest.setup.ts",
+        ".storybook/**"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noEmptyBlockStatements": "off",
+            "useAwait": "off"
+          }
+        }
+      }
+    }
+  ],
   "css": {
     "parser": {
       "cssModules": false,

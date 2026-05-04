@@ -889,7 +889,7 @@ const fixtureTurns: Turn[] = [
     speaker: 'assistant',
     speakerLabel: 'Morpheus',
     text: 'You have a stand-up at 9 AM, lunch with the team at noon, and a 3 PM design review…',
-    startedAt: NOW.getTime() - 5_000,
+    startedAt: NOW.getTime() - 5000,
     streaming: true,
   },
 ];

@@ -48,7 +48,7 @@ describe('DiscordPreview', () => {
           {
             title: 'Embed title',
             description: 'Embed description',
-            color: 0xff5500,
+            color: 0xff_55_00,
             url: 'https://example.com',
           },
         ]}

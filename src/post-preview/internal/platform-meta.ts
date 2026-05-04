@@ -13,7 +13,7 @@ export const PLATFORM_META: Record<PlatformId, PlatformMeta> = {
   twitter: { displayName: 'X', brandColor: '#000000', characterLimit: 280 },
   linkedin: { displayName: 'LinkedIn', brandColor: '#0A66C2', characterLimit: 3000 },
   instagram: { displayName: 'Instagram', brandColor: '#E4405F', characterLimit: 2200 },
-  facebook: { displayName: 'Facebook', brandColor: '#1877F2', characterLimit: 63206 },
+  facebook: { displayName: 'Facebook', brandColor: '#1877F2', characterLimit: 63_206 },
   threads: { displayName: 'Threads', brandColor: '#000000', characterLimit: 500 },
   bluesky: { displayName: 'Bluesky', brandColor: '#0085FF', characterLimit: 300 },
   tiktok: { displayName: 'TikTok', brandColor: '#000000', characterLimit: 4000 },
@@ -25,5 +25,5 @@ export const PLATFORM_META: Record<PlatformId, PlatformMeta> = {
   },
   telegram: { displayName: 'Telegram', brandColor: '#26A5E4', characterLimit: 4096 },
   discord: { displayName: 'Discord', brandColor: '#5865F2', characterLimit: 2000 },
-  generic: { displayName: 'Generic', brandColor: '#6B7280', characterLimit: 63206 },
+  generic: { displayName: 'Generic', brandColor: '#6B7280', characterLimit: 63_206 },
 };
