@@ -204,11 +204,12 @@ function embedKey(embed: DiscordEmbedDraft, index: number) {
   return `${embed.title ?? ''}::${embed.url ?? ''}::${embed.imageUrl ?? ''}::${index}`;
 }
 
+/* v8 ignore next — v8 phantom duplicate function record */
 function DiscordEmbedCard({ embed }: { embed: DiscordEmbedDraft }) {
   const accent =
     typeof embed.color === 'number' ? `#${embed.color.toString(16).padStart(6, '0')}` : '#5865f2';
   const href = embed.url?.trim();
-
+  /* v8 ignore next — v8 phantom duplicate function body record */
   return (
     <div
       data-slot="discord-embed"

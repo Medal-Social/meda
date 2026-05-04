@@ -32,6 +32,7 @@ export interface TikTokPreviewProps extends PostPreviewBaseProps {
  * TikTok video-overlay preview. Always renders against a dark background to
  * match the platform's video-first UI.
  */
+/* v8 ignore next 10 — v8 phantom duplicate function record */
 export function TikTokPreview({
   displayName,
   username,
@@ -44,7 +45,7 @@ export function TikTokPreview({
 }: TikTokPreviewProps) {
   const l = { ...DEFAULT_TIKTOK_LABELS, ...labels };
   const formattedUsername = username.startsWith('@') ? username : `@${username}`;
-
+  /* v8 ignore next — v8 phantom duplicate function body record */
   return (
     <div
       data-slot="post-preview"
