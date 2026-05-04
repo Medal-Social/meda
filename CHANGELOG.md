@@ -1,5 +1,94 @@
 # @medalsocial/meda
 
+## 2.1.0
+
+### Minor Changes
+
+- [#132](https://github.com/Medal-Social/meda/pull/132) [`8295aed`](https://github.com/Medal-Social/meda/commit/8295aedd9df8bd21f3f7f3aef25fff05f3dae76f) Thanks [@alioftech](https://github.com/alioftech)! - Add `EmailBuilder`, `PostPreview`, and `WorkflowBuilder` as the single
+  top-level entry points for their respective surfaces.
+
+  `PostPreview` is a new component that accepts a discriminated `platform`
+  prop (`instagram`, `twitter`, `facebook`, `linkedin`, `tiktok`, `youtube`,
+  `threads`, `bluesky`, `discord`, `telegram`, `google_business`, `generic`)
+  plus the existing per-platform props inline. It exposes render-prop slots
+  for `renderEditor`, `renderMediaPicker`, `renderEmojiPicker`, and
+  `renderMentionPicker` so consumers can plug in their own rich text editor,
+  media library, and pickers.
+
+  `EmailBuilder` and `WorkflowBuilder` no longer export internal pieces
+  (palettes, inspectors, canvases, headers, toolboxes, node/edge helpers)
+  from their barrels — those remain internal. `WorkflowCard` and
+  `WorkflowCardCompact` continue to be exported as standalone list-row
+  components.
+
+  Note: the Google Business platform identifier is `'google_business'`
+  (underscore) rather than the hyphenated form initially proposed in the
+  design doc — the underscore matches the existing internal convention
+  across `platform-meta.ts`, `data-platform` attributes, and test fixtures.
+
+- [#132](https://github.com/Medal-Social/meda/pull/132) [`02f925e`](https://github.com/Medal-Social/meda/commit/02f925e9670ea11c36f315c9a4ce903aeaf66129) Thanks [@alioftech](https://github.com/alioftech)! - Add `@medalsocial/meda/calendar` surface with `<Calendar>`, `<MonthView>`, `<WeekView>`, `<DayView>`, and `<CalendarToolbar>`. Fully prop-driven (events array + handlers), container-query responsive, dark-mode aware, and i18n via per-component `Labels` props.
+
+### Patch Changes
+
+- [#136](https://github.com/Medal-Social/meda/pull/136) [`a57b434`](https://github.com/Medal-Social/meda/commit/a57b4343c7324eb9ffa92843d60fac4ec70e4d6d) Thanks [@alioftech](https://github.com/alioftech)! - Track code coverage over time via DeepSource. CI now runs
+  `pnpm test:coverage` and uploads the `coverage/lcov.info` report to
+  DeepSource on every push, so coverage trend, deltas per PR, and
+  hotspots become visible in the DeepSource dashboard.
+
+  Internal: fixed a vitest 4 quirk where setting both `coverage.include`
+  and `coverage.exclude` arrays on the top-level `coverage` block silently
+  zeroed instrumentation. Working around it with `excludeAfterRemap` and
+  relaxed thresholds (~5% under current floor) so CI catches regressions
+  without blocking PRs on rounding.
+
+  No public API change.
+
+- [#135](https://github.com/Medal-Social/meda/pull/135) [`ac23f35`](https://github.com/Medal-Social/meda/commit/ac23f352db9894cd62ea5f808ef738b2021bef55) Thanks [@alioftech](https://github.com/alioftech)! - Remove dead code left over from earlier refactors. No public API change.
+
+  - Drop the entire `src/post-preview/chrome/` directory (13 components +
+    index + test). The chromes (`InstagramChrome`, `TwitterChrome`,
+    `PlatformChrome`, etc.) became internal during the PR [#132](https://github.com/Medal-Social/meda/issues/132) PostPreview
+    consolidation and are no longer imported by any test, story, or
+    platform component. They were not exported from the post-preview
+    barrel or `package.json`'s `exports`.
+  - Drop `src/email-builder/internal/dnd-data.ts` and `drop-zone.tsx` —
+    leftovers from a DnD refactor; both were defined but never imported.
+  - Drop `@react-three/drei` from devDependencies — not imported anywhere
+    in `src/`, `demo/`, `scripts/`, or `docs/`.
+
+- [#134](https://github.com/Medal-Social/meda/pull/134) [`d095fea`](https://github.com/Medal-Social/meda/commit/d095fea973d56aa35a9af94ac1ff7b56d95ac35f) Thanks [@alioftech](https://github.com/alioftech)! - Upgrade every dependency to its latest version and pin all entries in
+  `dependencies` and `devDependencies` to **exact** versions (no caret
+  ranges). Peer dependencies stay as ranges per their semantics.
+
+  Pinning to exact versions is a supply-chain hardening practice — caret
+  ranges allow malicious-but-semver-valid patch updates to slip in
+  between `pnpm install` runs.
+
+  Notable bumps:
+
+  - `@biomejs/biome` `2.4.12` → `2.4.14`
+  - `storybook` and `@storybook/*` `10.3.5` → `10.3.6`
+  - `vitest` and `@vitest/*` `4.1.4` → `4.1.5`
+  - `vite` `8.0.9` → `8.0.10`
+  - `chromatic` `16.6.0` → `16.6.3`
+  - `jsdom` `29.0.2` → `29.1.1`
+  - `wrangler` `4.84.1` → `4.87.0`
+  - `react-resizable-panels` `4.10.0` → `4.11.0`
+  - `@react-three/fiber` `9.6.0` → `9.6.1`
+  - `three` `0.170.0` → `0.184.0`
+  - `@changesets/changelog-github` `0.5.2` → `0.6.0`
+
+  Also folds in the strict biome ruleset that was lost from PR [#133](https://github.com/Medal-Social/meda/issues/133):
+
+  - `noExplicitAny`, `noConsole`, `noDebugger`, `noNestedTernary`,
+    `useImportType`, `useNumericSeparators`, `useErrorMessage`, plus
+    20 other rules — all `error`.
+  - Per-folder overrides: `scripts/**` and `demo/**` allow console;
+    `**/*.test.{ts,tsx}`, `vitest.setup.ts`, and `.storybook/**` allow
+    empty blocks and bare async.
+
+  All existing violations were repaired. No public API changes.
+
 ## 2.0.0
 
 ### Major Changes
