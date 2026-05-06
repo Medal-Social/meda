@@ -9,7 +9,11 @@ import { defineConfig } from 'vitest/config';
  */
 export default defineConfig({
   test: {
-    include: ['test/**/*.test.ts'],
+    // Narrow include to the single integration test today. Unit tests now
+    // live under test/unit/** and depend on jsdom — running them under
+    // environment: 'node' would fail on browser globals like `window`.
+    include: ['test/nextjs-consumer.test.ts'],
+    exclude: ['test/unit/**', 'test/unit/**/*'],
     environment: 'node',
     globals: false,
     // No jsdom setup needed for process-level integration tests.
