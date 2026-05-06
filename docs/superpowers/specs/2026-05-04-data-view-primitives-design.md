@@ -88,10 +88,12 @@ interface DisplaySettingsProps {
   showBoardOptions?: boolean;
   /** Embeds a `<ViewSwitcher>` at the top of the panel when provided. Omit to hide. */
   viewSwitcherProps?: Pick<ViewSwitcherProps, 'views' | 'labels' | 'icons'>;
+  /** Custom trigger element. When omitted, renders a default "Display" button with a Sliders icon. */
+  trigger?: ReactNode;
 }
 ```
 
-Renders as a `<Popover>` triggered by a "Display" button (Sliders icon). Emits `ViewConfig` updates immediately on each control change. The trigger button is a slotted child so consumers can swap it.
+Renders as a `<Popover>`. The trigger defaults to a "Display" button (Sliders icon) and can be swapped via the `trigger` prop. Emits `ViewConfig` updates immediately on each control change.
 
 ### `useViewConfig(options)`
 
