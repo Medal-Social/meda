@@ -1,5 +1,17 @@
 # @medalsocial/meda
 
+## 2.2.0
+
+### Minor Changes
+
+- [#144](https://github.com/Medal-Social/meda/pull/144) [`ae75f31`](https://github.com/Medal-Social/meda/commit/ae75f3109ca41e6d1ade7fbfbfecfa416944a7e4) Thanks [@alioftech](https://github.com/alioftech)! - feat(marketing): add landing v5 shell skeleton — `MarketingShell`, `MarketingHeader` (logged-out + logged-in defaults, no mega menu yet), `MarketingHeaderLogo`, `MarketingNavItem`, `MarketingFooter`, `MarketingTrustBar`, `MarketingBentoGrid` + `MarketingBentoCard`, `MarketingFAQ`. Slot-based, library-agnostic auth contract via `user?: MarketingHeaderUser | null`. Auth-aware enrichment (mega menu, hero, announcement, CTA) lands in the next minor.
+
+### Patch Changes
+
+- [#141](https://github.com/Medal-Social/meda/pull/141) [`6b7a693`](https://github.com/Medal-Social/meda/commit/6b7a693ed00691f57a8d6f4a3005c584a17fc8d2) Thanks [@alioftech](https://github.com/alioftech)! - chore: expand unit test coverage across email-builder, post-preview, workflow-builder, calendar, and shell. Coverage rises from 71%/69%/63%/74% to 82%/85%/79%/83% (statements/branches/functions/lines). No public API change.
+
+- [#142](https://github.com/Medal-Social/meda/pull/142) [`0cefa60`](https://github.com/Medal-Social/meda/commit/0cefa60a7898d6aa151ae503b24200512334eb07) Thanks [@alioftech](https://github.com/alioftech)! - chore: migrate unit tests from `src/**` to `test/unit/<mirror>/**` to align with `medal-monorepo`'s test layout. No public API change.
+
 ## 2.1.0
 
 ### Minor Changes
