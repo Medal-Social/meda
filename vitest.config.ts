@@ -36,15 +36,9 @@ export default defineConfig({
         'dist/**',
         'storybook-static/**',
         'coverage/**',
-        'src/**/*.test.ts',
-        'src/**/*.test.tsx',
+        'test/**',
         'src/**/*.stories.ts',
         'src/**/*.stories.tsx',
-        'src/**/wcag.test.ts',
-        'src/**/wcag.test.tsx',
-        'src/__stories__/**',
-        'src/__tests__/**',
-        'src/**/__tests__/**',
         'src/**/__stories__/**',
         'src/**/index.ts',
         'src/**/public.ts',
@@ -99,8 +93,9 @@ export default defineConfig({
           environment: 'jsdom',
           globals: false,
           setupFiles: ['./vitest.setup.ts'],
-          // Integration tests (test/**) require pnpm build first; run via pnpm test:integration.
-          exclude: ['**/node_modules/**', '**/dist/**', 'test/**'],
+          // Integration tests (test/nextjs-consumer.test.ts) require pnpm build first; run via pnpm test:integration.
+          // demo/ requires a built dist/ — excluded from unit runs, covered by test:integration.
+          exclude: ['**/node_modules/**', '**/dist/**', 'test/nextjs-consumer.test.ts', 'demo/**'],
         },
       },
       {
