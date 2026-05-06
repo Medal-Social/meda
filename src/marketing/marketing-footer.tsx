@@ -20,8 +20,9 @@ export function MarketingFooter({
           <div key={i} className="md:col-span-2 space-y-3">
             <h3 className="text-sm font-semibold text-foreground">{col.title}</h3>
             <ul className="space-y-2">
-              {col.links.map((link) => (
-                <li key={link.href}>
+              {col.links.map((link, j) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: composite key includes href to disambiguate identical hrefs across columns
+                <li key={`${j}-${link.href}`}>
                   <a
                     href={link.href}
                     className="text-sm text-muted-foreground hover:text-foreground"
