@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { MarketingHeader } from '../../../src/marketing/marketing-header.js';
 
@@ -54,5 +54,26 @@ describe('MarketingHeader', () => {
     );
     expect(screen.getByTestId('custom-li')).toHaveTextContent('Ali Tech');
     expect(screen.queryByRole('link', { name: 'Open dashboard' })).toBeNull();
+  });
+
+  it('toggles mega menu open when nav item with panel is clicked', () => {
+    render(
+      <MarketingHeader
+        navItems={[
+          {
+            id: 'products',
+            label: 'Products',
+            hasMenu: true,
+            panel: <div data-testid="products-panel">Panel content</div>,
+          },
+        ]}
+      />
+    );
+    const trigger = screen.getByRole('button', { name: /products/i });
+    expect(screen.queryByTestId('products-panel')).toBeNull();
+    fireEvent.click(trigger);
+    expect(screen.getByTestId('products-panel')).toBeInTheDocument();
+    fireEvent.click(trigger);
+    expect(screen.queryByTestId('products-panel')).toBeNull();
   });
 });
