@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { HeadingBlockProps } from '../types.js';
-import { HeadingBlock } from './heading.js';
+import { HeadingBlock } from '../../../../src/email-builder/block-renderers/heading.js';
+import type { HeadingBlockProps } from '../../../../src/email-builder/types.js';
 
 const base: HeadingBlockProps = {
   text: 'Hello world',

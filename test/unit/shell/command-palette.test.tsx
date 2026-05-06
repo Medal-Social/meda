@@ -7,13 +7,13 @@ import {
   CommandRegistryContext,
   useCommandGroup,
   useCommands,
-} from '../../../src/shell/../../src/shell/command-palette.js';
-import { MedaShellProvider, useMedaShell } from '../../../src/shell/../../src/shell/shell-provider.js';
+} from '../../../src/shell/command-palette.js';
+import { MedaShellProvider, useMedaShell } from '../../../src/shell/shell-provider.js';
 import type {
   AppDefinition,
   CommandDefinition,
   WorkspaceDefinition,
-} from '../../../src/shell/../../src/shell/types.js';
+} from '../../../src/shell/types.js';
 
 // ---------------------------------------------------------------------------
 // Browser stubs

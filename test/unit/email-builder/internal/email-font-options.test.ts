@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { EmailFontOption } from '../email-font-options.js';
-import { EMAIL_FONT_OPTIONS } from '../email-font-options.js';
+import type { EmailFontOption } from '../../../../src/email-builder/internal/email-font-options.js';
+import { EMAIL_FONT_OPTIONS } from '../../../../src/email-builder/internal/email-font-options.js';
 
 describe('EMAIL_FONT_OPTIONS', () => {
   it('is a non-empty array', () => {

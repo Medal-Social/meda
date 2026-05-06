@@ -4,15 +4,15 @@ import { Info } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { StrictMode, useEffect, useRef, useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PanelViewsProvider } from '../../../src/shell/../../src/shell/panel-views-provider.js';
-import { RightPanel } from '../../../src/shell/../../src/shell/right-panel.js';
-import { MedaShellProvider, useMedaShell } from '../../../src/shell/../../src/shell/shell-provider.js';
+import { PanelViewsProvider } from '../../../src/shell/panel-views-provider.js';
+import { RightPanel } from '../../../src/shell/right-panel.js';
+import { MedaShellProvider, useMedaShell } from '../../../src/shell/shell-provider.js';
 import type {
   AppDefinition,
   PanelMode,
   PanelView,
   WorkspaceDefinition,
-} from '../../../src/shell/../../src/shell/types.js';
+} from '../../../src/shell/types.js';
 
 // ---------------------------------------------------------------------------
 // Mock useShellViewport — default 'desktop', overridden per-test where needed
@@ -22,7 +22,7 @@ vi.mock('../../../src/shell/use-shell-viewport.js', () => ({
   useShellViewport: vi.fn(() => 'desktop'),
 }));
 
-import { useShellViewport } from '../../../src/shell/../../src/shell/use-shell-viewport.js';
+import { useShellViewport } from '../../../src/shell/use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
 // Browser stubs

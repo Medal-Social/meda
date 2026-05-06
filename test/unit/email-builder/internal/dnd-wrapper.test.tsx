@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { BuilderDndWrapper } from '../dnd-wrapper.js';
+import { BuilderDndWrapper } from '../../../../src/email-builder/internal/dnd-wrapper.js';
 
 describe('BuilderDndWrapper', () => {
   it('renders children', () => {

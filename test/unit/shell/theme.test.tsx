@@ -1,7 +1,7 @@
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DefaultThemeProvider, ThemeToggle, useTheme } from '../../../src/shell/../../src/shell/theme.js';
+import { DefaultThemeProvider, ThemeToggle, useTheme } from '../../../src/shell/theme.js';
 
 // Ensure next-themes is never loaded when the default adapter is used.
 vi.mock('next-themes', () => {

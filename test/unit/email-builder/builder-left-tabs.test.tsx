@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { BuilderLeftTabs } from '../builder-left-tabs.js';
-import { defaultEmailBuilderLabels } from '../types.js';
+import { BuilderLeftTabs } from '../../../src/email-builder/builder-left-tabs.js';
+import { defaultEmailBuilderLabels } from '../../../src/email-builder/types.js';
 
 const labels = defaultEmailBuilderLabels;
 

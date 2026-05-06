@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { TextBlockProps } from '../types.js';
-import { TextBlock } from './text.js';
+import { TextBlock } from '../../../../src/email-builder/block-renderers/text.js';
+import type { TextBlockProps } from '../../../../src/email-builder/types.js';
 
 const base: TextBlockProps = {
   content: 'Hello world',

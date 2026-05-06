@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { createBlock } from '../block-registry.js';
-import { BlockRenderer } from '../block-renderer.js';
+import { createBlock } from '../../../src/email-builder/block-registry.js';
+import { BlockRenderer } from '../../../src/email-builder/block-renderer.js';
 
 describe('BlockRenderer', () => {
   it('renders a heading block without throwing', () => {

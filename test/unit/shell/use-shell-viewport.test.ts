@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { useShellViewport } from '../../../src/shell/../../src/shell/use-shell-viewport.js';
+import { useShellViewport } from '../../../src/shell/use-shell-viewport.js';
 
 const QUERIES = {
   mobile: '(max-width: 767px)',

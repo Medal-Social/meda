@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { MobileTabBar } from '../mobile-tab-bar.js';
-import { defaultEmailBuilderLabels } from '../types.js';
+import { MobileTabBar } from '../../../src/email-builder/mobile-tab-bar.js';
+import { defaultEmailBuilderLabels } from '../../../src/email-builder/types.js';
 
 const labels = defaultEmailBuilderLabels;
 

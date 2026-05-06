@@ -6,11 +6,11 @@ vi.mock('../../../src/shell/use-shell-viewport.js', () => ({
   useShellViewport: vi.fn(),
 }));
 
-import { AppShellWorkspace } from '../../../src/shell/../../src/shell/app-shell-workspace.js';
-import { CommandPalette, useCommands } from '../../../src/shell/../../src/shell/command-palette.js';
-import { PanelViewsProvider } from '../../../src/shell/../../src/shell/panel-views-provider.js';
-import { MedaShellProvider, useMedaShell } from '../../../src/shell/../../src/shell/shell-provider.js';
-import { useShellViewport } from '../../../src/shell/../../src/shell/use-shell-viewport.js';
+import { AppShellWorkspace } from '../../../src/shell/app-shell-workspace.js';
+import { CommandPalette, useCommands } from '../../../src/shell/command-palette.js';
+import { PanelViewsProvider } from '../../../src/shell/panel-views-provider.js';
+import { MedaShellProvider, useMedaShell } from '../../../src/shell/shell-provider.js';
+import { useShellViewport } from '../../../src/shell/use-shell-viewport.js';
 
 const Provider = ({ children }: { children: React.ReactNode }) => (
   <MedaShellProvider

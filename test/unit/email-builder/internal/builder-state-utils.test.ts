@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import type { EmailBlock, EmailDocument } from '../../types.js';
 import {
   addBlock,
   duplicateBlock,
@@ -7,7 +6,8 @@ import {
   moveBlock,
   removeBlock,
   updateBlockProps,
-} from '../builder-state-utils.js';
+} from '../../../../src/email-builder/internal/builder-state-utils.js';
+import type { EmailBlock, EmailDocument } from '../../../../src/email-builder/types.js';
 
 function makeBlock(id: string, text = 'Hello'): EmailBlock {
   return {

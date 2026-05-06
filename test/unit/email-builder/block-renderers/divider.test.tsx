@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { DividerBlockProps } from '../types.js';
-import { DividerBlock } from './divider.js';
+import { DividerBlock } from '../../../../src/email-builder/block-renderers/divider.js';
+import type { DividerBlockProps } from '../../../../src/email-builder/types.js';
 
 const base: DividerBlockProps = {
   color: '#e5e7eb',

@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ShellStorageAdapter } from '../../../src/shell/../../src/shell/layout-state';
-import { createLocalStorageAdapter, useShellLayoutState } from '../../../src/shell/../../src/shell/layout-state';
+import type { ShellStorageAdapter } from '../../../src/shell/layout-state';
+import { createLocalStorageAdapter, useShellLayoutState } from '../../../src/shell/layout-state';
 
 function createStorageMock() {
   const store = new Map<string, string>();

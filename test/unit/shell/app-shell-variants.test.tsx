@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { Inbox } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
-import { AppShell, AppShellBody } from './app-shell.js';
-import { MedaShellProvider } from './shell-provider.js';
+import { AppShell, AppShellBody } from '../../../src/shell/app-shell.js';
+import { MedaShellProvider } from '../../../src/shell/shell-provider.js';
 
 const baseProvider = (children: React.ReactNode) => (
   <MedaShellProvider

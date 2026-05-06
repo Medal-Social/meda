@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { BlockErrorBoundary } from '../block-error-boundary.js';
+import { BlockErrorBoundary } from '../../../src/email-builder/block-error-boundary.js';
 
 function ThrowOnce({ shouldThrow }: { shouldThrow: boolean }) {
   if (shouldThrow) {

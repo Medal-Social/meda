@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { SpacerBlockProps } from '../types.js';
-import { SpacerBlock } from './spacer.js';
+import { SpacerBlock } from '../../../../src/email-builder/block-renderers/spacer.js';
+import type { SpacerBlockProps } from '../../../../src/email-builder/types.js';
 
 const base: SpacerBlockProps = { height: 24 };
 

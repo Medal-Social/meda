@@ -31,7 +31,7 @@ function makeDragEndEvent(activeId: string, overId: string | null): DragEndEvent
 // Capture the onDragEnd callback from BuilderDndWrapper by mocking the module
 let capturedOnDragEnd: ((event: DragEndEvent) => void) | null = null;
 
-vi.mock('../internal/dnd-wrapper.js', () => ({
+vi.mock('../../../src/email-builder/internal/dnd-wrapper.js', () => ({
   BuilderDndWrapper: ({
     children,
     onDragEnd,

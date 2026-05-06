@@ -3,10 +3,10 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { Inbox, Settings } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IconRailItem } from '../../../src/shell/../../src/shell/icon-rail.js';
-import { IconRail } from '../../../src/shell/../../src/shell/icon-rail.js';
-import { MedaShellProvider } from '../../../src/shell/../../src/shell/shell-provider.js';
-import type { AppDefinition, WorkspaceDefinition } from '../../../src/shell/../../src/shell/types.js';
+import type { IconRailItem } from '../../../src/shell/icon-rail.js';
+import { IconRail } from '../../../src/shell/icon-rail.js';
+import { MedaShellProvider } from '../../../src/shell/shell-provider.js';
+import type { AppDefinition, WorkspaceDefinition } from '../../../src/shell/types.js';
 
 // ---------------------------------------------------------------------------
 // Mock useShellViewport — default 'desktop', overridden per-test where needed
@@ -16,7 +16,7 @@ vi.mock('../../../src/shell/use-shell-viewport.js', () => ({
   useShellViewport: vi.fn(() => 'desktop'),
 }));
 
-import { useShellViewport } from '../../../src/shell/../../src/shell/use-shell-viewport.js';
+import { useShellViewport } from '../../../src/shell/use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
 // Browser stubs

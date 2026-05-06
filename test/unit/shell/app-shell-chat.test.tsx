@@ -1,12 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('./use-shell-viewport.js', () => ({
+vi.mock('../../../src/shell/use-shell-viewport.js', () => ({
   useShellViewport: vi.fn().mockReturnValue('desktop'),
 }));
 
-import { AppShellChat } from './app-shell-chat.js';
-import { useShellViewport } from './use-shell-viewport.js';
+import { AppShellChat } from '../../../src/shell/app-shell-chat.js';
+import { useShellViewport } from '../../../src/shell/use-shell-viewport.js';
 
 describe('AppShellChat', () => {
   it('renders the chat scaffolding and global actions slot', () => {

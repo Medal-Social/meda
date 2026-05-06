@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { FooterBlockProps } from '../types.js';
-import { FooterBlock } from './footer.js';
+import { FooterBlock } from '../../../../src/email-builder/block-renderers/footer.js';
+import type { FooterBlockProps } from '../../../../src/email-builder/types.js';
 
 const base: FooterBlockProps = {
   companyName: 'Acme Corp',

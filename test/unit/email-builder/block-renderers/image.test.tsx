@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { ImageBlockProps } from '../types.js';
-import { ImageBlock } from './image.js';
+import { ImageBlock } from '../../../../src/email-builder/block-renderers/image.js';
+import type { ImageBlockProps } from '../../../../src/email-builder/types.js';
 
 const base: ImageBlockProps = {
   src: 'https://example.com/photo.jpg',

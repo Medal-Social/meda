@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { ViewControls } from '../view-controls.js';
+import { ViewControls } from '../../../src/email-builder/view-controls.js';
 
 describe('ViewControls', () => {
   it('renders desktop and mobile radio buttons', () => {

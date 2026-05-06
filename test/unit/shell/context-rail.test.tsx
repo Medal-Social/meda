@@ -3,14 +3,14 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { Inbox } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ContextRail } from '../../../src/shell/../../src/shell/context-rail.js';
-import { MedaShellProvider } from '../../../src/shell/../../src/shell/shell-provider.js';
+import { ContextRail } from '../../../src/shell/context-rail.js';
+import { MedaShellProvider } from '../../../src/shell/shell-provider.js';
 import type {
   AppDefinition,
   ContextItem,
   ContextModule,
   WorkspaceDefinition,
-} from '../../../src/shell/../../src/shell/types.js';
+} from '../../../src/shell/types.js';
 
 // ---------------------------------------------------------------------------
 // Mock useShellViewport — default 'desktop', overridden per-test where needed
@@ -20,7 +20,7 @@ vi.mock('../../../src/shell/use-shell-viewport.js', () => ({
   useShellViewport: vi.fn(() => 'desktop'),
 }));
 
-import { useShellViewport } from '../../../src/shell/../../src/shell/use-shell-viewport.js';
+import { useShellViewport } from '../../../src/shell/use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
 // Browser stubs

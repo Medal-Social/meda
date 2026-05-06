@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { useTheme } from '../../../src/shell/../../src/shell/theme.js';
-import { NextThemesAdapter } from '../../../src/shell/../../src/shell/theme-next-themes.js';
+import { useTheme } from '../../../src/shell/theme.js';
+import { NextThemesAdapter } from '../../../src/shell/theme-next-themes.js';
 
 afterEach(() => {
   document.documentElement.classList.remove('dark');
@@ -143,7 +143,7 @@ describe('NextThemesAdapter — exposes a next-themes-compatible meda ThemeAdapt
     });
 
     // Directly set the theme to 'dark' via the context
-    const { useTheme } = await import('./theme.js');
+    const { useTheme } = await import('../../../src/shell/theme.js');
 
     function Setter() {
       const { setTheme } = useTheme();

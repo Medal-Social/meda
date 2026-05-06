@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { EnvelopeCard } from '../envelope-card.js';
-import type { EmailEnvelope } from '../types.js';
+import { EnvelopeCard } from '../../../src/email-builder/envelope-card.js';
+import type { EmailEnvelope } from '../../../src/email-builder/types.js';
 
 describe('EnvelopeCard', () => {
   it('renders all fields', () => {

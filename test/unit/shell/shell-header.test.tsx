@@ -8,9 +8,9 @@ import {
   PanelToggle,
   ShellHeader,
   WorkspaceSwitcher,
-} from '../../../src/shell/../../src/shell/shell-header.js';
-import { MedaShellProvider } from '../../../src/shell/../../src/shell/shell-provider.js';
-import type { AppDefinition, WorkspaceDefinition } from '../../../src/shell/../../src/shell/types.js';
+} from '../../../src/shell/shell-header.js';
+import { MedaShellProvider } from '../../../src/shell/shell-provider.js';
+import type { AppDefinition, WorkspaceDefinition } from '../../../src/shell/types.js';
 
 // ---------------------------------------------------------------------------
 // Mock useShellViewport — default 'desktop', overridden per-test where needed
@@ -20,7 +20,7 @@ vi.mock('../../../src/shell/use-shell-viewport.js', () => ({
   useShellViewport: vi.fn(() => 'desktop'),
 }));
 
-import { useShellViewport } from '../../../src/shell/../../src/shell/use-shell-viewport.js';
+import { useShellViewport } from '../../../src/shell/use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
 // Browser stubs — DefaultThemeProvider reads localStorage + matchMedia
@@ -590,7 +590,7 @@ describe('ShellHeader — renders on desktop viewport', () => {
 
 describe('WorkspaceSwitcher — workspace.icon renders in trigger when set', () => {
   it('shows a workspace icon span when workspace.icon is a ReactNode', () => {
-    const wsWithIcon: import('./types.js').WorkspaceDefinition = {
+    const wsWithIcon: import('../../../src/shell/types.js').WorkspaceDefinition = {
       id: 'ws-icon',
       name: 'Iconic WS',
       icon: <span data-testid="ws-icon">WS</span>,
@@ -606,7 +606,7 @@ describe('WorkspaceSwitcher — workspace.icon renders in trigger when set', () 
   });
 
   it('shows icon for workspace in the dropdown list when workspace.icon is set', () => {
-    const wsIconEntry: import('./types.js').WorkspaceDefinition = {
+    const wsIconEntry: import('../../../src/shell/types.js').WorkspaceDefinition = {
       id: 'ws-with-icon',
       name: 'Icon WS',
       icon: <span data-testid="list-ws-icon">X</span>,

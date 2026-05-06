@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { getDefaultBlockProps } from '../block-registry.js';
+import { getDefaultBlockProps } from '../../../src/email-builder/block-registry.js';
 import {
   AlignmentToggle,
   ColorInput,
@@ -10,16 +10,16 @@ import {
   SpacingEditor,
   TextAreaInput,
   TextInput,
-} from '../property-editors/_shared.js';
-import { ButtonPropertyEditor } from '../property-editors/button-editor.js';
-import { ColumnsPropertyEditor } from '../property-editors/columns-editor.js';
-import { DividerPropertyEditor } from '../property-editors/divider-editor.js';
-import { FooterPropertyEditor } from '../property-editors/footer-editor.js';
-import { HeadingPropertyEditor } from '../property-editors/heading-editor.js';
-import { ImagePropertyEditor } from '../property-editors/image-editor.js';
-import { SocialPropertyEditor } from '../property-editors/social-editor.js';
-import { SpacerPropertyEditor } from '../property-editors/spacer-editor.js';
-import { TextPropertyEditor } from '../property-editors/text-editor.js';
+} from '../../../src/email-builder/property-editors/_shared.js';
+import { ButtonPropertyEditor } from '../../../src/email-builder/property-editors/button-editor.js';
+import { ColumnsPropertyEditor } from '../../../src/email-builder/property-editors/columns-editor.js';
+import { DividerPropertyEditor } from '../../../src/email-builder/property-editors/divider-editor.js';
+import { FooterPropertyEditor } from '../../../src/email-builder/property-editors/footer-editor.js';
+import { HeadingPropertyEditor } from '../../../src/email-builder/property-editors/heading-editor.js';
+import { ImagePropertyEditor } from '../../../src/email-builder/property-editors/image-editor.js';
+import { SocialPropertyEditor } from '../../../src/email-builder/property-editors/social-editor.js';
+import { SpacerPropertyEditor } from '../../../src/email-builder/property-editors/spacer-editor.js';
+import { TextPropertyEditor } from '../../../src/email-builder/property-editors/text-editor.js';
 
 const defaults = getDefaultBlockProps();
 

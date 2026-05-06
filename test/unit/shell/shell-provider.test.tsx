@@ -2,7 +2,7 @@ import { act, fireEvent, render, renderHook, screen } from '@testing-library/rea
 import { LayoutGrid, Menu } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ShellStorageAdapter } from '../../../src/shell/../../src/shell/layout-state.js';
+import type { ShellStorageAdapter } from '../../../src/shell/layout-state.js';
 
 vi.mock('../../../src/shell/use-shell-viewport.js', () => ({
   useShellViewport: vi.fn(() => 'desktop'),
@@ -12,15 +12,15 @@ import {
   MedaShellProvider,
   useMedaShell,
   useShellSelection,
-} from '../../../src/shell/../../src/shell/shell-provider.js';
-import { useTheme } from '../../../src/shell/../../src/shell/theme.js';
+} from '../../../src/shell/shell-provider.js';
+import { useTheme } from '../../../src/shell/theme.js';
 import type {
   AppDefinition,
   MobileBottomNavItem,
   ThemeAdapter,
   WorkspaceDefinition,
-} from '../../../src/shell/../../src/shell/types.js';
-import { useShellViewport } from '../../../src/shell/../../src/shell/use-shell-viewport.js';
+} from '../../../src/shell/types.js';
+import { useShellViewport } from '../../../src/shell/use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
 // Global browser stubs — DefaultThemeProvider reads localStorage + matchMedia

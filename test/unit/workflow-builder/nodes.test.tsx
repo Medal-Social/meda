@@ -3,7 +3,13 @@ import { ReactFlowProvider } from '@xyflow/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { BaseWorkflowNode } from '../../../src/workflow-builder/nodes/base-node.js';
-import { ActionNode, ConditionNode, DelayNode, EndNode, TriggerNode } from '../../../src/workflow-builder/nodes/index.js';
+import {
+  ActionNode,
+  ConditionNode,
+  DelayNode,
+  EndNode,
+  TriggerNode,
+} from '../../../src/workflow-builder/nodes/index.js';
 import type { WorkflowNode } from '../../../src/workflow-builder/types.js';
 
 function wrap(children: ReactNode) {

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { MobileDrawer } from '../mobile-drawers.js';
+import { MobileDrawer } from '../../../src/email-builder/mobile-drawers.js';
 
 describe('MobileDrawer', () => {
   it('renders the title when open', () => {

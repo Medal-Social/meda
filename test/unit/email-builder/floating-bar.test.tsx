@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { FloatingBar } from '../floating-bar.js';
-import { defaultEmailBuilderLabels } from '../types.js';
+import { FloatingBar } from '../../../src/email-builder/floating-bar.js';
+import { defaultEmailBuilderLabels } from '../../../src/email-builder/types.js';
 
 const labels = defaultEmailBuilderLabels;
 

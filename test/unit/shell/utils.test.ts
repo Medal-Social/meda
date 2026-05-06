@@ -1,3 +1,4 @@
+import { Inbox } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 import { motion } from '../../../src/shell/motion.js';
 import {
@@ -35,11 +36,11 @@ describe('buildShellShortcutMap', () => {
       inbox: {
         id: 'inbox',
         label: 'Inbox',
+        description: 'Inbox section',
         items: [
-          { label: 'All', to: '/inbox', shortcut: 'g i', icon: null },
-          { label: 'Sent', to: '/inbox/sent', icon: null },
+          { label: 'All', to: '/inbox', shortcut: 'g i', icon: Inbox },
+          { label: 'Sent', to: '/inbox/sent', icon: Inbox },
         ],
-        icon: null,
       },
     });
 
@@ -54,8 +55,8 @@ describe('buildShellShortcutMap', () => {
       inbox: {
         id: 'inbox',
         label: 'Inbox',
-        items: [{ label: 'All', to: '/inbox', icon: null }],
-        icon: null,
+        description: 'Inbox section',
+        items: [{ label: 'All', to: '/inbox', icon: Inbox }],
       },
     });
     expect(map.size).toBe(0);
@@ -69,7 +70,7 @@ describe('buildShellShortcutMap', () => {
 describe('buildShellSectionCommands', () => {
   it('maps items to ShellCommandDefinition shape', () => {
     const cmds = buildShellSectionCommands(
-      { id: 'inbox', items: [{ label: 'All inbox', to: '/inbox', shortcut: 'g i', icon: null }] },
+      { id: 'inbox', items: [{ label: 'All inbox', to: '/inbox', shortcut: 'g i', icon: Inbox }] },
       'Inbox'
     );
 
@@ -90,7 +91,7 @@ describe('buildShellSectionCommands', () => {
   it('uses "Current Section" as the default group label', () => {
     const cmds = buildShellSectionCommands({
       id: 'x',
-      items: [{ label: 'X', to: '/x', icon: null }],
+      items: [{ label: 'X', to: '/x', icon: Inbox }],
     });
     expect(cmds[0].group).toBe('Current Section');
   });
@@ -102,8 +103,8 @@ describe('buildShellSectionCommands', () => {
 
 const PANEL_VIEWS = {
   inbox: [
-    { id: 'activity', label: 'Activity' },
-    { id: 'details', label: 'Details' },
+    { id: 'activity', label: 'Activity', icon: Inbox },
+    { id: 'details', label: 'Details', icon: Inbox },
   ],
 };
 
@@ -116,7 +117,7 @@ describe('getShellPanelCollection', () => {
   });
 
   it('merges globalPanelViews into views', () => {
-    const global = [{ id: 'global-1', label: 'Global' }];
+    const global = [{ id: 'global-1', label: 'Global', icon: Inbox }];
     const col = getShellPanelCollection({
       panelViews: PANEL_VIEWS,
       sectionKey: 'inbox',
@@ -127,7 +128,7 @@ describe('getShellPanelCollection', () => {
   });
 
   it('uses productPanelViews when selectedProductId is set', () => {
-    const productViews = [{ id: 'product-view', label: 'Product' }];
+    const productViews = [{ id: 'product-view', label: 'Product', icon: Inbox }];
     const col = getShellPanelCollection({
       panelViews: PANEL_VIEWS,
       sectionKey: 'inbox',
@@ -214,7 +215,7 @@ describe('resolveShellPanelView', () => {
 describe('getShellPanelView', () => {
   it('returns the view definition when found', () => {
     const view = getShellPanelView({ panelViews: PANEL_VIEWS, sectionKey: 'inbox' }, 'details');
-    expect(view).toEqual({ id: 'details', label: 'Details' });
+    expect(view).toEqual({ id: 'details', label: 'Details', icon: Inbox });
   });
 
   it('returns null when viewId is null', () => {

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { SocialBlockProps, SocialLink } from '../types.js';
-import { SocialBlock } from './social.js';
+import { SocialBlock } from '../../../../src/email-builder/block-renderers/social.js';
+import type { SocialBlockProps, SocialLink } from '../../../../src/email-builder/types.js';
 
 const twitterLink: SocialLink = { platform: 'twitter', url: 'https://twitter.com/' };
 const linkedinLink: SocialLink = { platform: 'linkedin', url: 'https://linkedin.com/' };

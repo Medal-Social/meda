@@ -5,22 +5,23 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { Inbox } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MobileBottomNav } from '../../../../src/shell/internal/mobile-bottom-nav.js';
+import { MobileDrawers } from '../../../../src/shell/internal/mobile-drawers.js';
+import { MobileHeader } from '../../../../src/shell/internal/mobile-header.js';
 import { MedaShellProvider, useMedaShell } from '../../../../src/shell/shell-provider.js';
 import type {
   AppDefinition,
   MobileBottomNavItem,
   PanelView,
   WorkspaceDefinition,
+  WorkspaceMenuItem,
 } from '../../../../src/shell/types.js';
-import { MobileBottomNav } from '../../../../src/shell/internal/mobile-bottom-nav.js';
-import { MobileDrawers } from '../../../../src/shell/internal/mobile-drawers.js';
-import { MobileHeader } from '../../../../src/shell/internal/mobile-header.js';
 
 // ---------------------------------------------------------------------------
 // Mock useShellViewport — defaults to 'mobile', overridden per-test
 // ---------------------------------------------------------------------------
 
-vi.mock('../use-shell-viewport.js', () => ({
+vi.mock('../../../../src/shell/use-shell-viewport.js', () => ({
   useShellViewport: vi.fn(() => 'mobile'),
 }));
 
@@ -510,8 +511,7 @@ describe('MobileDrawers — theme toggle in menu drawer', () => {
     expect(screen.getByTestId('drawer-state')).toHaveTextContent('closed');
   });
 
-  it('renders workspace menu items with array-shaped ReactNode icon', async () => {
-    const { WorkspaceMenuItem } = await import('../types.js');
+  it('renders workspace menu items with array-shaped ReactNode icon', () => {
     const item = {
       id: 'compound',
       label: 'Compound Item',
@@ -540,7 +540,7 @@ describe('MobileDrawers — theme toggle in menu drawer', () => {
           </button>
           <MobileDrawers
             menuItems={[]}
-            workspaceMenuItems={[item as ReturnType<typeof WorkspaceMenuItem>]}
+            workspaceMenuItems={[item as unknown as WorkspaceMenuItem]}
           />
         </>
       );
@@ -629,7 +629,7 @@ describe('MobileDrawers — menu drawer with renderLink returning non-element', 
           <MobileDrawers
             menuItems={items}
             // biome-ignore lint/suspicious/noExplicitAny: test cast for non-element renderLink
-            renderLink={() => 'plain-string' as any}
+            menuRenderLink={() => 'plain-string' as any}
           />
         </>
       );

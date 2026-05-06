@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { AppShellAuth } from './app-shell-auth.js';
+import { AppShellAuth } from '../../../src/shell/app-shell-auth.js';
 
 describe('AppShellAuth', () => {
   it('renders the title, description, and form children', () => {

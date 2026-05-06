@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { ButtonBlockProps } from '../types.js';
-import { ButtonBlock } from './button.js';
+import { ButtonBlock } from '../../../../src/email-builder/block-renderers/button.js';
+import type { ButtonBlockProps } from '../../../../src/email-builder/types.js';
 
 const base: ButtonBlockProps = {
   text: 'Click me',

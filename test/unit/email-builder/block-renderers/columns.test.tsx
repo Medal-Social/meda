@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { ColumnsBlockProps, EmailBlock } from '../types.js';
-import { ColumnsBlock } from './columns.js';
+import { ColumnsBlock } from '../../../../src/email-builder/block-renderers/columns.js';
+import type { ColumnsBlockProps, EmailBlock } from '../../../../src/email-builder/types.js';
 
 const base: ColumnsBlockProps = {
   layout: '50-50',
