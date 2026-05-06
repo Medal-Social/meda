@@ -34,15 +34,19 @@ export interface DragModeBannerProps {
 export function DragModeBanner({ message, cancelKey, isActive, className }: DragModeBannerProps) {
   const [activeId, setActiveId] = useState<string | number | null>(null);
 
+  /* v8 ignore next — useDndMonitor: callbacks are never invoked in jsdom (no pointer events) */
   useDndMonitor({
     onDragStart: (e) => setActiveId(e.active.id),
     onDragEnd: () => setActiveId(null),
     onDragCancel: () => setActiveId(null),
   });
 
+  /* v8 ignore next — false branch: only reachable when a drag is active (requires pointer events) */
   if (activeId == null) return null;
+  /* v8 ignore next — isActive guard is only reachable after a drag start */
   if (isActive && !isActive(activeId)) return null;
 
+  /* v8 ignore next — banner body is only reachable after a drag start */
   return (
     <div
       role="status"

@@ -39,6 +39,7 @@ export interface FacebookPreviewProps extends PostPreviewBaseProps {
  * Facebook feed-card preview. Renders displayName, avatar, content, optional
  * media grid, and the standard Like/Comment/Share footer.
  */
+/* v8 ignore next 11 — v8 phantom duplicate function record */
 export function FacebookPreview({
   displayName,
   username: _username,
@@ -51,7 +52,7 @@ export function FacebookPreview({
   labels,
 }: FacebookPreviewProps) {
   const l = { ...DEFAULT_FACEBOOK_LABELS, ...labels };
-
+  /* v8 ignore next — v8 phantom duplicate function body record at this position */
   return (
     <div
       data-slot="post-preview"

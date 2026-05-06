@@ -113,6 +113,7 @@ export const COLUMN_WIDTHS: Record<ColumnLayout, number[]> = {
 };
 
 export function getColumnWidths(layout: ColumnLayout): number[] {
+  /* v8 ignore next -- fallback is unreachable; ColumnLayout union exhausts COLUMN_WIDTHS keys */
   return COLUMN_WIDTHS[layout] ?? [100];
 }
 

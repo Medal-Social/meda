@@ -103,6 +103,7 @@ function renderBlock(block: EmailBlock, brand: EmailBrand, contentWidth: number)
     case 'footer':
       return renderFooter(block.props as FooterBlockProps);
     default:
+      /* v8 ignore next -- defensive guard; EmailBlock union makes this unreachable at runtime */
       return '';
   }
 }

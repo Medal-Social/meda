@@ -51,6 +51,7 @@ export const CommandRegistryContext = createContext<CommandRegistry | null>(null
 
 export function matchesHotkey(e: KeyboardEvent, spec: string): boolean {
   const parts = spec.toLowerCase().split('+');
+  /* v8 ignore next — ?? '' fallback: split('+') always returns at least one element */
   const key = parts.at(-1) ?? '';
   const mods = parts.slice(0, -1);
 
@@ -155,6 +156,7 @@ export function CommandPalette({ children }: CommandPaletteProps) {
       return {
         id: groupId,
         label: def?.label ?? groupId,
+        /* v8 ignore next — ?? []: groupId always exists in byGroup since it comes from byGroup.keys() */
         commands: (byGroup.get(groupId) ?? []).sort((a, b) => a.label.localeCompare(b.label)),
       };
     });

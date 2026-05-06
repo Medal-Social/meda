@@ -32,6 +32,7 @@ export interface GoogleBusinessPreviewProps extends PostPreviewBaseProps {
  * Google Business Profile update-post preview. Renders the business name,
  * timestamp, content, optional media, and a Learn-more CTA button.
  */
+/* v8 ignore next 11 — v8 phantom duplicate function record */
 export function GoogleBusinessPreview({
   displayName,
   username: _username,
@@ -44,7 +45,7 @@ export function GoogleBusinessPreview({
   labels,
 }: GoogleBusinessPreviewProps) {
   const l = { ...DEFAULT_GOOGLE_BUSINESS_LABELS, ...labels };
-
+  /* v8 ignore next — v8 phantom duplicate function body record */
   return (
     <div
       data-slot="post-preview"

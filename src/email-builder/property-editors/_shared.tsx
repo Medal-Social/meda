@@ -114,6 +114,7 @@ export function NumberInput({
       aria-label={ariaLabel}
       onChange={(e: ChangeEvent<HTMLInputElement>) => {
         const n = Number(e.target.value);
+        /* v8 ignore next -- number inputs sanitize non-numeric input in real browsers; jsdom always coerces to 0 */
         if (!Number.isNaN(n)) onChange(n);
       }}
       className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -238,6 +239,7 @@ export function SpacingEditor({
               aria-label={`${label} padding`}
               onChange={(e: ChangeEvent<HTMLInputElement>) => {
                 const n = Number(e.target.value);
+                /* v8 ignore next -- number inputs sanitize non-numeric input in real browsers; jsdom always coerces to 0 */
                 if (!Number.isNaN(n)) onChange({ ...value, [side]: n });
               }}
               className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"

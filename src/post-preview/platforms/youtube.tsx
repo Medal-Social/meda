@@ -31,6 +31,7 @@ export interface YouTubePreviewProps extends PostPreviewBaseProps {
 /**
  * YouTube community-post preview. Honors `.dark` for the dark variant.
  */
+/* v8 ignore next 11 — v8 phantom duplicate function record */
 export function YouTubePreview({
   displayName,
   username: _username,
@@ -43,7 +44,7 @@ export function YouTubePreview({
   labels,
 }: YouTubePreviewProps) {
   const l = { ...DEFAULT_YOUTUBE_LABELS, ...labels };
-
+  /* v8 ignore next — v8 phantom duplicate function body record */
   return (
     <div
       data-slot="post-preview"

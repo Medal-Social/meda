@@ -27,16 +27,19 @@ function narrow(value: string | null | undefined): Theme {
 }
 
 function getMediaQueryList(): LegacyMediaQueryList | undefined {
+  /* v8 ignore next — SSR guard: window is always defined in jsdom test env */
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
   return window.matchMedia(MEDIA_QUERY) as LegacyMediaQueryList;
 }
 
 function resolveSystemTheme(mql?: LegacyMediaQueryList): ResolvedTheme {
   if (mql) return mql.matches ? 'dark' : 'light';
+  /* v8 ignore next — null-safe branch: getMediaQueryList() always returns an MQL in jsdom */
   return getMediaQueryList()?.matches ? 'dark' : 'light';
 }
 
 function getStoredTheme(): Theme {
+  /* v8 ignore next — SSR guard: window is always defined in jsdom test env */
   if (typeof window === 'undefined') return 'system';
   try {
     return narrow(window.localStorage.getItem(STORAGE_KEY));
@@ -46,6 +49,7 @@ function getStoredTheme(): Theme {
 }
 
 function applyTheme(theme: Theme, resolvedTheme: ResolvedTheme) {
+  /* v8 ignore next — SSR guard: document is always defined in jsdom test env */
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
   const applied = theme === 'system' ? resolvedTheme : theme;
@@ -89,6 +93,7 @@ export function NextThemesAdapter({ children }: { children: ReactNode }) {
     setResolvedTheme(resolved);
     applyTheme(next, resolved);
     try {
+      /* v8 ignore next — SSR guard: window is always defined in jsdom test env */
       if (typeof window !== 'undefined') window.localStorage.setItem(STORAGE_KEY, next);
     } catch {
       // Ignore unavailable storage, matching next-themes' best-effort behavior.

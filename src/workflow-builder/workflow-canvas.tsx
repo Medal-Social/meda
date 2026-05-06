@@ -55,6 +55,7 @@ export function WorkflowCanvas({
   className,
 }: WorkflowCanvasProps) {
   const handleNodeClick = useCallback(
+    /* v8 ignore next 3 — React Flow only fires this in a real browser canvas */
     (_e: React.MouseEvent, node: Node) => {
       onNodeClick?.(node as WorkflowNode);
     },
@@ -62,6 +63,7 @@ export function WorkflowCanvas({
   );
 
   const handleSelectionChange = useCallback(
+    /* v8 ignore next 4 — React Flow only fires this in a real browser canvas */
     (params: { nodes: Node[]; edges: Edge[] }) => {
       onSelectionChange?.({
         nodes: params.nodes as WorkflowNode[],

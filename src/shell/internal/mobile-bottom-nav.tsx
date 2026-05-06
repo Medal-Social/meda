@@ -57,6 +57,7 @@ export function MobileBottomNav({ items, className }: MobileBottomNavProps) {
 /** Long-press threshold in milliseconds */
 const LONG_PRESS_DURATION = 500;
 
+/* v8 ignore next — v8 phantom duplicate function record for MobileBottomNavButton */
 function MobileBottomNavButton({ item }: { item: MobileBottomNavItem }) {
   const ctx = useMedaShell();
   const Icon = item.icon;

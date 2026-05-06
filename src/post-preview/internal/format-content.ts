@@ -18,6 +18,7 @@ export function splitContent(content: string): ContentPart[] {
   const parts: ContentPart[] = [];
   let lastIndex = 0;
   for (const match of content.matchAll(PATTERN)) {
+    /* v8 ignore next — match.index is always defined for matchAll results */
     const matchIndex = match.index ?? 0;
     if (matchIndex > lastIndex) {
       parts.push({ type: 'text', value: content.slice(lastIndex, matchIndex) });

@@ -75,3 +75,110 @@ export interface MarketingLeadMagnetProps {
   onOpenChange?: (open: boolean) => void;
   className?: string;
 }
+
+// ---- v1.8 — Landing v5 shell types ---- //
+
+export interface MarketingHeaderUser {
+  name: string;
+  email?: string;
+  image?: string;
+  workspaceSlug?: string;
+}
+
+interface MarketingNavItemBase {
+  id: string;
+  label: ReactNode;
+}
+
+export interface MarketingNavLinkItem extends MarketingNavItemBase {
+  href: string;
+  hasMenu?: false;
+  panel?: never;
+}
+
+export interface MarketingNavMenuItem extends MarketingNavItemBase {
+  hasMenu: true;
+  href?: string;
+  panel?: ReactNode;
+}
+
+export type MarketingNavItemDescriptor = MarketingNavLinkItem | MarketingNavMenuItem;
+
+export interface MarketingHeaderProps {
+  logo?: ReactNode;
+  navItems?: MarketingNavItemDescriptor[];
+  user?: MarketingHeaderUser | null;
+  signInHref?: string;
+  signUpHref?: string;
+  appHref?: string;
+  rightSlot?: ReactNode;
+  toggles?: ReactNode;
+  renderLoggedOut?: (defaults: { signInHref: string; signUpHref: string }) => ReactNode;
+  renderLoggedIn?: (user: MarketingHeaderUser, defaults: { appHref: string }) => ReactNode;
+  className?: string;
+}
+
+export interface MarketingShellProps {
+  header?: ReactNode;
+  footer?: ReactNode;
+  children?: ReactNode;
+  className?: string;
+}
+
+export interface MarketingFooterColumn {
+  title: ReactNode;
+  links: Array<{ label: ReactNode; href: string }>;
+}
+
+export interface MarketingFooterProps {
+  brand?: ReactNode;
+  tagline?: ReactNode;
+  columns?: MarketingFooterColumn[];
+  bottomSlot?: ReactNode;
+  className?: string;
+}
+
+export interface MarketingTrustStat {
+  value: ReactNode;
+  label: ReactNode;
+  caption?: ReactNode;
+}
+
+export interface MarketingTrustBarProps {
+  eyebrow?: ReactNode;
+  title?: ReactNode;
+  stats: MarketingTrustStat[];
+  className?: string;
+}
+
+export interface MarketingBentoGridProps {
+  cols?: 2 | 3 | 4 | 6 | 12;
+  children?: ReactNode;
+  className?: string;
+}
+
+export interface MarketingBentoCardProps {
+  colSpan?: 1 | 2 | 3 | 4 | 6 | 12;
+  rowSpan?: 1 | 2 | 3;
+  variant?: 'default' | 'feature' | 'compact';
+  icon?: ReactNode;
+  title?: ReactNode;
+  description?: ReactNode;
+  children?: ReactNode;
+  href?: string;
+  className?: string;
+}
+
+export interface MarketingFAQItem {
+  id: string;
+  question: ReactNode;
+  answer: ReactNode;
+}
+
+export interface MarketingFAQProps {
+  eyebrow?: ReactNode;
+  title?: ReactNode;
+  items: MarketingFAQItem[];
+  defaultOpenId?: string;
+  className?: string;
+}

@@ -46,6 +46,7 @@ export function duplicateBlock(doc: EmailDocument, blockId: string): EmailDocume
   const idx = doc.blocks.findIndex((b) => b.id === blockId);
   if (idx === -1) return doc;
   const original = doc.blocks[idx];
+  /* v8 ignore next -- defensive guard; findIndex guarantees idx is valid */
   if (!original) return doc;
   const clone: EmailBlock = {
     ...original,
