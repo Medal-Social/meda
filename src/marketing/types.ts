@@ -182,3 +182,61 @@ export interface MarketingFAQProps {
   defaultOpenId?: string;
   className?: string;
 }
+
+// ---- v1.9 — Landing v5 enrichment types ---- //
+
+export interface MarketingMegaMenuFeature {
+  id: string;
+  icon?: ReactNode;
+  title: ReactNode;
+  description?: ReactNode;
+  href: string;
+}
+
+export interface MarketingMegaMenuProps {
+  triggerId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  features?: MarketingMegaMenuFeature[];
+  children?: ReactNode;
+  className?: string;
+}
+
+export interface MarketingAnnouncementBarProps {
+  href?: string;
+  icon?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}
+
+export interface MarketingHeroProps {
+  eyebrow?: ReactNode;
+  headline: ReactNode;
+  subtitle?: ReactNode;
+  ctas?: ReactNode;
+  meta?: ReactNode;
+  productMockup?: ReactNode;
+  className?: string;
+}
+
+export interface MarketingNumberedFeature {
+  id: string;
+  index: ReactNode;
+  title: ReactNode;
+  description: ReactNode;
+}
+
+export interface MarketingNumberedFeaturesProps {
+  eyebrow?: ReactNode;
+  title?: ReactNode;
+  features: MarketingNumberedFeature[];
+  className?: string;
+}
+
+export interface MarketingCTAProps {
+  eyebrow?: ReactNode;
+  title: ReactNode;
+  subtitle?: ReactNode;
+  ctas?: ReactNode;
+  className?: string;
+}
