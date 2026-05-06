@@ -190,7 +190,7 @@ export interface MarketingMegaMenuFeature {
   icon?: ReactNode;
   title: ReactNode;
   description?: ReactNode;
-  href?: string;
+  href: string;
 }
 
 export interface MarketingMegaMenuProps {

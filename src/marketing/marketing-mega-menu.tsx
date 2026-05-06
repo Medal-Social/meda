@@ -26,10 +26,7 @@ export function MarketingMegaMenu({
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {features?.map((f) => (
             <li key={f.id}>
-              <a
-                href={f.href ?? '#'}
-                className="flex items-start gap-3 rounded-xl p-3 hover:bg-muted/40"
-              >
+              <a href={f.href} className="flex items-start gap-3 rounded-xl p-3 hover:bg-muted/40">
                 {f.icon && (
                   <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     {f.icon}
