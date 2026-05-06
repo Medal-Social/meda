@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { MarketingNavItem } from './marketing-nav-item.js';
 import type { MarketingHeaderProps } from './types.js';
 import { cx } from './utils.js';
@@ -49,6 +49,8 @@ export function MarketingHeader({
   renderLoggedIn,
   className,
 }: MarketingHeaderProps) {
+  const [openId, setOpenId] = useState<string | null>(null);
+
   let right: ReactNode;
   if (rightSlot !== undefined) {
     right = rightSlot;
@@ -66,20 +68,30 @@ export function MarketingHeader({
     );
   }
 
+  const activeItem = navItems.find((i) => i.id === openId);
+  const activePanel = activeItem && 'panel' in activeItem ? activeItem.panel : undefined;
+
   return (
     <nav
       aria-label="Primary"
       className={cx(
-        'mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-border/60 bg-background/70 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/50',
+        'relative mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-border/60 bg-background/70 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/50',
         className
       )}
+      onMouseLeave={() => setOpenId(null)}
     >
       <div className="flex items-center gap-6">
         {logo}
         <ul className="hidden items-center gap-1 md:flex">
           {navItems.map((item) => (
             <li key={item.id}>
-              <MarketingNavItem {...item} />
+              <MarketingNavItem
+                {...item}
+                open={openId === item.id}
+                onToggle={
+                  item.hasMenu ? () => setOpenId(openId === item.id ? null : item.id) : undefined
+                }
+              />
             </li>
           ))}
         </ul>
@@ -88,6 +100,7 @@ export function MarketingHeader({
         {toggles}
         {right}
       </div>
+      {activePanel}
     </nav>
   );
 }
