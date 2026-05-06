@@ -17,6 +17,12 @@ const ROW_SPAN = {
   3: 'row-span-3',
 } as const;
 
+const PADDING = {
+  default: 'p-6',
+  feature: 'p-8',
+  compact: 'p-4',
+} as const;
+
 export function MarketingBentoCard({
   colSpan = 4,
   rowSpan = 1,
@@ -34,12 +40,11 @@ export function MarketingBentoCard({
       data-bento-card
       {...(href ? { href } : {})}
       className={cx(
-        'rounded-2xl border border-border bg-card p-6 text-card-foreground transition',
+        'rounded-2xl border border-border bg-card text-card-foreground transition',
+        PADDING[variant],
         COL_SPAN[colSpan],
         ROW_SPAN[rowSpan],
         href && 'hover:border-primary/40 hover:bg-card/80',
-        variant === 'feature' && 'p-8',
-        variant === 'compact' && 'p-4',
         className
       )}
     >
