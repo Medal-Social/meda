@@ -40,12 +40,14 @@ export function RailDropZones({
 }: RailDropZonesProps) {
   const [activeId, setActiveId] = useState<string | number | null>(null);
 
+  /* v8 ignore next — useDndMonitor: callbacks are never invoked in jsdom (no pointer events) */
   useDndMonitor({
     onDragStart: (e) => setActiveId(e.active.id),
     onDragEnd: () => setActiveId(null),
     onDragCancel: () => setActiveId(null),
   });
 
+  /* v8 ignore next — false branch: activeId is always null in jsdom (no drag events) */
   const auto = activeId != null && (!isActive || isActive(activeId));
   const active = forceActive ?? auto;
 

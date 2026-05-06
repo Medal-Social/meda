@@ -39,4 +39,16 @@ describe('TikTokPreview', () => {
     expect(container.querySelector('[data-platform="tiktok"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="post-preview"]')).not.toBeNull();
   });
+
+  it('prepends @ when username does not start with @', () => {
+    render(<TikTokPreview {...FIXTURE} username="acmestudios" />);
+    expect(screen.getByText('@acmestudios')).toBeInTheDocument();
+  });
+
+  it('does not double-prepend @ when username already starts with @', () => {
+    render(<TikTokPreview {...FIXTURE} username="@acmestudios" />);
+    // Should display @acmestudios, not @@acmestudios
+    expect(screen.getByText('@acmestudios')).toBeInTheDocument();
+    expect(screen.queryByText('@@acmestudios')).toBeNull();
+  });
 });

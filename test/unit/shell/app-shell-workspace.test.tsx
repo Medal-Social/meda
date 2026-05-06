@@ -666,3 +666,29 @@ describe('AppShellWorkspace', () => {
     expect(screen.queryByRole('button', { name: 'Module' })).not.toBeInTheDocument();
   });
 });
+
+describe('AppShellWorkspace — mobile bottom nav includes AI button when panelViews has ai view', () => {
+  it('includes AI in mobile bottom nav when a panelView with id "ai" is present', () => {
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
+    (useShellViewport as any).mockReturnValue('mobile');
+
+    render(
+      <Provider>
+        <AppShellWorkspace
+          iconRail={{ mainItems: [{ id: 'i', label: 'Inbox', to: '/i', icon: Inbox }] }}
+          rightPanel={{
+            panelViews: [
+              { id: 'inspector', label: 'Inspector', icon: Inbox, render: () => null },
+              { id: 'ai', label: 'AI', icon: Inbox, render: () => null },
+            ],
+          }}
+        >
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    // AI button appears in mobile bottom nav
+    expect(screen.getByRole('button', { name: 'AI' })).toBeInTheDocument();
+  });
+});

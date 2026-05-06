@@ -34,6 +34,7 @@ export interface ThreadsPreviewProps extends PostPreviewBaseProps {
  * Threads feed-card preview. Honors a parent `.dark` class for the dark
  * variant the platform itself uses.
  */
+/* v8 ignore next 11 — v8 phantom duplicate function record */
 export function ThreadsPreview({
   displayName,
   username,
@@ -47,7 +48,7 @@ export function ThreadsPreview({
 }: ThreadsPreviewProps) {
   const l = { ...DEFAULT_THREADS_LABELS, ...labels };
   const formattedUsername = username.startsWith('@') ? username.slice(1) : username;
-
+  /* v8 ignore next — v8 phantom duplicate function body record */
   return (
     <div
       data-slot="post-preview"

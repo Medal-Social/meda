@@ -691,3 +691,41 @@ describe('collapse toggle', () => {
     expect(aside).toHaveStyle({ width: '260px' });
   });
 });
+
+describe('ContextRail — resize handle no-op when not dragging', () => {
+  it('pointerMove without prior pointerDown does not change width', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+
+    const aside = screen.getByRole('complementary', { name: 'Mail' });
+    const handle = screen.getByRole('separator', { name: 'Resize context rail' });
+
+    // Fire pointerMove without a preceding pointerDown
+    act(() => {
+      fireEvent.pointerMove(handle, { clientX: 100, pointerId: 1 });
+    });
+
+    // Width must remain at the default 260px
+    expect(aside).toHaveStyle({ width: '260px' });
+  });
+
+  it('pointerUp without prior pointerDown does not commit width', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+
+    const aside = screen.getByRole('complementary', { name: 'Mail' });
+    const handle = screen.getByRole('separator', { name: 'Resize context rail' });
+
+    act(() => {
+      fireEvent.pointerUp(handle, { clientX: 100, pointerId: 1 });
+    });
+
+    expect(aside).toHaveStyle({ width: '260px' });
+  });
+});

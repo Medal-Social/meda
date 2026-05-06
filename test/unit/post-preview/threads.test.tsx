@@ -39,4 +39,34 @@ describe('ThreadsPreview', () => {
     expect(container.querySelector('[data-platform="threads"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="post-preview"]')).not.toBeNull();
   });
+
+  it('strips leading @ from username for display', () => {
+    render(<ThreadsPreview {...FIXTURE} username="@acmestudios" />);
+    expect(screen.getByText('acmestudios')).toBeInTheDocument();
+  });
+
+  it('renders 2-image grid for multiple media', () => {
+    render(
+      <ThreadsPreview
+        {...FIXTURE}
+        mediaUrls={['https://example.com/a.jpg', 'https://example.com/b.jpg']}
+      />
+    );
+    // avatar + 2 media = 3 total
+    expect(screen.getAllByRole('img').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('renders 3-image grid for 3 media urls', () => {
+    render(
+      <ThreadsPreview
+        {...FIXTURE}
+        mediaUrls={[
+          'https://example.com/a.jpg',
+          'https://example.com/b.jpg',
+          'https://example.com/c.jpg',
+        ]}
+      />
+    );
+    expect(screen.getAllByRole('img').length).toBeGreaterThanOrEqual(3);
+  });
 });

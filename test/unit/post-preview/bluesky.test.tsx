@@ -39,4 +39,54 @@ describe('BlueSkyPreview', () => {
     const { container } = render(<BlueSkyPreview {...FIXTURE} />);
     expect(container.querySelector('[data-platform="bluesky"]')).not.toBeNull();
   });
+
+  it('uses username as-is when it already includes a domain', () => {
+    render(<BlueSkyPreview {...FIXTURE} username="acme.bsky.team" />);
+    expect(screen.getByText('@acme.bsky.team')).toBeInTheDocument();
+  });
+
+  it('strips leading @ before appending .bsky.social', () => {
+    render(<BlueSkyPreview {...FIXTURE} username="@handle" />);
+    expect(screen.getByText('@handle.bsky.social')).toBeInTheDocument();
+  });
+
+  it('renders 2-image grid', () => {
+    render(
+      <BlueSkyPreview
+        {...FIXTURE}
+        mediaUrls={['https://example.com/a.jpg', 'https://example.com/b.jpg']}
+      />
+    );
+    // avatar img + 2 media imgs = 3 total
+    expect(screen.getAllByRole('img').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('renders 3-image grid', () => {
+    render(
+      <BlueSkyPreview
+        {...FIXTURE}
+        mediaUrls={[
+          'https://example.com/a.jpg',
+          'https://example.com/b.jpg',
+          'https://example.com/c.jpg',
+        ]}
+      />
+    );
+    expect(screen.getAllByRole('img').length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('renders 4-image grid', () => {
+    render(
+      <BlueSkyPreview
+        {...FIXTURE}
+        mediaUrls={[
+          'https://example.com/a.jpg',
+          'https://example.com/b.jpg',
+          'https://example.com/c.jpg',
+          'https://example.com/d.jpg',
+        ]}
+      />
+    );
+    expect(screen.getAllByRole('img').length).toBeGreaterThanOrEqual(4);
+  });
 });

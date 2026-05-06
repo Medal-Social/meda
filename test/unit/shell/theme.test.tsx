@@ -70,6 +70,22 @@ describe('useTheme', () => {
     expect(result.current.theme).toBe('system');
   });
 
+  it('hydrates theme from a valid stored value in localStorage on mount', async () => {
+    // Provide a storage that returns 'dark' for the meda:theme key.
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key: string) => (key === 'meda:theme' ? 'dark' : null)),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+    });
+
+    const { result } = renderHook(() => useTheme(), { wrapper });
+    act(() => {});
+
+    // After the mount effect runs, theme should be hydrated to 'dark'.
+    expect(result.current.theme).toBe('dark');
+  });
+
   it("setTheme('dark') applies class=\"dark\" to html and persists to localStorage key 'meda:theme'", () => {
     const { result } = renderHook(() => useTheme(), { wrapper });
 

@@ -39,4 +39,11 @@ describe('YouTubePreview', () => {
     expect(container.querySelector('[data-platform="youtube"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="post-preview"]')).not.toBeNull();
   });
+
+  it('renders static content paragraph when not editable', () => {
+    render(<YouTubePreview {...FIXTURE} editable={false} />);
+    // The content should appear as a paragraph, not a textarea
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.getByText(/Hello from YouTube/)).toBeInTheDocument();
+  });
 });

@@ -43,4 +43,19 @@ describe('shell-layout-utils', () => {
       })
     ).toBe(280);
   });
+
+  it('returns undefined for fullbleed layout on an unrecognised viewport band', () => {
+    expect(getShellContentMaxWidth('fullbleed', 'tablet')).toBeUndefined();
+  });
+
+  it('returns the clamped preferred width when viewportWidth is non-finite', () => {
+    expect(
+      getResolvedShellPanelWidth({
+        preferredWidth: 400,
+        viewportWidth: Number.NaN,
+        sidebarOpen: false,
+        sidebarWidth: 0,
+      })
+    ).toBe(400);
+  });
 });

@@ -40,11 +40,19 @@ export default defineConfig({
         'src/**/*.stories.ts',
         'src/**/*.stories.tsx',
         'src/**/__stories__/**',
+        // Story fixtures (data shapes for stories — no behavior)
+        'src/**/fixtures.ts',
+        'src/**/fixtures.tsx',
+        // Scaffolding files
+        'src/__stories__/StoryFrame.tsx',
+        // Pure barrel / type files (re-exports and aliases)
         'src/**/index.ts',
         'src/**/public.ts',
         'src/**/types.ts',
         'src/**/*.types.ts',
         'src/**/*.d.ts',
+        // Defaults-only constant modules with no behavior to assert
+        'src/email-builder/starter-shell.ts',
         // Three.js / WebGL scene + shader. Renders into a <Canvas> via
         // react-three-fiber; cannot exercise meaningfully without a real
         // GPU and is mocked away from jsdom render trees by

@@ -129,6 +129,95 @@ describe('NextThemesAdapter — exposes a next-themes-compatible meda ThemeAdapt
     });
   });
 
+  it('calling setTheme persists the chosen theme to localStorage', async () => {
+    stubThemeEnvironment({ storedTheme: null, systemDark: false });
+
+    render(
+      <NextThemesAdapter>
+        <ThemeConsumer />
+      </NextThemesAdapter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('theme').textContent).toBe('system');
+    });
+
+    // Directly set the theme to 'dark' via the context
+    const { useTheme } = await import('../../../src/shell/theme.js');
+
+    function Setter() {
+      const { setTheme } = useTheme();
+      return (
+        <button type="button" onClick={() => setTheme('dark')}>
+          Set dark
+        </button>
+      );
+    }
+
+    const { rerender } = render(
+      <NextThemesAdapter>
+        <Setter />
+      </NextThemesAdapter>
+    );
+
+    const btn = screen.getByRole('button', { name: 'Set dark' });
+    btn.click();
+
+    rerender(
+      <NextThemesAdapter>
+        <Setter />
+        <ThemeConsumer />
+      </NextThemesAdapter>
+    );
+
+    await waitFor(() => {
+      expect(localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
+    });
+  });
+
+  it('storage event with a different key is ignored', async () => {
+    stubThemeEnvironment({ storedTheme: null });
+
+    render(
+      <NextThemesAdapter>
+        <ThemeConsumer />
+      </NextThemesAdapter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('theme').textContent).toBe('system');
+    });
+
+    // Fire a storage event with a different key — should be ignored
+    const event = new StorageEvent('storage', { key: 'other-key', newValue: 'dark' });
+    window.dispatchEvent(event);
+
+    // Theme should remain 'system'
+    expect(screen.getByTestId('theme').textContent).toBe('system');
+  });
+
+  it('storage event with the theme key updates the theme', async () => {
+    stubThemeEnvironment({ storedTheme: null });
+
+    render(
+      <NextThemesAdapter>
+        <ThemeConsumer />
+      </NextThemesAdapter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('theme').textContent).toBe('system');
+    });
+
+    // Fire a storage event for the 'theme' key
+    const event = new StorageEvent('storage', { key: 'theme', newValue: 'dark' });
+    window.dispatchEvent(event);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('theme').textContent).toBe('dark');
+    });
+  });
+
   it('supports legacy MediaQueryList addListener/removeListener APIs', async () => {
     const env = stubThemeEnvironment({
       storedTheme: 'system',
@@ -152,6 +241,104 @@ describe('NextThemesAdapter — exposes a next-themes-compatible meda ThemeAdapt
     await waitFor(() => {
       expect(screen.getByTestId('resolved').textContent).toBe('dark');
       expect(document.documentElement).toHaveClass('dark');
+    });
+  });
+
+  it('setTheme("system") resolves via system preference (system branch)', async () => {
+    stubThemeEnvironment({ storedTheme: null, systemDark: false });
+
+    function Setter() {
+      const { setTheme, theme } = useTheme();
+      return (
+        <>
+          <button type="button" onClick={() => setTheme('system')} data-testid="set-system">
+            Set system
+          </button>
+          <span data-testid="theme">{theme}</span>
+        </>
+      );
+    }
+
+    render(
+      <NextThemesAdapter>
+        <Setter />
+      </NextThemesAdapter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('theme').textContent).toBe('system');
+    });
+
+    // Click to re-set theme to 'system' (even if already system) — covers the ternary true branch
+    screen.getByTestId('set-system').click();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('theme').textContent).toBe('system');
+    });
+  });
+
+  it('returns system theme when localStorage.getItem throws', async () => {
+    vi.stubGlobal('localStorage', {
+      get getItem() {
+        throw new Error('QuotaExceeded');
+      },
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+    });
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        matches: false,
+        media: '',
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }))
+    );
+
+    render(
+      <NextThemesAdapter>
+        <ThemeConsumer />
+      </NextThemesAdapter>
+    );
+
+    await waitFor(() => {
+      // Falls back to 'system' when getItem throws
+      expect(screen.getByTestId('theme').textContent).toBe('system');
+    });
+  });
+
+  it('handles mql with no addEventListener and no addListener gracefully', async () => {
+    // Stub matchMedia to return an mql that has neither addEventListener nor addListener.
+    // This exercises the final `return () => undefined` branch in subscribeToSystemTheme.
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+    });
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        matches: false,
+        media: '(prefers-color-scheme: dark)',
+        onchange: null,
+        // Neither addEventListener nor addListener
+        dispatchEvent: vi.fn(),
+      }))
+    );
+
+    render(
+      <NextThemesAdapter>
+        <ThemeConsumer />
+      </NextThemesAdapter>
+    );
+
+    await waitFor(() => {
+      // Should render without throwing
+      expect(screen.getByTestId('theme').textContent).toBe('system');
     });
   });
 });

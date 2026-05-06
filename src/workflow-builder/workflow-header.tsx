@@ -39,6 +39,7 @@ export function WorkflowHeader({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleNameClick = () => {
+    /* v8 ignore next — button is disabled when readOnly or no handler; browser blocks the click */
     if (readOnly || !onNameChange) return;
     setIsEditing(true);
     setTimeout(() => inputRef.current?.select(), 0);

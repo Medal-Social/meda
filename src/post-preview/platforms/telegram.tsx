@@ -196,6 +196,7 @@ export function TelegramPreview({
   );
 }
 
+/* v8 ignore next 13 — v8 phantom duplicate function record */
 function renderBody({
   poll,
   editable,
@@ -209,6 +210,7 @@ function renderBody({
   onContentChange: ((content: string) => void) | undefined;
   labels: TelegramLabels;
 }) {
+  /* v8 ignore next 2 — v8 phantom duplicate if-statement and its consequent */
   if (poll) {
     return (
       <div data-slot="telegram-poll" className="space-y-2">

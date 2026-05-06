@@ -50,4 +50,117 @@ describe('PropertyInspector', () => {
       unmount();
     }
   });
+
+  it('fires onChange when editing a text content', () => {
+    const block = createBlock('text');
+    const onChange = vi.fn();
+    render(<PropertyInspector block={block} onChange={onChange} emptyContent="" />);
+    const textarea = screen.getByLabelText('Content') as HTMLTextAreaElement;
+    fireEvent.change(textarea, { target: { value: 'New content' } });
+    expect(onChange).toHaveBeenCalledWith(
+      block.id,
+      expect.objectContaining({ content: 'New content' })
+    );
+  });
+
+  it('fires onChange when editing an image src', () => {
+    const block = createBlock('image');
+    const onChange = vi.fn();
+    render(<PropertyInspector block={block} onChange={onChange} emptyContent="" />);
+    const input = screen.getByLabelText('Source URL') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'https://new.img/photo.jpg' } });
+    expect(onChange).toHaveBeenCalledWith(
+      block.id,
+      expect.objectContaining({ src: 'https://new.img/photo.jpg' })
+    );
+  });
+
+  it('fires onChange when editing a divider color', () => {
+    const block = createBlock('divider');
+    const onChange = vi.fn();
+    render(<PropertyInspector block={block} onChange={onChange} emptyContent="" />);
+    const input = screen.getAllByRole('textbox')[0] as HTMLInputElement;
+    fireEvent.change(input, { target: { value: '#ff0000' } });
+    expect(onChange).toHaveBeenCalledWith(block.id, expect.objectContaining({ color: '#ff0000' }));
+  });
+
+  it('fires onChange when editing a spacer height', () => {
+    const block = createBlock('spacer');
+    const onChange = vi.fn();
+    render(<PropertyInspector block={block} onChange={onChange} emptyContent="" />);
+    const input = screen.getByRole('spinbutton') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: '48' } });
+    expect(onChange).toHaveBeenCalledWith(block.id, expect.objectContaining({ height: 48 }));
+  });
+
+  it('fires onChange when editing a columns layout', () => {
+    const block = createBlock('columns');
+    const onChange = vi.fn();
+    render(<PropertyInspector block={block} onChange={onChange} emptyContent="" />);
+    const select = screen.getAllByRole('combobox')[0] as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: '33-67' } });
+    expect(onChange).toHaveBeenCalledWith(block.id, expect.objectContaining({ layout: '33-67' }));
+  });
+
+  it('fires onChange when editing a social icon size', () => {
+    const block = createBlock('social');
+    const onChange = vi.fn();
+    render(<PropertyInspector block={block} onChange={onChange} emptyContent="" />);
+    const inputs = screen.getAllByRole('spinbutton') as HTMLInputElement[];
+    // First number input is icon size
+    fireEvent.change(inputs[0], { target: { value: '40' } });
+    expect(onChange).toHaveBeenCalledWith(block.id, expect.objectContaining({ iconSize: 40 }));
+  });
+
+  it('fires onChange when editing a footer company name', () => {
+    const block = createBlock('footer');
+    const onChange = vi.fn();
+    render(<PropertyInspector block={block} onChange={onChange} emptyContent="" />);
+    const input = screen.getByLabelText('Company name') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'Acme Corp' } });
+    expect(onChange).toHaveBeenCalledWith(
+      block.id,
+      expect.objectContaining({ companyName: 'Acme Corp' })
+    );
+  });
+
+  it('renders text block with renderTextEditor slot', () => {
+    const block = createBlock('text');
+    const renderTextEditor = vi.fn(() => <div data-testid="custom-editor">editor</div>);
+    render(
+      <PropertyInspector
+        block={block}
+        onChange={() => {}}
+        emptyContent=""
+        renderTextEditor={renderTextEditor}
+      />
+    );
+    expect(screen.getByTestId('custom-editor')).toBeInTheDocument();
+  });
+
+  it('returns null for unknown block kind (default branch in renderEditor)', () => {
+    // biome-ignore lint/suspicious/noExplicitAny: intentional — exercises default branch
+    const unknownBlock = { id: 'x', kind: 'unknown' as any, props: {} } as any;
+    const { container } = render(
+      <PropertyInspector block={unknownBlock} onChange={() => {}} emptyContent="" />
+    );
+    // Should render the inspector wrapper but with null editor content
+    expect(container.querySelector('[data-slot="email-builder-inspector"]')).toBeInTheDocument();
+  });
+
+  it('renders image block with renderMediaPicker slot (opens on click)', () => {
+    const block = createBlock('image');
+    const renderMediaPicker = vi.fn(() => <div data-testid="media-picker">picker</div>);
+    render(
+      <PropertyInspector
+        block={block}
+        onChange={() => {}}
+        emptyContent=""
+        renderMediaPicker={renderMediaPicker}
+      />
+    );
+    // Picker button should be visible; click it to open the picker
+    fireEvent.click(screen.getByText('Pick from media library'));
+    expect(screen.getByTestId('media-picker')).toBeInTheDocument();
+  });
 });

@@ -83,6 +83,7 @@ function SortableBlock({ block, selected, onSelect, renderFloatingBar }: Sortabl
       className={cn(
         'group relative cursor-grab transition-shadow',
         selected && 'ring-2 ring-primary ring-inset',
+        /* v8 ignore next -- isDragging=true requires live pointer drag; not reachable in jsdom */
         isDragging && 'z-10 opacity-60'
       )}
       {...sortableAttrs}

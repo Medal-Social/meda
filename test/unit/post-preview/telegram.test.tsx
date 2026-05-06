@@ -77,4 +77,60 @@ describe('TelegramPreview', () => {
     expect(screen.getByText('Visit site')).toBeInTheDocument();
     expect(screen.getByText('Contact')).toBeInTheDocument();
   });
+
+  it('renders placeholder text for empty poll options', () => {
+    render(
+      <TelegramPreview {...FIXTURE} content="" poll={{ question: 'Pick one', options: ['', ''] }} />
+    );
+    expect(screen.getByText('Option 1')).toBeInTheDocument();
+    expect(screen.getByText('Option 2')).toBeInTheDocument();
+  });
+
+  it('renders multiple media images in a grid', () => {
+    render(
+      <TelegramPreview
+        {...FIXTURE}
+        mediaUrls={['https://example.com/a.jpg', 'https://example.com/b.jpg']}
+      />
+    );
+    // avatar img + 2 media = 3 total
+    expect(screen.getAllByRole('img').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('renders inline keyboard button with callbackData fallback href', () => {
+    render(
+      <TelegramPreview
+        {...FIXTURE}
+        replyMarkup={{
+          inline_keyboard: [[{ text: 'Action', callbackData: 'do_something' }]],
+        }}
+      />
+    );
+    const btn = screen.getByText('Action');
+    expect(btn.closest('a')?.getAttribute('href')).toBe('#');
+  });
+
+  it('renders button fallback label when button text is empty', () => {
+    render(
+      <TelegramPreview
+        {...FIXTURE}
+        replyMarkup={{
+          inline_keyboard: [[{ text: '', url: 'https://example.com' }]],
+        }}
+      />
+    );
+    expect(screen.getByText('Button')).toBeInTheDocument();
+  });
+
+  it('renders keyboard button with no url or callbackData (empty key fallback)', () => {
+    render(
+      <TelegramPreview
+        {...FIXTURE}
+        replyMarkup={{
+          inline_keyboard: [[{ text: 'Just text' }]],
+        }}
+      />
+    );
+    expect(screen.getByText('Just text')).toBeInTheDocument();
+  });
 });

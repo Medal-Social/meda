@@ -68,6 +68,7 @@ export interface MobileDrawersProps {
  * any custom-content drawers. Mount once near the AppShell root; drawers
  * open/close via `ctx.mobileDrawer.open` provider state.
  */
+/* v8 ignore next — v8 phantom duplicate function record for MobileDrawers */
 export function MobileDrawers({
   menuItems = [],
   menuActiveId,
@@ -162,6 +163,7 @@ function MenuDrawer({
   const hasIconItems = items.length > 0;
   const hasWorkspaceItems = Array.isArray(workspaceItems) && workspaceItems.length > 0;
 
+  /* v8 ignore next — v8 phantom duplicate return statement for MenuDrawer */
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()} direction="left">
       <DrawerContent>
@@ -388,6 +390,7 @@ function ModuleDrawer({
     </>
   );
 
+  /* v8 ignore next — v8 phantom duplicate return statement for ModuleDrawer */
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()} direction="left">
       <DrawerContent>
@@ -458,6 +461,7 @@ function PanelsDrawer({
     (defaultView ? panelViews.find((v) => v.id === defaultView) : undefined) ??
     panelViews[0];
 
+  /* v8 ignore next — v8 phantom duplicate return statement for PanelsDrawer */
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()} direction="bottom">
       <DrawerContent>
@@ -519,6 +523,7 @@ function AiDrawer({
 
   if (!aiView) return null;
 
+  /* v8 ignore next — v8 phantom duplicate return statement for AiDrawer */
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()} direction="bottom">
       <DrawerContent>

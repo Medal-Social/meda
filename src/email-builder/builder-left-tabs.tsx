@@ -29,6 +29,7 @@ export function BuilderLeftTabs({
   if (designContent) {
     tabs.splice(1, 0, { id: 'design', label: labels.designTab, content: designContent });
   }
+  /* v8 ignore next -- fallback to tabs[0] is unreachable; tab state is always set to a valid TabId */
   const active = tabs.find((t) => t.id === tab) ?? tabs[0];
   return (
     <div data-slot="email-builder-left-tabs" className="flex h-full flex-col">
