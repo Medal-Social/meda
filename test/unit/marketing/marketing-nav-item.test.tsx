@@ -15,4 +15,12 @@ describe('MarketingNavItem', () => {
     expect(btn).toHaveAttribute('aria-expanded', 'false');
     expect(btn.querySelector('[data-chevron]')).toBeInTheDocument();
   });
+
+  it('button trigger sets aria-haspopup', () => {
+    render(<MarketingNavItem id="products" label="Products" hasMenu />);
+    expect(screen.getByRole('button', { name: /products/i })).toHaveAttribute(
+      'aria-haspopup',
+      'menu'
+    );
+  });
 });

@@ -85,13 +85,24 @@ export interface MarketingHeaderUser {
   workspaceSlug?: string;
 }
 
-export interface MarketingNavItemDescriptor {
+interface MarketingNavItemBase {
   id: string;
   label: ReactNode;
+}
+
+export interface MarketingNavLinkItem extends MarketingNavItemBase {
+  href: string;
+  hasMenu?: false;
+  panel?: never;
+}
+
+export interface MarketingNavMenuItem extends MarketingNavItemBase {
+  hasMenu: true;
   href?: string;
-  hasMenu?: boolean;
   panel?: ReactNode;
 }
+
+export type MarketingNavItemDescriptor = MarketingNavLinkItem | MarketingNavMenuItem;
 
 export interface MarketingHeaderProps {
   logo?: ReactNode;

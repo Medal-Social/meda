@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { MarketingHeader } from './marketing-header.js';
 import { MarketingHeaderLogo } from './marketing-header-logo.js';
+import type { MarketingNavItemDescriptor } from './types.js';
 
-const navItems = [
+const navItems: MarketingNavItemDescriptor[] = [
   { id: 'start', label: 'Start Here', href: '/start' },
   { id: 'products', label: 'Products', hasMenu: true },
   { id: 'solutions', label: 'Solutions', hasMenu: true },
