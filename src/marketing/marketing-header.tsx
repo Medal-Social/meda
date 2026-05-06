@@ -72,33 +72,33 @@ export function MarketingHeader({
   const activePanel = activeItem && 'panel' in activeItem ? activeItem.panel : undefined;
 
   return (
-    <nav
-      aria-label="Primary"
-      className={cx(
-        'relative mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-border/60 bg-background/70 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/50',
-        className
-      )}
-      onMouseLeave={() => setOpenId(null)}
-    >
-      <div className="flex items-center gap-6">
-        {logo}
-        <ul className="hidden items-center gap-1 md:flex">
-          {navItems.map((item) => (
-            <li key={item.id}>
-              <MarketingNavItem
-                {...item}
-                open={openId === item.id}
-                onToggle={
-                  item.hasMenu ? () => setOpenId(openId === item.id ? null : item.id) : undefined
-                }
-              />
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="flex items-center gap-3">
-        {toggles}
-        {right}
+    <nav aria-label="Primary" className="relative" onMouseLeave={() => setOpenId(null)}>
+      <div
+        className={cx(
+          'mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-border/60 bg-background/70 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/50',
+          className
+        )}
+      >
+        <div className="flex items-center gap-6">
+          {logo}
+          <ul className="hidden items-center gap-1 md:flex">
+            {navItems.map((item) => (
+              <li key={item.id}>
+                <MarketingNavItem
+                  {...item}
+                  open={openId === item.id}
+                  onToggle={
+                    item.hasMenu ? () => setOpenId(openId === item.id ? null : item.id) : undefined
+                  }
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="flex items-center gap-3">
+          {toggles}
+          {right}
+        </div>
       </div>
       {activePanel}
     </nav>
