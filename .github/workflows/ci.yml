@@ -41,7 +41,15 @@ jobs:
       # install location regardless of runner-image changes to $HOME defaults.
       PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
     steps:
+      # On pull_request, actions/checkout defaults to checking out the synthetic
+      # `refs/pull/N/merge` commit, which doesn't exist upstream. DeepSource's
+      # test-coverage analyzer keys artifacts by commit SHA; if it can't find
+      # the SHA upstream it times out with "Artifact was never reported". We
+      # check out the PR head SHA so coverage is tied to a real commit.
+      # Ref: https://docs.deepsource.com/docs/analyzers-test-coverage#with-github-actions
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
 
