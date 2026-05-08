@@ -53,13 +53,19 @@ export function MarkdownView({ children, className, components, ...props }: Mark
       className={cn(
         // Base prose
         'text-sm leading-relaxed text-foreground',
+        // Trim outer block margins: only the first/last *child* of the
+        // wrapper should lose its top/bottom margin. The earlier shape
+        // `first:[&_h1]:mt-0` selects all descendant h1s when the wrapper
+        // itself is :first-child of its parent — which then collapses the
+        // margin on every nested h1, not just the leading one.
+        '[&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
         // Headings
-        '[&_h1]:mt-6 [&_h1]:mb-3 [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:text-foreground first:[&_h1]:mt-0',
-        '[&_h2]:mt-5 [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-foreground first:[&_h2]:mt-0',
-        '[&_h3]:mt-4 [&_h3]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-foreground first:[&_h3]:mt-0',
-        '[&_h4]:mt-3 [&_h4]:mb-1.5 [&_h4]:text-sm [&_h4]:font-semibold [&_h4]:text-foreground first:[&_h4]:mt-0',
+        '[&_h1]:mt-6 [&_h1]:mb-3 [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:text-foreground',
+        '[&_h2]:mt-5 [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-foreground',
+        '[&_h3]:mt-4 [&_h3]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-foreground',
+        '[&_h4]:mt-3 [&_h4]:mb-1.5 [&_h4]:text-sm [&_h4]:font-semibold [&_h4]:text-foreground',
         // Paragraphs and inline
-        '[&_p]:my-3 first:[&_p]:mt-0 last:[&_p]:mb-0',
+        '[&_p]:my-3',
         '[&_strong]:font-semibold [&_strong]:text-foreground',
         '[&_em]:italic',
         '[&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:no-underline',

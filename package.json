@@ -108,6 +108,10 @@
     "./theme": {
       "types": "./dist/theme/index.d.ts",
       "default": "./dist/theme/index.js"
+    },
+    "./markdown-view": {
+      "types": "./dist/primitives/markdown-view-entry.d.ts",
+      "default": "./dist/primitives/markdown-view-entry.js"
     }
   },
   "sideEffects": [
