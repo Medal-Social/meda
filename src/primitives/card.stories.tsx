@@ -52,6 +52,44 @@ export const BodyOnly: Story = {
   ),
 };
 
+export const PartialCompositions: Story = {
+  render: () => (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <Card>
+        <Card.Header>
+          <h3 className="text-sm font-semibold text-foreground">Plan settings</h3>
+          <p className="text-xs text-muted-foreground">Header + body, no footer.</p>
+        </Card.Header>
+        <Card.Body>
+          <p className="text-sm text-muted-foreground">
+            The header should sit flush against the body — its bottom border collapses when it is
+            the last child.
+          </p>
+        </Card.Body>
+      </Card>
+      <Card>
+        <Card.Body>
+          <p className="text-sm text-muted-foreground">
+            Body + footer, no header. The footer&rsquo;s top border collapses when it follows the
+            body directly.
+          </p>
+        </Card.Body>
+        <Card.Footer>
+          <button type="button" className="rounded-md border border-border px-3 py-1.5 text-sm">
+            Dismiss
+          </button>
+          <button
+            type="button"
+            className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
+          >
+            Confirm
+          </button>
+        </Card.Footer>
+      </Card>
+    </div>
+  ),
+};
+
 export const Tile: Story = {
   render: () => (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

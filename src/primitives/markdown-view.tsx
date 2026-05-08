@@ -22,7 +22,7 @@ const DEFAULT_COMPONENTS: Components = {
         />
       );
     }
-    return <input type={type} checked={checked} {...rest} />;
+    return <input type={type} {...rest} />;
   },
 };
 

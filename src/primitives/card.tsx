@@ -1,11 +1,9 @@
 'use client';
 
-import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import type { ComponentPropsWithoutRef } from 'react';
 import { cn } from '../lib/utils.js';
 
-export interface CardProps extends ComponentPropsWithoutRef<'div'> {
-  children?: ReactNode;
-}
+export type CardProps = ComponentPropsWithoutRef<'div'>;
 
 export type CardHeaderProps = ComponentPropsWithoutRef<'div'>;
 export type CardBodyProps = ComponentPropsWithoutRef<'div'>;
