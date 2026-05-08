@@ -1,5 +1,15 @@
 # @medalsocial/meda
 
+## 2.4.0
+
+### Minor Changes
+
+- [#154](https://github.com/Medal-Social/meda/pull/154) [`b0bace6`](https://github.com/Medal-Social/meda/commit/b0bace614c8f4e2acd0ec430afd53b12d89f82e9) Thanks [@alioftech](https://github.com/alioftech)! - feat(primitives): add `Card`, `StatusPill`, and `MarkdownView` primitives.
+
+  - `Card` — compound component (`Card`, `Card.Header`, `Card.Body`, `Card.Footer`) replacing the recurring `bg-card border border-border rounded-xl` pattern. All parts accept `className` overrides.
+  - `StatusPill` — generic colored pill with `tone` (`neutral` | `info` | `success` | `warning` | `danger`) and `size` (`sm` | `md`) props, leaning on existing meda colour tokens.
+  - `MarkdownView` — wraps `react-markdown` + `remark-gfm` + `rehype-highlight` with consistent prose styles. The three markdown libraries are listed as **optional peer dependencies** — install them in your app only if you import `MarkdownView`.
+
 ## 2.3.0
 
 ### Minor Changes
