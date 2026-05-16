@@ -10,6 +10,7 @@ describe('MarketingNavMenuItem features shorthand', () => {
       features: [{ id: 'a', title: 'A', href: '/a' }],
     };
     expect(item.hasMenu).toBe(true);
-    expect('features' in item && item.features?.[0]?.href).toBe('/a');
+    expect('features' in item).toBe(true);
+    expect(item.features?.[0]?.href).toBe('/a');
   });
 });
