@@ -31,3 +31,29 @@ describe('MarketingShell', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument();
   });
 });
+
+describe('MarketingShell banner slot', () => {
+  it('renders a banner above the header when provided', () => {
+    render(
+      <MarketingShell
+        banner={<div data-testid="banner">Announcement</div>}
+        header={<div data-testid="header">Header</div>}
+      >
+        <p>body</p>
+      </MarketingShell>
+    );
+    const banner = screen.getByTestId('banner');
+    const header = screen.getByTestId('header');
+    expect(banner).toBeInTheDocument();
+    expect(banner.compareDocumentPosition(header) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('omits the banner wrapper when no banner is passed', () => {
+    render(
+      <MarketingShell header={<div>Header</div>}>
+        <p>body</p>
+      </MarketingShell>
+    );
+    expect(screen.queryByTestId('banner')).not.toBeInTheDocument();
+  });
+});

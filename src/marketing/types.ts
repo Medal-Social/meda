@@ -121,6 +121,7 @@ export interface MarketingHeaderProps {
 }
 
 export interface MarketingShellProps {
+  banner?: ReactNode;
   header?: ReactNode;
   footer?: ReactNode;
   children?: ReactNode;
