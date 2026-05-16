@@ -1,8 +1,6 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import { MarketingHeader } from '../../../src/marketing/marketing-header.js';
-
-afterEach(cleanup);
 
 describe('MarketingHeader', () => {
   it('renders Sign in + Start free when no user', () => {
