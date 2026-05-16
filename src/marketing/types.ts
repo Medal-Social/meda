@@ -100,6 +100,8 @@ export interface MarketingNavMenuItem extends MarketingNavItemBase {
   hasMenu: true;
   href?: string;
   panel?: ReactNode;
+  /** Data-driven mega-menu. Rendered via MarketingMegaMenu when `panel` is not provided. */
+  features?: MarketingMegaMenuFeature[];
 }
 
 export type MarketingNavItemDescriptor = MarketingNavLinkItem | MarketingNavMenuItem;
