@@ -1,6 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 import { MarketingHeader } from '../../../src/marketing/marketing-header.js';
+
+afterEach(cleanup);
 
 describe('MarketingHeader', () => {
   it('renders Sign in + Start free when no user', () => {
@@ -75,5 +77,52 @@ describe('MarketingHeader', () => {
     expect(screen.getByTestId('products-panel')).toBeInTheDocument();
     fireEvent.click(trigger);
     expect(screen.queryByTestId('products-panel')).toBeNull();
+  });
+});
+
+describe('MarketingHeader features-driven mega menu', () => {
+  it('renders a MarketingMegaMenu from features when the item is opened', () => {
+    render(
+      <MarketingHeader
+        navItems={[
+          {
+            id: 'products',
+            label: 'Products',
+            hasMenu: true,
+            features: [
+              {
+                id: 'composer',
+                title: 'AI Composer',
+                description: 'Draft',
+                href: '/products/composer',
+              },
+            ],
+          },
+        ]}
+      />
+    );
+    expect(screen.queryByText('AI Composer')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Products' }));
+    const link = screen.getByRole('link', { name: /AI Composer/ });
+    expect(link).toHaveAttribute('href', '/products/composer');
+  });
+
+  it('prefers an explicit panel over features', () => {
+    render(
+      <MarketingHeader
+        navItems={[
+          {
+            id: 'x',
+            label: 'X',
+            hasMenu: true,
+            panel: <div data-testid="explicit-panel">explicit</div>,
+            features: [{ id: 'a', title: 'A', href: '/a' }],
+          },
+        ]}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'X' }));
+    expect(screen.getByTestId('explicit-panel')).toBeInTheDocument();
+    expect(screen.queryByText('A')).not.toBeInTheDocument();
   });
 });

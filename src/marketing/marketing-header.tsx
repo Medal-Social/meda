@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactNode, useState } from 'react';
+import { MarketingMegaMenu } from './marketing-mega-menu.js';
 import { MarketingNavItem } from './marketing-nav-item.js';
 import type { MarketingHeaderProps } from './types.js';
 import { cx } from './utils.js';
@@ -69,7 +70,21 @@ export function MarketingHeader({
   }
 
   const activeItem = navItems.find((i) => i.id === openId);
-  const activePanel = activeItem && 'panel' in activeItem ? activeItem.panel : undefined;
+  let activePanel: ReactNode;
+  if (activeItem && 'panel' in activeItem && activeItem.panel) {
+    activePanel = activeItem.panel;
+  } else if (activeItem && 'features' in activeItem && activeItem.features) {
+    activePanel = (
+      <MarketingMegaMenu
+        triggerId={activeItem.id}
+        open
+        onOpenChange={(next) => setOpenId(next ? activeItem.id : null)}
+        features={activeItem.features}
+      />
+    );
+  } else {
+    activePanel = undefined;
+  }
 
   return (
     <nav aria-label="Primary" className="relative" onMouseLeave={() => setOpenId(null)}>
