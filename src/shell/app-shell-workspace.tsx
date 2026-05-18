@@ -3,6 +3,7 @@ import { LayoutGrid, Menu, PanelTop, Sparkles } from 'lucide-react';
 import { type ReactNode, useContext } from 'react';
 import { CommandPalette, CommandRegistryContext } from './command-palette.js';
 import { ContextRail } from './context-rail.js';
+import type { IconRailEntry, IconRailItem } from './icon-rail.js';
 import { IconRail } from './icon-rail.js';
 import { MobileBottomNav } from './internal/mobile-bottom-nav.js';
 import { MobileDrawers } from './internal/mobile-drawers.js';
@@ -67,7 +68,13 @@ export function AppShellWorkspace({
   // shows both, so dropping utilityItems here would orphan items like Help/
   // Settings on mobile. Concat preserves discoverability; visual separation
   // (divider in the drawer between main and utility) is a future polish.
-  const mobileMenuItems = iconRail ? [...iconRail.mainItems, ...(iconRail.utilityItems ?? [])] : [];
+  // Non-interactive section dividers are desktop-rail-only — filter them out
+  // and narrow back to navigable IconRailItem[] for the mobile drawer.
+  const mobileMenuItems: IconRailItem[] = iconRail
+    ? [...iconRail.mainItems, ...(iconRail.utilityItems ?? [])].filter(
+        (e: IconRailEntry): e is IconRailItem => !('kind' in e && e.kind === 'divider')
+      )
+    : [];
 
   // ONE tree shape across both viewports. ShellMain stays at a fixed position
   // in its parent's children array so React preserves its subtree (and the

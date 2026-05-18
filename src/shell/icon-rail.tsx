@@ -25,6 +25,23 @@ export interface IconRailItem {
   badge?: ReactNode;
 }
 
+/**
+ * A non-interactive section separator placed inline within `mainItems` or
+ * `utilityItems`. Renders a hairline rule — no tooltip, no link, no icon box
+ * — and never matches `activeId`. Additive: `IconRailItem` has no `kind`
+ * field, so existing `IconRailItem[]` consumers stay valid.
+ */
+export interface IconRailDivider {
+  kind: 'divider';
+  id: string;
+}
+
+export type IconRailEntry = IconRailItem | IconRailDivider;
+
+function isDivider(entry: IconRailEntry): entry is IconRailDivider {
+  return 'kind' in entry && entry.kind === 'divider';
+}
+
 export interface IconRailRenderLinkArgs {
   item: IconRailItem;
   isActive: boolean;
@@ -34,8 +51,8 @@ export interface IconRailRenderLinkArgs {
 }
 
 export interface IconRailProps {
-  mainItems: IconRailItem[];
-  utilityItems?: IconRailItem[];
+  mainItems: IconRailEntry[];
+  utilityItems?: IconRailEntry[];
   footer?: ReactNode;
   activeId?: string;
   renderLink?: (args: IconRailRenderLinkArgs) => ReactNode;
@@ -104,7 +121,21 @@ export function IconRail({
 
   if (band === 'mobile') return null;
 
-  const renderItem = (item: IconRailItem) => {
+  const renderItem = (entry: IconRailEntry) => {
+    if (isDivider(entry)) {
+      // <hr> is the semantic separator — implicit ARIA role="separator", so
+      // no explicit role attr (biome a11y forbids the redundant role on
+      // <hr>). Non-interactive: no tooltip, no link, never matches activeId.
+      return (
+        <hr
+          key={entry.id}
+          data-testid={`icon-rail-divider-${entry.id}`}
+          className="my-1.5 h-px w-5 border-0 bg-border"
+        />
+      );
+    }
+
+    const item = entry;
     const isActive = item.id === activeId;
     const klass = itemClass(isActive);
     const IconComp = item.icon;

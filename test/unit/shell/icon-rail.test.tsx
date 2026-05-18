@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { Inbox, Settings } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IconRailItem } from '../../../src/shell/icon-rail.js';
+import type { IconRailEntry, IconRailItem } from '../../../src/shell/icon-rail.js';
 import { IconRail } from '../../../src/shell/icon-rail.js';
 import { MedaShellProvider } from '../../../src/shell/shell-provider.js';
 import type { AppDefinition, WorkspaceDefinition } from '../../../src/shell/types.js';
@@ -220,6 +220,157 @@ describe('IconRail', () => {
     );
 
     expect(screen.queryByTestId('rail-divider')).not.toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests — IconRail dividers (non-interactive section separators)
+// ---------------------------------------------------------------------------
+
+describe('IconRail dividers', () => {
+  it('renders a separator element with role and testid for a divider entry', () => {
+    render(
+      <Wrapper>
+        <IconRail
+          mainItems={[
+            { id: 'inbox', label: 'Inbox', to: '/inbox', icon: Inbox },
+            { kind: 'divider', id: 'testing' },
+            { id: 'settings', label: 'Settings', to: '/settings', icon: Settings },
+          ]}
+        />
+      </Wrapper>
+    );
+
+    const divider = screen.getByTestId('icon-rail-divider-testing');
+    expect(divider).toBeInTheDocument();
+    // <hr> carries the implicit ARIA role "separator"
+    expect(divider.tagName).toBe('HR');
+    expect(screen.getByRole('separator')).toBe(divider);
+  });
+
+  it('does not wrap a divider in a tooltip trigger', () => {
+    render(
+      <Wrapper>
+        <IconRail
+          mainItems={[
+            { id: 'inbox', label: 'Inbox', to: '/inbox', icon: Inbox },
+            { kind: 'divider', id: 'testing' },
+          ]}
+        />
+      </Wrapper>
+    );
+
+    expect(screen.queryByTestId('icon-rail-trigger-testing')).not.toBeInTheDocument();
+    expect(screen.getByTestId('icon-rail-trigger-inbox')).toBeInTheDocument();
+  });
+
+  it('never invokes renderLink for a divider entry', () => {
+    const renderLink = vi.fn(({ item, children }) => (
+      <span data-testid={`link-${item.id}`}>{children}</span>
+    ));
+
+    render(
+      <Wrapper>
+        <IconRail
+          mainItems={[
+            { id: 'inbox', label: 'Inbox', to: '/inbox', icon: Inbox },
+            { kind: 'divider', id: 'testing' },
+            { id: 'settings', label: 'Settings', to: '/settings', icon: Settings },
+          ]}
+        />
+      </Wrapper>
+    );
+
+    expect(renderLink).not.toHaveBeenCalled();
+
+    render(
+      <Wrapper>
+        <IconRail
+          mainItems={[
+            { id: 'inbox', label: 'Inbox', to: '/inbox', icon: Inbox },
+            { kind: 'divider', id: 'testing' },
+            { id: 'settings', label: 'Settings', to: '/settings', icon: Settings },
+          ]}
+          renderLink={renderLink}
+        />
+      </Wrapper>
+    );
+
+    expect(renderLink).toHaveBeenCalledTimes(2);
+    for (const call of renderLink.mock.calls) {
+      expect(call[0].item.id).not.toBe('testing');
+    }
+  });
+
+  it('divider never receives active styling even when activeId matches its id', () => {
+    render(
+      <Wrapper>
+        <IconRail
+          mainItems={[
+            { id: 'inbox', label: 'Inbox', to: '/inbox', icon: Inbox },
+            { kind: 'divider', id: 'testing' },
+          ]}
+          activeId="testing"
+        />
+      </Wrapper>
+    );
+
+    const divider = screen.getByTestId('icon-rail-divider-testing');
+    expect(divider.tagName).toBe('HR');
+    expect(screen.getByRole('separator')).toBe(divider);
+    expect(divider.className).not.toContain('bg-primary');
+  });
+
+  it('preserves order — separator sits between the two item triggers', () => {
+    render(
+      <Wrapper>
+        <IconRail
+          mainItems={[
+            { id: 'inbox', label: 'Inbox', to: '/inbox', icon: Inbox },
+            { kind: 'divider', id: 'testing' },
+            { id: 'settings', label: 'Settings', to: '/settings', icon: Settings },
+          ]}
+        />
+      </Wrapper>
+    );
+
+    const itemA = screen.getByTestId('icon-rail-trigger-inbox');
+    const divider = screen.getByTestId('icon-rail-divider-testing');
+    const itemB = screen.getByTestId('icon-rail-trigger-settings');
+
+    expect(itemA.compareDocumentPosition(divider) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(divider.compareDocumentPosition(itemB) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('back-compat: a plain IconRailItem[] (no kind) renders exactly as before', () => {
+    const plain: IconRailItem[] = [
+      { id: 'inbox', label: 'Inbox', to: '/inbox', icon: Inbox },
+      { id: 'settings', label: 'Settings', to: '/settings', icon: Settings },
+    ];
+    render(
+      <Wrapper>
+        <IconRail mainItems={plain} />
+      </Wrapper>
+    );
+
+    expect(screen.getByTestId('icon-rail-trigger-inbox')).toBeInTheDocument();
+    expect(screen.getByTestId('icon-rail-trigger-settings')).toBeInTheDocument();
+    expect(screen.queryByRole('separator')).not.toBeInTheDocument();
+  });
+
+  it('renders dividers placed in utilityItems too', () => {
+    const utility: IconRailEntry[] = [
+      { kind: 'divider', id: 'util-sep' },
+      { id: 'help', label: 'Help', to: '/help', icon: Settings },
+    ];
+    render(
+      <Wrapper>
+        <IconRail mainItems={mainItems} utilityItems={utility} />
+      </Wrapper>
+    );
+
+    expect(screen.getByTestId('icon-rail-divider-util-sep')).toBeInTheDocument();
+    expect(screen.getByTestId('icon-rail-trigger-help')).toBeInTheDocument();
   });
 });
 

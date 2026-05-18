@@ -37,6 +37,7 @@ const APPS: AppDefinition[] = [
 const RAIL_MAIN = [
   { id: 'inbox', label: 'Inbox', to: '/inbox', icon: Inbox },
   { id: 'calendar', label: 'Calendar', to: '/calendar', icon: Calendar },
+  { kind: 'divider', id: 'testing' },
   { id: 'users', label: 'People', to: '/people', icon: Users },
 ];
 const RAIL_UTILITY = [{ id: 'help', label: 'Help', to: '/help', icon: HelpCircle }];

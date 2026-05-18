@@ -115,8 +115,8 @@ export type AppShellVariant = 'auth' | 'workspace' | 'chat';
 
 /** IconRail configuration for `<AppShell variant="workspace">`. */
 export interface AppShellIconRailConfig {
-  mainItems: import('./icon-rail.js').IconRailItem[];
-  utilityItems?: import('./icon-rail.js').IconRailItem[];
+  mainItems: import('./icon-rail.js').IconRailEntry[];
+  utilityItems?: import('./icon-rail.js').IconRailEntry[];
   footer?: ReactNode;
   activeId?: string;
   renderLink?: import('./icon-rail.js').IconRailProps['renderLink'];
