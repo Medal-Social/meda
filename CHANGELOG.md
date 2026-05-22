@@ -1,5 +1,11 @@
 # @medalsocial/meda
 
+## 2.4.1
+
+### Patch Changes
+
+- [#162](https://github.com/Medal-Social/meda/pull/162) [`a4bd7b4`](https://github.com/Medal-Social/meda/commit/a4bd7b451f6cc9896b90b16829e23f1325cc6a94) Thanks [@alioftech](https://github.com/alioftech)! - Upgrade Base UI to 1.5.0 so Meda primitives pick up upstream popup, focus, form, RTL, and toast fixes.
+
 ## 2.4.0
 
 ### Minor Changes
