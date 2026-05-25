@@ -22,7 +22,8 @@
     "README.md",
     "components.json",
     "dist",
-    "skills"
+    "skills",
+    "!skills/_artifacts"
   ],
   "exports": {
     ".": {
