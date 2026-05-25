@@ -23,7 +23,9 @@
     "components.json",
     "dist",
     "skills",
-    "!skills/_artifacts"
+    "!skills/_artifacts",
+    "!skills/**/_artifacts",
+    "!skills/**/_artifacts/**"
   ],
   "exports": {
     ".": {
