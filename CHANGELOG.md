@@ -1,5 +1,11 @@
 # @medalsocial/meda
 
+## 2.4.2
+
+### Patch Changes
+
+- [#167](https://github.com/Medal-Social/meda/pull/167) [`adf3344`](https://github.com/Medal-Social/meda/commit/adf3344baba75f408bd2e298407c05504b812c4e) Thanks [@alioftech](https://github.com/alioftech)! - Ship TanStack Intent agent skills (`skills/brand`, `skills/shell`, `skills/components`) with the package. Consumers running `npx @tanstack/intent install` now get versioned usage guidance for brand tokens, shell regions, and component conventions written into their agent config.
+
 ## 2.4.1
 
 ### Patch Changes
