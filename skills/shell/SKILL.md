@@ -1,5 +1,5 @@
 ---
-name: meda-shell
+name: shell
 description: Use when scaffolding or modifying shell regions (icon rail, context rail, header, right panel, command palette) in any app consuming `@medalsocial/meda` — Picasso, pilot-talk, NextMedal, apps/web. Load before adding a new rail item, panel surface, or top-level layout region. Required reading before any `IconRail` change.
 ---
 

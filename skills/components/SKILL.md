@@ -1,5 +1,5 @@
 ---
-name: meda-components
+name: components
 description: Use when implementing a UI component in any app that consumes `@medalsocial/meda`, choosing between a primitive and a shadcn-style UI adapter, scaffolding a Storybook story, or picking an icon. Required reading before generating any new visual code — the `meda-storybook` MCP server is the source of truth for what already exists.
 ---
 

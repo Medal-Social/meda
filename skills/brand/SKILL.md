@@ -1,5 +1,5 @@
 ---
-name: meda-brand
+name: brand
 description: Use when picking a CTA color, editing color/typography tokens, authoring or modifying any `*.css` file under `src/styles/`, or choosing brand-vs-semantic tokens for any component in `@medalsocial/meda` or apps that consume it (Picasso, pilot-talk, NextMedal, apps/web).
 ---
 
