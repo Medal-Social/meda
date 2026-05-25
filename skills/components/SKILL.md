@@ -157,7 +157,11 @@ Shell sizes: 22px (rails), 16px (header), 14px (inline). Inside primitives like 
 
 Do not use `[...].join(' ')` or template-string concatenation for classes — noisy, merge-unsafe.
 
-meda uses a `cn()` helper internally (`src/lib/utils.ts`) built from `clsx` + `tailwind-merge`, but it is **not exported from the package**. In consumer apps, declare your own — it's three lines:
+meda uses a `cn()` helper internally (`src/lib/utils.ts`) built from `clsx` + `tailwind-merge`, but it is **not exported from the package**. In consumer apps, declare your own — first install the two deps explicitly (don't rely on them being transitive — that's not safe under pnpm strict, Yarn PnP, or any layout that hides un-declared dependencies):
+
+```bash
+pnpm add clsx tailwind-merge
+```
 
 ```ts
 // your-app/src/lib/utils.ts
@@ -174,8 +178,6 @@ import { cn } from '@/lib/utils';
 
 <div className={cn('base classes', isActive && 'active', className)} />
 ```
-
-Both `clsx` and `tailwind-merge` are already transitive deps if you use meda; no extra installs needed.
 
 ## Anti-patterns
 

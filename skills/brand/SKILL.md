@@ -194,5 +194,5 @@ Size scale: `display` 36, `h1` 30, `h2` 24, `h3` 20, `h4` 18, `body-lg` 16, `bod
 | Picking chart colors ad-hoc per app | Loses cross-consumer parity | Cycle `--chart-1`..`--chart-5` in order |
 | Adding Inter or system fonts | Canonical is Geist + Geist Mono | Stick to the two families |
 | `success` as green | Canonical success is teal | Use the teal scale |
-| `[...].join(' ')` for classNames | Noisy, error-prone | Use `cn()` from `src/lib/utils` |
+| `[...].join(' ')` for classNames | Noisy, error-prone | Use a consumer-owned `cn()` helper — see the `components` skill |
 | Raw px (e.g. `pt-[12px]`) for spacing | Bypasses consumer overrides | Use the named spacing tokens |
