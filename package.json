@@ -21,7 +21,8 @@
   "files": [
     "README.md",
     "components.json",
-    "dist"
+    "dist",
+    "skills"
   ],
   "exports": {
     ".": {
@@ -251,5 +252,8 @@
     "vitest": "4.1.5",
     "vitest-axe": "0.1.0",
     "wrangler": "4.87.0"
-  }
+  },
+  "keywords": [
+    "tanstack-intent"
+  ]
 }
