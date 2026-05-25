@@ -106,27 +106,28 @@ renderLink={({ item, isActive, className, children, linkProps }) => (
 
 ## Command palette
 
-`CommandPalette` is registry-driven. Components register their commands via the `CommandRegistryContext`:
+`CommandPalette` is registry-driven. Components register their commands via the **public hooks** `useCommands` and `useCommandGroup` from `@medalsocial/meda/shell` — both must run inside a `<CommandPalette>` (they throw otherwise).
 
 ```tsx
-import { useContext, useEffect } from 'react';
-import { CommandRegistryContext } from '@medalsocial/meda/shell';
+import { useCommands, useCommandGroup } from '@medalsocial/meda/shell';
 
 function MyFeature() {
-  const registry = useContext(CommandRegistryContext);
-  useEffect(() => {
-    registry?.register([
-      { id: 'my.action', label: 'Run my action', group: 'tools', run: () => doIt() },
-    ]);
-    return () => registry?.unregister(['my.action']);
-  }, [registry]);
-  return null;
+  // Optional: register the group first so its label + ordering are known.
+  useCommandGroup({ id: 'tools', label: 'Tools', priority: 50 });
+
+  useCommands([
+    { id: 'my.action', label: 'Run my action', group: 'tools', run: () => doIt() },
+  ]);
+
+  return null; // or your real UI
 }
 ```
 
-Hotkey matching is strict modifier-aware via `matchesHotkey(e, 'mod+k')` — `'mod'` resolves to ⌘ on macOS, Ctrl on Windows/Linux. Modifiers not in the spec MUST NOT be pressed (so `'mod+k'` does NOT fire on `mod+shift+k`).
+Each hook auto-handles register-on-mount and unregister-on-unmount via `useEffect`. Lower `priority` numbers render the group earlier (default 100).
 
-The default palette hotkey is `'mod+k'`; override via `MedaShellProvider.commandPaletteHotkey`.
+`CommandRegistryContext` is internal — don't import or `useContext` it directly. The hooks are the supported API.
+
+The default palette hotkey is `'mod+k'` — override via `MedaShellProvider.commandPaletteHotkey`. Hotkey matching is strict modifier-aware: `'mod+k'` does NOT fire on `mod+shift+k`. Use `'mod'` (resolves to ⌘ on macOS, Ctrl on Windows/Linux), not platform-specific keywords.
 
 ## Right panel patterns
 

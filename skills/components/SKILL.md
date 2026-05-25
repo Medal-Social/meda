@@ -111,29 +111,23 @@ import { StatusPill } from '@medalsocial/meda';
 
 **Why solid backgrounds (not tinted):** the 11px small size needs ≥4.5:1 contrast to pass WCAG AA. Tinted backgrounds (`bg-info/15 text-info`) fail axe gates at this size. Solid `bg-info text-info-foreground` etc. always passes via the theme tokens. If you need a tinted variant, use it at `size="md"` or larger only, and verify with `vitest-axe`.
 
-## ui-adapter examples
+## ui-adapters — NOT exported from the npm package
 
-shadcn-style adapters in `src/components/ui/` wrap `@base-ui/react`. They follow the canonical shadcn API surface:
+shadcn-style adapters in `src/components/ui/` (`Dialog`, `DropdownMenu`, `Tooltip`, `Drawer`, `Command`, `Checkbox`, `Collapsible`) wrap `@base-ui/react`. **They are intentionally NOT exported from `@medalsocial/meda`** — meda follows the shadcn philosophy: you own the ui code.
 
-```tsx
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@medalsocial/meda';
+Two supported ways to consume them:
 
-<Dialog>
-  <DialogTrigger asChild><Button>Open</Button></DialogTrigger>
-  <DialogContent>
-    <DialogHeader><DialogTitle>Confirm</DialogTitle></DialogHeader>
-    Body
-  </DialogContent>
-</Dialog>
-```
+1. **Vendor via the meda shadcn registry** (recommended for shell-consistent apps). meda publishes a registry at `https://meda.medalsocial.com/r/...` — install via the shadcn CLI:
 
-Same pattern for `DropdownMenu`, `Tooltip`, `Drawer`, `Command`, `Checkbox`, `Collapsible`. When you need a new adapter, scaffold from the existing `dropdown-menu.tsx` or `tooltip.tsx` — they show the base-ui binding pattern.
+   ```bash
+   npx shadcn@latest add https://meda.medalsocial.com/r/<component>.json
+   ```
+
+   The components land in your app's `@/ui` folder (configurable via your `components.json` aliases). You own and can modify the code.
+
+2. **Write your own wrapping `@base-ui/react` directly.** When you need a primitive meda doesn't provide a recipe for, follow the patterns visible in meda's `src/components/ui/dropdown-menu.tsx` / `tooltip.tsx` and ship the result in your own `@/ui` folder.
+
+Do NOT try `import { Dialog } from '@medalsocial/meda'` — it will fail with a missing-export error.
 
 ## Optional peer dependencies — MarkdownView pattern
 
@@ -161,13 +155,27 @@ Shell sizes: 22px (rails), 16px (header), 14px (inline). Inside primitives like 
 
 ## className composition
 
-Use `cn()` from `src/lib/utils`. Do not use `[...].join(' ')` or template-string concatenation — noisy and merge-unsafe.
+Do not use `[...].join(' ')` or template-string concatenation for classes — noisy, merge-unsafe.
+
+meda uses a `cn()` helper internally (`src/lib/utils.ts`) built from `clsx` + `tailwind-merge`, but it is **not exported from the package**. In consumer apps, declare your own — it's three lines:
+
+```ts
+// your-app/src/lib/utils.ts
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs));
+}
+```
 
 ```tsx
-import { cn } from '@medalsocial/meda';
+import { cn } from '@/lib/utils';
 
 <div className={cn('base classes', isActive && 'active', className)} />
 ```
+
+Both `clsx` and `tailwind-merge` are already transitive deps if you use meda; no extra installs needed.
 
 ## Anti-patterns
 
@@ -178,6 +186,8 @@ import { cn } from '@medalsocial/meda';
 | Re-exporting `MarkdownView` from root | Breaks consumers without optional peers | Import from `@medalsocial/meda/markdown-view` |
 | Tinted `StatusPill` at `size="sm"` | Fails WCAG AA at 11px (vitest-axe gate) | Use solid tones at `sm`; tints only at `md`+ with a11y verification |
 | Raw `<div>` inside `<Card>` with custom padding | Bypasses border-collapse logic; off-grid spacing | Use `Card.Header` / `Card.Body` / `Card.Footer` |
+| `import { Dialog } from '@medalsocial/meda'` | Not exported — meda follows the shadcn "you own the ui" model | Vendor via `npx shadcn@latest add https://meda.medalsocial.com/r/...` or write your own wrapping `@base-ui/react` |
+| `import { cn } from '@medalsocial/meda'` | Not exported | Declare your own three-line `cn()` using `clsx` + `tailwind-merge` (already transitive) |
 | Adding emojis as UI icons | Inconsistent sizing + brand | Use Lucide equivalents (`Clock`, `Check`, `AlertTriangle`) |
 | Inventing a new top-level layer folder | Loses the established taxonomy | Use primitives / ui / domain / recipes |
 | Skipping `*.stories.tsx` for an exported component | Breaks the lookup-first discipline for the next contributor | Always ship a story |
