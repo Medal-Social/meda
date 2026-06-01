@@ -1,6 +1,6 @@
 {
   "name": "@medalsocial/meda",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "description": "Shared Meda UI shell and runtime package.",
   "license": "Apache-2.0",
   "repository": {
@@ -21,7 +21,11 @@
   "files": [
     "README.md",
     "components.json",
-    "dist"
+    "dist",
+    "skills",
+    "!skills/_artifacts",
+    "!skills/**/_artifacts",
+    "!skills/**/_artifacts/**"
   ],
   "exports": {
     ".": {
@@ -222,6 +226,7 @@
     "@storybook/addon-vitest": "10.3.6",
     "@storybook/react-vite": "10.3.6",
     "@tailwindcss/vite": "4.2.4",
+    "@tanstack/intent": "0.0.41",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
     "@types/react": "19.2.14",
@@ -250,5 +255,8 @@
     "vitest": "4.1.5",
     "vitest-axe": "0.1.0",
     "wrangler": "4.87.0"
-  }
+  },
+  "keywords": [
+    "tanstack-intent"
+  ]
 }
