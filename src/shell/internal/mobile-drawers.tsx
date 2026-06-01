@@ -19,6 +19,7 @@ import {
   DrawerTitle,
 } from '../../components/ui/drawer.js';
 import { cn } from '../../lib/utils.js';
+import type { ContextRailProps } from '../context-rail.js';
 import type { IconRailItem, IconRailProps } from '../icon-rail.js';
 import { useMedaShell } from '../shell-provider.js';
 import { useTheme } from '../theme.js';
@@ -46,10 +47,19 @@ export interface MobileDrawersProps {
   module?: ContextModule;
   /** App id used when rendering module custom content. */
   moduleAppId?: string;
+  /** Active module item id, sourced from context rail config. */
+  moduleActiveItemId?: string;
+  /** Custom module link renderer, sourced from context rail config. */
+  moduleRenderLink?: ContextRailProps['renderLink'];
   /** Header behavior mirrored from the desktop ContextRail. */
   moduleHeader?: ContextRailHeader;
   /** Scroll behavior mirrored from the desktop ContextRail. */
   moduleScroll?: ContextRailScroll;
+  /**
+   * Desktop header "leading" content (section tabs) surfaced under the menu
+   * drawer on mobile. Anchors inside auto-close the drawer on click.
+   */
+  sectionTabs?: ReactNode;
   /** Panels drawer source. */
   panelViews?: PanelView[];
   /**
@@ -77,8 +87,11 @@ export function MobileDrawers({
   workspaceMenuFooter,
   module,
   moduleAppId,
+  moduleActiveItemId,
+  moduleRenderLink,
   moduleHeader,
   moduleScroll,
+  sectionTabs,
   panelViews = [],
   defaultView,
   customContent = {},
@@ -106,12 +119,15 @@ export function MobileDrawers({
         renderLink={menuRenderLink}
         workspaceItems={workspaceMenuItems}
         workspaceFooter={workspaceMenuFooter}
+        sectionTabs={sectionTabs}
       />
       <ModuleDrawer
         open={open === 'module-drawer'}
         onClose={close}
         module={module}
+        activeItemId={moduleActiveItemId}
         renderCtx={moduleRenderCtx}
+        renderLink={moduleRenderLink}
         header={moduleHeader}
         scroll={moduleScroll}
       />
@@ -151,6 +167,7 @@ function MenuDrawer({
   renderLink,
   workspaceItems,
   workspaceFooter,
+  sectionTabs,
 }: {
   open: boolean;
   onClose: () => void;
@@ -159,9 +176,20 @@ function MenuDrawer({
   renderLink?: IconRailProps['renderLink'];
   workspaceItems?: WorkspaceMenuItem[];
   workspaceFooter?: ReactNode;
+  sectionTabs?: ReactNode;
 }) {
   const hasIconItems = items.length > 0;
   const hasWorkspaceItems = Array.isArray(workspaceItems) && workspaceItems.length > 0;
+  const hasSectionTabs = sectionTabs != null;
+
+  // The desktop "leading" section tabs (e.g. Home / Inbox) live under the menu
+  // on mobile. The tabs are router Links; clicking one navigates client-side,
+  // so close the drawer when any anchor inside is activated.
+  const handleSectionTabsClick = (event: MouseEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest('a')) {
+      onClose();
+    }
+  };
 
   /* v8 ignore next — v8 phantom duplicate return statement for MenuDrawer */
   return (
@@ -174,6 +202,20 @@ function MenuDrawer({
           </DrawerDescription>
         </DrawerHeader>
         <div className="flex flex-col gap-2 p-2">
+          {hasSectionTabs && (
+            <>
+              {/* biome-ignore lint/a11y/useKeyWithClickEvents: delegated close; the section tabs are themselves interactive anchors */}
+              {/* biome-ignore lint/a11y/noStaticElementInteractions: container only delegates close to its interactive anchor children */}
+              <div
+                data-meda-mobile-section-tabs=""
+                className="flex h-9 items-stretch overflow-x-auto px-1"
+                onClick={handleSectionTabsClick}
+              >
+                {sectionTabs}
+              </div>
+              <div className="h-px bg-border" />
+            </>
+          )}
           {hasIconItems && (
             <nav aria-label="Primary navigation" className="flex flex-col gap-0.5">
               {items.map((item) => (
@@ -363,14 +405,18 @@ function ModuleDrawer({
   open,
   onClose,
   module,
+  activeItemId,
   renderCtx,
+  renderLink,
   header = 'auto',
   scroll = 'auto',
 }: {
   open: boolean;
   onClose: () => void;
   module?: ContextModule;
+  activeItemId?: string;
   renderCtx: ShellRenderContext;
+  renderLink?: ContextRailProps['renderLink'];
   header?: ContextRailHeader;
   scroll?: ContextRailScroll;
 }) {
@@ -406,16 +452,37 @@ function ModuleDrawer({
             <nav className="flex flex-col gap-0.5 p-2">
               {items.map((item) => {
                 const Icon = item.icon;
-                return (
-                  <a
-                    key={item.id}
-                    href={item.to}
-                    onClick={onClose}
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-                  >
+                const isActive = item.id === activeItemId;
+                const className = cn(
+                  'flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground',
+                  isActive && 'bg-accent text-foreground'
+                );
+                const children = (
+                  <>
                     <Icon size={16} aria-hidden="true" />
                     <span>{item.label}</span>
-                  </a>
+                  </>
+                );
+                const linkProps = {
+                  href: item.to,
+                  'aria-current': isActive ? ('page' as const) : undefined,
+                  className,
+                  children,
+                };
+                if (renderLink) {
+                  return (
+                    <Fragment key={item.id}>
+                      {closeAfterLinkClick(
+                        renderLink({ item, isActive, className, children, linkProps }),
+                        onClose
+                      )}
+                    </Fragment>
+                  );
+                }
+                return (
+                  <Fragment key={item.id}>
+                    {closeAfterLinkClick(<a {...linkProps} />, onClose)}
+                  </Fragment>
                 );
               })}
             </nav>

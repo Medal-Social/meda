@@ -236,8 +236,10 @@
   --shell-panel: var(--color-neutral-50);
   --shell-border: var(--color-neutral-200);
   --shell-shadow: 0 4px 12px hsl(0 0% 0% / 0.04);
-  --shell-header-height: 56px;
+  --shell-header-height: 64px;
+  --shell-mobile-header-height: 48px;
   --shell-rail-width: 60px;
+  --shell-rail-label-width: 88px;
   --shell-context-default: 300px;
   --shell-context-min: 240px;
   --shell-context-max: 420px;

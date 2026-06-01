@@ -19,12 +19,7 @@ export function ShellMain({ layout = 'workspace', className, children }: ShellMa
   return (
     <main
       data-meda-shell-main-layout={layout}
-      className={cn(
-        'flex-1 min-w-0 overflow-y-auto bg-shell-main',
-        '[content-visibility:auto]',
-        layoutClass[layout],
-        className
-      )}
+      className={cn('flex-1 min-w-0 overflow-y-auto bg-shell-main', layoutClass[layout], className)}
     >
       {children}
     </main>

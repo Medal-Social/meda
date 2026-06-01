@@ -120,6 +120,7 @@ export interface AppShellIconRailConfig {
   footer?: ReactNode;
   activeId?: string;
   renderLink?: import('./icon-rail.js').IconRailProps['renderLink'];
+  labelVisibility?: import('./icon-rail.js').IconRailProps['labelVisibility'];
 }
 
 /** ContextRail configuration for `<AppShell variant="workspace">`. */
@@ -127,6 +128,7 @@ export interface AppShellContextRailConfig {
   appId: string;
   module: ContextModule;
   activeItemId?: string;
+  renderLink?: import('./context-rail.js').ContextRailProps['renderLink'];
   header?: ContextRailHeader;
   scroll?: ContextRailScroll;
 }

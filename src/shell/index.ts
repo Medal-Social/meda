@@ -30,7 +30,12 @@ export { DragModeBanner } from './drag-mode-banner.js';
 // Extras (legacy components ported during Phase 15 — opt-in for apps that need them)
 export * as Extras from './extras/index.js';
 // Rails + main + panel
-export type { IconRailItem, IconRailProps, IconRailRenderLinkArgs } from './icon-rail.js';
+export type {
+  IconRailItem,
+  IconRailLabelVisibility,
+  IconRailProps,
+  IconRailRenderLinkArgs,
+} from './icon-rail.js';
 export { IconRail, RailDivider } from './icon-rail.js';
 export type { ShellStorageAdapter } from './layout-state.js';
 // Storage adapter (consumers may want to provide their own)
@@ -47,7 +52,7 @@ export { RailDropZones } from './rail-drop-zones.js';
 export { ResizableHandle, ResizableShell, ResizableShellPanel } from './resizable-shell.js';
 export { RightPanel } from './right-panel.js';
 // Header (and its individual children for advanced composition)
-export type { AppTabsProps } from './shell-header.js';
+export type { AppTabsProps, PanelToggleProps } from './shell-header.js';
 export { AppTabs, PanelToggle, ShellHeader, WorkspaceSwitcher } from './shell-header.js';
 export { ShellMain } from './shell-main.js';
 export type { MedaShellProviderProps } from './shell-provider.js';

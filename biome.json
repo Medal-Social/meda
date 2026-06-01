@@ -3,6 +3,7 @@
   "files": {
     "includes": [
       "**",
+      "!**/.worktrees",
       "!**/dist",
       "!**/demo/dist",
       "!**/node_modules",
