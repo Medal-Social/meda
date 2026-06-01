@@ -72,6 +72,13 @@ export type AppShellProps = AppShellBaseProps &
          * Optional className for the workspace shell's main scroll region.
          */
         mainClassName?: string;
+        /**
+         * Whether meda renders its built-in `CommandPalette` (and provides the
+         * `CommandRegistryContext`) when no command registry is already present.
+         * Defaults to `true` for backwards compatibility. Set `false` when the
+         * host app ships its own command palette to avoid a duplicate dialog.
+         */
+        builtInCommandPalette?: boolean;
       }
     | {
         variant: 'chat';
@@ -115,6 +122,7 @@ export function AppShell(props: AppShellProps) {
           banners={props.banners}
           mainLayout={props.mainLayout}
           mainClassName={props.mainClassName}
+          builtInCommandPalette={props.builtInCommandPalette}
         >
           {props.children}
         </AppShellWorkspace>

@@ -1,7 +1,7 @@
 'use client';
 import { LayoutGrid, Menu, PanelTop, Sparkles } from 'lucide-react';
 import { type ReactNode, useContext } from 'react';
-import { CommandRegistryContext } from './command-palette.js';
+import { CommandPalette, CommandRegistryContext } from './command-palette.js';
 import { ContextRail } from './context-rail.js';
 import { IconRail } from './icon-rail.js';
 import { MobileBottomNav } from './internal/mobile-bottom-nav.js';
@@ -37,6 +37,13 @@ export interface AppShellWorkspaceProps {
   banners?: ReactNode;
   mainLayout?: ShellMainLayout;
   mainClassName?: string;
+  /**
+   * Whether to render the built-in `CommandPalette` (providing the
+   * `CommandRegistryContext`) when no registry is already in context. Defaults
+   * to `true` for backwards compatibility; set `false` to opt out when the host
+   * app ships its own palette.
+   */
+  builtInCommandPalette?: boolean;
   children: ReactNode;
 }
 
@@ -52,6 +59,7 @@ export function AppShellWorkspace({
   banners,
   mainLayout,
   mainClassName,
+  builtInCommandPalette = true,
   children,
 }: AppShellWorkspaceProps) {
   const viewport = useShellViewport();
@@ -154,13 +162,16 @@ export function AppShellWorkspace({
     </div>
   );
 
-  // The host app (medal-monorepo) ships its own command palette via
-  // CommandPaletteBridge, so meda must NOT render its built-in empty palette
-  // here — doing so opened a second "Search commands / No results" dialog on
-  // top of the app's real one. No meda shell component depends on the built-in
-  // command registry, so rendering the bare shell is safe.
-  void commandRegistry;
-  return shell;
+  // Backwards-compatible default: meda provides the built-in CommandPalette
+  // (and its CommandRegistryContext) so consumers calling useCommands()/
+  // useCommandGroup() under the workspace shell keep working. When a registry is
+  // already present, or the consumer opts out via builtInCommandPalette={false}
+  // (e.g. apps that ship their own palette), render the bare shell to avoid a
+  // duplicate dialog.
+  if (commandRegistry || !builtInCommandPalette) {
+    return shell;
+  }
+  return <CommandPalette>{shell}</CommandPalette>;
 }
 
 function buildMobileNavItems(

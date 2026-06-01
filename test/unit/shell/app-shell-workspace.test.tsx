@@ -198,36 +198,47 @@ describe('AppShellWorkspace', () => {
     expect(main).toHaveClass('custom-main');
   });
 
-  it('does NOT auto-mount a built-in command palette — the host app provides its own', () => {
+  it('auto-mounts the built-in command palette by default so useCommands() works', () => {
     (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
 
-    // meda no longer wraps the shell in its own <CommandPalette> fallback
-    // (it opened a duplicate empty palette on top of the host app's real one).
-    // Descendants that call useCommands() without a host-provided palette throw.
+    // Backwards-compatible default: meda wraps the shell in its own
+    // <CommandPalette>, providing the CommandRegistryContext, so descendants
+    // that call useCommands() work without the host supplying a palette.
+    render(
+      <Provider>
+        <AppShellWorkspace>
+          <CommandRegistrationProbe />
+        </AppShellWorkspace>
+      </Provider>
+    );
+
+    expect(screen.getByTestId('command-registration-probe')).toBeInTheDocument();
+  });
+
+  it('opts out of the built-in palette with builtInCommandPalette={false}', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+
+    // Apps that ship their own palette opt out to avoid a duplicate dialog.
+    // With no host palette and the built-in disabled, useCommands() throws.
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() =>
       render(
         <Provider>
-          <AppShellWorkspace>
+          <AppShellWorkspace builtInCommandPalette={false}>
             <CommandRegistrationProbe />
           </AppShellWorkspace>
         </Provider>
       )
     ).toThrow(/useCommands must be used inside <CommandPalette>/);
     consoleError.mockRestore();
-  });
-
-  it('renders the bare shell (no built-in palette) when no host palette is present', () => {
-    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
 
     render(
       <Provider>
-        <AppShellWorkspace>
+        <AppShellWorkspace builtInCommandPalette={false}>
           <main aria-label="content">hi</main>
         </AppShellWorkspace>
       </Provider>
     );
-
     expect(screen.getByRole('main', { name: 'content' })).toBeInTheDocument();
   });
 
