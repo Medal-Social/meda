@@ -19,7 +19,15 @@ export function ShellMain({ layout = 'workspace', className, children }: ShellMa
   return (
     <main
       data-meda-shell-main-layout={layout}
-      className={cn('flex-1 min-w-0 overflow-y-auto bg-shell-main', layoutClass[layout], className)}
+      className={cn(
+        // `flex flex-col` is required so full-height content regions (pages that
+        // use `flex-1` to fill the main area) get a flex-column parent with a
+        // definite height. Without it, those regions collapse and clip their
+        // content (e.g. the Posts list rendered but stayed blank).
+        'flex flex-col flex-1 min-w-0 overflow-y-auto bg-shell-main',
+        layoutClass[layout],
+        className
+      )}
     >
       {children}
     </main>
