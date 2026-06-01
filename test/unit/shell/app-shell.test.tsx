@@ -151,6 +151,6 @@ describe('AppShellBody', () => {
     expect(root.className).toContain('relative');
     expect(root.className).toContain('flex');
     expect(root.className).toContain('overflow-hidden');
-    expect(root.className).toContain('h-[calc(100vh-var(--shell-header-height))]');
+    expect(root.className).toContain('h-[calc(100svh-var(--shell-header-height))]');
   });
 });

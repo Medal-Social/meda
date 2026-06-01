@@ -15,7 +15,7 @@
  * once <AppShellBody> ships as a ResizableShell Group.
  */
 
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { AnchorHTMLAttributes, ReactNode, PointerEvent as ReactPointerEvent } from 'react';
 import { Fragment, useId, useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
@@ -57,21 +57,28 @@ export interface ContextRailProps {
 }
 
 // ---------------------------------------------------------------------------
-// ResizeHandle — right-edge drag handle (Pattern B)
+// ContextRailSeam — the single seam handle at the rail's right boundary. It is
+// both the drag-to-resize separator AND the collapse grip, so there is exactly
+// ONE highlight line: dragging the seam resizes, clicking the grip collapses.
 // ---------------------------------------------------------------------------
 
-interface ResizeHandleProps {
+interface ContextRailSeamProps {
+  railId: string;
   currentWidth: number;
   onResize: (w: number) => void;
   onCommit: (w: number) => void;
 }
 
-function ResizeHandle({ currentWidth, onResize, onCommit }: ResizeHandleProps) {
+function ContextRailSeam({ railId, currentWidth, onResize, onCommit }: ContextRailSeamProps) {
+  const ctx = useMedaShell();
+  const collapsed = ctx.contextRail.collapsed;
+  const Icon = collapsed ? ChevronRight : ChevronLeft;
   const startWidthRef = useRef(currentWidth);
   const startXRef = useRef(0);
   const draggingRef = useRef(false);
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (collapsed) return; // no resize while collapsed
     // setPointerCapture may not be available in all test environments (jsdom)
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -102,61 +109,74 @@ function ResizeHandle({ currentWidth, onResize, onCommit }: ResizeHandleProps) {
     onCommit(next);
   };
 
+  // Grip reveal: invisible until the rail is hovered (expanded); faint and
+  // reachable when collapsed so the rail can always be reopened.
+  const reveal = collapsed
+    ? 'pointer-events-auto opacity-55'
+    : 'pointer-events-none opacity-0 group-hover/seam:pointer-events-auto group-hover/seam:opacity-100';
+
+  // ONE element: a full-height col-resize separator straddling the boundary,
+  // carrying the single seam line (brand + glow on hover/focus) and the grip
+  // pill. Dragging the seam resizes; clicking the grip (which stops pointer
+  // propagation) collapses — no separate resize handle, so only one line.
   return (
-    // biome-ignore lint/a11y/useSemanticElements: <hr> can't accept pointer events; div with role="separator" is the correct pattern here
+    // Outer wrapper: positioning + pointer-driven resize. It is NOT itself a
+    // widget role — the `separator` role lives on the thin seam line below and
+    // the collapse grip is a sibling button, so no interactive roles nest
+    // (avoids axe `nested-interactive`). One `group/seam` scope still drives the
+    // shared hover/focus reveal for both the line and the grip.
+    // biome-ignore lint/a11y/noStaticElementInteractions: pointer-only resize affordance; the keyboard-accessible control is the grip <button> sibling
     <div
-      role="separator"
-      aria-orientation="vertical"
-      aria-label="Resize context rail"
-      aria-valuenow={currentWidth}
-      aria-valuemin={MIN_WIDTH}
-      aria-valuemax={MAX_WIDTH}
-      tabIndex={0}
-      className={cn(
-        'absolute top-0 right-0 h-full w-1 cursor-col-resize',
-        'opacity-0 transition-opacity hover:opacity-100 hover:bg-ring'
-      )}
+      data-testid="context-rail-seam"
+      data-collapsed={collapsed ? 'true' : 'false'}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------
-// ContextRailToggle — chevron button that flips ctx.contextRail.collapsed
-// ---------------------------------------------------------------------------
-
-function ContextRailToggle({ railId }: { railId: string }) {
-  const ctx = useMedaShell();
-  const collapsed = ctx.contextRail.collapsed;
-  // Lucide PanelLeft* icons render the chevron-with-wall pattern (similar
-  // to Unifi). The wall reinforces "this is a sidebar toggle" rather than
-  // a generic navigation chevron.
-  const Icon = collapsed ? PanelLeftOpen : PanelLeftClose;
-  return (
-    <button
-      type="button"
-      onClick={() => ctx.contextRail.setCollapsed(!collapsed)}
-      aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      aria-expanded={!collapsed}
-      aria-controls={railId}
-      data-testid="context-rail-toggle"
       className={cn(
-        // Pull-tab: 28w × 40h. Big enough to read the icon at a glance and to
-        // grab confidently — matches Unifi's reference. Flat left edge
-        // attached to the rail (no left border), rounded right. The whole tab
-        // sticks fully out of the rail's outer edge.
-        'absolute top-3 -right-7 z-20 inline-flex h-10 w-7 items-center justify-center',
-        'before:absolute before:-inset-1 before:content-[""]',
-        'rounded-r-md border border-l-0 border-border bg-card text-muted-foreground',
-        'shadow-[2px_0_4px_rgb(0_0_0_/_0.08)]',
-        'hover:bg-accent hover:text-foreground',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+        'group/seam absolute top-0 right-0 bottom-0 z-20 w-3 translate-x-1/2',
+        collapsed ? 'cursor-default' : 'cursor-col-resize'
       )}
     >
-      <Icon size={18} aria-hidden />
-    </button>
+      {/* single seam line — carries the resize separator semantics; brand + glow
+          on rail hover or grip focus, faint when collapsed */}
+      {/* biome-ignore lint/a11y/useSemanticElements: <hr> can't carry the live resize value semantics; a span with role="separator" is the correct pattern */}
+      {/* biome-ignore lint/a11y/useFocusableInteractive: the separator exposes the resize value to AT but is operated via pointer; the focusable keyboard control is the sibling grip <button> (keeping the separator out of the tab order avoids an axe nested-interactive violation) */}
+      <span
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize context rail"
+        aria-valuenow={currentWidth}
+        aria-valuemin={MIN_WIDTH}
+        aria-valuemax={MAX_WIDTH}
+        className={cn(
+          'pointer-events-none absolute inset-y-0 left-1/2 w-[2px] -translate-x-1/2 transition-[background-color,box-shadow] duration-150',
+          collapsed ? 'bg-shell-border' : 'bg-transparent',
+          'group-hover/seam:bg-[var(--color-brand-400)] group-hover/seam:shadow-[0_0_14px_-1px_var(--color-brand-400)]',
+          'group-focus-visible/seam:bg-[var(--color-brand-400)] group-focus-visible/seam:shadow-[0_0_14px_-1px_var(--color-brand-400)]'
+        )}
+      />
+      {/* grip pill — collapse/expand; stops propagation so grabbing it never starts a resize drag */}
+      <button
+        type="button"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={() => ctx.contextRail.setCollapsed(!collapsed)}
+        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-expanded={!collapsed}
+        aria-controls={railId}
+        data-testid="context-rail-toggle"
+        className={cn(
+          'absolute top-1/2 left-1/2 grid h-12 w-[21px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border bg-card text-[var(--color-brand-400)]',
+          'border-[color-mix(in_oklab,var(--color-brand-400)_26%,transparent)]',
+          'transition-[opacity,transform,box-shadow,border-color] duration-150',
+          collapsed ? 'scale-90' : 'scale-[.82]',
+          reveal,
+          'group-hover/seam:scale-100 group-hover/seam:border-[var(--color-brand-400)] group-hover/seam:opacity-100 group-hover/seam:shadow-[0_6px_18px_-4px_color-mix(in_oklab,var(--color-brand-400)_65%,transparent)]',
+          'focus-visible:scale-100 focus-visible:border-[var(--color-brand-400)] focus-visible:opacity-100 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-brand-400)_35%,transparent)]'
+        )}
+      >
+        <Icon size={14} aria-hidden />
+      </button>
+    </div>
   );
 }
 
@@ -226,19 +246,25 @@ export function ContextRail({
       data-testid="context-rail"
       aria-label={module.label}
       className={cn(
-        'relative h-full shrink-0 border-r border-shell-border bg-shell-context',
+        'group/rail relative h-full shrink-0 bg-shell-context',
         !isDragging && 'transition-[width] duration-200 ease-in-out motion-reduce:transition-none',
         collapsed && 'w-0',
         className
       )}
       style={{ width: collapsed ? 0 : width }}
     >
-      {/* Toggle: absolute, sits half on the rail's right edge. Stays visible
-          even when the inner content shrinks to width 0 — when collapsed, the
-          outer aside is also w-0 and the toggle anchors at the IconRail's
-          right edge by virtue of -right-2.5. Skipped when collapsible={false}
-          so consumers opting out of the collapse behavior get a fixed rail. */}
-      {collapsible && <ContextRailToggle railId={railId} />}
+      {/* Unified seam at the right boundary: drag-to-resize AND collapse grip,
+          so there is exactly one highlight line. The seam line + grip reveal on
+          rail hover (group/seam). Skipped when collapsible={false} so consumers
+          opting out of the collapse behavior get a fixed rail. */}
+      {collapsible && (
+        <ContextRailSeam
+          railId={railId}
+          currentWidth={width}
+          onResize={handleResize}
+          onCommit={handleCommit}
+        />
+      )}
 
       {/* Inner overflow wrapper so the rail content clips cleanly during the
           width animation without clipping the absolute toggle above.
@@ -315,11 +341,6 @@ export function ContextRail({
           {module.render?.({ workspaceId: ctx.workspace.id, appId })}
         </div>
       </div>
-
-      {/* Right-edge resize handle — only when expanded (no rail edge to grab when collapsed) */}
-      {!collapsed && (
-        <ResizeHandle currentWidth={width} onResize={handleResize} onCommit={handleCommit} />
-      )}
     </aside>
   );
 }

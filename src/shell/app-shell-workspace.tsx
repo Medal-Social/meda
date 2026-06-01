@@ -33,9 +33,17 @@ export interface AppShellWorkspaceProps {
   appTabs?: AppShellAppTabsConfig;
   globalActions?: ReactNode;
   headerCenter?: ReactNode;
+  headerLeading?: ReactNode;
   banners?: ReactNode;
   mainLayout?: ShellMainLayout;
   mainClassName?: string;
+  /**
+   * Whether to render the built-in `CommandPalette` (providing the
+   * `CommandRegistryContext`) when no registry is already in context. Defaults
+   * to `true` for backwards compatibility; set `false` to opt out when the host
+   * app ships its own palette.
+   */
+  builtInCommandPalette?: boolean;
   children: ReactNode;
 }
 
@@ -47,9 +55,11 @@ export function AppShellWorkspace({
   appTabs,
   globalActions,
   headerCenter,
+  headerLeading,
   banners,
   mainLayout,
   mainClassName,
+  builtInCommandPalette = true,
   children,
 }: AppShellWorkspaceProps) {
   const viewport = useShellViewport();
@@ -80,16 +90,19 @@ export function AppShellWorkspace({
   // nested viewport-height divs collapse cleanly — no double-scroll.
   const commandRegistry = useContext(CommandRegistryContext);
   const shell = (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-svh flex-col">
       {isMobile ? (
-        <MobileHeader globalActions={globalActions} />
+        <MobileHeader globalActions={globalActions} headerCenter={headerCenter} />
       ) : (
         <ShellHeader
           globalActions={globalActions}
           headerCenter={headerCenter}
+          headerLeading={headerLeading}
           appTabsRenderLink={appTabs?.renderLink}
           workspaceMenuItems={workspace?.menuItems}
           workspaceMenuFooter={workspace?.menuFooter}
+          showPanelToggle={resolvedRightPanel.panelViews.length > 0}
+          panelViews={resolvedRightPanel.panelViews}
         />
       )}
       {banners ? (
@@ -107,6 +120,7 @@ export function AppShellWorkspace({
             footer={iconRail.footer}
             activeId={iconRail.activeId}
             renderLink={iconRail.renderLink}
+            labelVisibility={iconRail.labelVisibility}
           />
         )}
         {!isMobile && contextRail && (
@@ -114,6 +128,7 @@ export function AppShellWorkspace({
             appId={contextRail.appId}
             module={contextRail.module}
             activeItemId={contextRail.activeItemId}
+            renderLink={contextRail.renderLink}
             header={contextRail.header}
             scroll={contextRail.scroll}
           />
@@ -135,8 +150,11 @@ export function AppShellWorkspace({
           workspaceMenuFooter={workspace?.menuFooter}
           module={contextRail?.module}
           moduleAppId={contextRail?.appId}
+          moduleActiveItemId={contextRail?.activeItemId}
+          moduleRenderLink={contextRail?.renderLink}
           moduleHeader={contextRail?.header}
           moduleScroll={contextRail?.scroll}
+          sectionTabs={headerLeading}
           panelViews={resolvedRightPanel.panelViews}
           defaultView={resolvedRightPanel.defaultView}
         />
@@ -144,7 +162,16 @@ export function AppShellWorkspace({
     </div>
   );
 
-  return commandRegistry ? shell : <CommandPalette>{shell}</CommandPalette>;
+  // Backwards-compatible default: meda provides the built-in CommandPalette
+  // (and its CommandRegistryContext) so consumers calling useCommands()/
+  // useCommandGroup() under the workspace shell keep working. When a registry is
+  // already present, or the consumer opts out via builtInCommandPalette={false}
+  // (e.g. apps that ship their own palette), render the bare shell to avoid a
+  // duplicate dialog.
+  if (commandRegistry || !builtInCommandPalette) {
+    return shell;
+  }
+  return <CommandPalette>{shell}</CommandPalette>;
 }
 
 function buildMobileNavItems(

@@ -83,27 +83,27 @@ describe('ShellMain — layout="fullbleed"', () => {
 });
 
 describe('ShellMain — content-visibility', () => {
-  it('applies [content-visibility:auto] class on every layout', () => {
+  it('does NOT apply [content-visibility:auto] (removed — it broke sticky/measured children)', () => {
     const { rerender } = render(
       <ShellMain>
         <div />
       </ShellMain>
     );
-    expect(screen.getByRole('main').className).toContain('[content-visibility:auto]');
+    expect(screen.getByRole('main').className).not.toContain('[content-visibility:auto]');
 
     rerender(
       <ShellMain layout="centered">
         <div />
       </ShellMain>
     );
-    expect(screen.getByRole('main').className).toContain('[content-visibility:auto]');
+    expect(screen.getByRole('main').className).not.toContain('[content-visibility:auto]');
 
     rerender(
       <ShellMain layout="fullbleed">
         <div />
       </ShellMain>
     );
-    expect(screen.getByRole('main').className).toContain('[content-visibility:auto]');
+    expect(screen.getByRole('main').className).not.toContain('[content-visibility:auto]');
   });
 });
 

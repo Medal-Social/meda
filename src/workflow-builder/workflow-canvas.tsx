@@ -12,7 +12,6 @@ import {
   ReactFlow,
   type ReactFlowProps,
 } from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
 
 import { useCallback } from 'react';
 import { cn } from '../lib/utils.js';

@@ -113,7 +113,7 @@ describe('IconRail', () => {
     expect(screen.getByRole('tooltip')).toHaveTextContent('Inbox');
   });
 
-  it('active item has bg-primary/12 and text-primary classes', () => {
+  it('active item has solid bg-primary, primary-foreground text and ring', () => {
     render(
       <Wrapper>
         <IconRail
@@ -124,11 +124,12 @@ describe('IconRail', () => {
     );
 
     const trigger = screen.getByTestId('icon-rail-trigger-inbox');
-    expect(trigger.className).toContain('bg-primary/12');
-    expect(trigger.className).toContain('text-primary');
+    expect(trigger.className).toContain('bg-primary');
+    expect(trigger.className).toContain('text-primary-foreground');
+    expect(trigger.className).toContain('ring-2');
   });
 
-  it('inactive item does NOT have bg-primary/12', () => {
+  it('inactive item does NOT have bg-primary', () => {
     render(
       <Wrapper>
         <IconRail mainItems={mainItems} activeId="inbox" />
@@ -136,7 +137,7 @@ describe('IconRail', () => {
     );
 
     const settingsTrigger = screen.getByTestId('icon-rail-trigger-settings');
-    expect(settingsTrigger.className).not.toContain('bg-primary/12');
+    expect(settingsTrigger.className).not.toContain('bg-primary');
   });
 
   it('renderLink prop wraps each item', () => {
