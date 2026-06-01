@@ -198,18 +198,37 @@ describe('AppShellWorkspace', () => {
     expect(main).toHaveClass('custom-main');
   });
 
-  it('auto-mounts the command palette registry for workspace descendants', () => {
+  it('does NOT auto-mount a built-in command palette — the host app provides its own', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+
+    // meda no longer wraps the shell in its own <CommandPalette> fallback
+    // (it opened a duplicate empty palette on top of the host app's real one).
+    // Descendants that call useCommands() without a host-provided palette throw.
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(() =>
+      render(
+        <Provider>
+          <AppShellWorkspace>
+            <CommandRegistrationProbe />
+          </AppShellWorkspace>
+        </Provider>
+      )
+    ).toThrow(/useCommands must be used inside <CommandPalette>/);
+    consoleError.mockRestore();
+  });
+
+  it('renders the bare shell (no built-in palette) when no host palette is present', () => {
     (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
 
     render(
       <Provider>
         <AppShellWorkspace>
-          <CommandRegistrationProbe />
+          <main aria-label="content">hi</main>
         </AppShellWorkspace>
       </Provider>
     );
 
-    expect(screen.getByTestId('command-registration-probe')).toBeInTheDocument();
+    expect(screen.getByRole('main', { name: 'content' })).toBeInTheDocument();
   });
 
   it('does not mount a second command palette when a consumer already provides one', () => {

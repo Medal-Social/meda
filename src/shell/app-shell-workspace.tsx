@@ -1,7 +1,7 @@
 'use client';
 import { LayoutGrid, Menu, PanelTop, Sparkles } from 'lucide-react';
 import { type ReactNode, useContext } from 'react';
-import { CommandPalette, CommandRegistryContext } from './command-palette.js';
+import { CommandRegistryContext } from './command-palette.js';
 import { ContextRail } from './context-rail.js';
 import { IconRail } from './icon-rail.js';
 import { MobileBottomNav } from './internal/mobile-bottom-nav.js';
@@ -33,6 +33,7 @@ export interface AppShellWorkspaceProps {
   appTabs?: AppShellAppTabsConfig;
   globalActions?: ReactNode;
   headerCenter?: ReactNode;
+  headerLeading?: ReactNode;
   banners?: ReactNode;
   mainLayout?: ShellMainLayout;
   mainClassName?: string;
@@ -47,6 +48,7 @@ export function AppShellWorkspace({
   appTabs,
   globalActions,
   headerCenter,
+  headerLeading,
   banners,
   mainLayout,
   mainClassName,
@@ -80,16 +82,19 @@ export function AppShellWorkspace({
   // nested viewport-height divs collapse cleanly — no double-scroll.
   const commandRegistry = useContext(CommandRegistryContext);
   const shell = (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-svh flex-col">
       {isMobile ? (
-        <MobileHeader globalActions={globalActions} />
+        <MobileHeader globalActions={globalActions} headerCenter={headerCenter} />
       ) : (
         <ShellHeader
           globalActions={globalActions}
           headerCenter={headerCenter}
+          headerLeading={headerLeading}
           appTabsRenderLink={appTabs?.renderLink}
           workspaceMenuItems={workspace?.menuItems}
           workspaceMenuFooter={workspace?.menuFooter}
+          showPanelToggle={resolvedRightPanel.panelViews.length > 0}
+          panelViews={resolvedRightPanel.panelViews}
         />
       )}
       {banners ? (
@@ -107,6 +112,7 @@ export function AppShellWorkspace({
             footer={iconRail.footer}
             activeId={iconRail.activeId}
             renderLink={iconRail.renderLink}
+            labelVisibility={iconRail.labelVisibility}
           />
         )}
         {!isMobile && contextRail && (
@@ -114,6 +120,7 @@ export function AppShellWorkspace({
             appId={contextRail.appId}
             module={contextRail.module}
             activeItemId={contextRail.activeItemId}
+            renderLink={contextRail.renderLink}
             header={contextRail.header}
             scroll={contextRail.scroll}
           />
@@ -135,8 +142,11 @@ export function AppShellWorkspace({
           workspaceMenuFooter={workspace?.menuFooter}
           module={contextRail?.module}
           moduleAppId={contextRail?.appId}
+          moduleActiveItemId={contextRail?.activeItemId}
+          moduleRenderLink={contextRail?.renderLink}
           moduleHeader={contextRail?.header}
           moduleScroll={contextRail?.scroll}
+          sectionTabs={headerLeading}
           panelViews={resolvedRightPanel.panelViews}
           defaultView={resolvedRightPanel.defaultView}
         />
@@ -144,7 +154,13 @@ export function AppShellWorkspace({
     </div>
   );
 
-  return commandRegistry ? shell : <CommandPalette>{shell}</CommandPalette>;
+  // The host app (medal-monorepo) ships its own command palette via
+  // CommandPaletteBridge, so meda must NOT render its built-in empty palette
+  // here — doing so opened a second "Search commands / No results" dialog on
+  // top of the app's real one. No meda shell component depends on the built-in
+  // command registry, so rendering the bare shell is safe.
+  void commandRegistry;
+  return shell;
 }
 
 function buildMobileNavItems(

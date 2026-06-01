@@ -3,7 +3,7 @@
 import type { LucideIcon } from 'lucide-react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import {
   Tooltip,
   TooltipContent,
@@ -33,12 +33,15 @@ export interface IconRailRenderLinkArgs {
   linkProps: AnchorHTMLAttributes<HTMLAnchorElement>;
 }
 
+export type IconRailLabelVisibility = 'tooltip' | 'visible';
+
 export interface IconRailProps {
   mainItems: IconRailItem[];
   utilityItems?: IconRailItem[];
   footer?: ReactNode;
   activeId?: string;
   renderLink?: (args: IconRailRenderLinkArgs) => ReactNode;
+  labelVisibility?: IconRailLabelVisibility;
   className?: string;
 }
 
@@ -46,12 +49,37 @@ export interface IconRailProps {
 // Item styling
 // ---------------------------------------------------------------------------
 
-function itemClass(isActive: boolean) {
+function itemClass(isActive: boolean, labelVisibility: IconRailLabelVisibility) {
+  if (labelVisibility === 'visible') {
+    return cn(
+      'group relative flex min-h-[4rem] w-full flex-col items-center justify-start gap-1 px-1 py-1 text-center transition-colors',
+      isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+    );
+  }
   return cn(
     'group relative flex h-11 w-11 items-center justify-center rounded-xl transition-colors',
     isActive
-      ? 'bg-primary/12 text-primary'
+      ? 'bg-primary text-primary-foreground shadow-sm ring-2 ring-primary/60'
       : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+  );
+}
+
+function iconFrameClass(isActive: boolean) {
+  return cn(
+    'relative inline-flex h-11 w-11 items-center justify-center rounded-xl transition-colors',
+    isActive
+      ? 'bg-primary text-primary-foreground shadow-sm ring-2 ring-primary/60'
+      : 'group-hover:bg-accent group-hover:text-foreground'
+  );
+}
+
+function railClass(labelVisibility: IconRailLabelVisibility, className?: string) {
+  return cn(
+    'flex h-full shrink-0 flex-col items-center bg-shell-rail',
+    labelVisibility === 'visible'
+      ? 'w-[var(--shell-rail-label-width)] px-2 py-4'
+      : 'w-[var(--shell-rail-width)] py-3.5',
+    className
   );
 }
 
@@ -97,6 +125,7 @@ export function IconRail({
   footer,
   activeId,
   renderLink,
+  labelVisibility = 'tooltip',
   className,
 }: IconRailProps) {
   const band = useShellViewport();
@@ -104,11 +133,23 @@ export function IconRail({
 
   if (band === 'mobile') return null;
 
+  const showLabels = labelVisibility === 'visible';
+
   const renderItem = (item: IconRailItem) => {
     const isActive = item.id === activeId;
-    const klass = itemClass(isActive);
+    const klass = itemClass(isActive, labelVisibility);
     const IconComp = item.icon;
-    const inner = (
+    const inner = showLabels ? (
+      <>
+        <span data-slot="icon-rail-icon-frame" className={iconFrameClass(isActive)}>
+          <IconComp size={26} aria-hidden="true" />
+          {item.badge ? <span className="absolute right-1 top-1">{item.badge}</span> : null}
+        </span>
+        <span data-slot="icon-rail-label" className="max-w-full truncate text-[12px] leading-4">
+          {item.label}
+        </span>
+      </>
+    ) : (
       <>
         <IconComp size={22} aria-hidden="true" />
         {item.badge ? <span className="absolute right-1 top-1">{item.badge}</span> : null}
@@ -130,16 +171,20 @@ export function IconRail({
       <a {...linkProps} />
     );
 
+    const trigger = (
+      <span data-testid={`icon-rail-trigger-${item.id}`} className={klass}>
+        {linkContent}
+      </span>
+    );
+
+    if (showLabels) {
+      return <Fragment key={item.id}>{trigger}</Fragment>;
+    }
+
     return (
       <Tooltip key={item.id}>
         {/* Trigger span owns the visual state; link inside provides navigation. */}
-        <TooltipTrigger
-          render={
-            <span data-testid={`icon-rail-trigger-${item.id}`} className={klass}>
-              {linkContent}
-            </span>
-          }
-        />
+        <TooltipTrigger render={trigger} />
         <TooltipContent side="right">{item.label}</TooltipContent>
       </Tooltip>
     );
@@ -150,12 +195,11 @@ export function IconRail({
       <nav
         data-testid="icon-rail"
         aria-label="Primary"
-        className={cn(
-          'flex h-full w-[var(--shell-rail-width)] shrink-0 flex-col items-center bg-shell-rail py-3.5',
-          className
-        )}
+        className={railClass(labelVisibility, className)}
       >
-        <div className="flex flex-col items-center gap-1">{mainItems.map(renderItem)}</div>
+        <div className={cn('flex flex-col items-center', showLabels ? 'w-full gap-1' : 'gap-1')}>
+          {mainItems.map(renderItem)}
+        </div>
         {utilityItems.length > 0 && (
           <>
             <RailDivider
@@ -164,7 +208,11 @@ export function IconRail({
             />
             <div
               data-testid="utility-items-wrapper"
-              className={cn('flex flex-col items-center gap-1', pinnedBottom && 'mt-auto')}
+              className={cn(
+                'flex flex-col items-center',
+                showLabels ? 'w-full gap-1' : 'gap-1',
+                pinnedBottom && 'mt-auto'
+              )}
             >
               {utilityItems.map(renderItem)}
             </div>

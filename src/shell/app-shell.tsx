@@ -54,6 +54,11 @@ export type AppShellProps = AppShellBaseProps &
          */
         headerCenter?: ReactNode;
         /**
+         * Optional leading content rendered in the LEFT header region immediately
+         * after the workspace switcher. On mobile, surfaced inside the menu drawer.
+         */
+        headerLeading?: ReactNode;
+        /**
          * Optional chrome-level content rendered below the header and above
          * the workspace rail row.
          */
@@ -80,7 +85,7 @@ export function AppShell(props: AppShellProps) {
   // Auth lets the form scroll past viewport (signup, dense forms, high zoom);
   // workspace and chat fix the chrome to viewport height and let inner regions
   // scroll independently.
-  const heightClass = props.variant === 'auth' ? 'min-h-screen' : 'h-screen overflow-hidden';
+  const heightClass = props.variant === 'auth' ? 'min-h-screen' : 'h-svh overflow-hidden';
 
   const wrapper = (content: ReactNode) => (
     <div
@@ -106,6 +111,7 @@ export function AppShell(props: AppShellProps) {
           appTabs={props.appTabs}
           globalActions={props.globalActions}
           headerCenter={props.headerCenter}
+          headerLeading={props.headerLeading}
           banners={props.banners}
           mainLayout={props.mainLayout}
           mainClassName={props.mainClassName}
@@ -138,7 +144,7 @@ export function AppShellBody({ children, className }: { children: ReactNode; cla
   return (
     <div
       className={cn(
-        'relative flex h-[calc(100vh-var(--shell-header-height))] overflow-hidden',
+        'relative flex h-[calc(100svh-var(--shell-header-height))] overflow-hidden',
         className
       )}
     >

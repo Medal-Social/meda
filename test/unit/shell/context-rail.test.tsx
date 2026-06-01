@@ -157,38 +157,45 @@ describe('ContextRail — layout + visibility', () => {
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   });
 
-  it('resize handle is present with opacity-0 and hover:opacity-100 classes', () => {
+  it('seam wrapper hosts the resize separator and the unified group/seam reveal scope', () => {
     render(
       <Wrapper>
         <ContextRail appId="mail" module={MODULE} />
       </Wrapper>
     );
 
-    const handle = screen.getByRole('separator', { name: 'Resize context rail' });
-    expect(handle.className).toContain('opacity-0');
-    expect(handle.className).toContain('hover:opacity-100');
+    // The resize separator semantics live on the thin seam line; the wrapper
+    // (data-testid="context-rail-seam") owns positioning + the group/seam scope
+    // so the line + grip reveal together on rail hover. The grip button is a
+    // sibling of the separator (not nested) — keeps roles a11y-valid.
+    const separator = screen.getByRole('separator', { name: 'Resize context rail' });
+    const seam = screen.getByTestId('context-rail-seam');
+    expect(seam).toContainElement(separator);
+    expect(seam).toContainElement(screen.getByTestId('context-rail-toggle'));
+    expect(seam.className).toContain('group/seam');
   });
 
-  it('resize handle is 4px wide (w-1 class)', () => {
+  it('seam straddles the rail boundary (w-3 + translate-x-1/2)', () => {
     render(
       <Wrapper>
         <ContextRail appId="mail" module={MODULE} />
       </Wrapper>
     );
 
-    const handle = screen.getByRole('separator', { name: 'Resize context rail' });
-    expect(handle.className).toContain('w-1');
+    const seam = screen.getByTestId('context-rail-seam');
+    expect(seam.className).toContain('w-3');
+    expect(seam.className).toContain('translate-x-1/2');
   });
 
-  it('resize handle has cursor-col-resize class', () => {
+  it('seam has cursor-col-resize class when expanded', () => {
     render(
       <Wrapper>
         <ContextRail appId="mail" module={MODULE} />
       </Wrapper>
     );
 
-    const handle = screen.getByRole('separator', { name: 'Resize context rail' });
-    expect(handle.className).toContain('cursor-col-resize');
+    const seam = screen.getByTestId('context-rail-seam');
+    expect(seam.className).toContain('cursor-col-resize');
   });
 });
 
@@ -611,21 +618,27 @@ describe('collapse toggle', () => {
     expect(btn).toHaveAttribute('aria-expanded', 'true');
   });
 
-  it('does not render the resize handle when collapsed', () => {
+  it('keeps the seam mounted when collapsed (so the rail can be reopened) but disables resize', () => {
     render(
       <Wrapper>
         <ContextRail appId="mail" module={MODULE} />
       </Wrapper>
     );
-    expect(screen.queryByRole('separator', { name: /resize context rail/i })).toBeInTheDocument();
+    const seam = screen.getByTestId('context-rail-seam');
+    expect(seam).toBeInTheDocument();
+    expect(seam.getAttribute('data-collapsed')).toBe('false');
+    expect(seam.className).toContain('cursor-col-resize');
+    expect(screen.getByRole('separator', { name: /resize context rail/i })).toBeInTheDocument();
 
-    // Collapse via the toggle
+    // Collapse via the grip — the unified seam stays mounted (it carries the
+    // expand grip) but flips to a non-resizable state.
     act(() => {
       fireEvent.click(screen.getByTestId('context-rail-toggle'));
     });
-    expect(
-      screen.queryByRole('separator', { name: /resize context rail/i })
-    ).not.toBeInTheDocument();
+    const collapsedSeam = screen.getByTestId('context-rail-seam');
+    expect(collapsedSeam).toBeInTheDocument();
+    expect(collapsedSeam.getAttribute('data-collapsed')).toBe('true');
+    expect(collapsedSeam.className).toContain('cursor-default');
   });
 
   it('does not render the toggle on mobile viewport', () => {

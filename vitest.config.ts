@@ -103,7 +103,13 @@ export default defineConfig({
           setupFiles: ['./vitest.setup.ts'],
           // Integration tests (test/nextjs-consumer.test.ts) require pnpm build first; run via pnpm test:integration.
           // demo/ requires a built dist/ — excluded from unit runs, covered by test:integration.
-          exclude: ['**/node_modules/**', '**/dist/**', 'test/nextjs-consumer.test.ts', 'demo/**'],
+          exclude: [
+            '**/node_modules/**',
+            '**/dist/**',
+            '**/.worktrees/**',
+            'test/nextjs-consumer.test.ts',
+            'demo/**',
+          ],
         },
       },
       {

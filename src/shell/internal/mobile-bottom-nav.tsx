@@ -43,7 +43,7 @@ export function MobileBottomNav({ items, className }: MobileBottomNavProps) {
       data-testid="mobile-bottom-nav"
       aria-label="Mobile navigation"
       className={cn(
-        'flex h-[var(--shell-bottom-nav-height)] items-center justify-around border-t border-border bg-card',
+        'flex h-[calc(var(--shell-bottom-nav-height)+env(safe-area-inset-bottom))] items-start justify-around border-t border-border bg-card px-1 pb-[env(safe-area-inset-bottom)]',
         className
       )}
     >
@@ -119,10 +119,10 @@ function MobileBottomNavButton({ item }: { item: MobileBottomNavItem }) {
       onPointerCancel={handlePointerCancel}
       onClick={handleClick}
       aria-label={label}
-      className="flex h-full flex-1 flex-col items-center justify-center gap-0.5 text-muted-foreground hover:text-foreground"
+      className="flex h-[var(--shell-bottom-nav-height)] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-muted-foreground transition-colors hover:text-foreground active:bg-accent"
     >
       <Icon size={20} aria-hidden="true" />
-      <span className="text-[10px]">{label}</span>
+      <span className="font-medium text-[10px] leading-none">{label}</span>
     </button>
   );
 }
