@@ -76,7 +76,7 @@ jobs:
       # system deps (no re-download); on miss we do the full install.
       - name: Install Playwright Chromium (cache miss)
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install chromium
 
       - name: Install Playwright system deps only (cache hit)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
