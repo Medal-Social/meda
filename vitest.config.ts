@@ -4,6 +4,9 @@ import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
 
 const dirname = fileURLToPath(new URL('.', import.meta.url));
+const browserProvider = playwright(
+  process.env.MEDA_USE_SYSTEM_CHROME === '1' ? { launchOptions: { channel: 'chrome' } } : undefined
+);
 
 export default defineConfig({
   test: {
@@ -120,7 +123,7 @@ export default defineConfig({
           browser: {
             enabled: true,
             headless: true,
-            provider: playwright(),
+            provider: browserProvider,
             instances: [{ browser: 'chromium' }],
           },
           setupFiles: ['./.storybook/vitest.setup.ts'],
