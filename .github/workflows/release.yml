@@ -15,7 +15,10 @@ jobs:
     # the Husky pre-commit hook fired by changesets/action when it commits
     # the version bump) resolves to the cached install location.
     env:
-      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+      # Use the Chrome binary already available on GitHub-hosted runners.
+      # The release action may invoke Husky, which runs the browser-backed
+      # Vitest storybook project via `pnpm test`.
+      MEDA_USE_SYSTEM_CHROME: '1'
     # GITHUB_TOKEN gets only what the npm OIDC + provenance steps need.
     # All git/PR writes (checkout, push, PR open) use the Medal Social
     # Release Bot App token, not GITHUB_TOKEN — so contents: write and
@@ -50,32 +53,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Cache the Playwright browser binaries — the Husky pre-commit hook
-      # (which fires when changesets/action commits the version bump) runs
-      # `pnpm test`, and the vitest 'storybook' project drives headless
-      # Chromium via @vitest/browser-playwright. Pin PLAYWRIGHT_BROWSERS_PATH
-      # so the cache path matches the install location deterministically.
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f # v3.4.3
-        with:
-          path: ${{ github.workspace }}/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-
-      - name: Install Playwright Chromium (cache miss)
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Install Playwright system deps only (cache hit)
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm exec playwright install-deps chromium
-
       - run: pnpm build
 
       # Mint a FRESH Release Bot token immediately before the long-running
       # publish step. App tokens expire after one hour, and the checkout
-      # token above could be 15+ minutes old by now (install + playwright
-      # + build). Re-mint resets the clock for the changesets push + PR
+      # token above could be old by now (install + build). Re-mint resets
+      # the clock for the changesets push + PR
       # operations and avoids 401s on slow runners.
       #
       # Refresh the persisted git credential too so changesets/action's
