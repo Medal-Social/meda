@@ -1,5 +1,11 @@
 # @medalsocial/meda
 
+## 2.5.2
+
+### Patch Changes
+
+- [#183](https://github.com/Medal-Social/meda/pull/183) [`dbc0848`](https://github.com/Medal-Social/meda/commit/dbc08486c14ddc1dd9fe5f707297a01e3a4a7a36) Thanks [@alioftech](https://github.com/alioftech)! - Upgrade Base UI to 1.6.0 for the latest primitive fixes and stable OTP field namespace.
+
 ## 2.5.1
 
 ### Patch Changes
