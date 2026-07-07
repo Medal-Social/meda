@@ -82,6 +82,66 @@ describe('IconRail', () => {
     expect(nav.className).toContain('w-[var(--shell-rail-width)]');
   });
 
+  it('rail scrolls vertically so items stay reachable on short viewports (class contract)', () => {
+    render(
+      <Wrapper>
+        <IconRail mainItems={mainItems} />
+      </Wrapper>
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Primary' });
+    expect(nav.className).toContain('overflow-y-auto');
+    expect(nav.className).toContain('min-h-0');
+  });
+
+  it('visible mode falls back to tooltips on short viewports where labels are hidden', async () => {
+    // matchMedia stub: report a short viewport for the label-hiding tier.
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
+    (window.matchMedia as any) = vi.fn().mockImplementation((query: string) => ({
+      matches: query === '(max-height: 700px)',
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    render(
+      <Wrapper>
+        <IconRail
+          mainItems={[{ id: 'inbox', label: 'Inbox', to: '/inbox', icon: Inbox }]}
+          labelVisibility="visible"
+        />
+      </Wrapper>
+    );
+
+    const trigger = screen.getByTestId('icon-rail-trigger-inbox');
+    fireEvent.mouseEnter(trigger);
+    fireEvent.mouseMove(trigger);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 800));
+    });
+    // Label span still rendered (CSS hides it), and tooltip provides the fallback
+    expect(trigger.querySelector('[data-slot="icon-rail-label"]')).toBeInTheDocument();
+    const tooltips = await screen.findAllByText('Inbox');
+    expect(tooltips.length).toBeGreaterThan(1);
+  });
+
+  it('compacts items below 850px and hides labels below 700px viewport height (class contract)', () => {
+    render(
+      <Wrapper>
+        <IconRail mainItems={mainItems} labelVisibility="visible" activeId="inbox" />
+      </Wrapper>
+    );
+
+    const trigger = screen.getByTestId('icon-rail-trigger-inbox');
+    expect(trigger.className).toContain('[@media(max-height:850px)]:min-h-[3.25rem]');
+    const label = trigger.querySelector('[data-slot="icon-rail-label"]');
+    expect(label?.className).toContain('[@media(max-height:700px)]:hidden');
+    const frame = trigger.querySelector('[data-slot="icon-rail-icon-frame"]');
+    expect(frame?.className).toContain('[@media(max-height:850px)]:h-9');
+  });
+
   it('does not expand on hover — width class unchanged after mouseEnter', () => {
     render(
       <Wrapper>
