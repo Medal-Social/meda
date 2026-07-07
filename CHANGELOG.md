@@ -1,5 +1,11 @@
 # @medalsocial/meda
 
+## 2.5.3
+
+### Patch Changes
+
+- [#188](https://github.com/Medal-Social/meda/pull/188) [`251c158`](https://github.com/Medal-Social/meda/commit/251c15842b7eee5fb8c67847821d510e0414d37f) Thanks [@alioftech](https://github.com/alioftech)! - IconRail now adapts to short viewports: items compact below 850px viewport height (smaller icon frame, tighter spacing, smaller label) and labels hide below 700px so the rail degrades to icon-only. The rail also scrolls vertically (hidden scrollbar) as a hard guarantee that every menu item stays reachable on small screens — previously items below the fold were unreachable on ~12" displays.
+
 ## 2.5.2
 
 ### Patch Changes
