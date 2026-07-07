@@ -3,7 +3,7 @@
 import type { LucideIcon } from 'lucide-react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import {
   Tooltip,
   TooltipContent,
@@ -128,6 +128,24 @@ export function RailDivider({ pinnedBottom, onToggle }: RailDividerProps) {
   );
 }
 
+// Mirrors the [@media(max-height:700px)] CSS tier that hides visible-mode
+// labels, so those items regain a tooltip fallback exactly when their label
+// disappears. SSR-safe: initial false, resolves post-mount.
+function useIsShortViewport(): boolean {
+  const [isShort, setIsShort] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mql = window.matchMedia('(max-height: 700px)');
+    const onChange = () => setIsShort(mql.matches);
+    onChange();
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
+
+  return isShort;
+}
+
 // ---------------------------------------------------------------------------
 // IconRail
 // ---------------------------------------------------------------------------
@@ -142,11 +160,15 @@ export function IconRail({
   className,
 }: IconRailProps) {
   const band = useShellViewport();
+  const isShortViewport = useIsShortViewport();
   const [pinnedBottom, setPinnedBottom] = useState(true);
 
   if (band === 'mobile') return null;
 
   const showLabels = labelVisibility === 'visible';
+  // At ≤700px the visible-mode label is hidden by CSS, so items fall back to
+  // tooltip labels like tooltip mode does.
+  const useTooltipFallback = !showLabels || isShortViewport;
 
   const renderItem = (item: IconRailItem) => {
     const isActive = item.id === activeId;
@@ -193,7 +215,7 @@ export function IconRail({
       </span>
     );
 
-    if (showLabels) {
+    if (!useTooltipFallback) {
       return <Fragment key={item.id}>{trigger}</Fragment>;
     }
 

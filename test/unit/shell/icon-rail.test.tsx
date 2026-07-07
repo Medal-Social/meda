@@ -94,6 +94,39 @@ describe('IconRail', () => {
     expect(nav.className).toContain('min-h-0');
   });
 
+  it('visible mode falls back to tooltips on short viewports where labels are hidden', async () => {
+    // matchMedia stub: report a short viewport for the label-hiding tier.
+    // biome-ignore lint/suspicious/noExplicitAny: test mock
+    (window.matchMedia as any) = vi.fn().mockImplementation((query: string) => ({
+      matches: query === '(max-height: 700px)',
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    render(
+      <Wrapper>
+        <IconRail
+          mainItems={[{ id: 'inbox', label: 'Inbox', to: '/inbox', icon: Inbox }]}
+          labelVisibility="visible"
+        />
+      </Wrapper>
+    );
+
+    const trigger = screen.getByTestId('icon-rail-trigger-inbox');
+    fireEvent.mouseEnter(trigger);
+    fireEvent.mouseMove(trigger);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 800));
+    });
+    // Label span still rendered (CSS hides it), and tooltip provides the fallback
+    expect(trigger.querySelector('[data-slot="icon-rail-label"]')).toBeInTheDocument();
+    const tooltips = await screen.findAllByText('Inbox');
+    expect(tooltips.length).toBeGreaterThan(1);
+  });
+
   it('compacts items below 850px and hides labels below 700px viewport height (class contract)', () => {
     render(
       <Wrapper>
