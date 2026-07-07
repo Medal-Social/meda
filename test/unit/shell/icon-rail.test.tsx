@@ -82,6 +82,33 @@ describe('IconRail', () => {
     expect(nav.className).toContain('w-[var(--shell-rail-width)]');
   });
 
+  it('rail scrolls vertically so items stay reachable on short viewports (class contract)', () => {
+    render(
+      <Wrapper>
+        <IconRail mainItems={mainItems} />
+      </Wrapper>
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Primary' });
+    expect(nav.className).toContain('overflow-y-auto');
+    expect(nav.className).toContain('min-h-0');
+  });
+
+  it('compacts items below 850px and hides labels below 700px viewport height (class contract)', () => {
+    render(
+      <Wrapper>
+        <IconRail mainItems={mainItems} labelVisibility="visible" activeId="inbox" />
+      </Wrapper>
+    );
+
+    const trigger = screen.getByTestId('icon-rail-trigger-inbox');
+    expect(trigger.className).toContain('[@media(max-height:850px)]:min-h-[3.25rem]');
+    const label = trigger.querySelector('[data-slot="icon-rail-label"]');
+    expect(label?.className).toContain('[@media(max-height:700px)]:hidden');
+    const frame = trigger.querySelector('[data-slot="icon-rail-icon-frame"]');
+    expect(frame?.className).toContain('[@media(max-height:850px)]:h-9');
+  });
+
   it('does not expand on hover — width class unchanged after mouseEnter', () => {
     render(
       <Wrapper>

@@ -49,15 +49,22 @@ export interface IconRailProps {
 // Item styling
 // ---------------------------------------------------------------------------
 
+// Short-viewport scaling: below 850px viewport height items compact (smaller
+// icon frame, tighter spacing, smaller label); below 700px labels hide so the
+// rail degrades to icon-only. The rail additionally scrolls (see railClass) as
+// the hard guarantee that every item stays reachable on any height.
 function itemClass(isActive: boolean, labelVisibility: IconRailLabelVisibility) {
   if (labelVisibility === 'visible') {
     return cn(
-      'group relative flex min-h-[4rem] w-full flex-col items-center justify-start gap-1 px-1 py-1 text-center transition-colors',
+      'group relative flex min-h-[4rem] w-full shrink-0 flex-col items-center justify-start gap-1 px-1 py-1 text-center transition-colors',
+      '[@media(max-height:850px)]:min-h-[3.25rem] [@media(max-height:850px)]:gap-0.5',
+      '[@media(max-height:700px)]:min-h-0',
       isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
     );
   }
   return cn(
-    'group relative flex h-11 w-11 items-center justify-center rounded-xl transition-colors',
+    'group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors',
+    '[@media(max-height:700px)]:h-9 [@media(max-height:700px)]:w-9',
     isActive
       ? 'bg-primary text-primary-foreground shadow-sm ring-2 ring-primary/60'
       : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -67,6 +74,7 @@ function itemClass(isActive: boolean, labelVisibility: IconRailLabelVisibility) 
 function iconFrameClass(isActive: boolean) {
   return cn(
     'relative inline-flex h-11 w-11 items-center justify-center rounded-xl transition-colors',
+    '[@media(max-height:850px)]:h-9 [@media(max-height:850px)]:w-9',
     isActive
       ? 'bg-primary text-primary-foreground shadow-sm ring-2 ring-primary/60'
       : 'group-hover:bg-accent group-hover:text-foreground'
@@ -76,9 +84,13 @@ function iconFrameClass(isActive: boolean) {
 function railClass(labelVisibility: IconRailLabelVisibility, className?: string) {
   return cn(
     'flex h-full shrink-0 flex-col items-center bg-shell-rail',
+    // Hard reachability guarantee on short viewports: the rail scrolls when the
+    // compact tiers still can't fit every item. Scrollbar is hidden — wheel,
+    // trackpad, and keyboard focus traversal still scroll the overflow.
+    'min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
     labelVisibility === 'visible'
-      ? 'w-[var(--shell-rail-label-width)] px-2 py-4'
-      : 'w-[var(--shell-rail-width)] py-3.5',
+      ? 'w-[var(--shell-rail-label-width)] px-2 py-4 [@media(max-height:850px)]:py-2'
+      : 'w-[var(--shell-rail-width)] py-3.5 [@media(max-height:850px)]:py-2',
     className
   );
 }
@@ -102,7 +114,8 @@ export function RailDivider({ pinnedBottom, onToggle }: RailDividerProps) {
       onClick={onToggle}
       aria-label={pinnedBottom ? 'Pull utility items up' : 'Push utility items down'}
       className={cn(
-        'my-3 flex h-6 w-8 items-center justify-center rounded-md',
+        'my-3 flex h-6 w-8 shrink-0 items-center justify-center rounded-md',
+        '[@media(max-height:850px)]:my-1',
         'text-muted-foreground hover:bg-accent hover:text-foreground transition-colors'
       )}
     >
@@ -142,16 +155,19 @@ export function IconRail({
     const inner = showLabels ? (
       <>
         <span data-slot="icon-rail-icon-frame" className={iconFrameClass(isActive)}>
-          <IconComp size={26} aria-hidden="true" />
+          <IconComp size={26} aria-hidden="true" className="[@media(max-height:850px)]:size-5" />
           {item.badge ? <span className="absolute right-1 top-1">{item.badge}</span> : null}
         </span>
-        <span data-slot="icon-rail-label" className="max-w-full truncate text-[12px] leading-4">
+        <span
+          data-slot="icon-rail-label"
+          className="max-w-full truncate text-[12px] leading-4 [@media(max-height:850px)]:text-[11px] [@media(max-height:700px)]:hidden"
+        >
           {item.label}
         </span>
       </>
     ) : (
       <>
-        <IconComp size={22} aria-hidden="true" />
+        <IconComp size={22} aria-hidden="true" className="[@media(max-height:700px)]:size-[18px]" />
         {item.badge ? <span className="absolute right-1 top-1">{item.badge}</span> : null}
       </>
     );
@@ -197,7 +213,12 @@ export function IconRail({
         aria-label="Primary"
         className={railClass(labelVisibility, className)}
       >
-        <div className={cn('flex flex-col items-center', showLabels ? 'w-full gap-1' : 'gap-1')}>
+        <div
+          className={cn(
+            'flex shrink-0 flex-col items-center',
+            showLabels ? 'w-full gap-1' : 'gap-1'
+          )}
+        >
           {mainItems.map(renderItem)}
         </div>
         {utilityItems.length > 0 && (
@@ -209,7 +230,7 @@ export function IconRail({
             <div
               data-testid="utility-items-wrapper"
               className={cn(
-                'flex flex-col items-center',
+                'flex shrink-0 flex-col items-center',
                 showLabels ? 'w-full gap-1' : 'gap-1',
                 pinnedBottom && 'mt-auto'
               )}
@@ -219,7 +240,12 @@ export function IconRail({
           </>
         )}
         {footer && (
-          <div className={cn('pt-3', pinnedBottom || utilityItems.length === 0 ? 'mt-auto' : '')}>
+          <div
+            className={cn(
+              'shrink-0 pt-3 [@media(max-height:850px)]:pt-1.5',
+              pinnedBottom || utilityItems.length === 0 ? 'mt-auto' : ''
+            )}
+          >
             {footer}
           </div>
         )}
