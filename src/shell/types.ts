@@ -151,6 +151,14 @@ export interface AppShellMobileNavConfig {
   activeTo?: string;
   /** Render dock/sheet targets as router links (else plain `<a>`). */
   renderLink?: (args: MobileNavLinkArgs) => ReactNode;
+  /**
+   * Dock presentation:
+   * - `pill` (default) — a floating, centered pill of icon-only slots with any
+   *   `emphasis: 'brand'` item as a standalone circle beside it.
+   * - `bar` — a flat, full-width bottom bar of evenly-spread slots, each with a
+   *   larger icon + label and a tinted active state (mirrors the native app).
+   */
+  variant?: 'pill' | 'bar';
 }
 
 export interface ShellRenderContext {
