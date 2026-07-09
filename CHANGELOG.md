@@ -1,5 +1,27 @@
 # @medalsocial/meda
 
+## 2.6.0
+
+### Minor Changes
+
+- [#195](https://github.com/Medal-Social/meda/pull/195) [`85c3300`](https://github.com/Medal-Social/meda/commit/85c33009975db39d2db1f353c6051b8890d21a7a) Thanks [@alioftech](https://github.com/alioftech)! - feat(shell): opt-in mobile dock + workspace sheet navigation
+
+  Adds a Linear-style mobile navigation as an opt-in alternative to the legacy
+  bottom-nav + four drawers. When `<AppShell variant="workspace">` receives a
+  `mobileNav` config, the mobile viewport renders:
+
+  - a floating **dock** — a pill of pinned destinations plus a standalone brand
+    (e.g. Pilot) circle, with a workspace-selector slot that opens
+  - **one workspace sheet** — a calm, scannable list of the whole nav tree
+    (modules as groups, submodules as rows), where a row either navigates or
+    reveals a slim chip row of preset views (accordion, one open at a time).
+
+  New public types: `AppShellMobileNavConfig`, `MobileDockItem`, `MobileNavTree`,
+  `MobileNavGroup`, `MobileNavItem`, `MobileNavView`, `MobileNavLinkArgs`.
+
+  Fully additive — consumers that don't pass `mobileNav` keep the existing
+  bottom-nav + drawers unchanged.
+
 ## 2.5.3
 
 ### Patch Changes
