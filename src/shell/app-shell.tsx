@@ -12,6 +12,7 @@ import type {
   AppShellAuthConfig,
   AppShellContextRailConfig,
   AppShellIconRailConfig,
+  AppShellMobileNavConfig,
   AppShellRightPanelConfig,
   AppShellWorkspaceConfig,
   ShellMainLayout,
@@ -79,6 +80,11 @@ export type AppShellProps = AppShellBaseProps &
          * host app ships its own command palette to avoid a duplicate dialog.
          */
         builtInCommandPalette?: boolean;
+        /**
+         * Opt-in mobile dock + workspace sheet (replaces the legacy bottom-nav
+         * + four drawers on the mobile viewport). Omit for the legacy nav.
+         */
+        mobileNav?: AppShellMobileNavConfig;
       }
     | {
         variant: 'chat';
@@ -123,6 +129,7 @@ export function AppShell(props: AppShellProps) {
           mainLayout={props.mainLayout}
           mainClassName={props.mainClassName}
           builtInCommandPalette={props.builtInCommandPalette}
+          mobileNav={props.mobileNav}
         >
           {props.children}
         </AppShellWorkspace>

@@ -74,6 +74,85 @@ export interface MobileBottomNavItem {
     | ((close: () => void) => ReactNode);
 }
 
+// ---------------------------------------------------------------------------
+// Mobile dock + workspace sheet (opt-in via AppShell `mobileNav`)
+//
+// Replaces the 4-drawer mobile nav with a Linear-style floating dock (a few
+// pinned destinations + a workspace-sheet trigger) and ONE workspace sheet
+// that shows the whole nav tree at once — modules as groups, submodules as
+// rows, preset views expanding inline (accordion). When `mobileNav` is absent
+// the shell keeps the legacy bottom-nav + drawers, so this is non-breaking for
+// consumers that haven't adopted it.
+// ---------------------------------------------------------------------------
+
+/** A pinned slot in the floating dock — a route link or a shell action. */
+export interface MobileDockItem {
+  id: string;
+  label: string | (() => string);
+  icon: LucideIcon | ReactNode;
+  /** Route target — rendered as a nav link via `renderLink`. */
+  to?: string;
+  /** Show an unread/notification dot on the slot. */
+  badge?: boolean;
+  /** Perform a shell action instead of navigating. */
+  action?: 'open-sheet' | 'open-ai' | 'open-command-palette';
+  /** `brand` renders the standalone emphasized circle (e.g. Pilot). */
+  emphasis?: 'brand';
+}
+
+/** A preset view under a submodule (e.g. Deals → Won) — expands inline. */
+export interface MobileNavView {
+  id: string;
+  label: string;
+  to: string;
+  count?: string | number;
+}
+
+/** A submodule row in the workspace sheet (e.g. CRM → Deals). */
+export interface MobileNavItem {
+  id: string;
+  label: string;
+  icon?: LucideIcon | ReactNode;
+  to: string;
+  badge?: string | number;
+  /** Preset views that expand inline under this row (accordion). */
+  views?: MobileNavView[];
+}
+
+/** A module group in the workspace sheet (e.g. CRM). */
+export interface MobileNavGroup {
+  id: string;
+  label: string;
+  icon?: LucideIcon | ReactNode;
+  items: MobileNavItem[];
+}
+
+/** The full nav tree shown in the workspace sheet. */
+export interface MobileNavTree {
+  groups: MobileNavGroup[];
+  /** Rows below the groups (e.g. Settings). */
+  footerItems?: MobileNavItem[];
+}
+
+export interface MobileNavLinkArgs {
+  to: string;
+  isActive: boolean;
+  className: string;
+  children: ReactNode;
+  onNavigate: () => void;
+  linkProps: AnchorHTMLAttributes<HTMLAnchorElement>;
+}
+
+/** Opt-in mobile dock + workspace sheet configuration. */
+export interface AppShellMobileNavConfig {
+  dock: MobileDockItem[];
+  tree: MobileNavTree;
+  /** The `to` of the currently-active row, for highlighting. */
+  activeTo?: string;
+  /** Render dock/sheet targets as router links (else plain `<a>`). */
+  renderLink?: (args: MobileNavLinkArgs) => ReactNode;
+}
+
 export interface ShellRenderContext {
   workspaceId: string;
   appId: string;
