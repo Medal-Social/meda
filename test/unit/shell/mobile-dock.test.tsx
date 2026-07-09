@@ -104,4 +104,22 @@ describe('MobileDock', () => {
     );
     expect(screen.queryByTestId('mobile-dock')).toBeNull();
   });
+
+  it('renders a full-width labeled bar with a tinted active slot in the bar variant', () => {
+    render(
+      <Wrapper>
+        <MobileDock items={dockItems} variant="bar" activeTo="/inbox" />
+      </Wrapper>
+    );
+    expect(screen.getByTestId('mobile-dock')).toBeInTheDocument();
+    // The bar shows visible text labels (the pill variant is icon-only).
+    expect(screen.getByText('Home')).toBeInTheDocument();
+    expect(screen.getByText('Pilot')).toBeInTheDocument();
+    // The active destination is tinted and carries aria-current.
+    const inbox = screen.getByRole('link', { name: 'Inbox' });
+    expect(inbox).toHaveAttribute('aria-current', 'page');
+    expect(inbox.className).toContain('text-primary');
+    // The sheet trigger still opens the workspace sheet.
+    expect(screen.getByRole('button', { name: 'Open navigation' })).toBeInTheDocument();
+  });
 });

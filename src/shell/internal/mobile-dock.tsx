@@ -14,6 +14,8 @@ export interface MobileDockProps {
   activeTo?: string;
   renderLink?: (args: MobileNavLinkArgs) => ReactNode;
   className?: string;
+  /** `pill` (default) floating dock, or `bar` full-width labeled bottom bar. */
+  variant?: 'pill' | 'bar';
 }
 
 function renderIcon(icon: MobileDockItem['icon'], size: number): ReactNode {
@@ -27,12 +29,23 @@ function renderIcon(icon: MobileDockItem['icon'], size: number): ReactNode {
 }
 
 /**
- * Floating mobile dock — a pill of pinned destinations plus a workspace-sheet
- * trigger, with any `emphasis: 'brand'` item rendered as a standalone circle
- * (e.g. Pilot) beside the pill. Replaces the bordered bottom bar. Hidden on
- * non-mobile viewports and when the right panel is fullscreen.
+ * Mobile dock — pinned destinations plus a workspace-sheet trigger. Two shapes:
+ *
+ * - `pill` (default): a floating, centered pill of icon-only slots, with any
+ *   `emphasis: 'brand'` item (e.g. Pilot) as a standalone circle beside it.
+ * - `bar`: a flat, full-width bottom bar of evenly-spread slots — each a larger
+ *   icon + label with a tinted active state — mirroring the native app. The
+ *   brand item sits inline as the last slot (a filled circle).
+ *
+ * Hidden on non-mobile viewports and when the right panel is fullscreen.
  */
-export function MobileDock({ items, activeTo, renderLink, className }: MobileDockProps) {
+export function MobileDock({
+  items,
+  activeTo,
+  renderLink,
+  className,
+  variant = 'pill',
+}: MobileDockProps) {
   const ctx = useMedaShell();
   const band = useShellViewport();
 
@@ -40,14 +53,104 @@ export function MobileDock({ items, activeTo, renderLink, className }: MobileDoc
   if (ctx.panel.mode === 'fullscreen') return null;
   if (items.length === 0) return null;
 
-  const pillItems = items.filter((item) => item.emphasis !== 'brand');
-  const brandItems = items.filter((item) => item.emphasis === 'brand');
-
   const runAction = (item: MobileDockItem) => {
     if (item.action === 'open-sheet') ctx.mobileDrawer.setOpen(WORKSPACE_SHEET_KEY);
     else if (item.action === 'open-ai') ctx.mobileDrawer.setOpen('ai-drawer');
     else if (item.action === 'open-command-palette') ctx.commandPalette.setOpen(true);
   };
+
+  // ── Full-width bar (native-app style) ──────────────────────────────────
+  if (variant === 'bar') {
+    const renderBarSlot = (item: MobileDockItem): ReactNode => {
+      const label = typeof item.label === 'function' ? item.label() : item.label;
+      const isActive = Boolean(item.to && activeTo && item.to === activeTo);
+      const isBrand = item.emphasis === 'brand';
+      const iconEl = isBrand ? (
+        <span className="flex size-8 items-center justify-center rounded-full bg-[#5B2D8C] text-white">
+          {renderIcon(item.icon, 20)}
+        </span>
+      ) : (
+        renderIcon(item.icon, 25)
+      );
+      let toneClass = 'text-muted-foreground hover:text-foreground';
+      if (isBrand) toneClass = 'text-muted-foreground';
+      else if (isActive) toneClass = 'font-medium text-primary';
+      const slotClass = cn(
+        'flex w-full flex-col items-center justify-center gap-1 py-2 text-[11px] leading-none transition-colors',
+        toneClass
+      );
+      const children = (
+        <>
+          <span className="relative flex items-center justify-center">
+            {iconEl}
+            {item.badge ? (
+              <span className="absolute -top-0.5 -right-1 size-2 rounded-full bg-primary ring-2 ring-card" />
+            ) : null}
+          </span>
+          <span>{label}</span>
+        </>
+      );
+
+      if (item.to && !item.action) {
+        if (renderLink) {
+          return renderLink({
+            to: item.to,
+            isActive,
+            className: slotClass,
+            children,
+            onNavigate: () => undefined,
+            linkProps: {
+              href: item.to,
+              className: slotClass,
+              'aria-label': label,
+              'aria-current': isActive ? 'page' : undefined,
+            },
+          });
+        }
+        return (
+          <a
+            href={item.to}
+            className={slotClass}
+            aria-label={label}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            {children}
+          </a>
+        );
+      }
+      return (
+        <button
+          type="button"
+          onClick={() => runAction(item)}
+          aria-label={label}
+          className={slotClass}
+        >
+          {children}
+        </button>
+      );
+    };
+
+    return (
+      <nav
+        data-testid="mobile-dock"
+        aria-label="Dock"
+        className={cn(
+          'absolute inset-x-0 bottom-0 z-30 flex items-stretch border-t border-border bg-card pb-[env(safe-area-inset-bottom)]',
+          className
+        )}
+      >
+        {items.map((item) => (
+          <div key={item.id} className="flex flex-1">
+            {renderBarSlot(item)}
+          </div>
+        ))}
+      </nav>
+    );
+  }
+
+  // ── Floating pill (default) ────────────────────────────────────────────
+  const pillItems = items.filter((item) => item.emphasis !== 'brand');
+  const brandItems = items.filter((item) => item.emphasis === 'brand');
 
   const renderSlot = (item: MobileDockItem, size: number) => {
     const label = typeof item.label === 'function' ? item.label() : item.label;
