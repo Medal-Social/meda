@@ -1,5 +1,17 @@
 # @medalsocial/meda
 
+## 2.7.0
+
+### Minor Changes
+
+- [#200](https://github.com/Medal-Social/meda/pull/200) [`d39fbeb`](https://github.com/Medal-Social/meda/commit/d39fbeb63914229e6ce8c3af71bbbbd4967ab6e4) Thanks [@alioftech](https://github.com/alioftech)! - feat(shell): full-width `bar` variant for the mobile dock
+
+  `AppShellMobileNavConfig.variant` now accepts `'bar'` alongside the default
+  `'pill'`. The `bar` renders a flat, full-width bottom bar of evenly-spread slots
+  — each a larger icon + label with a tinted active state — mirroring the native
+  mobile app; the brand item (e.g. Pilot) sits inline as the last slot. Fully
+  additive: consumers that omit `variant` keep the floating pill.
+
 ## 2.6.0
 
 ### Minor Changes
