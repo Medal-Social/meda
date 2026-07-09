@@ -1,12 +1,15 @@
 'use client';
 import { LayoutGrid, Menu, PanelTop, Sparkles } from 'lucide-react';
 import { type ReactNode, useContext } from 'react';
+import { cn } from '../lib/utils.js';
 import { CommandPalette, CommandRegistryContext } from './command-palette.js';
 import { ContextRail } from './context-rail.js';
 import { IconRail } from './icon-rail.js';
 import { MobileBottomNav } from './internal/mobile-bottom-nav.js';
+import { MobileDock } from './internal/mobile-dock.js';
 import { MobileDrawers } from './internal/mobile-drawers.js';
 import { MobileHeader } from './internal/mobile-header.js';
+import { MobileWorkspaceSheet } from './internal/mobile-workspace-sheet.js';
 import { useResolvedPanelViews } from './panel-views-provider.js';
 import { RightPanel } from './right-panel.js';
 import { ShellHeader } from './shell-header.js';
@@ -15,6 +18,7 @@ import type {
   AppShellAppTabsConfig,
   AppShellContextRailConfig,
   AppShellIconRailConfig,
+  AppShellMobileNavConfig,
   AppShellRightPanelConfig,
   AppShellWorkspaceConfig,
   MobileBottomNavItem,
@@ -44,6 +48,12 @@ export interface AppShellWorkspaceProps {
    * app ships its own palette.
    */
   builtInCommandPalette?: boolean;
+  /**
+   * Opt-in mobile dock + workspace sheet. When provided, the mobile viewport
+   * renders a floating dock + one workspace sheet instead of the legacy
+   * bottom-nav + four drawers. Omit to keep the legacy mobile nav.
+   */
+  mobileNav?: AppShellMobileNavConfig;
   children: ReactNode;
 }
 
@@ -60,6 +70,7 @@ export function AppShellWorkspace({
   mainLayout,
   mainClassName,
   builtInCommandPalette = true,
+  mobileNav,
   children,
 }: AppShellWorkspaceProps) {
   const viewport = useShellViewport();
@@ -133,31 +144,59 @@ export function AppShellWorkspace({
             scroll={contextRail.scroll}
           />
         )}
-        <ShellMain layout={mainLayout ?? 'workspace'} className={mainClassName}>
+        <ShellMain
+          layout={mainLayout ?? 'workspace'}
+          className={cn(
+            mainClassName,
+            // Pad the scroll area so the floating dock never covers content.
+            isMobile && mobileNav && 'pb-[calc(env(safe-area-inset-bottom)+80px)]'
+          )}
+        >
           {children}
         </ShellMain>
         {!isMobile && resolvedRightPanel.panelViews.length > 0 && (
           <RightPanel panelViews={staticPanelViews} defaultView={rightPanel?.defaultView} />
         )}
       </div>
-      {isMobile && hasDrawerContent && <MobileBottomNav items={navItems} />}
-      {isMobile && hasDrawerContent && (
-        <MobileDrawers
-          menuItems={mobileMenuItems}
-          menuActiveId={iconRail?.activeId}
-          menuRenderLink={iconRail?.renderLink}
-          workspaceMenuItems={workspace?.menuItems}
-          workspaceMenuFooter={workspace?.menuFooter}
-          module={contextRail?.module}
-          moduleAppId={contextRail?.appId}
-          moduleActiveItemId={contextRail?.activeItemId}
-          moduleRenderLink={contextRail?.renderLink}
-          moduleHeader={contextRail?.header}
-          moduleScroll={contextRail?.scroll}
-          sectionTabs={headerLeading}
-          panelViews={resolvedRightPanel.panelViews}
-          defaultView={resolvedRightPanel.defaultView}
-        />
+      {/* Mobile nav: opt-in floating dock + workspace sheet, else the legacy
+          bottom-nav + drawers. */}
+      {isMobile && mobileNav ? (
+        <>
+          <MobileDock
+            items={mobileNav.dock}
+            activeTo={mobileNav.activeTo}
+            renderLink={mobileNav.renderLink}
+          />
+          <MobileWorkspaceSheet
+            tree={mobileNav.tree}
+            activeTo={mobileNav.activeTo}
+            renderLink={mobileNav.renderLink}
+            workspaceMenuItems={workspace?.menuItems}
+            workspaceMenuFooter={workspace?.menuFooter}
+          />
+        </>
+      ) : (
+        <>
+          {isMobile && hasDrawerContent && <MobileBottomNav items={navItems} />}
+          {isMobile && hasDrawerContent && (
+            <MobileDrawers
+              menuItems={mobileMenuItems}
+              menuActiveId={iconRail?.activeId}
+              menuRenderLink={iconRail?.renderLink}
+              workspaceMenuItems={workspace?.menuItems}
+              workspaceMenuFooter={workspace?.menuFooter}
+              module={contextRail?.module}
+              moduleAppId={contextRail?.appId}
+              moduleActiveItemId={contextRail?.activeItemId}
+              moduleRenderLink={contextRail?.renderLink}
+              moduleHeader={contextRail?.header}
+              moduleScroll={contextRail?.scroll}
+              sectionTabs={headerLeading}
+              panelViews={resolvedRightPanel.panelViews}
+              defaultView={resolvedRightPanel.defaultView}
+            />
+          )}
+        </>
       )}
     </div>
   );
