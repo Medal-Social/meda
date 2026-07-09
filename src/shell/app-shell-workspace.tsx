@@ -166,6 +166,7 @@ export function AppShellWorkspace({
             items={mobileNav.dock}
             activeTo={mobileNav.activeTo}
             renderLink={mobileNav.renderLink}
+            variant={mobileNav.variant}
           />
           <MobileWorkspaceSheet
             tree={mobileNav.tree}
