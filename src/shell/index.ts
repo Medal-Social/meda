@@ -96,4 +96,4 @@ export type {
   WorkspaceDefinition,
   WorkspaceMenuItem,
 } from './types.js';
-export { useShellViewport } from './use-shell-viewport.js';
+export { ShellViewportHintContext, useShellViewport } from './use-shell-viewport.js';
