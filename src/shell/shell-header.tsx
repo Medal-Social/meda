@@ -414,6 +414,7 @@ export function ShellHeader({
   if (headerCenter !== undefined) {
     return (
       <header
+        data-meda-shell-header=""
         className={cn(
           'grid h-[var(--shell-header-height)] w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center',
           'gap-4 bg-background px-4',
@@ -437,6 +438,7 @@ export function ShellHeader({
 
   return (
     <header
+      data-meda-shell-header=""
       className={cn(
         'flex h-[var(--shell-header-height)] w-full items-center justify-between',
         'gap-4 bg-background px-4',

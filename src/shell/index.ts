@@ -58,6 +58,10 @@ export { ShellMain } from './shell-main.js';
 export type { MedaShellProviderProps } from './shell-provider.js';
 // Provider + hooks
 export { MedaShellProvider, useMedaShell, useShellSelection } from './shell-provider.js';
+export {
+  ShellViewportHintProvider,
+  type ShellViewportHintProviderProps,
+} from './shell-viewport-hint.js';
 // Theme
 export { DefaultThemeProvider, ThemeToggle, useTheme } from './theme.js';
 export { NextThemesAdapter } from './theme-next-themes.js';
@@ -96,4 +100,4 @@ export type {
   WorkspaceDefinition,
   WorkspaceMenuItem,
 } from './types.js';
-export { useShellViewport } from './use-shell-viewport.js';
+export { ShellViewportHintContext, useShellViewport } from './use-shell-viewport.js';
