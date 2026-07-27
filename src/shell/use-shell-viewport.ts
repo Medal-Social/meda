@@ -18,15 +18,23 @@ type MatchMedia = (query: string) => MediaQueryList;
  * The server cannot measure the window, so by default server output (and the
  * hydration snapshot) assumes 'desktop' — on phones that means the desktop
  * shell is the first HTML on screen. Apps that can classify the request
- * (Sec-CH-UA-Mobile, User-Agent markers) may provide a coarse band here to
- * emit the right chrome from the first byte:
+ * (Sec-CH-UA-Mobile, User-Agent markers) may supply a coarse band to emit the
+ * right chrome from the first byte.
  *
- *   <ShellViewportHintContext.Provider value={isPhoneRequest ? 'mobile' : null}>
+ * Render the hint through the `ShellViewportHintProvider` client component
+ * rather than this context directly: React Context providers cannot be
+ * rendered from a React Server Component, so an App Router server component —
+ * where request headers are available — has to go through a client wrapper.
+ *
+ *   // app/layout.tsx — server component
+ *   <ShellViewportHintProvider value={isPhoneRequest ? 'mobile' : null}>
  *     <AppShell ... />
- *   </ShellViewportHintContext.Provider>
+ *   </ShellViewportHintProvider>
  *
- * The hint is used ONLY as the server/hydration snapshot; matchMedia owns the
- * value from hydration onward. `null` keeps the desktop-first default.
+ * The context stays exported for client-side consumers that already own a
+ * provider tree (and for tests). The hint feeds ONLY the server/hydration
+ * snapshot; matchMedia owns the value from hydration onward, and `null` keeps
+ * the desktop-first default.
  */
 export const ShellViewportHintContext = createContext<ShellViewport | null>(null);
 

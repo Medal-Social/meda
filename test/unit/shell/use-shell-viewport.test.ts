@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ShellViewportHintProvider } from '../../../src/shell/shell-viewport-hint.js';
 import {
   ShellViewportHintContext,
   useShellViewport,
@@ -193,5 +194,38 @@ describe('ShellViewportHintContext', () => {
     const { result } = renderHook(() => useShellViewport(), { wrapper: hintWrapper('mobile') });
     act(() => {});
     expect(result.current).toBe('desktop');
+  });
+});
+
+describe('ShellViewportHintProvider', () => {
+  function Probe() {
+    return createElement('span', null, useShellViewport());
+  }
+
+  // The component exists because React Context providers cannot be rendered
+  // from a Server Component — an App Router server component (the only place
+  // request headers are available) must go through this client wrapper.
+  it('supplies the hinted band to the server render', () => {
+    const html = renderToString(
+      createElement(ShellViewportHintProvider, { value: 'mobile' }, createElement(Probe))
+    );
+    expect(html).toContain('mobile');
+  });
+
+  it('keeps the desktop default when passed a null hint', () => {
+    const html = renderToString(
+      createElement(ShellViewportHintProvider, { value: null }, createElement(Probe))
+    );
+    expect(html).toContain('desktop');
+  });
+
+  it('defers to matchMedia on the client', () => {
+    mockMatchMedia(QUERIES.tablet);
+    const { result } = renderHook(() => useShellViewport(), {
+      wrapper: ({ children }: { children: ReactNode }) =>
+        createElement(ShellViewportHintProvider, { value: 'mobile' }, children),
+    });
+    act(() => {});
+    expect(result.current).toBe('tablet');
   });
 });
