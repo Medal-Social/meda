@@ -148,8 +148,11 @@ export function AppShellWorkspace({
           layout={mainLayout ?? 'workspace'}
           className={cn(
             mainClassName,
-            // Pad the scroll area so the floating dock never covers content.
-            isMobile && mobileNav && 'pb-[calc(env(safe-area-inset-bottom)+80px)]'
+            // Pad the scroll area so the dock never covers content. 64px is
+            // the bar-variant dock's intrinsic height (py-2 + 25px icon +
+            // label) — the previous 80px over-reserved 16px of permanently
+            // unreachable space at the bottom of every mobile surface.
+            isMobile && mobileNav && 'pb-[calc(env(safe-area-inset-bottom)+64px)]'
           )}
         >
           {children}
