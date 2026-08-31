@@ -66,7 +66,7 @@ export function MobileDock({
       const isActive = Boolean(item.to && activeTo && item.to === activeTo);
       const isBrand = item.emphasis === 'brand';
       const iconEl = isBrand ? (
-        <span className="flex size-8 items-center justify-center rounded-full bg-[#5B2D8C] text-white">
+        <span className="flex size-8 items-center justify-center rounded-full bg-[var(--color-brand-600)] text-white">
           {renderIcon(item.icon, 20)}
         </span>
       ) : (
@@ -234,7 +234,7 @@ export function MobileDock({
       {brandItems.map((item) => (
         <span
           key={item.id}
-          className="pointer-events-auto flex size-11 items-center justify-center rounded-full bg-[#5B2D8C] text-white shadow-[0_6px_20px_rgba(91,45,140,0.35)]"
+          className="pointer-events-auto flex size-11 items-center justify-center rounded-full bg-[var(--color-brand-600)] text-white shadow-[0_6px_20px_rgba(91,45,140,0.35)]"
         >
           {renderSlot(item, 22)}
         </span>
