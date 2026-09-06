@@ -38,6 +38,8 @@ describe('Next.js consumer fixture', () => {
           cwd: FIXTURE_DIR,
           encoding: 'utf8',
           timeout: 120_000,
+          // Windows: pnpm/next are .cmd shims — spawnSync needs a shell to run them.
+          shell: process.platform === 'win32',
         }
       );
 
@@ -57,6 +59,7 @@ describe('Next.js consumer fixture', () => {
           cwd: FIXTURE_DIR,
           encoding: 'utf8',
           timeout: 120_000,
+          shell: process.platform === 'win32',
           env: {
             ...process.env,
             // Suppress Next.js telemetry noise in CI.

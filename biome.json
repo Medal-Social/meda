@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
   "files": {
     "includes": [
       "**",
@@ -12,14 +12,15 @@
       "!**/registry/r",
       "!**/storybook-static",
       "!test/fixtures/**/node_modules",
-      "!test/fixtures/**/.next"
+      "!test/fixtures/**/.next",
+      "!test/fixtures/**/next-env.d.ts"
     ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "correctness": {
         "noUnusedVariables": "error",
         "noUnusedImports": "error",
