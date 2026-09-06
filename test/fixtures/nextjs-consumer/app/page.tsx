@@ -1,22 +1,17 @@
-// This is an App Router server component.
-// It mounts <MedaShellProvider> + <AppShell> from @medalsocial/meda/shell.
-// Both carry 'use client' directives in dist output; Next.js traces them and
-// applies the boundary at the underlying component files (the barrel itself
-// no longer carries the directive — see src/shell/index.ts comment for why).
-import { AppShell, AppShellBody, MedaShellProvider } from '@medalsocial/meda/shell';
-import { Inbox } from 'lucide-react';
+// This is an App Router server component. It renders the client shell
+// wrapper (app/shell.tsx), which mounts <MedaShellProvider> + <AppShell>
+// from @medalsocial/meda/shell — matching the package's documented Next.js
+// recipe (@medalsocial/meda/recipes/next): the client wrapper owns the
+// non-serializable shell wiring, server pages pass children through the
+// boundary. The meda components themselves carry 'use client' in dist
+// output; Next.js traces them and applies the boundary at the underlying
+// component files.
+import { ConsumerShell } from './shell';
 
 export default function Page() {
   return (
-    <MedaShellProvider
-      workspace={{ id: 'ws-test', name: 'Test', icon: 'W' }}
-      apps={[{ id: 'app-test', label: 'Test', icon: Inbox }]}
-    >
-      <AppShell>
-        <AppShellBody>
-          <main>content</main>
-        </AppShellBody>
-      </AppShell>
-    </MedaShellProvider>
+    <ConsumerShell>
+      <main>content</main>
+    </ConsumerShell>
   );
 }

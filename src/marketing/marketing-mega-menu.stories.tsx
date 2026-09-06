@@ -9,7 +9,9 @@ const meta = {
   args: {
     triggerId: 'products-trigger',
     open: true,
-    onOpenChange: () => {},
+    onOpenChange: () => {
+      // controlled-open story: open state is fixed by args
+    },
     features: [
       {
         id: 'a',
