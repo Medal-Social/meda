@@ -30,6 +30,11 @@ jobs:
 
       - run: pnpm lint
 
+      # Guards the design-token rules (no raw hex, no ad-hoc --meda-* vars) in
+      # src/shell. It lives in the "quality" script, but "quality" never ran in
+      # CI, so the script sat broken on a missing fast-glob dependency unnoticed.
+      - run: pnpm lint:tokens
+
       - run: pnpm typecheck
 
       - run: pnpm check:stories
