@@ -3,17 +3,17 @@
    ============================================================ */
 :root {
   /* Brand color scale — used for accents, not backgrounds */
-  --color-brand-50: #f5f3f7;
-  --color-brand-100: #e8e4ed;
-  --color-brand-200: #d4cce0;
-  --color-brand-300: #b9a8cc;
-  --color-brand-400: #9f5fc8;
-  --color-brand-500: #7e3fac;
-  --color-brand-600: #5b2d8c;
-  --color-brand-700: #3b1d6c;
-  --color-brand-800: #2d1650;
-  --color-brand-900: #1a1035;
-  --color-brand-950: #0a0510;
+  --color-brand-50: #fafafd;
+  --color-brand-100: #f0ebf7;
+  --color-brand-200: #d9cde8;
+  --color-brand-300: #b39acf;
+  --color-brand-400: #8b5fb8;
+  --color-brand-500: #5b2d8c;
+  --color-brand-600: #4a1f73;
+  --color-brand-700: #341456;
+  --color-brand-800: #1a0035;
+  --color-brand-900: #140028;
+  --color-brand-950: #0a0018;
 
   /* Accent colors */
   --color-accent-magenta: #c026d3;
@@ -87,8 +87,8 @@
   --foreground: oklch(0.19 0.013 285.82);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.19 0.013 285.82);
-  --primary: var(--color-brand-500);
-  --primary-foreground: #ffffff;
+  --primary: var(--color-brand-800);
+  --primary-foreground: var(--color-brand-50);
   --secondary: oklch(0.93 0.01 285.82);
   --secondary-foreground: oklch(0.4 0.03 285.82);
   --muted: oklch(0.93 0.01 285.82);
@@ -97,7 +97,7 @@
   --accent-foreground: oklch(0.4 0.03 285.82);
   --border: oklch(0.88 0.025 285.82);
   --input: oklch(0.88 0.025 285.82);
-  --ring: var(--color-brand-500);
+  --ring: var(--color-brand-600);
 }
 
 /* ============================================================

@@ -1,13 +1,13 @@
 import { create } from 'storybook/theming';
 
 const brand = {
-  purple100: '#eeeaf5',
-  purple200: '#dcd4e8',
-  purple300: '#b8a3d2',
-  purple400: '#9a6ac2',
-  purple500: '#7e3fac',
-  purple600: '#6a2e96',
-  purple800: '#2f1552',
+  purple100: '#f0ebf7',
+  purple200: '#d9cde8',
+  purple300: '#b39acf',
+  purple400: '#8b5fb8',
+  purple500: '#5b2d8c',
+  purple600: '#4a1f73',
+  purple800: '#1a0035',
   rose400: '#fb7185',
   medalBackground: 'hsl(0, 0%, 10%)',
   medalMark: 'hsl(0, 0%, 90%)',
@@ -203,7 +203,7 @@ export const medaManagerStyles = `
        prominent row, and so icons rendered at brand-200 keep ≥7:1 against
        the surface. */
     background:
-      linear-gradient(90deg, rgba(126, 63, 172, 0.45), rgba(47, 21, 82, 0.95)),
+      linear-gradient(90deg, rgba(91, 45, 140, 0.45), rgba(26, 0, 53, 0.95)),
       var(--meda-sidebar-selected) !important;
     box-shadow:
       inset 3px 0 0 var(--meda-sidebar-accent),

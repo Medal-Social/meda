@@ -16,7 +16,7 @@ describe('Swatch', () => {
   });
 
   it('shows a hex value when provided', () => {
-    render(<Swatch name="brand-500" cssVar="--color-brand-500" hex="#7e3fac" />);
-    expect(screen.getByText('#7e3fac')).toBeInTheDocument();
+    render(<Swatch name="brand-500" cssVar="--color-brand-500" hex="#5b2d8c" />);
+    expect(screen.getByText('#5b2d8c')).toBeInTheDocument();
   });
 });

@@ -1,30 +1,30 @@
 /* ============================================================
-   Meda design tokens — canonical from 00-design-system.lib.pen
-   Source: /Users/ali/Library/CloudStorage/GoogleDrive-ali@medalsocial.com/
-           Delte disker/03 Product/Pencil Design/00-design-system.lib.pen
-   Retrieved via mcp__pencil__get_variables 2026-04-27.
+   Meda design tokens — logo-anchored aubergine brand ramp (2026-09-19).
 
-   NOTE: 00-design-system.pen and 050-meda-ui.pen are illustrative
-   companion boards — not normative. This file is derived from the
-   .lib.pen (library file) which is the sole canonical contract.
+   Historical source: 00-design-system.lib.pen (Pencil). The CSS ramp below
+   is now the shipping contract for app + site. Pencil lib still needs a
+   manual sync — do not treat .pen binaries as auto-updated from this file.
+
+   Light --primary maps to brand-800 (logo near-black aubergine), NOT
+   brand-500 (mid vibrant). Success stays teal; never cyan as brand.
    ============================================================ */
 
 /* ============================================================
    Layer 0 — Color primitives (theme: brand, constant)
    ============================================================ */
 :root {
-  /* Brand (purple) — 11 stops */
+  /* Brand (aubergine) — 11 stops, logo-anchored */
   --color-brand-50: #fafafd;
-  --color-brand-100: #eeeaf5;
-  --color-brand-200: #dcd4e8;
-  --color-brand-300: #b8a3d2;
-  --color-brand-400: #9a6ac2;
-  --color-brand-500: #7e3fac;
-  --color-brand-600: #6a2e96;
-  --color-brand-700: #482070;
-  --color-brand-800: #2f1552;
-  --color-brand-900: #1c0e38;
-  --color-brand-950: #120a24;
+  --color-brand-100: #f0ebf7;
+  --color-brand-200: #d9cde8;
+  --color-brand-300: #b39acf;
+  --color-brand-400: #8b5fb8;
+  --color-brand-500: #5b2d8c;
+  --color-brand-600: #4a1f73;
+  --color-brand-700: #341456;
+  --color-brand-800: #1a0035;
+  --color-brand-900: #140028;
+  --color-brand-950: #0a0018;
 
   /* Neutral (zinc-aligned) — 11 stops */
   --color-neutral-50: #fafafa;

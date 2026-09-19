@@ -20,7 +20,7 @@ export type { VoiceOrbVariant } from './voice-orb-scene.js';
 
 // Fallback colors used only if CSS custom properties fail to resolve.
 // Both values are from the canonical brand ramp (.lib.pen):
-//   brand-400 (#9A6AC2) and brand-500 (#7E3FAC).
+//   brand-400 (#8B5FB8) and brand-500 (#5B2D8C).
 // Runtime path reads --primary and --accent first.
 const FALLBACK_COLOR = '#9A6AC2'; // brand-400
 
@@ -89,7 +89,7 @@ function readMedaColors(el: HTMLElement): [string, string] {
   return [colorA, colorB];
 }
 
-const DEFAULT_COLORS: [string, string] = ['#9A6AC2', '#7E3FAC']; // brand-400 → brand-500
+const DEFAULT_COLORS: [string, string] = ['#8B5FB8', '#5B2D8C']; // brand-400 → brand-500
 
 // ---------------------------------------------------------------------------
 // Props
