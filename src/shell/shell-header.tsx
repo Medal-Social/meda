@@ -11,9 +11,15 @@ import {
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu.js';
 import { cn } from '../lib/utils.js';
+import type { IconRailLabelVisibility } from './icon-rail.js';
 import { useMedaShell } from './shell-provider.js';
 import { useTheme } from './theme.js';
-import type { AppShellAppTabsConfig, PanelView, WorkspaceMenuItem } from './types.js';
+import type {
+  AppShellAppTabsConfig,
+  PanelView,
+  ShellHeaderLayout,
+  WorkspaceMenuItem,
+} from './types.js';
 import { useShellViewport } from './use-shell-viewport.js';
 
 // ---------------------------------------------------------------------------
@@ -47,6 +53,16 @@ function ThemeToggleMenuItem() {
 // WorkspaceSwitcher
 // ---------------------------------------------------------------------------
 
+/**
+ * WorkspaceSwitcher trigger shape.
+ *
+ * - `chip` (default, unchanged) — a horizontal button: mark · name · chevron.
+ * - `tile` — a full-width, rail-column button: the mark centred on the rail's
+ *   axis with the workspace name beneath it in the icon-rail label type. Used
+ *   by `<ShellHeader headerLayout="rail">`.
+ */
+export type WorkspaceSwitcherVariant = 'chip' | 'tile';
+
 export interface WorkspaceSwitcherProps {
   /**
    * Configurable dropdown items. When provided, REPLACES the default
@@ -64,6 +80,18 @@ export interface WorkspaceSwitcherProps {
   menuFooter?: ReactNode;
   /** @deprecated Use `menuFooter` instead. */
   workspaceMenuFooter?: ReactNode;
+  /**
+   * Trigger presentation. Defaults to `chip` — the 1.x/2.x horizontal button.
+   * The dropdown content and behaviour are identical in both variants.
+   */
+  variant?: WorkspaceSwitcherVariant;
+  /**
+   * `tile` variant only — render the workspace name under the mark. Pass
+   * `false` when the icon rail is icon-only (`labelVisibility: 'tooltip'`) so
+   * the tile matches the narrow rail. Ignored by the `chip` variant, whose
+   * name is never hidden. Defaults to `true`.
+   */
+  showLabel?: boolean;
 }
 
 /* v8 ignore next 9 — v8 phantom duplicate function record for renderShellIcon */
@@ -110,19 +138,60 @@ function renderConfiguredItem(item: WorkspaceMenuItem): ReactNode {
   );
 }
 
+/** Mark fallback for the tile variant when the workspace carries no icon. */
+function workspaceInitial(name: string): string {
+  return name.trim().charAt(0).toUpperCase();
+}
+
 /* v8 ignore next — v8 phantom duplicate function record for WorkspaceSwitcher (default params) */
 export function WorkspaceSwitcher({
   menuItems,
   menuFooter,
   workspaceMenuFooter,
+  variant = 'chip',
+  showLabel = true,
 }: WorkspaceSwitcherProps = {}) {
   const { workspace, workspaces } = useMedaShell();
   const resolvedFooter = menuFooter ?? workspaceMenuFooter;
   const useConfiguredItems = Array.isArray(menuItems);
 
-  return (
-    <DropdownMenu>
+  // The tile sits in the header's rail column: the mark is the only
+  // flow-level child, so it stays centred on the rail's axis, and the chevron
+  // hangs off it absolutely rather than pushing it sideways.
+  const trigger =
+    variant === 'tile' ? (
       <DropdownMenuTrigger
+        data-meda-workspace-switcher="tile"
+        render={
+          <button
+            type="button"
+            aria-label={`${workspace.name} workspace menu`}
+            className="flex w-full min-w-0 flex-col items-center gap-1 rounded-lg px-1 py-1 hover:bg-accent"
+          />
+        }
+      >
+        <span className="relative inline-flex shrink-0" aria-hidden="true">
+          <span className="inline-flex size-8 items-center justify-center overflow-hidden rounded-lg bg-muted text-foreground text-sm font-semibold ring-1 ring-border/70">
+            {workspace.icon ?? workspaceInitial(workspace.name)}
+          </span>
+          <ChevronDown
+            size={12}
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-1.5 -bottom-1 rounded-full bg-background text-muted-foreground"
+          />
+        </span>
+        {showLabel && (
+          <span
+            data-slot="icon-rail-label"
+            className="line-clamp-2 max-w-full text-center font-medium text-[12px] leading-4 [@media(max-height:850px)]:text-[11px] [@media(max-height:700px)]:hidden"
+          >
+            {workspace.name}
+          </span>
+        )}
+      </DropdownMenuTrigger>
+    ) : (
+      <DropdownMenuTrigger
+        data-meda-workspace-switcher="chip"
         render={
           <button
             type="button"
@@ -141,6 +210,11 @@ export function WorkspaceSwitcher({
         <span className="max-w-[13rem] truncate">{workspace.name}</span>
         <ChevronDown size={16} aria-hidden="true" />
       </DropdownMenuTrigger>
+    );
+
+  return (
+    <DropdownMenu>
+      {trigger}
 
       <DropdownMenuContent className="min-w-[240px]">
         {/* Workspace list */}
@@ -367,7 +441,8 @@ export interface ShellHeaderProps {
   globalActions?: ReactNode;
   /**
    * Optional center-region content. Replaces the default application tabs when
-   * provided.
+   * provided. IGNORED when `headerLayout="rail"` — that layout has no centre
+   * column; put the content in `headerLeading` instead.
    */
   headerCenter?: ReactNode;
   /**
@@ -386,6 +461,20 @@ export interface ShellHeaderProps {
   showPanelToggle?: boolean;
   /** Panel views forwarded to the header `<PanelToggle>` dropdown. */
   panelViews?: PanelView[];
+  /**
+   * Header grid. `split` (default) is the pre-2.8 markup, unchanged. `rail`
+   * switches to `[rail column | fill | actions]` — see `ShellHeaderLayout`.
+   */
+  headerLayout?: ShellHeaderLayout;
+  /**
+   * The icon rail's label mode, so the `rail` layout can size its first column
+   * to the rail below it (`--shell-rail-label-width` when the rail shows
+   * labels, `--shell-rail-width` when it does not) and hide the tile's
+   * workspace name in icon-only mode. Mirror `iconRail.labelVisibility`.
+   * Defaults to `tooltip`, matching `IconRail`'s own default. Unused by the
+   * `split` layout.
+   */
+  railLabelVisibility?: IconRailLabelVisibility;
 }
 
 /* v8 ignore next — v8 phantom duplicate function record for ShellHeader (default params) */
@@ -399,6 +488,8 @@ export function ShellHeader({
   workspaceMenuFooter,
   showPanelToggle = true,
   panelViews = [],
+  headerLayout = 'split',
+  railLabelVisibility = 'tooltip',
 }: ShellHeaderProps = {}) {
   const band = useShellViewport();
   if (band === 'mobile') return null;
@@ -411,9 +502,44 @@ export function ShellHeader({
       <div className="ml-2 flex min-w-0 items-center">{headerLeading}</div>
     ) : null;
 
+  // Rail layout: column 1 is exactly the icon rail's width, so the switcher
+  // tile sits on the rail's axis and `headerLeading` starts precisely where
+  // the main region starts below. No left padding, `pr-4` on the right.
+  if (headerLayout === 'rail') {
+    return (
+      <header
+        data-meda-shell-header=""
+        data-meda-header-layout="rail"
+        className={cn(
+          'grid h-[var(--shell-header-height)] w-full items-center bg-background pr-4',
+          railLabelVisibility === 'visible'
+            ? 'grid-cols-[var(--shell-rail-label-width)_minmax(0,1fr)_auto]'
+            : 'grid-cols-[var(--shell-rail-width)_minmax(0,1fr)_auto]',
+          className
+        )}
+      >
+        <div className="flex min-w-0 items-center justify-center px-1">
+          <WorkspaceSwitcher
+            menuItems={workspaceMenuItems}
+            menuFooter={workspaceMenuFooter}
+            variant="tile"
+            showLabel={railLabelVisibility === 'visible'}
+          />
+        </div>
+        <div className="flex min-w-0 items-center">{headerLeading}</div>
+        <div className="flex shrink-0 items-center gap-2 justify-self-end pl-4">
+          {globalActions}
+          {showPanelToggle && <PanelToggle panelViews={panelViews} />}
+        </div>
+      </header>
+    );
+  }
+
   if (headerCenter !== undefined) {
     return (
       <header
+        data-meda-shell-header=""
+        data-meda-header-layout="split"
         className={cn(
           'grid h-[var(--shell-header-height)] w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center',
           'gap-4 bg-background px-4',
@@ -437,6 +563,8 @@ export function ShellHeader({
 
   return (
     <header
+      data-meda-shell-header=""
+      data-meda-header-layout="split"
       className={cn(
         'flex h-[var(--shell-header-height)] w-full items-center justify-between',
         'gap-4 bg-background px-4',

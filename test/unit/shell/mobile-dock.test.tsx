@@ -105,6 +105,59 @@ describe('MobileDock', () => {
     expect(screen.queryByTestId('mobile-dock')).toBeNull();
   });
 
+  it('lights by app id when activeId is supplied, ignoring activeTo', () => {
+    render(
+      <Wrapper>
+        {/* The user is deeper inside Inbox, so activeTo no longer equals /inbox. */}
+        <MobileDock items={dockItems} activeTo="/inbox/thread/42" activeId="inbox" />
+      </Wrapper>
+    );
+    expect(screen.getByRole('link', { name: 'Inbox' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('keeps the activeTo comparison when activeId is omitted', () => {
+    render(
+      <Wrapper>
+        <MobileDock items={dockItems} activeTo="/inbox/thread/42" />
+      </Wrapper>
+    );
+    expect(screen.getByRole('link', { name: 'Inbox' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('lights an action slot only through activeId', () => {
+    const { unmount } = render(
+      <Wrapper>
+        <MobileDock items={dockItems} activeId="sheet" />
+      </Wrapper>
+    );
+    expect(screen.getByRole('button', { name: 'Open navigation' }).className).not.toContain(
+      'text-muted-foreground'
+    );
+    unmount();
+
+    render(
+      <Wrapper>
+        <MobileDock items={dockItems} activeTo="/home" />
+      </Wrapper>
+    );
+    expect(screen.getByRole('button', { name: 'Open navigation' }).className).toContain(
+      'text-muted-foreground'
+    );
+  });
+
+  it('lights by app id in the bar variant too', () => {
+    render(
+      <Wrapper>
+        <MobileDock items={dockItems} variant="bar" activeTo="/inbox/thread/42" activeId="inbox" />
+      </Wrapper>
+    );
+    const inbox = screen.getByRole('link', { name: 'Inbox' });
+    expect(inbox).toHaveAttribute('aria-current', 'page');
+    expect(inbox.className).toContain('text-primary');
+    expect(screen.getByRole('link', { name: 'Home' }).className).not.toContain('text-primary');
+  });
+
   it('renders a full-width labeled bar with a tinted active slot in the bar variant', () => {
     render(
       <Wrapper>

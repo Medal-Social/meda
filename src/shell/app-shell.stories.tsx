@@ -19,6 +19,8 @@ import type {
   AppDefinition,
   ContextItem,
   ContextModule,
+  MobileDockItem,
+  MobileNavTree,
   PanelView,
   WorkspaceDefinition,
 } from './types.js';
@@ -167,6 +169,36 @@ function SystemBanner() {
   );
 }
 
+const MOBILE_DOCK: MobileDockItem[] = [
+  { id: 'inbox', label: 'Inbox', icon: Inbox, to: '/inbox' },
+  { id: 'calendar', label: 'Calendar', icon: Calendar, to: '/calendar' },
+  { id: 'people', label: 'People', icon: Users, to: '/people' },
+  { id: 'nav', label: 'Open navigation', icon: Building2, action: 'open-sheet' },
+];
+const MOBILE_TREE: MobileNavTree = {
+  groups: [
+    {
+      id: 'work',
+      label: 'Work',
+      items: [
+        { id: 'calendar', label: 'Calendar', icon: Calendar, to: '/calendar' },
+        { id: 'people', label: 'People', icon: Users, to: '/people' },
+        {
+          id: 'inbox',
+          label: 'Inbox',
+          icon: Inbox,
+          to: '/inbox',
+          views: [
+            { id: 'priority', label: 'Priority', to: '/inbox?view=priority' },
+            { id: 'assigned', label: 'Assigned', to: '/inbox?view=assigned' },
+          ],
+        },
+      ],
+    },
+  ],
+  footerItems: [{ id: 'settings', label: 'Settings', icon: Settings, to: '/settings' }],
+};
+
 const ALL_VIEWPORTS = {
   desktop: { viewport: 1280 },
   ipad: { viewport: 768 },
@@ -281,6 +313,58 @@ export const Chat: Story = {
           integrations.
         </div>
       </div>
+    </AppShell>
+  ),
+};
+
+export const WorkspaceRailHeader: Story = {
+  parameters: { chromatic: { modes: ALL_VIEWPORTS } },
+  render: () => (
+    <AppShell
+      variant="workspace"
+      // `headerLayout="rail"` sizes the header's first column from the rail's
+      // own label mode, puts the workspace switcher there as a tile, and hands
+      // every remaining pixel to `headerLeading`. `headerCenter` is ignored.
+      headerLayout="rail"
+      iconRail={{
+        mainItems: RAIL_MAIN,
+        utilityItems: RAIL_UTILITY,
+        activeId: 'inbox',
+        labelVisibility: 'visible',
+      }}
+      headerLeading={<SectionTabs />}
+      workspace={{
+        menuItems: [
+          { id: 'settings', label: 'Settings', href: '/settings', icon: Settings },
+          { id: 'help', label: 'Help center', href: '/help', icon: HelpCircle },
+        ],
+      }}
+      // Panel views stay registered; only the header's toggle is dropped.
+      rightPanel={{ panelViews: PANEL_VIEWS, defaultView: 'inspector', showToggle: false }}
+      globalActions={
+        <button
+          type="button"
+          className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground"
+        >
+          + New
+        </button>
+      }
+      mobileNav={{
+        dock: MOBILE_DOCK,
+        tree: MOBILE_TREE,
+        activeTo: '/inbox/thread/42',
+        // The dock lights by APP, so it stays lit on every route inside Inbox,
+        // and the sheet opens with the Inbox row expanded and in view.
+        activeId: 'inbox',
+        currentFirst: true,
+        variant: 'bar',
+      }}
+    >
+      <h1 className="text-2xl font-semibold text-foreground mb-2">Inbox</h1>
+      <p className="text-muted-foreground">
+        Rail header — the switcher tile sits on the rail's axis and the section tabs own the rest of
+        the row, so they no longer shift with the workspace name.
+      </p>
     </AppShell>
   ),
 };

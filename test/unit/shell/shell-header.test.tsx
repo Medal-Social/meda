@@ -588,6 +588,211 @@ describe('ShellHeader — renders on desktop viewport', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// data-meda-shell-header — stable hook on BOTH layouts
+// ---------------------------------------------------------------------------
+
+describe('ShellHeader — data-meda-shell-header hook', () => {
+  it('marks the default split header', () => {
+    const { container } = renderWithProvider(<ShellHeader />);
+
+    const header = container.querySelector('[data-meda-shell-header]');
+    expect(header?.tagName).toBe('HEADER');
+    expect(header).toHaveAttribute('data-meda-header-layout', 'split');
+  });
+
+  it('marks the split header that has a headerCenter', () => {
+    const { container } = renderWithProvider(<ShellHeader headerCenter={<span>Centre</span>} />);
+
+    expect(container.querySelector('[data-meda-shell-header]')).toHaveAttribute(
+      'data-meda-header-layout',
+      'split'
+    );
+  });
+
+  it('marks the rail header', () => {
+    const { container } = renderWithProvider(<ShellHeader headerLayout="rail" />);
+
+    expect(container.querySelector('[data-meda-shell-header]')).toHaveAttribute(
+      'data-meda-header-layout',
+      'rail'
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// headerLayout="rail"
+// ---------------------------------------------------------------------------
+
+describe('ShellHeader — headerLayout="rail"', () => {
+  it('defaults to the split layout, leaving the existing markup untouched', () => {
+    const { container } = renderWithProvider(<ShellHeader />);
+
+    const header = container.querySelector('header');
+    expect(header?.className).toContain('flex');
+    expect(header?.className).not.toContain('--shell-rail-width');
+    // The chip switcher, not the tile.
+    expect(screen.getByRole('button', { name: /acme corp/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Acme Corp workspace menu' })).toBeNull();
+  });
+
+  it('sizes column 1 to the icon-only rail width by default', () => {
+    const { container } = renderWithProvider(<ShellHeader headerLayout="rail" />);
+
+    const header = container.querySelector('header');
+    expect(header?.className).toContain('grid-cols-[var(--shell-rail-width)_minmax(0,1fr)_auto]');
+    // No left padding; right padding only.
+    expect(header?.className).toContain('pr-4');
+    expect(header?.className).not.toContain('px-4');
+  });
+
+  it('sizes column 1 to the labelled rail width when the rail shows labels', () => {
+    const { container } = renderWithProvider(
+      <ShellHeader headerLayout="rail" railLabelVisibility="visible" />
+    );
+
+    expect(container.querySelector('header')?.className).toContain(
+      'grid-cols-[var(--shell-rail-label-width)_minmax(0,1fr)_auto]'
+    );
+  });
+
+  it('renders the switcher as a tile and gives headerLeading the fill column', () => {
+    renderWithProvider(
+      <ShellHeader headerLayout="rail" headerLeading={<nav aria-label="Section tabs">Inbox</nav>} />
+    );
+
+    expect(screen.getByRole('button', { name: 'Acme Corp workspace menu' })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Section tabs' })).toBeInTheDocument();
+  });
+
+  it('ignores headerCenter and never renders the default app tabs', () => {
+    renderWithProvider(
+      <ShellHeader headerLayout="rail" headerCenter={<nav aria-label="Centre tabs">Nope</nav>} />
+    );
+
+    expect(screen.queryByRole('navigation', { name: 'Centre tabs' })).toBeNull();
+    expect(screen.queryByRole('navigation', { name: 'Applications' })).toBeNull();
+  });
+
+  it('renders globalActions before the panel toggle in the actions column', () => {
+    renderWithProvider(
+      <ShellHeader headerLayout="rail" globalActions={<button type="button">Custom</button>} />
+    );
+
+    const customBtn = screen.getByRole('button', { name: 'Custom' });
+    const panelBtn = screen.getByRole('button', { name: /open right panel/i });
+    expect(customBtn.compareDocumentPosition(panelBtn) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+  });
+
+  it('honours showPanelToggle={false}', () => {
+    renderWithProvider(<ShellHeader headerLayout="rail" showPanelToggle={false} />);
+
+    expect(screen.queryByRole('button', { name: /right panel/i })).toBeNull();
+  });
+
+  it('hides the tile label in icon-only rail mode and shows it in labelled mode', () => {
+    const { unmount } = renderWithProvider(<ShellHeader headerLayout="rail" />);
+    expect(screen.queryByText('Acme Corp')).toBeNull();
+    unmount();
+
+    renderWithProvider(<ShellHeader headerLayout="rail" railLabelVisibility="visible" />);
+    expect(screen.getByText('Acme Corp')).toHaveAttribute('data-slot', 'icon-rail-label');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WorkspaceSwitcher — tile variant
+// ---------------------------------------------------------------------------
+
+describe('WorkspaceSwitcher — tile variant', () => {
+  it('names the trigger "<workspace> workspace menu" and shows the name beneath the mark', () => {
+    renderWithProvider(<WorkspaceSwitcher variant="tile" />);
+
+    const trigger = screen.getByRole('button', { name: 'Acme Corp workspace menu' });
+    expect(trigger).toHaveAttribute('data-meda-workspace-switcher', 'tile');
+    expect(screen.getByText('Acme Corp')).toHaveAttribute('data-slot', 'icon-rail-label');
+  });
+
+  it('falls back to the workspace initial when the workspace has no icon', () => {
+    renderWithProvider(<WorkspaceSwitcher variant="tile" />);
+
+    expect(screen.getByText('A')).toBeInTheDocument();
+  });
+
+  it('renders the workspace icon in the mark when one is set', () => {
+    render(
+      <MedaShellProvider
+        workspace={{
+          id: 'ws-icon',
+          name: 'Iconic WS',
+          icon: <span data-testid="tile-icon">I</span>,
+        }}
+        apps={apps}
+      >
+        <WorkspaceSwitcher variant="tile" />
+      </MedaShellProvider>
+    );
+
+    expect(screen.getByTestId('tile-icon')).toBeInTheDocument();
+  });
+
+  it('hides the name when showLabel is false', () => {
+    renderWithProvider(<WorkspaceSwitcher variant="tile" showLabel={false} />);
+
+    expect(screen.getByRole('button', { name: 'Acme Corp workspace menu' })).toBeInTheDocument();
+    expect(screen.queryByText('Acme Corp')).toBeNull();
+  });
+
+  it('opens the same dropdown content as the chip', () => {
+    renderWithProvider(<WorkspaceSwitcher variant="tile" />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Acme Corp workspace menu' }));
+
+    expect(screen.getByText('Beta LLC')).toBeInTheDocument();
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.getByText('Sign out')).toBeInTheDocument();
+    expect(screen.getByText(/switch to .* theme/i)).toBeInTheDocument();
+  });
+
+  it('forwards menuItems and menuFooter exactly like the chip', () => {
+    renderWithProvider(
+      <WorkspaceSwitcher
+        variant="tile"
+        menuItems={[{ id: 'a', label: 'Item A', onClick: () => {} }]}
+        menuFooter={<div>Tile footer</div>}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Acme Corp workspace menu' }));
+
+    expect(screen.getByText('Item A')).toBeInTheDocument();
+    expect(screen.getByText('Tile footer')).toBeInTheDocument();
+    expect(screen.queryByText('Manage workspaces')).toBeNull();
+  });
+
+  it('closes on Escape like the chip', () => {
+    renderWithProvider(<WorkspaceSwitcher variant="tile" />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Acme Corp workspace menu' }));
+    expect(screen.getByText('Sign out')).toBeInTheDocument();
+
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape', code: 'Escape' });
+
+    expect(screen.queryByText('Sign out')).toBeNull();
+  });
+
+  it('marks the default chip trigger for symmetry', () => {
+    renderWithProvider(<WorkspaceSwitcher />);
+
+    expect(screen.getByRole('button', { name: /acme corp/i })).toHaveAttribute(
+      'data-meda-workspace-switcher',
+      'chip'
+    );
+  });
+});
+
 describe('WorkspaceSwitcher — workspace.icon renders in trigger when set', () => {
   it('shows a workspace icon span when workspace.icon is a ReactNode', () => {
     const wsWithIcon: import('../../../src/shell/types.js').WorkspaceDefinition = {
