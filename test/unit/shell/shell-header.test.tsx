@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Menu, User } from 'lucide-react';
 import { memo } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -790,6 +790,116 @@ describe('WorkspaceSwitcher — tile variant', () => {
       'data-meda-workspace-switcher',
       'chip'
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WorkspaceSwitcher tile — bounded metrics + tooltip
+//
+// The tile has to fit inside `--shell-header-height` whatever a consumer sets
+// that token to; the web app runs a 52px header under its window-tab strip.
+// Budget: mark 28 + gap 2 + ONE 14px label line = 44px, and no vertical
+// padding that could push past it.
+// ---------------------------------------------------------------------------
+
+const LONG_WS: WorkspaceDefinition = {
+  id: 'ws-long',
+  name: 'Nordisk Medieproduksjon og Kommunikasjon AS',
+  icon: null,
+};
+
+describe('WorkspaceSwitcher tile — fits the header height', () => {
+  it('renders the workspace name on ONE truncated line, never a 2-line clamp', () => {
+    renderWithProvider(<WorkspaceSwitcher variant="tile" />);
+
+    const label = screen.getByText('Acme Corp');
+    expect(label).toHaveAttribute('data-slot', 'icon-rail-label');
+    // Single line: truncate (overflow-hidden + ellipsis + nowrap).
+    expect(label.className).toContain('truncate');
+    expect(label.className).not.toContain('line-clamp');
+    // 14px line box — two of these would already overflow a 52px header.
+    expect(label.className).toContain('leading-[14px]');
+  });
+
+  it('keeps a long workspace name on one line too', () => {
+    render(
+      <MedaShellProvider workspace={LONG_WS} apps={apps}>
+        <WorkspaceSwitcher variant="tile" />
+      </MedaShellProvider>
+    );
+
+    const label = screen.getByText(LONG_WS.name);
+    expect(label.className).toContain('truncate');
+    expect(label.className).not.toContain('line-clamp');
+    expect(label.className).toContain('max-w-full');
+  });
+
+  it('bounds the trigger: compact mark, no vertical padding, max-h-full', () => {
+    renderWithProvider(<WorkspaceSwitcher variant="tile" />);
+
+    const trigger = screen.getByRole('button', { name: 'Acme Corp workspace menu' });
+    expect(trigger.className).toContain('max-h-full');
+    expect(trigger.className).toContain('gap-0.5');
+    // No `py-*` / `pt-*` / `pb-*` — vertical padding is what spilled the tile
+    // past a 64px header in the first place.
+    expect(trigger.className).not.toMatch(/(^|\s)p[ytb]-/);
+    // size-7 mark (28px), not size-8.
+    const mark = trigger.querySelector('span > span');
+    expect(mark?.className).toContain('size-7');
+  });
+
+  it('leaves the chip variant metrics alone', () => {
+    renderWithProvider(<WorkspaceSwitcher />);
+
+    const trigger = screen.getByRole('button', { name: /acme corp/i });
+    expect(trigger.className).toContain('py-2');
+    expect(trigger.querySelector('span')?.className).toContain('truncate');
+  });
+});
+
+describe('WorkspaceSwitcher tile — tooltip carries the full name', () => {
+  async function hoverTile(container: HTMLElement) {
+    const tooltipTrigger = container.querySelector('[data-slot="tooltip-trigger"]');
+    expect(tooltipTrigger).not.toBeNull();
+    await act(async () => {
+      fireEvent.mouseEnter(tooltipTrigger as Element);
+    });
+  }
+
+  it('shows the workspace name on hover when the label is visible but may truncate', async () => {
+    const { container } = render(
+      <MedaShellProvider workspace={LONG_WS} apps={apps}>
+        <WorkspaceSwitcher variant="tile" />
+      </MedaShellProvider>
+    );
+
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    await hoverTile(container);
+    expect(screen.getByRole('tooltip')).toHaveTextContent(LONG_WS.name);
+  });
+
+  it('shows the workspace name on hover when showLabel is false', async () => {
+    const { container } = renderWithProvider(
+      <WorkspaceSwitcher variant="tile" showLabel={false} />
+    );
+
+    expect(screen.queryByText('Acme Corp')).toBeNull();
+    await hoverTile(container);
+    expect(screen.getByRole('tooltip')).toHaveTextContent('Acme Corp');
+  });
+
+  it('is reachable in the icon-only rail header, where the tile label is hidden', async () => {
+    const { container } = renderWithProvider(<ShellHeader headerLayout="rail" />);
+
+    expect(screen.queryByText('Acme Corp')).toBeNull();
+    await hoverTile(container);
+    expect(screen.getByRole('tooltip')).toHaveTextContent('Acme Corp');
+  });
+
+  it('does not add a tooltip to the chip variant', () => {
+    const { container } = renderWithProvider(<WorkspaceSwitcher />);
+
+    expect(container.querySelector('[data-slot="tooltip-trigger"]')).toBeNull();
   });
 });
 

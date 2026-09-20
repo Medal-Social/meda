@@ -10,6 +10,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu.js';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../components/ui/tooltip.js';
 import { cn } from '../lib/utils.js';
 import type { IconRailLabelVisibility } from './icon-rail.js';
 import { useMedaShell } from './shell-provider.js';
@@ -158,37 +164,61 @@ export function WorkspaceSwitcher({
   // The tile sits in the header's rail column: the mark is the only
   // flow-level child, so it stays centred on the rail's axis, and the chevron
   // hangs off it absolutely rather than pushing it sideways.
+  //
+  // Its intrinsic height is deliberately bounded — mark 28 + gap 2 + one 14px
+  // label line = 44px, with NO vertical padding — so it fits inside
+  // `--shell-header-height` even when a consumer tightens that token (the web
+  // app runs a 52px header under its window-tab strip). `max-h-full` plus the
+  // rail column's `overflow-hidden` is the belt-and-braces guard.
+  const tileTrigger = (
+    <DropdownMenuTrigger
+      data-meda-workspace-switcher="tile"
+      render={
+        <button
+          type="button"
+          aria-label={`${workspace.name} workspace menu`}
+          className="flex max-h-full w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 hover:bg-accent"
+        />
+      }
+    >
+      <span className="relative inline-flex shrink-0" aria-hidden="true">
+        <span className="inline-flex size-7 items-center justify-center overflow-hidden rounded-lg bg-muted text-[13px] text-foreground font-semibold ring-1 ring-border/70">
+          {workspace.icon ?? workspaceInitial(workspace.name)}
+        </span>
+        <ChevronDown
+          size={11}
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-1.5 -bottom-1 rounded-full bg-background text-muted-foreground"
+        />
+      </span>
+      {showLabel && (
+        <span
+          data-slot="icon-rail-label"
+          className="max-w-full truncate text-center font-medium text-[11px] leading-[14px] [@media(max-height:700px)]:hidden"
+        >
+          {workspace.name}
+        </span>
+      )}
+    </DropdownMenuTrigger>
+  );
+
   const trigger =
     variant === 'tile' ? (
-      <DropdownMenuTrigger
-        data-meda-workspace-switcher="tile"
-        render={
-          <button
-            type="button"
-            aria-label={`${workspace.name} workspace menu`}
-            className="flex w-full min-w-0 flex-col items-center gap-1 rounded-lg px-1 py-1 hover:bg-accent"
-          />
-        }
-      >
-        <span className="relative inline-flex shrink-0" aria-hidden="true">
-          <span className="inline-flex size-8 items-center justify-center overflow-hidden rounded-lg bg-muted text-foreground text-sm font-semibold ring-1 ring-border/70">
-            {workspace.icon ?? workspaceInitial(workspace.name)}
-          </span>
-          <ChevronDown
-            size={12}
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-1.5 -bottom-1 rounded-full bg-background text-muted-foreground"
-          />
-        </span>
-        {showLabel && (
-          <span
-            data-slot="icon-rail-label"
-            className="line-clamp-2 max-w-full text-center font-medium text-[12px] leading-4 [@media(max-height:850px)]:text-[11px] [@media(max-height:700px)]:hidden"
-          >
-            {workspace.name}
-          </span>
-        )}
-      </DropdownMenuTrigger>
+      // The tile's visible label is single-line-truncated, hidden below 700px
+      // viewport height (the same tier at which every icon-rail label hides),
+      // and absent entirely when `showLabel` is false. So the full workspace
+      // name always stays reachable through the same tooltip mechanism the
+      // rail uses — rendered unconditionally, which is a superset of the
+      // rail's `!showLabel || isShortViewport` rule and also covers the case
+      // the rail never has: a visible-but-truncated long name.
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger render={<span className="flex max-h-full w-full min-w-0" />}>
+            {tileTrigger}
+          </TooltipTrigger>
+          <TooltipContent side="bottom">{workspace.name}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     ) : (
       <DropdownMenuTrigger
         data-meda-workspace-switcher="chip"
@@ -518,7 +548,11 @@ export function ShellHeader({
           className
         )}
       >
-        <div className="flex min-w-0 items-center justify-center px-1">
+        {/* h-full gives the tile's `max-h-full` a definite box to measure
+            against; overflow-hidden means nothing in this column can ever
+            paint past the header, whatever `--shell-header-height` is set to.
+            Both the menu and the tooltip are portalled, so neither is clipped. */}
+        <div className="flex h-full min-w-0 items-center justify-center overflow-hidden px-1">
           <WorkspaceSwitcher
             menuItems={workspaceMenuItems}
             menuFooter={workspaceMenuFooter}

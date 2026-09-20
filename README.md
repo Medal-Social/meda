@@ -137,6 +137,20 @@ actions:
 - Column 3 is `globalActions` plus the panel toggle.
 - `headerCenter` is **ignored** in this layout — there is no centre column.
 
+The tile is metered to **44px** — a 28px mark, a 2px gap and ONE 14px label line, with no vertical
+padding — and carries `max-h-full` inside an `overflow-hidden` column. So it fits whatever you set
+`--shell-header-height` to, down to 52px (the web app runs 52px under its desktop window-tab
+strip), and can never paint past the header:
+
+```css
+/* a tighter header — the tile follows it */
+:root { --shell-header-height: 52px; }
+```
+
+Because the label is truncated to one line — and hidden entirely below 700px viewport height, the
+same tier at which every icon-rail label hides — the full workspace name is always recoverable two
+other ways: the tile's tooltip, and its accessible name (`"<workspace> workspace menu"`).
+
 Both layouts put `data-meda-shell-header` on the `<header>` (with
 `data-meda-header-layout="split" | "rail"`), so consumer CSS and tests can target the header
 without depending on its structure.

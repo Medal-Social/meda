@@ -11,7 +11,7 @@ import {
   Settings,
   Users,
 } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { AppShell } from './app-shell.js';
 import { PanelViewsProvider } from './panel-views-provider.js';
 import { MedaShellProvider, useMedaShell } from './shell-provider.js';
@@ -320,52 +320,60 @@ export const Chat: Story = {
 export const WorkspaceRailHeader: Story = {
   parameters: { chromatic: { modes: ALL_VIEWPORTS } },
   render: () => (
-    <AppShell
-      variant="workspace"
-      // `headerLayout="rail"` sizes the header's first column from the rail's
-      // own label mode, puts the workspace switcher there as a tile, and hands
-      // every remaining pixel to `headerLeading`. `headerCenter` is ignored.
-      headerLayout="rail"
-      iconRail={{
-        mainItems: RAIL_MAIN,
-        utilityItems: RAIL_UTILITY,
-        activeId: 'inbox',
-        labelVisibility: 'visible',
-      }}
-      headerLeading={<SectionTabs />}
-      workspace={{
-        menuItems: [
-          { id: 'settings', label: 'Settings', href: '/settings', icon: Settings },
-          { id: 'help', label: 'Help center', href: '/help', icon: HelpCircle },
-        ],
-      }}
-      // Panel views stay registered; only the header's toggle is dropped.
-      rightPanel={{ panelViews: PANEL_VIEWS, defaultView: 'inspector', showToggle: false }}
-      globalActions={
-        <button
-          type="button"
-          className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground"
-        >
-          + New
-        </button>
-      }
-      mobileNav={{
-        dock: MOBILE_DOCK,
-        tree: MOBILE_TREE,
-        activeTo: '/inbox/thread/42',
-        // The dock lights by APP, so it stays lit on every route inside Inbox,
-        // and the sheet opens with the Inbox row expanded and in view.
-        activeId: 'inbox',
-        currentFirst: true,
-        variant: 'bar',
-      }}
-    >
-      <h1 className="text-2xl font-semibold text-foreground mb-2">Inbox</h1>
-      <p className="text-muted-foreground">
-        Rail header — the switcher tile sits on the rail's axis and the section tabs own the rest of
-        the row, so they no longer shift with the workspace name.
-      </p>
-    </AppShell>
+    // Deliberately runs a TIGHT header token — the web app sets 52px under its
+    // desktop window-tab strip. The switcher tile is metered to fit inside it
+    // (28px mark + 2px gap + one 14px label line, no vertical padding), so this
+    // story doubles as the visual proof that it never spills past the header.
+    <div className="h-full" style={{ '--shell-header-height': '52px' } as CSSProperties}>
+      <AppShell
+        variant="workspace"
+        // `headerLayout="rail"` sizes the header's first column from the rail's
+        // own label mode, puts the workspace switcher there as a tile, and hands
+        // every remaining pixel to `headerLeading`. `headerCenter` is ignored.
+        headerLayout="rail"
+        iconRail={{
+          mainItems: RAIL_MAIN,
+          utilityItems: RAIL_UTILITY,
+          activeId: 'inbox',
+          labelVisibility: 'visible',
+        }}
+        headerLeading={<SectionTabs />}
+        workspace={{
+          menuItems: [
+            { id: 'settings', label: 'Settings', href: '/settings', icon: Settings },
+            { id: 'help', label: 'Help center', href: '/help', icon: HelpCircle },
+          ],
+        }}
+        // Panel views stay registered; only the header's toggle is dropped.
+        rightPanel={{ panelViews: PANEL_VIEWS, defaultView: 'inspector', showToggle: false }}
+        globalActions={
+          <button
+            type="button"
+            className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground"
+          >
+            + New
+          </button>
+        }
+        mobileNav={{
+          dock: MOBILE_DOCK,
+          tree: MOBILE_TREE,
+          activeTo: '/inbox/thread/42',
+          // The dock lights by APP, so it stays lit on every route inside Inbox
+          // — including the branded Pilot slot — and the sheet opens with the
+          // Inbox row expanded and in view.
+          activeId: 'inbox',
+          currentFirst: true,
+          variant: 'bar',
+        }}
+      >
+        <h1 className="text-2xl font-semibold text-foreground mb-2">Inbox</h1>
+        <p className="text-muted-foreground">
+          Rail header — the switcher tile sits on the rail's axis and the section tabs own the rest
+          of the row, so they no longer shift with the workspace name. The tile truncates its label
+          to one line and carries the full workspace name in a tooltip.
+        </p>
+      </AppShell>
+    </div>
   ),
 };
 

@@ -78,15 +78,25 @@ export function MobileDock({
       const isActive = isItemActive(item);
       const isBrand = item.emphasis === 'brand';
       const iconEl = isBrand ? (
-        <span className="flex size-8 items-center justify-center rounded-full bg-[var(--color-brand-600)] text-white">
+        // An active brand slot keeps its brand disc and gains a ring — the
+        // disc's own fill cannot also carry the selected state.
+        <span
+          className={cn(
+            'flex size-8 items-center justify-center rounded-full bg-[var(--color-brand-600)] text-white',
+            isActive && 'ring-2 ring-primary ring-offset-2 ring-offset-card'
+          )}
+        >
           {renderIcon(item.icon, 20)}
         </span>
       ) : (
         renderIcon(item.icon, 25)
       );
+      // Active wins over brand: a slot carrying `aria-current="page"` must
+      // have a visible treatment too. The label goes primary; the glyph in the
+      // disc stays white because the disc sets its own colour.
       let toneClass = 'text-muted-foreground hover:text-foreground';
-      if (isBrand) toneClass = 'text-muted-foreground';
-      else if (isActive) toneClass = 'font-medium text-primary';
+      if (isActive) toneClass = 'font-medium text-primary';
+      else if (isBrand) toneClass = 'text-muted-foreground';
       const slotClass = cn(
         'flex w-full flex-col items-center justify-center gap-1 py-2 text-[11px] leading-none transition-colors',
         toneClass
@@ -176,7 +186,13 @@ export function MobileDock({
     if (item.to && !item.action) {
       const className = cn(
         'relative flex items-center justify-center rounded-full p-1 transition-colors',
-        isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+        // A brand slot is rendered inside a filled brand disc that already
+        // sets `text-white`; a colour class here would override it and paint
+        // the glyph muted-grey on purple. Inherit instead, and let the disc
+        // itself carry the active ring (see the brandItems map below).
+        item.emphasis === 'brand' && 'text-inherit',
+        item.emphasis !== 'brand' &&
+          (isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground')
       );
       const children = (
         <>
@@ -252,7 +268,10 @@ export function MobileDock({
       {brandItems.map((item) => (
         <span
           key={item.id}
-          className="pointer-events-auto flex size-11 items-center justify-center rounded-full bg-[var(--color-brand-600)] text-white shadow-[0_6px_20px_rgba(91,45,140,0.35)]"
+          className={cn(
+            'pointer-events-auto flex size-11 items-center justify-center rounded-full bg-[var(--color-brand-600)] text-white shadow-[0_6px_20px_rgba(91,45,140,0.35)]',
+            isItemActive(item) && 'ring-2 ring-primary ring-offset-2 ring-offset-background'
+          )}
         >
           {renderSlot(item, 22)}
         </span>

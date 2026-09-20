@@ -57,11 +57,24 @@ will disagree.
 
 `variant="chip"` (default) is the horizontal mark · name · chevron button. `variant="tile"` is the
 rail-column shape the `rail` header uses: a full-width button with the mark on the rail axis, the
-name beneath it in `data-slot="icon-rail-label"` type (2-line clamp, hidden below 700px viewport
-height like every other rail label), and a small chevron hung off the mark so the mark itself
-never leaves the axis. Its accessible name is `"<workspace name> workspace menu"`. Pass
-`showLabel={false}` in icon-only rail mode. The dropdown — items, theme toggle, footer, keyboard
-and dismiss behaviour — is identical in both.
+name beneath it in `data-slot="icon-rail-label"` type, and a small chevron hung off the mark so
+the mark itself never leaves the axis. Its accessible name is `"<workspace name> workspace menu"`.
+Pass `showLabel={false}` in icon-only rail mode. The dropdown — items, theme toggle, footer,
+keyboard and dismiss behaviour — is identical in both.
+
+**The tile's height is a budget, not a suggestion.** It has to fit inside
+`--shell-header-height`, which consumers retune (the web app runs 52px under its desktop
+window-tab strip) and which is a fixed `height` — so anything taller overlaps the chrome around
+it rather than growing the header. The tile spends 28px on the mark + a 2px gap + ONE 14px label
+line = 44px, with **no vertical padding**, plus `max-h-full` and an `overflow-hidden` rail column.
+Change any of those and re-check the sum against 52px, not 64px.
+
+That one-line label truncates, and hides entirely below 700px viewport height like every other
+rail label. So the tile always renders a tooltip carrying the full workspace name — the same
+`Tooltip` primitive the icon rail uses, rendered unconditionally rather than on the rail's
+`!showLabel || isShortViewport` rule, because unlike a rail item the tile can also be
+visible-but-truncated. **Any new rail-width control whose label can truncate or hide needs the
+same tooltip:** an accessible name alone is not a substitute for a sighted user.
 
 ## Keeping panel views without the header toggle
 
@@ -182,6 +195,10 @@ as soon as the user leaves an app's first tab, because a dock slot only lights o
 
 - **Dock:** a slot is active iff `item.id === activeId`. Action slots (`open-sheet`, `open-ai`,
   `open-command-palette`) light only through `activeId`, never through the `activeTo` fallback.
+  An `emphasis: 'brand'` slot keeps its brand disc when active and gains a ring plus a primary
+  label — **active always outranks brand.** A slot that carries `aria-current="page"` must carry a
+  visible treatment too; a variant branch that reassigns the tone after the active check (the
+  `let toneClass` ladder in `mobile-dock.tsx`) is exactly how that regresses.
 - **Workspace sheet:** that row is expanded and scrolled into view on every open. The user can
   still collapse it, and it re-expands on the next open. With no `activeId` the sheet derives the
   row from `activeTo` — an exact `to` match first, then the row that owns `activeTo` among its
@@ -214,3 +231,6 @@ Use a single `RightPanel` per shell. Don't build a parallel right-side surface �
 | Hiding the panel toggle with consumer CSS | Depends on internal sibling order | `rightPanel={{ showToggle: false }}` |
 | Passing `headerCenter` together with `headerLayout="rail"` | The rail grid has no centre column; the node never renders | Put the content in `headerLeading` |
 | Lighting the mobile dock from `activeTo` alone | Goes dark on every route past an app's first tab | Also pass `mobileNav.activeId` |
+| A rail-width control whose label truncates or hides, with no tooltip | The name becomes unrecoverable for sighted users | Add the `Tooltip` the icon rail and switcher tile use |
+| Letting a variant branch (brand, emphasis) reassign the tone after the active check | `aria-current` with no visible state | Test the active state of every variant, not just the default one |
+| Adding vertical padding or a second label line to the switcher tile | Overflows a 52px `--shell-header-height` | Keep the tile inside its 44px budget |
