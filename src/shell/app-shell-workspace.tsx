@@ -23,6 +23,7 @@ import type {
   AppShellWorkspaceConfig,
   MobileBottomNavItem,
   PanelView,
+  ShellHeaderLayout,
   ShellMainLayout,
 } from './types.js';
 import { useShellViewport } from './use-shell-viewport.js';
@@ -38,6 +39,12 @@ export interface AppShellWorkspaceProps {
   globalActions?: ReactNode;
   headerCenter?: ReactNode;
   headerLeading?: ReactNode;
+  /**
+   * Desktop header grid — `split` (default, unchanged) or `rail`. See
+   * `ShellHeaderLayout`. In `rail` the header's first column is sized from
+   * `iconRail.labelVisibility` so it lines up with the rail below it.
+   */
+  headerLayout?: ShellHeaderLayout;
   banners?: ReactNode;
   mainLayout?: ShellMainLayout;
   mainClassName?: string;
@@ -66,6 +73,7 @@ export function AppShellWorkspace({
   globalActions,
   headerCenter,
   headerLeading,
+  headerLayout,
   banners,
   mainLayout,
   mainClassName,
@@ -77,6 +85,11 @@ export function AppShellWorkspace({
   const isMobile = viewport === 'mobile';
   const staticPanelViews = rightPanel?.panelViews ?? EMPTY_PANEL_VIEWS;
   const resolvedRightPanel = useResolvedPanelViews(staticPanelViews, rightPanel?.defaultView);
+  // The header toggle still requires at least one panel view — `showToggle`
+  // only lets a consumer KEEP the views and drop the control, never the
+  // reverse (a toggle with nothing behind it is a dead end).
+  const showPanelToggle =
+    (rightPanel?.showToggle ?? true) && resolvedRightPanel.panelViews.length > 0;
 
   // Derive the bottom-nav items from the variant config so each button maps
   // to a drawer that actually has content. Menu is always available because
@@ -109,10 +122,12 @@ export function AppShellWorkspace({
           globalActions={globalActions}
           headerCenter={headerCenter}
           headerLeading={headerLeading}
+          headerLayout={headerLayout}
+          railLabelVisibility={iconRail?.labelVisibility}
           appTabsRenderLink={appTabs?.renderLink}
           workspaceMenuItems={workspace?.menuItems}
           workspaceMenuFooter={workspace?.menuFooter}
-          showPanelToggle={resolvedRightPanel.panelViews.length > 0}
+          showPanelToggle={showPanelToggle}
           panelViews={resolvedRightPanel.panelViews}
         />
       )}
@@ -168,12 +183,15 @@ export function AppShellWorkspace({
           <MobileDock
             items={mobileNav.dock}
             activeTo={mobileNav.activeTo}
+            activeId={mobileNav.activeId}
             renderLink={mobileNav.renderLink}
             variant={mobileNav.variant}
           />
           <MobileWorkspaceSheet
             tree={mobileNav.tree}
             activeTo={mobileNav.activeTo}
+            activeId={mobileNav.activeId}
+            currentFirst={mobileNav.currentFirst}
             renderLink={mobileNav.renderLink}
             workspaceMenuItems={workspace?.menuItems}
             workspaceMenuFooter={workspace?.menuFooter}

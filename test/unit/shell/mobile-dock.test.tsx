@@ -32,6 +32,16 @@ function Wrapper({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * The brand disc both dock variants wrap an `emphasis: 'brand'` item in.
+ *
+ * The fill is the literal `#5B2D8C`, not the `--color-brand-600` token — that
+ * swap is a separate change still unreleased on `dev`, and the token resolves
+ * to a different purple (`#6a2e96`). Consumer CSS also targets the literal.
+ */
+const BRAND_FILL = 'bg-[#5B2D8C]';
+const BRAND_DISC = '.rounded-full.bg-\\[\\#5B2D8C\\]';
+
 const dockItems: MobileDockItem[] = [
   { id: 'home', label: 'Home', icon: Home, to: '/home' },
   { id: 'inbox', label: 'Inbox', icon: Inbox, to: '/inbox', badge: true },
@@ -103,6 +113,108 @@ describe('MobileDock', () => {
       </Wrapper>
     );
     expect(screen.queryByTestId('mobile-dock')).toBeNull();
+  });
+
+  it('lights by app id when activeId is supplied, ignoring activeTo', () => {
+    render(
+      <Wrapper>
+        {/* The user is deeper inside Inbox, so activeTo no longer equals /inbox. */}
+        <MobileDock items={dockItems} activeTo="/inbox/thread/42" activeId="inbox" />
+      </Wrapper>
+    );
+    expect(screen.getByRole('link', { name: 'Inbox' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('keeps the activeTo comparison when activeId is omitted', () => {
+    render(
+      <Wrapper>
+        <MobileDock items={dockItems} activeTo="/inbox/thread/42" />
+      </Wrapper>
+    );
+    expect(screen.getByRole('link', { name: 'Inbox' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('lights an action slot only through activeId', () => {
+    const { unmount } = render(
+      <Wrapper>
+        <MobileDock items={dockItems} activeId="sheet" />
+      </Wrapper>
+    );
+    expect(screen.getByRole('button', { name: 'Open navigation' }).className).not.toContain(
+      'text-muted-foreground'
+    );
+    unmount();
+
+    render(
+      <Wrapper>
+        <MobileDock items={dockItems} activeTo="/home" />
+      </Wrapper>
+    );
+    expect(screen.getByRole('button', { name: 'Open navigation' }).className).toContain(
+      'text-muted-foreground'
+    );
+  });
+
+  it('lights by app id in the bar variant too', () => {
+    render(
+      <Wrapper>
+        <MobileDock items={dockItems} variant="bar" activeTo="/inbox/thread/42" activeId="inbox" />
+      </Wrapper>
+    );
+    const inbox = screen.getByRole('link', { name: 'Inbox' });
+    expect(inbox).toHaveAttribute('aria-current', 'page');
+    expect(inbox.className).toContain('text-primary');
+    expect(screen.getByRole('link', { name: 'Home' }).className).not.toContain('text-primary');
+  });
+
+  it('gives an ACTIVE branded slot a visible treatment in the bar variant', () => {
+    const { container, unmount } = render(
+      <Wrapper>
+        <MobileDock items={dockItems} variant="bar" activeId="pilot" />
+      </Wrapper>
+    );
+    const pilot = screen.getByRole('link', { name: 'Pilot' });
+    expect(pilot).toHaveAttribute('aria-current', 'page');
+    // aria-current must never be the only signal: the label goes primary…
+    expect(pilot.className).toContain('text-primary');
+    // …and the brand disc is kept, ringed rather than recoloured.
+    const disc = container.querySelector(BRAND_DISC);
+    expect(disc?.className).toContain('ring-2');
+    expect(disc?.className).toContain(BRAND_FILL);
+    unmount();
+
+    // An inactive brand slot keeps the muted label and an unringed disc.
+    const inactive = render(
+      <Wrapper>
+        <MobileDock items={dockItems} variant="bar" activeId="home" />
+      </Wrapper>
+    );
+    expect(screen.getByRole('link', { name: 'Pilot' }).className).toContain(
+      'text-muted-foreground'
+    );
+    expect(inactive.container.querySelector(BRAND_DISC)?.className).not.toContain('ring-2');
+  });
+
+  it('rings the brand disc and keeps its glyph white in the pill variant', () => {
+    const { container, unmount } = render(
+      <Wrapper>
+        <MobileDock items={dockItems} activeId="pilot" />
+      </Wrapper>
+    );
+    expect(container.querySelector(BRAND_DISC)?.className).toContain('ring-2');
+    // The link inside the disc must not repaint the glyph on top of the purple.
+    const pilot = screen.getByRole('link', { name: 'Pilot' });
+    expect(pilot.className).not.toContain('text-muted-foreground');
+    expect(pilot.className).not.toContain('text-foreground');
+    unmount();
+
+    const inactive = render(
+      <Wrapper>
+        <MobileDock items={dockItems} activeId="home" />
+      </Wrapper>
+    );
+    expect(inactive.container.querySelector(BRAND_DISC)?.className).not.toContain('ring-2');
   });
 
   it('renders a full-width labeled bar with a tinted active slot in the bar variant', () => {
