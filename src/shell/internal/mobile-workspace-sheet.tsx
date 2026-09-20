@@ -10,7 +10,15 @@ import {
   Search,
   Sun,
 } from 'lucide-react';
-import { createElement, Fragment, isValidElement, type ReactNode, useState } from 'react';
+import {
+  createElement,
+  Fragment,
+  isValidElement,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   Drawer,
   DrawerContent,
@@ -41,9 +49,54 @@ function renderIcon(icon: ReactNode | LucideIcon | undefined, size: number): Rea
 const rowClass =
   'flex w-full items-center gap-3 rounded-[10px] px-2 py-2.5 text-left text-[13.5px] transition-colors hover:bg-accent';
 
+/** Every row in the tree, groups first then footer rows, in render order. */
+function allNavItems(tree: MobileNavTree): MobileNavItem[] {
+  return [...tree.groups.flatMap((group) => group.items), ...(tree.footerItems ?? [])];
+}
+
+/**
+ * The row the user is currently "in".
+ *
+ * `activeId` is authoritative when supplied. Otherwise the row is derived from
+ * `activeTo`: an exact `to` match first, then the row that owns `activeTo`
+ * among its preset `views`.
+ */
+function resolveCurrentItem(
+  tree: MobileNavTree,
+  activeId: string | undefined,
+  activeTo: string | undefined
+): MobileNavItem | null {
+  const items = allNavItems(tree);
+  if (activeId != null) return items.find((item) => item.id === activeId) ?? null;
+  if (activeTo == null) return null;
+  return (
+    items.find((item) => item.to === activeTo) ??
+    items.find((item) => (item.views ?? []).some((view) => view.to === activeTo)) ??
+    null
+  );
+}
+
+/** Move `currentId` to the front of `items` (used by `currentFirst`). */
+function withCurrentFirst(items: MobileNavItem[], currentId: string | null): MobileNavItem[] {
+  if (currentId == null) return items;
+  const index = items.findIndex((item) => item.id === currentId);
+  if (index <= 0) return items;
+  return [items[index], ...items.slice(0, index), ...items.slice(index + 1)];
+}
+
 export interface MobileWorkspaceSheetProps {
   tree: MobileNavTree;
   activeTo?: string;
+  /**
+   * The active APP's id — a row id in `tree`. When supplied it, not
+   * `activeTo`, decides which row the sheet opens on.
+   */
+  activeId?: string;
+  /**
+   * Render the current row first inside its group. Defaults to `false`, i.e.
+   * the tree's own order.
+   */
+  currentFirst?: boolean;
   renderLink?: (args: MobileNavLinkArgs) => ReactNode;
   workspaceMenuItems?: WorkspaceMenuItem[];
   workspaceMenuFooter?: ReactNode;
@@ -56,10 +109,16 @@ export interface MobileWorkspaceSheetProps {
  * preset views (accordion, one open at a time). Filters, layout, and saved
  * views deliberately stay on the page, not here. Opened from the dock's
  * workspace-selector slot; a workspace header on top surfaces the account menu.
+ *
+ * The sheet opens WHERE YOU ARE: the current row (see `activeId` / `activeTo`)
+ * is expanded and scrolled into view on every open, and the user can still
+ * collapse it.
  */
 export function MobileWorkspaceSheet({
   tree,
   activeTo,
+  activeId,
+  currentFirst = false,
   renderLink,
   workspaceMenuItems,
   workspaceMenuFooter,
@@ -69,6 +128,41 @@ export function MobileWorkspaceSheet({
   const close = () => ctx.mobileDrawer.setOpen(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
+  // Which row we have already scrolled to for the CURRENT open session, so a
+  // re-render does not keep yanking a sheet the user has scrolled by hand.
+  const scrolledToRef = useRef<string | null>(null);
+
+  const currentItem = resolveCurrentItem(tree, activeId, activeTo);
+  const currentItemId = currentItem?.id ?? null;
+  const currentHasViews = (currentItem?.views ?? []).length > 0;
+
+  // Reset the accordion to the current row on every open. Primitive deps, so
+  // a re-render with the same current row does not fight a manual collapse.
+  useEffect(() => {
+    if (!open) return;
+    setExpandedId(currentHasViews ? currentItemId : null);
+  }, [open, currentItemId, currentHasViews]);
+
+  useEffect(() => {
+    if (!open) scrolledToRef.current = null;
+  }, [open]);
+
+  // Bring the current row into view as soon as it is in the DOM, so a long
+  // tree never opens scrolled away from where the user actually is. Done from
+  // the ref callback rather than an effect because the drawer portals its
+  // content in a later commit than the one that flips `open`.
+  const registerRow = (id: string) => (el: HTMLDivElement | null) => {
+    if (el == null) return;
+    if (!open || id !== currentItemId || scrolledToRef.current === id) return;
+    scrolledToRef.current = id;
+    // `scrollIntoView` is absent in some non-browser DOM implementations.
+    if (typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ block: 'center' });
+    }
+  };
+
+  const orderItems = (items: MobileNavItem[]): MobileNavItem[] =>
+    currentFirst ? withCurrentFirst(items, currentItemId) : items;
 
   const navLink = (
     to: string,
@@ -236,8 +330,10 @@ export function MobileWorkspaceSheet({
             <section key={group.id} aria-label={group.label}>
               <p className="px-2 pt-3 pb-1 text-[11px] text-muted-foreground">{group.label}</p>
               <div className="flex flex-col gap-0.5">
-                {group.items.map((item) => (
-                  <Fragment key={item.id}>{renderRow(item)}</Fragment>
+                {orderItems(group.items).map((item) => (
+                  <div key={item.id} ref={registerRow(item.id)} data-meda-nav-item={item.id}>
+                    {renderRow(item)}
+                  </div>
                 ))}
               </div>
             </section>
@@ -247,8 +343,10 @@ export function MobileWorkspaceSheet({
             <>
               <div className="mx-2 my-2 h-px bg-border" />
               <div className="flex flex-col gap-0.5">
-                {tree.footerItems.map((item) => (
-                  <Fragment key={item.id}>{renderRow(item)}</Fragment>
+                {orderItems(tree.footerItems).map((item) => (
+                  <div key={item.id} ref={registerRow(item.id)} data-meda-nav-item={item.id}>
+                    {renderRow(item)}
+                  </div>
                 ))}
               </div>
             </>

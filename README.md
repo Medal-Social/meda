@@ -107,6 +107,62 @@ Workspace shells also expose chrome-level composition slots:
 </AppShell>
 ```
 
+### Rail header (`headerLayout="rail"`)
+
+By default the desktop header is a `split` grid: the workspace switcher and `headerLeading` share
+the left region, and `headerCenter` owns the middle. Because the switcher is as wide as the
+workspace name, the leading region both moves per workspace and never gets more than about half
+the window. `headerLayout="rail"` swaps in a three-column grid instead — rail column · fill ·
+actions:
+
+```tsx
+<AppShell
+  variant="workspace"
+  headerLayout="rail"
+  iconRail={{ mainItems, labelVisibility: 'visible' }}
+  headerLeading={<SectionTabs />}          // owns the whole fill column
+  // Keep the panel views, drop the header's toggle:
+  rightPanel={{ panelViews, showToggle: false }}
+  globalActions={<NewButton />}
+>
+  {children}
+</AppShell>
+```
+
+- Column 1 is exactly the icon rail's width (`--shell-rail-label-width` when
+  `iconRail.labelVisibility` is `visible`, `--shell-rail-width` otherwise) and holds the workspace
+  switcher in its `tile` variant: the mark centred on the rail's axis with the workspace name
+  beneath it, in the icon-rail label type. The dropdown is the chip's, unchanged.
+- Column 2 is `headerLeading`, `min-w-0`, and gets every remaining pixel.
+- Column 3 is `globalActions` plus the panel toggle.
+- `headerCenter` is **ignored** in this layout — there is no centre column.
+
+The tile is metered to **44px** — a 28px mark, a 2px gap and ONE 14px label line, with no vertical
+padding — and carries `max-h-full` inside an `overflow-hidden` column. So it fits whatever you set
+`--shell-header-height` to, down to 52px (the web app runs 52px under its desktop window-tab
+strip), and can never paint past the header:
+
+```css
+/* a tighter header — the tile follows it */
+:root { --shell-header-height: 52px; }
+```
+
+Because the label is truncated to one line — and hidden entirely below 700px viewport height, the
+same tier at which every icon-rail label hides — the full workspace name is always recoverable two
+other ways: the tile's tooltip, and its accessible name (`"<workspace> workspace menu"`).
+
+Both layouts put `data-meda-shell-header` on the `<header>` (with
+`data-meda-header-layout="split" | "rail"`), so consumer CSS and tests can target the header
+without depending on its structure.
+
+### Mobile nav: light by app
+
+`mobileNav.activeTo` marks the exact address. Pass `mobileNav.activeId` (the active APP's id) as
+well and the dock lights whenever `item.id === activeId`, so it stays lit on every route inside
+that app rather than only on its first tab; the workspace sheet then opens with that row expanded
+and scrolled into view. `mobileNav.currentFirst` additionally hoists that row to the top of its
+group. Omit `activeId` and both surfaces keep comparing against `activeTo` as before.
+
 `workspace.menuItems`, `workspace.menuFooter`, and the theme toggle are available from the mobile Menu drawer. Use `mainLayout`/`mainClassName` when a workspace shell needs the same mobile chrome but a custom main scroll region, such as a full-bleed marketing page. `useCommands()` works from workspace descendants without manually mounting `CommandPalette`; lower-level primitive compositions can still mount `CommandPalette` directly.
 
 `ContextRail` is usable for both navigation rails and custom rendered rails. Navigation rails show Meda's label header by default. Custom rendered rails hide the automatic visible header by default so consumers can render their own heading without duplication. Rail bodies scroll vertically by default; use `contextRail={{ header: "visible" }}` or `contextRail={{ scroll: "none" }}` when you need explicit control.
