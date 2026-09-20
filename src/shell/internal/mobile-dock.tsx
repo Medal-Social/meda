@@ -12,6 +12,12 @@ export const WORKSPACE_SHEET_KEY = 'workspace-sheet';
 export interface MobileDockProps {
   items: MobileDockItem[];
   activeTo?: string;
+  /**
+   * The active APP's id. When set, a slot is active iff `item.id === activeId`
+   * — so the dock stays lit everywhere inside that app, not only on the exact
+   * address in `activeTo`. Omit to keep the `to === activeTo` comparison.
+   */
+  activeId?: string;
   renderLink?: (args: MobileNavLinkArgs) => ReactNode;
   className?: string;
   /** `pill` (default) floating dock, or `bar` full-width labeled bottom bar. */
@@ -42,6 +48,7 @@ function renderIcon(icon: MobileDockItem['icon'], size: number): ReactNode {
 export function MobileDock({
   items,
   activeTo,
+  activeId,
   renderLink,
   className,
   variant = 'pill',
@@ -53,6 +60,11 @@ export function MobileDock({
   if (ctx.panel.mode === 'fullscreen') return null;
   if (items.length === 0) return null;
 
+  // `activeId` wins when supplied; otherwise fall back to the exact-address
+  // comparison the dock has always used.
+  const isItemActive = (item: MobileDockItem): boolean =>
+    activeId != null ? item.id === activeId : Boolean(item.to && activeTo && item.to === activeTo);
+
   const runAction = (item: MobileDockItem) => {
     if (item.action === 'open-sheet') ctx.mobileDrawer.setOpen(WORKSPACE_SHEET_KEY);
     else if (item.action === 'open-ai') ctx.mobileDrawer.setOpen('ai-drawer');
@@ -63,18 +75,28 @@ export function MobileDock({
   if (variant === 'bar') {
     const renderBarSlot = (item: MobileDockItem): ReactNode => {
       const label = typeof item.label === 'function' ? item.label() : item.label;
-      const isActive = Boolean(item.to && activeTo && item.to === activeTo);
+      const isActive = isItemActive(item);
       const isBrand = item.emphasis === 'brand';
       const iconEl = isBrand ? (
-        <span className="flex size-8 items-center justify-center rounded-full bg-[var(--color-brand-600)] text-white">
+        // An active brand slot keeps its brand disc and gains a ring — the
+        // disc's own fill cannot also carry the selected state.
+        <span
+          className={cn(
+            'flex size-8 items-center justify-center rounded-full bg-[var(--color-brand-600)] text-white',
+            isActive && 'ring-2 ring-primary ring-offset-2 ring-offset-card'
+          )}
+        >
           {renderIcon(item.icon, 20)}
         </span>
       ) : (
         renderIcon(item.icon, 25)
       );
+      // Active wins over brand: a slot carrying `aria-current="page"` must
+      // have a visible treatment too. The label goes primary; the glyph in the
+      // disc stays white because the disc sets its own colour.
       let toneClass = 'text-muted-foreground hover:text-foreground';
-      if (isBrand) toneClass = 'text-muted-foreground';
-      else if (isActive) toneClass = 'font-medium text-primary';
+      if (isActive) toneClass = 'font-medium text-primary';
+      else if (isBrand) toneClass = 'text-muted-foreground';
       const slotClass = cn(
         'flex w-full flex-col items-center justify-center gap-1 py-2 text-[11px] leading-none transition-colors',
         toneClass
@@ -154,7 +176,7 @@ export function MobileDock({
 
   const renderSlot = (item: MobileDockItem, size: number) => {
     const label = typeof item.label === 'function' ? item.label() : item.label;
-    const isActive = Boolean(item.to && activeTo && item.to === activeTo);
+    const isActive = isItemActive(item);
     const icon = renderIcon(item.icon, size);
     const badge = item.badge ? (
       <span className="absolute top-0 right-0 size-2 rounded-full bg-primary ring-2 ring-card" />
@@ -164,7 +186,13 @@ export function MobileDock({
     if (item.to && !item.action) {
       const className = cn(
         'relative flex items-center justify-center rounded-full p-1 transition-colors',
-        isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+        // A brand slot is rendered inside a filled brand disc that already
+        // sets `text-white`; a colour class here would override it and paint
+        // the glyph muted-grey on purple. Inherit instead, and let the disc
+        // itself carry the active ring (see the brandItems map below).
+        item.emphasis === 'brand' && 'text-inherit',
+        item.emphasis !== 'brand' &&
+          (isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground')
       );
       const children = (
         <>
@@ -199,13 +227,19 @@ export function MobileDock({
       );
     }
 
-    // Action slot
+    // Action slot. Before `activeId` these never carried an active state, so
+    // the `activeTo` fallback deliberately does NOT light them — only an
+    // explicit `activeId` match does.
+    const actionActive = activeId != null && item.id === activeId;
     return (
       <button
         type="button"
         onClick={() => runAction(item)}
         aria-label={label}
-        className="relative flex items-center justify-center rounded-full p-1 text-muted-foreground transition-colors hover:text-foreground"
+        className={cn(
+          'relative flex items-center justify-center rounded-full p-1 transition-colors',
+          actionActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+        )}
       >
         {icon}
         {badge}
@@ -234,7 +268,10 @@ export function MobileDock({
       {brandItems.map((item) => (
         <span
           key={item.id}
-          className="pointer-events-auto flex size-11 items-center justify-center rounded-full bg-[var(--color-brand-600)] text-white shadow-[0_6px_20px_rgba(91,45,140,0.35)]"
+          className={cn(
+            'pointer-events-auto flex size-11 items-center justify-center rounded-full bg-[var(--color-brand-600)] text-white shadow-[0_6px_20px_rgba(91,45,140,0.35)]',
+            isItemActive(item) && 'ring-2 ring-primary ring-offset-2 ring-offset-background'
+          )}
         >
           {renderSlot(item, 22)}
         </span>

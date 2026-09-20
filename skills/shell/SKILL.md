@@ -21,10 +21,68 @@ The package exports a single `<AppShell>` component with a discriminated `varian
 | Variant | When to use | Key config |
 |---|---|---|
 | `'auth'` | Sign-in / sign-up / password reset / OAuth callbacks. Lets the form scroll past viewport (dense forms, high zoom). | `auth`, `branding`, optional `preview` (right-side art) + `actions` (top-right) |
-| `'workspace'` | Logged-in product shell. Has icon rail + context rail + header + main + optional right panel. | `iconRail`, `contextRail`, `rightPanel`, `workspace` (menu items override), `appTabs` (router integration), `headerCenter`, `banners`, `mainLayout`, `globalActions` |
+| `'workspace'` | Logged-in product shell. Has icon rail + context rail + header + main + optional right panel. | `iconRail`, `contextRail`, `rightPanel`, `workspace` (menu items override), `appTabs` (router integration), `headerCenter`, `headerLeading`, `headerLayout`, `banners`, `mainLayout`, `globalActions`, `mobileNav` |
 | `'chat'` | Chat-first surfaces (full-bleed messaging UI; no rails). | `globalActions` |
 
 `AppShellWorkspace.workspace.menuItems` REPLACES the default workspace dropdown ("Manage workspaces / Settings / Profile / Sign out") when provided. **The theme toggle is preserved automatically** — consumers do not have to re-implement theme cycling.
+
+## Header layout — `split` (default) vs `rail`
+
+`headerLayout` picks the desktop header grid. `split` is the historic layout and stays the default.
+
+| | `split` (default) | `rail` |
+|---|---|---|
+| Grid | `[1fr, auto, 1fr]` when `headerCenter` is set, else flex | `[rail width, minmax(0,1fr), auto]` |
+| Column 1 | workspace switcher (`chip`) + `headerLeading` | workspace switcher (`tile`), centred on the rail's axis |
+| Column 2 | `headerCenter` | `headerLeading`, `min-w-0`, **all** remaining width |
+| Column 3 | `globalActions` + `PanelToggle` | `globalActions` + `PanelToggle` |
+| `headerCenter` | rendered | **ignored** |
+| Padding | `px-4` | none on the left, `pr-4` |
+
+Reach for `rail` when the app's section tabs live in the header: in `split` they are capped at
+roughly half the window AND they shift horizontally with the workspace name, because the switcher
+sizes to that name. In `rail` the switcher is boxed into the rail column, so the tabs start at a
+fixed x — the same x the main region starts at below.
+
+Column 1's width comes from `iconRail.labelVisibility`: `--shell-rail-label-width` for `visible`,
+`--shell-rail-width` for the default `tooltip`. `AppShell` wires this for you; if you render
+`<ShellHeader>` by hand, mirror it into `railLabelVisibility` yourself or the header and the rail
+will disagree.
+
+**Target the header with `data-meda-shell-header`**, present on both layouts (alongside
+`data-meda-header-layout="split" | "rail"`). Do NOT reach for it structurally — a selector like
+`.flex.h-svh > header` breaks silently on any markup change.
+
+## WorkspaceSwitcher variants
+
+`variant="chip"` (default) is the horizontal mark · name · chevron button. `variant="tile"` is the
+rail-column shape the `rail` header uses: a full-width button with the mark on the rail axis, the
+name beneath it in `data-slot="icon-rail-label"` type, and a small chevron hung off the mark so
+the mark itself never leaves the axis. Its accessible name is `"<workspace name> workspace menu"`.
+Pass `showLabel={false}` in icon-only rail mode. The dropdown — items, theme toggle, footer,
+keyboard and dismiss behaviour — is identical in both.
+
+**The tile's height is a budget, not a suggestion.** It has to fit inside
+`--shell-header-height`, which consumers retune (the web app runs 52px under its desktop
+window-tab strip) and which is a fixed `height` — so anything taller overlaps the chrome around
+it rather than growing the header. The tile spends 28px on the mark + a 2px gap + ONE 14px label
+line = 44px, with **no vertical padding**, plus `max-h-full` and an `overflow-hidden` rail column.
+Change any of those and re-check the sum against 52px, not 64px.
+
+That one-line label truncates, and hides entirely below 700px viewport height like every other
+rail label. So the tile always renders a tooltip carrying the full workspace name — the same
+`Tooltip` primitive the icon rail uses, rendered unconditionally rather than on the rail's
+`!showLabel || isShortViewport` rule, because unlike a rail item the tile can also be
+visible-but-truncated. **Any new rail-width control whose label can truncate or hide needs the
+same tooltip:** an accessible name alone is not a substitute for a sighted user.
+
+## Keeping panel views without the header toggle
+
+`rightPanel.showToggle: false` drops the header's `PanelToggle` while the views stay registered and
+openable from anywhere else (`useMedaShell().panel.focus(id)`, a command, a route). It cannot do
+the reverse — a toggle with no views is still hidden, because it would be a dead end. Do NOT hide
+the toggle with consumer CSS such as `[data-meda-global-actions] + * { display: none }`; that is
+what this prop replaces.
 
 ## MedaShellProvider — the runtime root
 
@@ -129,6 +187,26 @@ Each hook auto-handles register-on-mount and unregister-on-unmount via `useEffec
 
 The default palette hotkey is `'mod+k'` — override via `MedaShellProvider.commandPaletteHotkey`. Hotkey matching is strict modifier-aware: `'mod+k'` does NOT fire on `mod+shift+k`. Use `'mod'` (resolves to ⌘ on macOS, Ctrl on Windows/Linux), not platform-specific keywords.
 
+## Mobile dock + workspace sheet — light by app, open where you are
+
+`mobileNav.activeTo` is the exact address of the active row. On its own it makes the dock go dark
+as soon as the user leaves an app's first tab, because a dock slot only lights on
+`item.to === activeTo`. Pass `mobileNav.activeId` — the active APP's id — alongside it:
+
+- **Dock:** a slot is active iff `item.id === activeId`. Action slots (`open-sheet`, `open-ai`,
+  `open-command-palette`) light only through `activeId`, never through the `activeTo` fallback.
+  An `emphasis: 'brand'` slot keeps its brand disc when active and gains a ring plus a primary
+  label — **active always outranks brand.** A slot that carries `aria-current="page"` must carry a
+  visible treatment too; a variant branch that reassigns the tone after the active check (the
+  `let toneClass` ladder in `mobile-dock.tsx`) is exactly how that regresses.
+- **Workspace sheet:** that row is expanded and scrolled into view on every open. The user can
+  still collapse it, and it re-expands on the next open. With no `activeId` the sheet derives the
+  row from `activeTo` — an exact `to` match first, then the row that owns `activeTo` among its
+  preset `views`.
+- **`mobileNav.currentFirst`:** renders that row first inside its group.
+
+Omit `activeId` and both surfaces behave exactly as they did before it existed.
+
 ## Right panel patterns
 
 Use a single `RightPanel` per shell. Don't build a parallel right-side surface — multiple right panels create state and dismiss-behavior conflicts. For a stacked detail experience, register multiple `PanelView`s with the existing `PanelViewsProvider` (`src/shell/panel-views-provider.tsx`).
@@ -149,3 +227,10 @@ Use a single `RightPanel` per shell. Don't build a parallel right-side surface �
 | Multiple `RightPanel`s in one shell | Dismiss/state conflicts | Use `PanelViewsProvider` for stacked detail |
 | Forking `MedaShellProvider` per app | Loses cross-consumer parity | Compose around it; pass a custom `ThemeAdapter` for theme integration |
 | Hard-coded modifier in hotkey strings (`'cmd+k'`) | Breaks on Windows/Linux | Use `'mod+k'` — resolves per-platform |
+| Selecting the header structurally (`.flex.h-svh > header`) | Breaks silently on any markup change | Target `[data-meda-shell-header]` |
+| Hiding the panel toggle with consumer CSS | Depends on internal sibling order | `rightPanel={{ showToggle: false }}` |
+| Passing `headerCenter` together with `headerLayout="rail"` | The rail grid has no centre column; the node never renders | Put the content in `headerLeading` |
+| Lighting the mobile dock from `activeTo` alone | Goes dark on every route past an app's first tab | Also pass `mobileNav.activeId` |
+| A rail-width control whose label truncates or hides, with no tooltip | The name becomes unrecoverable for sighted users | Add the `Tooltip` the icon rail and switcher tile use |
+| Letting a variant branch (brand, emphasis) reassign the tone after the active check | `aria-current` with no visible state | Test the active state of every variant, not just the default one |
+| Adding vertical padding or a second label line to the switcher tile | Overflows a 52px `--shell-header-height` | Keep the tile inside its 44px budget |

@@ -52,7 +52,13 @@ export { RailDropZones } from './rail-drop-zones.js';
 export { ResizableHandle, ResizableShell, ResizableShellPanel } from './resizable-shell.js';
 export { RightPanel } from './right-panel.js';
 // Header (and its individual children for advanced composition)
-export type { AppTabsProps, PanelToggleProps } from './shell-header.js';
+export type {
+  AppTabsProps,
+  PanelToggleProps,
+  ShellHeaderProps,
+  WorkspaceSwitcherProps,
+  WorkspaceSwitcherVariant,
+} from './shell-header.js';
 export { AppTabs, PanelToggle, ShellHeader, WorkspaceSwitcher } from './shell-header.js';
 export { ShellMain } from './shell-main.js';
 export type { MedaShellProviderProps } from './shell-provider.js';
@@ -88,6 +94,7 @@ export type {
   MobileNavView,
   PanelMode,
   PanelView,
+  ShellHeaderLayout,
   ShellLinkRenderArgs,
   ShellMainLayout,
   ShellRenderContext,

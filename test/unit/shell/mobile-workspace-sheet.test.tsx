@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { Target, Users } from 'lucide-react';
 import { type ReactNode, useEffect } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MobileWorkspaceSheet } from '../../../src/shell/internal/mobile-workspace-sheet.js';
 import { MedaShellProvider, useMedaShell } from '../../../src/shell/shell-provider.js';
 import type {
@@ -58,6 +58,29 @@ function OpenSheet() {
     ctx.mobileDrawer.setOpen('workspace-sheet');
   }, []);
   return null;
+}
+
+/** Lets a test close and re-open the sheet to exercise the open-time reset. */
+function SheetControls() {
+  const ctx = useMedaShell();
+  return (
+    <>
+      <button
+        type="button"
+        data-testid="open-sheet"
+        onClick={() => ctx.mobileDrawer.setOpen('workspace-sheet')}
+      >
+        open-sheet
+      </button>
+      <button
+        type="button"
+        data-testid="close-sheet"
+        onClick={() => ctx.mobileDrawer.setOpen(null)}
+      >
+        close-sheet
+      </button>
+    </>
+  );
 }
 
 function Wrapper({ children }: { children: ReactNode }) {
@@ -129,5 +152,132 @@ describe('MobileWorkspaceSheet', () => {
     fireEvent.click(screen.getByRole('button', { name: /Contacts/ }));
     expect(screen.getByRole('link', { name: 'Contacts · Leads' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Deals · Won' })).toBeNull();
+  });
+});
+
+describe('MobileWorkspaceSheet — opens where you are', () => {
+  let scrollIntoView: ReturnType<typeof vi.fn>;
+  const originalScrollIntoView = Element.prototype.scrollIntoView;
+
+  beforeEach(() => {
+    scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+  });
+
+  afterEach(() => {
+    Element.prototype.scrollIntoView = originalScrollIntoView;
+  });
+
+  it('expands and scrolls to the row named by activeId', () => {
+    render(
+      <Wrapper>
+        <OpenSheet />
+        <MobileWorkspaceSheet tree={tree} activeId="deals" />
+      </Wrapper>
+    );
+    expect(screen.getByRole('link', { name: 'Deals · Won' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Contacts · Leads' })).toBeNull();
+    expect(scrollIntoView).toHaveBeenCalled();
+  });
+
+  it('falls back to the row that owns activeTo through its own `to`', () => {
+    render(
+      <Wrapper>
+        <OpenSheet />
+        <MobileWorkspaceSheet tree={tree} activeTo="/crm/deals" />
+      </Wrapper>
+    );
+    expect(screen.getByRole('link', { name: 'Deals · Won' })).toBeInTheDocument();
+  });
+
+  it('falls back to the row that owns activeTo through one of its views', () => {
+    render(
+      <Wrapper>
+        <OpenSheet />
+        <MobileWorkspaceSheet tree={tree} activeTo="/crm/contacts?view=leads" />
+      </Wrapper>
+    );
+    expect(screen.getByRole('link', { name: 'Contacts · Leads' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Deals · Won' })).toBeNull();
+  });
+
+  it('leaves everything collapsed when the current row has no preset views', () => {
+    render(
+      <Wrapper>
+        <OpenSheet />
+        <MobileWorkspaceSheet tree={tree} activeId="email" />
+      </Wrapper>
+    );
+    expect(screen.queryByRole('link', { name: 'Deals · Won' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Contacts · Leads' })).toBeNull();
+    expect(scrollIntoView).toHaveBeenCalled();
+  });
+
+  it('lets the user collapse the pre-expanded row, and re-expands on the next open', () => {
+    render(
+      <Wrapper>
+        <OpenSheet />
+        <SheetControls />
+        <MobileWorkspaceSheet tree={tree} activeId="deals" />
+      </Wrapper>
+    );
+    expect(screen.getByRole('link', { name: 'Deals · Won' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /^Deals/ }));
+    expect(screen.queryByRole('link', { name: 'Deals · Won' })).toBeNull();
+
+    fireEvent.click(screen.getByTestId('close-sheet'));
+    fireEvent.click(screen.getByTestId('open-sheet'));
+    expect(screen.getByRole('link', { name: 'Deals · Won' })).toBeInTheDocument();
+  });
+
+  it('keeps the tree order by default and hoists the current row with currentFirst', () => {
+    const order = () =>
+      Array.from(document.querySelectorAll('section[aria-label="CRM"] [data-meda-nav-item]')).map(
+        (el) => el.getAttribute('data-meda-nav-item')
+      );
+
+    const { unmount } = render(
+      <Wrapper>
+        <OpenSheet />
+        <MobileWorkspaceSheet tree={tree} activeId="deals" />
+      </Wrapper>
+    );
+    expect(order()).toEqual(['contacts', 'deals', 'email']);
+    unmount();
+
+    render(
+      <Wrapper>
+        <OpenSheet />
+        <MobileWorkspaceSheet tree={tree} activeId="deals" currentFirst />
+      </Wrapper>
+    );
+    expect(order()).toEqual(['deals', 'contacts', 'email']);
+  });
+
+  it('is a no-op when neither activeId nor activeTo matches a row', () => {
+    render(
+      <Wrapper>
+        <OpenSheet />
+        <MobileWorkspaceSheet tree={tree} activeId="nope" currentFirst />
+      </Wrapper>
+    );
+    expect(screen.queryByRole('link', { name: 'Deals · Won' })).toBeNull();
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    expect(
+      Array.from(document.querySelectorAll('section[aria-label="CRM"] [data-meda-nav-item]')).map(
+        (el) => el.getAttribute('data-meda-nav-item')
+      )
+    ).toEqual(['contacts', 'deals', 'email']);
+  });
+
+  it('resolves footer rows too', () => {
+    render(
+      <Wrapper>
+        <OpenSheet />
+        <MobileWorkspaceSheet tree={tree} activeId="settings" />
+      </Wrapper>
+    );
+    expect(scrollIntoView).toHaveBeenCalled();
   });
 });

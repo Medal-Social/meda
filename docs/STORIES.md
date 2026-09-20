@@ -12,7 +12,10 @@ A story exists if and only if it shows you something you cannot reach by togglin
 
 - Soft cap: 3 stories per file. Above this, the lint script warns.
 - Hard cap: 5 stories per file. Above this, the lint script fails.
-- AppShell is the one exception (3 variants × 3 viewports, but still 3 story exports).
+- AppShell is the one exception: one story per shell *shape*, not per arg. It sits at 5 —
+  `Workspace`, `Auth`, `Chat`, `WorkspaceRailHeader` (the `headerLayout="rail"` grid, which has
+  different markup, not different args) and `WorkspaceWithAdoptionHooks`. That is the hard cap:
+  a sixth AppShell shape means restructuring, not another export.
 
 ## Mode budget (Chromatic)
 
