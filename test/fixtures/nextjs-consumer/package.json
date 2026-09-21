@@ -7,15 +7,15 @@
   },
   "dependencies": {
     "@medalsocial/meda": "file:../../..",
-    "lucide-react": "^1.8.0",
-    "next": "14.2.29",
+    "lucide-react": "^1.47.0",
+    "next": "16.3.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@types/node": "26.4.0",
+    "@types/node": "26.6.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "typescript": "~5.4.0"
+    "typescript": "~7.0.2"
   }
 }
