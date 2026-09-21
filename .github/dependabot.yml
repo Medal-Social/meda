@@ -121,3 +121,41 @@ updates:
       # diffing the full `.d.ts` tree against a TS 6 build.
       - dependency-name: typescript
         versions: ['>=7.0.0']
+
+  # ---------------------------------------------------------------------------
+  # The Next.js consumer fixture. `test/fixtures/nextjs-consumer` is a separate
+  # manifest installed with `--ignore-workspace` by `pnpm test:integration`, so
+  # the root entry above never sees it — and its lockfile is gitignored, so
+  # nothing else pins it either. It is the only place this repo proves it can
+  # be consumed from a real Next.js build, which makes a silently ageing
+  # `next`/`typescript`/`@types/node` there a slowly rotting integration test
+  # rather than a cosmetic gap.
+  #
+  # One group, one PR: it is a fixture, not a shipped surface, and splitting
+  # production from development here would only add noise.
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: npm
+    directory: /test/fixtures/nextjs-consumer
+    schedule:
+      interval: monthly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Oslo
+    target-branch: dev
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: chore(test-fixture)
+    groups:
+      nextjs-consumer-fixture:
+        patterns: ['*']
+    ignore:
+      # The fixture resolves meda through `file:../../..` on purpose — that is
+      # the whole point of the fixture. Dependabot must never rewrite it.
+      - dependency-name: '@medalsocial/meda'
+      # React is pinned by the same @react-three/fiber constraint as the root
+      # manifest; keeping the fixture on a different major would test a
+      # combination no consumer has.
+      - dependency-name: react
+        versions: ['>=19.3.0']
+      - dependency-name: react-dom
+        versions: ['>=19.3.0']

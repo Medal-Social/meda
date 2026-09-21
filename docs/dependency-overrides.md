@@ -29,16 +29,38 @@ retires itself in practice long before anyone deletes the line.
 Every one of these is a **development-only** path. None of them appears in the published
 tarball: `package.json#dependencies` lists ten packages and none is in this table.
 
-## Removed, and why
+> **State note.** The table is the set of overrides in `package.json` at the time of
+> writing, **except `valibot@<1.4.2` → `1.4.2`**, which is still in the manifest on this
+> branch and is deleted by the dependency-upgrade PR (#225). It is described below rather
+> than in the table because it is the worked example of an override that has outlived its
+> advisory. Once #225 lands, `package.json` and the table agree exactly.
 
-- **`valibot@<1.4.2` → `1.4.2`.** [GHSA-5qjj-4xww-7phc](https://github.com/advisories/GHSA-5qjj-4xww-7phc)
-  is fixed at 1.4.2 and every remaining requester already floors at or above it, so the
-  override did no security work. What it did do was pin valibot at *exactly* 1.4.2
-  against `@valibot/to-json-schema@1.8.0`'s `^1.5.0` peer — a stale override actively
-  holding the tree back. This is the failure mode the table above exists to prevent.
-- **`js-yaml`.** Six alerts are open against `prod` for js-yaml 3.14.2 / 4.1.1. No
-  override was ever needed: the dependency sweeps on `dev` removed js-yaml from the tree
-  entirely, so there is nothing left to pin.
+## The worked example: how an override goes stale
+
+`valibot@<1.4.2` → `1.4.2` was added to close
+[GHSA-5qjj-4xww-7phc](https://github.com/advisories/GHSA-5qjj-4xww-7phc), which is fixed
+at 1.4.2. Every remaining requester now floors at or above that, so the override does no
+security work at all — the tree would resolve to a safe valibot without it.
+
+What it *does* do is pin valibot at **exactly** 1.4.2, because the replacement is a bare
+version rather than a range. That became visible when `@storybook/addon-mcp` moved onto
+the Storybook 10.6 line and brought `@valibot/to-json-schema` with it, which peers on
+`valibot: ^1.5.0` — an unsatisfiable peer created entirely by a dead security pin. The
+fix is deletion, not a wider replacement, and it is part of #225.
+
+Two things this illustrates, and the reason the table above exists:
+
+- **Write the replacement as a range** (`^1.4.2`), never a bare version. A bare version
+  is a ceiling as well as a floor.
+- **An override with no recorded reason cannot be audited.** Nobody could tell this one
+  from a live mitigation by reading `package.json`.
+
+## Never needed
+
+- **`js-yaml`.** Six alerts are open against `prod` for js-yaml 3.14.2 / 4.1.1, so it
+  looks like a gap in the table. It is not: the dependency sweeps on `dev` removed
+  js-yaml from the tree entirely, so there is nothing left to pin. The alerts close when
+  `prod` catches up.
 
 ## Checking the table is still true
 
