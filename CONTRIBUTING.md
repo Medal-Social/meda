@@ -100,6 +100,21 @@ recipe. Repeated failures update that one issue rather than piling up duplicates
 healthy sync comments on it and closes it automatically. If you see it open, follow the recipe in
 its body — and merge the resulting PR with a merge commit.
 
+## Bundle size
+
+We gate every PR on `pnpm size-limit` — the brotli-compressed size of each
+published entry point must stay under the limits in `.size-limit.cjs`.
+
+If you legitimately need to bump a limit (a new dep, a real feature growth):
+
+1. Run `pnpm size-limit:why` to confirm what changed.
+2. Update the limit in `.size-limit.cjs` to the new measured size + ~15 %
+   headroom — never aspirationally low, never aspirationally high.
+3. Justify the bump in the PR description with one sentence: *what*
+   contributed the bytes, *why* it's worth it.
+
+Reviewers MUST flag a silent limit bump.
+
 ## Dependencies and security advisories
 
 Dependabot is configured in `.github/dependabot.yml`: grouped weekly version updates
@@ -115,21 +130,6 @@ leftover, and a leftover can pin the tree *below* a version it could otherwise t
 Third-party GitHub Actions are pinned to full commit SHAs with the version in a
 trailing comment, and anything downloaded and executed in CI is pinned to a release
 artifact and checked against a recorded `sha256`. No `curl … | sh`.
-
-## Bundle size
-
-We gate every PR on `pnpm size-limit` — the brotli-compressed size of each
-published entry point must stay under the limits in `.size-limit.cjs`.
-
-If you legitimately need to bump a limit (a new dep, a real feature growth):
-
-1. Run `pnpm size-limit:why` to confirm what changed.
-2. Update the limit in `.size-limit.cjs` to the new measured size + ~15 %
-   headroom — never aspirationally low, never aspirationally high.
-3. Justify the bump in the PR description with one sentence: *what*
-   contributed the bytes, *why* it's worth it.
-
-Reviewers MUST flag a silent limit bump.
 
 ## Visual review (Chromatic)
 
