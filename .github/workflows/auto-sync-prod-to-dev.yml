@@ -118,22 +118,53 @@ jobs:
           git config user.name 'medal-social-release-bot[bot]'
           git config user.email 'medal-social-release-bot[bot]@users.noreply.github.com'
 
-      # CONTENT, not commits. A promotion always leaves a merge commit on
-      # `prod` that `dev` will never hold, but its tree came from `dev`, so
-      # there is nothing to bring back. Only a real difference in the tree —
-      # a hotfix landed directly on `prod` — is worth a sync PR.
+      # DIRECTIONAL CONTENT, not commits and not tree inequality.
+      #
+      # Commits are wrong because a promotion always leaves a merge commit on
+      # `prod` that `dev` will never hold, even though its tree came from
+      # `dev` — testing commits would open a pointless sync PR after every
+      # release.
+      #
+      # Plain tree inequality is wrong too, and in the other direction: `dev`
+      # moving ahead after a release also makes the trees differ, which would
+      # fire the sync for an ordinary feature merge and produce a PR with an
+      # empty diff.
+      #
+      # The question is one-way — does `prod` contribute anything `dev` does
+      # not already have — so ask it that way: merge the two in memory and see
+      # whether the result differs from `dev`'s tree.
       - name: Check whether prod carries content dev does not
         if: steps.trigger.outputs.should_sync == 'true'
         id: divergence
         run: |
+          set -u
           git fetch origin dev:refs/remotes/origin/dev
-          if git diff --quiet origin/dev HEAD; then
+
+          # `--write-tree` prints the merged tree oid on its first line whether
+          # or not it conflicted, and exits 1 when it did. The Actions shell is
+          # `bash -e`, so the failing exit has to be caught, not inherited.
+          set +e
+          merge_out="$(git merge-tree --write-tree origin/dev HEAD)"
+          rc=$?
+          set -e
+
+          if [ "$rc" -gt 1 ]; then
+            echo "::error::git merge-tree failed (exit $rc) — cannot decide whether a sync is needed."
+            exit 1
+          fi
+
+          dev_tree="$(git rev-parse origin/dev^{tree})"
+          merged_tree="$(printf '%s\n' "$merge_out" | head -1)"
+
+          # A conflict (rc == 1) means prod definitely contributes something,
+          # so it falls through to needs_sync and the real merge downstream
+          # reports the detail.
+          if [ "$rc" -eq 0 ] && [ "$merged_tree" = "$dev_tree" ]; then
             echo "needs_sync=false" >> "$GITHUB_OUTPUT"
-            echo "dev already carries prod's tree — nothing to sync."
+            echo "dev already carries everything on prod — nothing to sync."
           else
             echo "needs_sync=true" >> "$GITHUB_OUTPUT"
-            echo "prod and dev differ in content:"
-            git diff --stat origin/dev HEAD | tail -1
+            echo "prod contributes content dev does not have (merge-tree exit $rc)."
           fi
 
       # Runs BEFORE the merge, while HEAD is still prod. This case produces no
@@ -409,12 +440,20 @@ jobs:
           # genuinely carries prod's content; otherwise leave the issue open
           # and let a later run close it.
           #
-          # The test is content, not ancestry, for the same reason the
-          # divergence check above is: every promotion leaves a merge commit on
-          # `prod` that `dev` will never contain, so ancestry is permanently
-          # false in the healthy flow and would pin this issue open forever.
+          # Same directional content test as the divergence check above, and
+          # for the same two reasons: ancestry is permanently false in the
+          # healthy flow (every promotion leaves a merge commit on `prod` that
+          # `dev` will never contain), and plain tree inequality is also false
+          # as soon as `dev` moves ahead — either would pin this issue open
+          # forever. The question is only whether `prod` still has something
+          # `dev` lacks.
           git fetch --quiet origin prod dev
-          if ! git diff --quiet origin/dev origin/prod; then
+          set +e
+          merge_out="$(git merge-tree --write-tree origin/dev origin/prod)"
+          rc=$?
+          set -e
+          if [ "$rc" -ne 0 ] ||
+            [ "$(printf '%s\n' "$merge_out" | head -1)" != "$(git rev-parse origin/dev^{tree})" ]; then
             echo "dev does not carry prod's content yet (a sync PR may still be in flight)."
             echo "Leaving tracking issue #$number open."
             exit 0

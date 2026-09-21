@@ -8,14 +8,20 @@ name: Promote dev → prod
 # auto-merge on. Nothing here approves anything — Ada's approval on that PR is
 # the release decision, and it is the only human step in a release.
 #
-# Why the merge can never conflict
-# --------------------------------
+# Why the merge is always empty
+# -----------------------------
 # `prod` only ever gains merge commits whose tree is already `dev`'s tree, so
 # `prod` never carries content `dev` lacks. Three-way merging `prod` into a
-# branch cut from `dev` therefore has an empty "theirs" side. If that invariant
-# is ever broken — someone lands a commit straight on `prod` — the merge CAN
-# conflict, and this workflow fails closed and files a tracking issue instead
-# of pushing a conflicted branch at a PR that has auto-merge enabled.
+# branch cut from `dev` therefore has an empty "theirs" side, and the merged
+# tree equals `dev`'s tree exactly.
+#
+# If that invariant is ever broken — someone lands a commit straight on `prod`
+# — this workflow fails closed and files a tracking issue instead of pushing at
+# a PR that has auto-merge enabled. Note that a CONFLICT is only one of the two
+# ways it can break: content on `prod` touching files `dev` did not touch merges
+# perfectly cleanly, and would silently release a tree `dev` has never had while
+# leaving `dev` without the hotfix. So the test below is not "did the merge
+# succeed" but "did the merge change `dev`'s tree".
 #
 # Why a disposable branch rather than `dev` itself
 # ------------------------------------------------
@@ -135,20 +141,35 @@ jobs:
           git fetch --quiet origin \
             "+refs/heads/$PROMOTE_BRANCH:refs/remotes/origin/$PROMOTE_BRANCH" 2>/dev/null || true
 
+          DEV_TREE="$(git rev-parse HEAD^{tree})"
           git checkout -B "$PROMOTE_BRANCH"
+
           # Merging prod in is what keeps the PR mergeable under prod's
           # "require branches to be up to date" rule. Under the invariant above
-          # this is an empty merge; if it is not, stop before anything is
-          # pushed.
+          # it is an EMPTY merge. If it is not, stop before anything is pushed.
           if ! git merge --no-edit origin/prod; then
             git diff --name-only --diff-filter=U > "$RUNNER_TEMP/conflicts.txt"
             git merge --abort || true
-            echo "conflict=true" >> "$GITHUB_OUTPUT"
+            echo "diverged=true" >> "$GITHUB_OUTPUT"
             echo "prod carries content dev does not — manual merge required."
             cat "$RUNNER_TEMP/conflicts.txt"
             exit 0
           fi
-          echo "conflict=false" >> "$GITHUB_OUTPUT"
+
+          # A clean merge is NOT proof that prod contributed nothing. Content
+          # on prod that touches files dev did not touch merges silently, and
+          # the promote branch would then carry — and release — a tree that
+          # `dev` has never had, with `dev` still missing the hotfix. The only
+          # honest test is whether the merge changed dev's tree at all.
+          if [ "$(git rev-parse HEAD^{tree})" != "$DEV_TREE" ]; then
+            git diff --name-only "$DEV_TREE" HEAD > "$RUNNER_TEMP/conflicts.txt"
+            echo "diverged=true" >> "$GITHUB_OUTPUT"
+            echo "prod contributed content that dev does not have:"
+            cat "$RUNNER_TEMP/conflicts.txt"
+            exit 0
+          fi
+
+          echo "diverged=false" >> "$GITHUB_OUTPUT"
 
           # Only push when something actually moved. A force-push dismisses the
           # approval on the open PR and re-runs CI, so re-pushing an identical
@@ -165,7 +186,7 @@ jobs:
       - name: Open or refresh the promote PR
         if: |
           steps.delta.outputs.has_delta == 'true' &&
-          steps.branch.outputs.conflict == 'false'
+          steps.branch.outputs.diverged == 'false'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           REPO: ${{ github.repository }}
@@ -236,7 +257,7 @@ jobs:
       # Make it impossible to miss rather than leaving it in a step log.
       - name: Report a promote that needs hands
         if: |
-          !cancelled() && steps.branch.outputs.conflict == 'true'
+          !cancelled() && steps.branch.outputs.diverged == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
@@ -254,12 +275,14 @@ jobs:
             echo "| \`dev\` | \`$(git rev-parse origin/dev)\` |"
             echo "| run | $RUN_URL |"
             echo
-            echo "Conflicting paths:"
+            echo "Paths \`prod\` contributes (conflicting, or merging cleanly but absent from \`dev\`):"
             echo
             sed 's/^/- `/; s/$/`/' "$RUNNER_TEMP/conflicts.txt"
             echo
-            echo "Nothing was pushed and no PR was touched — a conflicted tree must never reach a"
-            echo "branch that has auto-merge armed."
+            echo "Nothing was pushed and no PR was touched. A conflicted tree must never reach a"
+            echo "branch that has auto-merge armed — and neither must a cleanly-merged one that"
+            echo "\`dev\` has never seen, which would release unreviewed content and leave \`dev\`"
+            echo "still missing it."
             echo
             echo "### Recipe"
             echo
@@ -295,7 +318,7 @@ jobs:
 
       - name: Close the tracking issue after a healthy run
         if: |
-          success() && steps.branch.outputs.conflict != 'true'
+          success() && steps.branch.outputs.diverged != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
