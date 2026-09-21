@@ -44,6 +44,13 @@ permissions: {}
 env:
   PROMOTE_BRANCH: release/promote-dev
   TRACKING_ISSUE_TITLE: 'Promote dev → prod needs a manual merge'
+  # This workflow writes a merge commit. It is safe from the pre-commit hook
+  # today only by accident — it never runs `pnpm install`, so `core.hooksPath`
+  # is never set, and `.husky/pre-merge-commit` does not exist so even the
+  # installed stub would exit 0. Both of those are one edit away from being
+  # untrue, and the failure mode is a release that cannot be built. Make it
+  # structural: see the `version` job in release.yml for the full reasoning.
+  HUSKY: 0
 
 jobs:
   promote:

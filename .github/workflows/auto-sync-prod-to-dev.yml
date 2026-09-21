@@ -61,6 +61,11 @@ jobs:
       # One tracking issue, found by exact title so the workflow can update
       # rather than pile up duplicates.
       TRACKING_ISSUE_TITLE: 'Auto-sync prod → dev needs a manual merge'
+      # This job writes a merge commit, and its whole job is to run when
+      # something has already gone sideways. Do not let a hook meant for a
+      # human's commit decide whether the recovery lands. See the `version`
+      # job in release.yml for the full reasoning.
+      HUSKY: 0
     steps:
       - name: Classify trigger
         id: trigger

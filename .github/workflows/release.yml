@@ -50,6 +50,28 @@ jobs:
     # cannot publish, and keeping it credential-free is the point: it runs on
     # every single push to `dev`.
     permissions: {}
+    env:
+      # The pre-commit hook must not run for the bot's version commit.
+      #
+      # `pnpm install` runs `prepare: husky`, which points `core.hooksPath` at
+      # `.husky/_`; `changesets/action` then runs `git commit`, which fires
+      # `pre-commit` — `pnpm lint && pnpm test && pnpm check:stories`. That
+      # gates a machine-generated commit (a version number, a CHANGELOG entry
+      # and five deleted changesets) behind the full browser-backed Vitest
+      # suite, and it is what failed this job's first real run: the Storybook
+      # project could not launch Playwright's chromium and husky killed the
+      # commit, so no Version PR was ever opened.
+      #
+      # Making the browser available would treat the symptom. The hook exists
+      # to protect a human's commit; this content is already gated properly by
+      # `lint` / `test` / `build` on the resulting PR, which are required
+      # checks on `dev`. So skip the hook instead.
+      #
+      # `HUSKY: 0` covers both halves, verified against the installed husky
+      # 9.1.7: `index.js` returns early on `prepare` ("HUSKY=0 skip install",
+      # so `core.hooksPath` is never set at all), and `.husky/_/h` exits 0 on
+      # `[ "${HUSKY-}" = "0" ]` if it somehow is.
+      HUSKY: 0
     steps:
       # Every git/PR write below uses the Release Bot App token, never
       # GITHUB_TOKEN — events attributed to github-actions[bot] do not trigger
@@ -102,9 +124,18 @@ jobs:
     runs-on: ubuntu-latest
     environment: npm
     env:
-      # Use the Chrome binary already available on GitHub-hosted runners. The
-      # release action may invoke Husky, which runs the browser-backed Vitest
-      # storybook project via `pnpm test`.
+      # Same reasoning as the `version` job above: nothing a release workflow
+      # does should be gated by a hook meant for a human's commit. This job
+      # publishes the tree that `prod` already carries and creates tags (which
+      # fire no `pre-commit`), so the hook is not expected to run at all —
+      # `HUSKY: 0` makes that structural rather than incidental.
+      HUSKY: 0
+      # Belt and braces, kept deliberately. This used to be the ONLY thing
+      # standing between the release and a missing Playwright browser, because
+      # `changesets/action` committed the version bump here and husky ran the
+      # browser-backed Vitest project on it. With `HUSKY: 0` above, the browser
+      # is no longer on the release path — but a half-published release is the
+      # worst failure this repo has, so the fallback stays.
       MEDA_USE_SYSTEM_CHROME: '1'
     # GITHUB_TOKEN gets only what the npm OIDC + provenance steps need. All
     # git/tag writes use the Release Bot App token, so `contents: write` here
@@ -194,6 +225,12 @@ jobs:
     permissions:
       id-token: write
       attestations: write
+    env:
+      # This job must never produce a commit. `persist-credentials: false` on
+      # the checkout means it could not push one; `HUSKY: 0` means `pnpm
+      # install` does not even wire `core.hooksPath`, so `changeset version
+      # --snapshot` cannot trip a hook on the files it rewrites in place.
+      HUSKY: 0
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
