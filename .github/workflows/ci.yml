@@ -104,7 +104,7 @@ jobs:
           echo "${DEEPSOURCE_CLI_SHA256}  $RUNNER_TEMP/$archive" | sha256sum --check --strict -
           tar -xzf "$RUNNER_TEMP/$archive" -C ./bin deepsource
           chmod +x ./bin/deepsource
-          ./bin/deepsource --version
+          ./bin/deepsource version
 
       - name: Report coverage to DeepSource
         if: ${{ env.DEEPSOURCE_DSN != '' }}
