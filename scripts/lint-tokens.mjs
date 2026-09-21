@@ -11,10 +11,9 @@
  * Exit 1 — one or more violations found (printed to stderr).
  */
 
-import { readFile } from 'node:fs/promises';
+import { glob, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import fg from 'fast-glob';
 
 const HEX_REGEX = /#[0-9a-fA-F]{3,8}\b/g;
 const MEDA_VAR_REGEX = /var\(--meda-[a-zA-Z0-9-]+\)/g;
@@ -25,11 +24,14 @@ const BLOCK_COMMENT_REGEX = /^\s*\*/;
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(currentDir, '..');
 
-const files = await fg('src/shell/**/*.{ts,tsx}', {
-  cwd: packageRoot,
-  absolute: true,
-  ignore: ['**/*.test.ts', '**/*.test.tsx', '**/*.stories.ts', '**/*.stories.tsx'],
-});
+// Node's built-in glob (node:fs/promises, Node >= 22) — fast-glob was a
+// phantom transitive dependency that dropped out of the lockfile.
+const files = [];
+for await (const entry of glob('src/shell/**/*.{ts,tsx}', { cwd: packageRoot })) {
+  if (/\.(test|stories)\.(ts|tsx)$/.test(entry)) continue;
+  files.push(resolve(packageRoot, entry));
+}
+files.sort();
 
 /** @type {{ file: string; line: number; col: number; kind: string; match: string }[]} */
 const violations = [];

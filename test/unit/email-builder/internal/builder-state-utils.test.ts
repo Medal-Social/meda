@@ -118,7 +118,8 @@ describe('updateBlockProps', () => {
   it('does not mutate the original doc', () => {
     const doc = makeDoc('a');
     updateBlockProps(doc, 'a', { text: 'X' });
-    expect((doc.blocks[0]?.props as { text: string }).text).toBe('Hello');
+    const block = doc.blocks[0] as EmailBlock<'heading'>;
+    expect(block.props.text).toBe('Hello');
   });
 });
 

@@ -82,7 +82,7 @@ export function MobileDock({
         // disc's own fill cannot also carry the selected state.
         <span
           className={cn(
-            'flex size-8 items-center justify-center rounded-full bg-[#5B2D8C] text-white',
+            'flex size-8 items-center justify-center rounded-full bg-[var(--color-brand-600)] text-white',
             isActive && 'ring-2 ring-primary ring-offset-2 ring-offset-card'
           )}
         >
@@ -269,7 +269,7 @@ export function MobileDock({
         <span
           key={item.id}
           className={cn(
-            'pointer-events-auto flex size-11 items-center justify-center rounded-full bg-[#5B2D8C] text-white shadow-[0_6px_20px_rgba(91,45,140,0.35)]',
+            'pointer-events-auto flex size-11 items-center justify-center rounded-full bg-[var(--color-brand-600)] text-white shadow-[0_6px_20px_rgba(91,45,140,0.35)]',
             isItemActive(item) && 'ring-2 ring-primary ring-offset-2 ring-offset-background'
           )}
         >

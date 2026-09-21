@@ -38,7 +38,9 @@ function subscribeToViewport(onChange: () => void): () => void {
   const matchMedia = getMatchMedia();
   if (!matchMedia) {
     subscribedMqls = null;
-    return () => {};
+    return () => {
+      // no matchMedia (SSR/test) - nothing to unsubscribe
+    };
   }
   const mqls = (Object.entries(BREAKPOINTS) as [ShellViewport, string][]).map(
     ([band, query]) => [band, matchMedia(query)] as [ShellViewport, MediaQueryList]

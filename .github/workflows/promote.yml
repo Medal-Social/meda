@@ -1,0 +1,344 @@
+name: Promote dev → prod
+
+# Keeps ONE standing release PR alive so that shipping is a single approval.
+#
+# On every push to `dev` this recreates the disposable branch
+# `release/promote-dev` as: dev's exact tree, with `prod` merged in. It then
+# opens (or refreshes) the PR `release/promote-dev` -> `prod` and turns
+# auto-merge on. Nothing here approves anything — Ada's approval on that PR is
+# the release decision, and it is the only human step in a release.
+#
+# Why the merge is always empty
+# -----------------------------
+# `prod` only ever gains merge commits whose tree is already `dev`'s tree, so
+# `prod` never carries content `dev` lacks. Three-way merging `prod` into a
+# branch cut from `dev` therefore has an empty "theirs" side, and the merged
+# tree equals `dev`'s tree exactly.
+#
+# If that invariant is ever broken — someone lands a commit straight on `prod`
+# — this workflow fails closed and files a tracking issue instead of pushing at
+# a PR that has auto-merge enabled. Note that a CONFLICT is only one of the two
+# ways it can break: content on `prod` touching files `dev` did not touch merges
+# perfectly cleanly, and would silently release a tree `dev` has never had while
+# leaving `dev` without the hotfix. So the test below is not "did the merge
+# succeed" but "did the merge change `dev`'s tree".
+#
+# Why a disposable branch rather than `dev` itself
+# ------------------------------------------------
+# A PR whose head is `dev` goes stale the moment `prod` moves, and `prod` is
+# protected with "require branches to be up to date", so every release would
+# need an "Update branch" push onto `dev` — which dismisses the approval and
+# re-runs CI. The throwaway branch absorbs all of that; `dev` is never touched.
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: promote-dev-to-prod
+  cancel-in-progress: false
+
+permissions: {}
+
+env:
+  PROMOTE_BRANCH: release/promote-dev
+  TRACKING_ISSUE_TITLE: 'Promote dev → prod needs a manual merge'
+  # This workflow writes a merge commit. It is safe from the pre-commit hook
+  # today only by accident — it never runs `pnpm install`, so `core.hooksPath`
+  # is never set, and `.husky/pre-merge-commit` does not exist so even the
+  # installed stub would exit 0. Both of those are one edit away from being
+  # untrue, and the failure mode is a release that cannot be built. Make it
+  # structural: see the `version` job in release.yml for the full reasoning.
+  HUSKY: 0
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    # `issues: write` on GITHUB_TOKEN only, and only for the human-facing
+    # tracking issue. Every git/PR write uses the Release Bot App token,
+    # because GITHUB_TOKEN-attributed events do not trigger other workflows and
+    # a promote PR that never gets CI can never merge.
+    permissions:
+      issues: write
+    steps:
+      - name: Generate Release Bot token
+        id: app-token
+        uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v2.1.4
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          ref: dev
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name 'medal-social-release-bot[bot]'
+          git config user.email 'medal-social-release-bot[bot]@users.noreply.github.com'
+
+      - name: Is there anything to release?
+        id: delta
+        run: |
+          set -euo pipefail
+          git fetch --quiet origin prod:refs/remotes/origin/prod
+          if git diff --quiet origin/prod HEAD; then
+            echo "has_delta=false" >> "$GITHUB_OUTPUT"
+            echo "prod already carries dev's tree — nothing to promote."
+          else
+            echo "has_delta=true" >> "$GITHUB_OUTPUT"
+            git diff --stat origin/prod HEAD | tail -1
+          fi
+
+      # Right after a release `prod` and `dev` hold the same tree. Close the
+      # standing PR rather than leaving an empty one that says "release" —
+      # the next push to `dev` opens a fresh one.
+      - name: Close the promote PR when there is nothing to release
+        if: steps.delta.outputs.has_delta == 'false'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          PR_URL="$(gh pr list --repo "$REPO" --head "$PROMOTE_BRANCH" --base prod --state open \
+            --json url --jq '.[0].url // empty')"
+          if [ -n "$PR_URL" ]; then
+            gh pr close "$PR_URL" --repo "$REPO" --delete-branch \
+              --comment 'prod already carries this tree — nothing left to promote.'
+            echo "Closed $PR_URL"
+          else
+            echo "No open promote PR."
+          fi
+
+      # A pending changeset means the "Version Packages" PR has not merged yet,
+      # so `package.json` still holds the version that is ALREADY on npm.
+      # Promoting now would hand `release.yml` a tree it refuses to publish.
+      # Keep the PR as a draft until the bump lands, so it physically cannot be
+      # merged early.
+      - name: Is dev release-ready?
+        id: ready
+        if: steps.delta.outputs.has_delta == 'true'
+        run: |
+          set -euo pipefail
+          pending="$(find .changeset -maxdepth 1 -name '*.md' ! -name 'README.md' -print | sort)"
+          version="$(node -p "require('./package.json').version")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ -n "$pending" ]; then
+            echo "release_ready=false" >> "$GITHUB_OUTPUT"
+            echo "Pending changesets — holding the promote PR as a draft:"
+            printf '%s\n' "$pending"
+            {
+              echo 'pending<<PENDING_EOF'
+              printf '%s\n' "$pending"
+              echo 'PENDING_EOF'
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "release_ready=true" >> "$GITHUB_OUTPUT"
+            echo "dev is release-ready at $version."
+          fi
+
+      - name: Build the promote branch
+        id: branch
+        if: steps.delta.outputs.has_delta == 'true'
+        run: |
+          set -euo pipefail
+          git fetch --quiet origin \
+            "+refs/heads/$PROMOTE_BRANCH:refs/remotes/origin/$PROMOTE_BRANCH" 2>/dev/null || true
+
+          DEV_TREE="$(git rev-parse HEAD^{tree})"
+          git checkout -B "$PROMOTE_BRANCH"
+
+          # Merging prod in is what keeps the PR mergeable under prod's
+          # "require branches to be up to date" rule. Under the invariant above
+          # it is an EMPTY merge. If it is not, stop before anything is pushed.
+          if ! git merge --no-edit origin/prod; then
+            git diff --name-only --diff-filter=U > "$RUNNER_TEMP/conflicts.txt"
+            git merge --abort || true
+            echo "diverged=true" >> "$GITHUB_OUTPUT"
+            echo "prod carries content dev does not — manual merge required."
+            cat "$RUNNER_TEMP/conflicts.txt"
+            exit 0
+          fi
+
+          # A clean merge is NOT proof that prod contributed nothing. Content
+          # on prod that touches files dev did not touch merges silently, and
+          # the promote branch would then carry — and release — a tree that
+          # `dev` has never had, with `dev` still missing the hotfix. The only
+          # honest test is whether the merge changed dev's tree at all.
+          if [ "$(git rev-parse HEAD^{tree})" != "$DEV_TREE" ]; then
+            git diff --name-only "$DEV_TREE" HEAD > "$RUNNER_TEMP/conflicts.txt"
+            echo "diverged=true" >> "$GITHUB_OUTPUT"
+            echo "prod contributed content that dev does not have:"
+            cat "$RUNNER_TEMP/conflicts.txt"
+            exit 0
+          fi
+
+          echo "diverged=false" >> "$GITHUB_OUTPUT"
+
+          # Only push when something actually moved. A force-push dismisses the
+          # approval on the open PR and re-runs CI, so re-pushing an identical
+          # tree on an unrelated `dev` commit would quietly undo Ada's click.
+          if git rev-parse --verify --quiet "refs/remotes/origin/$PROMOTE_BRANCH" >/dev/null &&
+            [ "$(git rev-parse HEAD^{tree})" = "$(git rev-parse "origin/$PROMOTE_BRANCH^{tree}")" ] &&
+            git merge-base --is-ancestor origin/prod "origin/$PROMOTE_BRANCH"; then
+            echo "Promote branch already carries this tree on top of prod — not pushing."
+            exit 0
+          fi
+
+          git push --force-with-lease origin "HEAD:refs/heads/$PROMOTE_BRANCH"
+
+      - name: Open or refresh the promote PR
+        if: |
+          steps.delta.outputs.has_delta == 'true' &&
+          steps.branch.outputs.diverged == 'false'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: ${{ github.repository }}
+          RELEASE_READY: ${{ steps.ready.outputs.release_ready }}
+          VERSION: ${{ steps.ready.outputs.version }}
+          PENDING: ${{ steps.ready.outputs.pending }}
+        run: |
+          set -euo pipefail
+
+          BODY="$RUNNER_TEMP/promote.md"
+          {
+            if [ "$RELEASE_READY" = 'true' ]; then
+              echo "Promotes \`dev\` to \`prod\`. Merging this publishes **@medalsocial/meda@${VERSION}**"
+              echo "to npm with provenance."
+              echo
+              echo "**Approving this PR is the release.** Auto-merge is on, so the approval merges it,"
+              echo "the merge pushes \`prod\`, and \`release.yml\` publishes. Nothing else is needed and"
+              echo "there is nothing to sync back afterwards."
+            else
+              echo "⏳ **Not ready.** \`dev\` still has pending changesets, so \`package.json\` is still at"
+              echo "the version already on npm. This PR stays a **draft** until the"
+              echo "\`chore: version @medalsocial/meda\` PR merges into \`dev\` — at which point the next"
+              echo "run marks it ready automatically."
+              echo
+              echo "Pending:"
+              echo
+              printf '%s\n' "$PENDING" | sed 's/^/- `/; s/$/`/'
+            fi
+            echo
+            echo '---'
+            echo
+            echo "This branch is rebuilt from \`dev\` on every push, so it is disposable — never commit"
+            echo "to it. It is \`dev\`'s exact tree with \`prod\` merged in, which is why the merge cannot"
+            echo "conflict: \`prod\` never carries content \`dev\` lacks."
+          } > "$BODY"
+
+          PR_URL="$(gh pr list --repo "$REPO" --head "$PROMOTE_BRANCH" --base prod --state open \
+            --json url --jq '.[0].url // empty')"
+
+          if [ -z "$PR_URL" ]; then
+            PR_URL="$(gh pr create --repo "$REPO" \
+              --base prod --head "$PROMOTE_BRANCH" \
+              --title 'release: promote dev → prod' \
+              --body-file "$BODY" \
+              --draft)"
+            echo "Opened $PR_URL"
+          else
+            gh pr edit "$PR_URL" --repo "$REPO" --body-file "$BODY"
+            echo "Refreshed $PR_URL"
+          fi
+
+          if [ "$RELEASE_READY" = 'true' ]; then
+            gh pr ready "$PR_URL" --repo "$REPO"
+            # Auto-merge, never auto-approve: the approval is the release
+            # decision and it stays with a human. `--merge`, never `--squash`:
+            # a squash would drop the second parent and put content on `prod`
+            # that `dev` cannot see, breaking the no-conflict invariant.
+            gh pr merge --auto --merge --repo "$REPO" "$PR_URL"
+            echo "Marked ready and armed auto-merge."
+          else
+            gh pr ready --undo "$PR_URL" --repo "$REPO" || true
+            echo "Left as a draft."
+          fi
+
+          echo "$PR_URL" >> "$GITHUB_STEP_SUMMARY"
+
+      # The invariant broke: something landed on `prod` that `dev` never saw.
+      # Make it impossible to miss rather than leaving it in a step log.
+      - name: Report a promote that needs hands
+        if: |
+          !cancelled() && steps.branch.outputs.diverged == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          BODY="$RUNNER_TEMP/tracking-issue.md"
+          {
+            echo "\`prod\` carries content that \`dev\` does not, so the promote branch could not be"
+            echo "built. Until this is resolved no release PR can be opened."
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| \`prod\` | \`$(git rev-parse origin/prod)\` |"
+            echo "| \`dev\` | \`$(git rev-parse origin/dev)\` |"
+            echo "| run | $RUN_URL |"
+            echo
+            echo "Paths \`prod\` contributes (conflicting, or merging cleanly but absent from \`dev\`):"
+            echo
+            sed 's/^/- `/; s/$/`/' "$RUNNER_TEMP/conflicts.txt"
+            echo
+            echo "Nothing was pushed and no PR was touched. A conflicted tree must never reach a"
+            echo "branch that has auto-merge armed — and neither must a cleanly-merged one that"
+            echo "\`dev\` has never seen, which would release unreviewed content and leave \`dev\`"
+            echo "still missing it."
+            echo
+            echo "### Recipe"
+            echo
+            echo '```bash'
+            echo "git fetch origin"
+            echo "git switch -c chore/sync-prod-to-dev origin/dev"
+            echo "git merge origin/prod        # resolve"
+            echo "git push -u origin chore/sync-prod-to-dev"
+            echo '```'
+            echo
+            echo "Open that against \`dev\` and **merge it with a merge commit, not a squash**. Once"
+            echo "\`dev\` contains everything on \`prod\`, the next push to \`dev\` rebuilds the promote"
+            echo "branch by itself and this issue closes on the first healthy run."
+          } > "$BODY"
+
+          cat "$BODY" >> "$GITHUB_STEP_SUMMARY"
+
+          number="$(gh issue list --repo "$REPO" --state open --limit 100 \
+            --json number,title \
+            --jq "[.[] | select(.title == \"$TRACKING_ISSUE_TITLE\")][0].number // empty")"
+
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --repo "$REPO" --body-file "$BODY"
+            gh issue comment "$number" --repo "$REPO" \
+              --body "Still blocked — refreshed from $RUN_URL."
+          else
+            gh issue create --repo "$REPO" \
+              --title "$TRACKING_ISSUE_TITLE" --body-file "$BODY"
+          fi
+
+          echo "::error::prod → dev has diverged in content. See the job summary and the tracking issue."
+          exit 1
+
+      - name: Close the tracking issue after a healthy run
+        if: |
+          success() && steps.branch.outputs.diverged != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          number="$(gh issue list --repo "$REPO" --state open --limit 100 \
+            --json number,title \
+            --jq "[.[] | select(.title == \"$TRACKING_ISSUE_TITLE\")][0].number // empty")"
+          if [ -z "$number" ]; then
+            echo "No open tracking issue — nothing to close."
+            exit 0
+          fi
+          gh issue comment "$number" --repo "$REPO" \
+            --body "The promote branch built cleanly again as of $RUN_URL. Closing."
+          gh issue close "$number" --repo "$REPO"

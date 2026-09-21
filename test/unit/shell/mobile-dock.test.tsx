@@ -32,15 +32,8 @@ function Wrapper({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * The brand disc both dock variants wrap an `emphasis: 'brand'` item in.
- *
- * The fill is the literal `#5B2D8C`, not the `--color-brand-600` token — that
- * swap is a separate change still unreleased on `dev`, and the token resolves
- * to a different purple (`#6a2e96`). Consumer CSS also targets the literal.
- */
-const BRAND_FILL = 'bg-[#5B2D8C]';
-const BRAND_DISC = '.rounded-full.bg-\\[\\#5B2D8C\\]';
+/** The brand disc both dock variants wrap an `emphasis: 'brand'` item in. */
+const BRAND_DISC = '.rounded-full.bg-\\[var\\(--color-brand-600\\)\\]';
 
 const dockItems: MobileDockItem[] = [
   { id: 'home', label: 'Home', icon: Home, to: '/home' },
@@ -181,7 +174,7 @@ describe('MobileDock', () => {
     // …and the brand disc is kept, ringed rather than recoloured.
     const disc = container.querySelector(BRAND_DISC);
     expect(disc?.className).toContain('ring-2');
-    expect(disc?.className).toContain(BRAND_FILL);
+    expect(disc?.className).toContain('bg-[var(--color-brand-600)]');
     unmount();
 
     // An inactive brand slot keeps the muted label and an unringed disc.
