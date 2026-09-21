@@ -1,6 +1,10 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { changesetPaths, findStaleChangesets } from '../../../scripts/detect-stale-changesets.mjs';
+import {
+  changesetPaths,
+  findStaleChangesets,
+  isReleaseCommit,
+} from '../../../scripts/detect-stale-changesets.mjs';
 
 /**
  * `findStaleChangesets` decides whether the prod → dev sync is allowed to run.
@@ -9,6 +13,14 @@ import { changesetPaths, findStaleChangesets } from '../../../scripts/detect-sta
  * tracking issue nobody can action. Both failure modes are silent at the point
  * they are created, which is what makes this worth generating inputs for
  * rather than only enumerating the cases someone thought of.
+ *
+ * The oracle for "is this commit a release" is `isReleaseCommit` itself rather
+ * than a regex copied out of the implementation. Duplicating the pattern here
+ * would make these properties assert a *model* of the detector that can drift
+ * from it — and it would drift immediately, because the release commit subject
+ * is being renamed from `chore: release` to `chore: version` in a separate PR.
+ * Both subjects are generated; whichever the predicate currently accepts is
+ * the one the properties hold the detector to.
  */
 
 const changesetName = fc.constantFrom(
@@ -31,21 +43,37 @@ const nonChangeset = fc.constantFrom(
 
 const anyPath = fc.oneof(changesetName, nonChangeset);
 
-const releaseSubject = fc.constantFrom(
+/**
+ * Every subject shape the detector will ever meet, classified by the
+ * implementation rather than by a second copy of its regex.
+ */
+const anySubject = fc.constantFrom(
   'chore: release @medalsocial/meda',
-  'chore: version @medalsocial/meda'
-);
-
-const nonReleaseSubject = fc.constantFrom(
+  'chore: version @medalsocial/meda',
+  'chore:release @medalsocial/meda',
   'feat(shell): rail header layout',
   'chore: prepare for release',
   'docs: describe the release flow',
   'fix: drop a changeset we no longer want'
 );
 
+/** Subjects that must never be treated as a release, under any regex. */
+const definitelyNotARelease = fc.constantFrom(
+  'feat(shell): rail header layout',
+  'chore: prepare for release',
+  'docs: describe the release flow',
+  'fix: drop a changeset we no longer want'
+);
+
+const sha = fc.string({
+  unit: fc.constantFrom(...'0123456789abcdef'),
+  minLength: 7,
+  maxLength: 40,
+});
+
 const commit = fc.record({
-  sha: fc.string({ unit: fc.constantFrom(...'0123456789abcdef'), minLength: 7, maxLength: 40 }),
-  subject: fc.oneof(releaseSubject, nonReleaseSubject),
+  sha,
+  subject: anySubject,
   deleted: fc.array(anyPath, { maxLength: 5 }),
 });
 
@@ -55,6 +83,42 @@ const input = fc.record({
 });
 
 describe('findStaleChangesets (property)', () => {
+  // ---------------------------------------------------------------------
+  // Completeness. Without this the whole suite is satisfiable by
+  // `() => []`: everything below constrains what MAY be reported, nothing
+  // else requires anything to BE reported.
+  // ---------------------------------------------------------------------
+  it('always reports a released changeset that is still sitting on dev', () => {
+    fc.assert(
+      fc.property(
+        changesetName,
+        sha,
+        anySubject.filter((s) => isReleaseCommit(s)),
+        input,
+        (target, targetSha, releaseSubject, noise) => {
+          // Keep the noise from coincidentally owning the target path, so the
+          // assertion is about the commit we planted and not another one.
+          const others = noise.releaseCommits.filter(
+            (c) => !c.deleted.includes(target) && c.sha !== targetSha
+          );
+
+          const stale = findStaleChangesets({
+            releaseCommits: [
+              { sha: targetSha, subject: releaseSubject, deleted: [target] },
+              ...others,
+            ],
+            devChangesets: [...noise.devChangesets, target],
+          });
+
+          const hit = stale.find((s) => s.path === target);
+          expect(hit).toBeDefined();
+          expect(hit?.releasedIn).toBe(targetSha);
+          expect(hit?.subject).toBe(releaseSubject);
+        }
+      )
+    );
+  });
+
   it('never reports a file that is not actually on dev', () => {
     // A report names files the operator is told to `git rm` from dev. Naming
     // one that is not there sends them chasing a file that does not exist.
@@ -87,13 +151,11 @@ describe('findStaleChangesets (property)', () => {
     );
   });
 
-  it('attributes every report to a commit that is genuinely a release', () => {
+  it('attributes every report to a commit the predicate calls a release', () => {
     fc.assert(
       fc.property(input, (i) => {
         const releases = new Set(
-          i.releaseCommits
-            .filter((c) => /^chore:\s*(release|version)\b/i.test(c.subject))
-            .map((c) => c.sha)
+          i.releaseCommits.filter((c) => isReleaseCommit(c.subject)).map((c) => c.sha)
         );
         for (const s of findStaleChangesets(i)) {
           expect(releases.has(s.releasedIn)).toBe(true);
@@ -124,22 +186,25 @@ describe('findStaleChangesets (property)', () => {
   it('is unaffected by commits that are not releases', () => {
     // A `fix:` commit deleting a changeset is a human dropping work they no
     // longer want, not a release consuming it — flagging it would block the
-    // sync for a deliberate act.
+    // sync for a deliberate act. Generating the subject (rather than fixing
+    // one) means this also proves the detector ignores every non-release
+    // shape, not just the one example.
     fc.assert(
-      fc.property(input, fc.array(anyPath, { maxLength: 4 }), (i, extraDeletes) => {
-        const withNoise = {
-          ...i,
-          releaseCommits: [
-            ...i.releaseCommits,
-            {
-              sha: 'n0ise00',
-              subject: 'fix: drop a changeset we no longer want',
-              deleted: extraDeletes,
-            },
-          ],
-        };
-        expect(findStaleChangesets(withNoise)).toEqual(findStaleChangesets(i));
-      })
+      fc.property(
+        input,
+        definitelyNotARelease,
+        fc.array(anyPath, { maxLength: 4 }),
+        (i, subject, extraDeletes) => {
+          const withNoise = {
+            ...i,
+            releaseCommits: [
+              ...i.releaseCommits,
+              { sha: 'n0ise00', subject, deleted: extraDeletes },
+            ],
+          };
+          expect(findStaleChangesets(withNoise)).toEqual(findStaleChangesets(i));
+        }
+      )
     );
   });
 });
