@@ -42,8 +42,15 @@
 import { execFileSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
 
-/** The commit subject `changesets/action` uses (see release.yml `commit:`). */
-const RELEASE_COMMIT_SUBJECT = /^chore:\s*release\b/i;
+/**
+ * The commit subjects `changesets/action` uses (see release.yml `commit:`).
+ *
+ * `chore: version` is the current one — the bump moved onto `dev` and the
+ * subject was renamed to say what it actually does. `chore: release` stays
+ * matched because every release up to and including 2.8.0 used it, and this
+ * detector reads history.
+ */
+const RELEASE_COMMIT_SUBJECT = /^chore:\s*(release|version)\b/i;
 
 /** `.changeset/*.md`, excluding the directory's own README. */
 const CHANGESET_PATH = /^\.changeset\/(?!README\.md$)[^/]+\.md$/;

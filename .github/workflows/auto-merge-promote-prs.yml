@@ -1,10 +1,15 @@
 name: Auto-merge promote PRs
 
-# Enables auto-merge on the two recurring promote PRs:
-#   1. The dev → prod promotion PR (head ref `dev`).
-#   2. The Changesets-bot Release PR (head ref `changeset-release/prod`).
-# Auto-merge waits for required status checks before merging, so this is
-# gated on the same `lint` / `test` / `build` checks as a manual merge.
+# Enables auto-merge on the recurring automation PRs:
+#   1. The Changesets "Version Packages" PR (head ref `changeset-release/*`).
+#      Since the version bump moved onto `dev`, that PR targets `dev`, which
+#      is why this workflow is no longer scoped to `prod` as a base.
+#   2. The hand-opened dev → prod promotion PR (head ref `dev`) — the manual
+#      fallback for when `promote.yml` cannot run.
+# Auto-merge waits for required status checks AND the required approval before
+# merging, so this is gated exactly as a manual merge would be. It grants
+# nothing: `promote.yml` arms auto-merge on the standing release PR itself, and
+# nothing here approves anything.
 on:
   # `pull_request` (not `pull_request_target`) is intentional: this workflow
   # only ever acts on same-repo promote PRs, so it never needs base-repo
@@ -14,7 +19,7 @@ on:
   # below.
   pull_request:
     types: [opened, synchronize, reopened]
-    branches: [prod]
+    branches: [dev, prod]
 
 # GITHUB_TOKEN is left at zero perms — the actual write call uses the
 # Medal Approvals App token minted in the job. Auto-merge enabled by the
@@ -33,7 +38,8 @@ jobs:
     # letting it fail with a 403.
     if: |
       github.event.pull_request.head.repo.full_name == github.repository &&
-      (github.event.pull_request.head.ref == 'dev' ||
+      ((github.event.pull_request.head.ref == 'dev' &&
+        github.event.pull_request.base.ref == 'prod') ||
        startsWith(github.event.pull_request.head.ref, 'changeset-release/'))
     permissions: {}
     steps:

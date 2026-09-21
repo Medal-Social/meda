@@ -15,6 +15,14 @@ describe('isReleaseCommit', () => {
     expect(isReleaseCommit('chore:release @medalsocial/meda')).toBe(true);
   });
 
+  it('matches the current `chore: version` subject as well as the historic one', () => {
+    // The bump moved onto `dev` and the commit subject was renamed with it.
+    // Releases up to and including 2.8.0 used `chore: release`, so both have
+    // to match or the detector goes blind on history.
+    expect(isReleaseCommit('chore: version @medalsocial/meda')).toBe(true);
+    expect(isReleaseCommit('  chore:version @medalsocial/meda  ')).toBe(true);
+  });
+
   it('does not match ordinary commits that merely mention a release', () => {
     expect(isReleaseCommit('feat(shell): rail header layout')).toBe(false);
     expect(isReleaseCommit('docs: describe the release flow')).toBe(false);

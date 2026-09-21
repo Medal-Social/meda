@@ -1,13 +1,24 @@
 name: Auto-sync prod → dev
 
-# After the Changesets Release PR merges to prod and the Release workflow
-# publishes successfully, the version-bump commit lands on prod and dev falls
-# behind. This workflow opens (and auto-merges) a chore PR that brings dev
-# back in sync with prod, eliminating the manual merge-up step.
+# SAFETY NET, not part of the normal release.
+#
+# The version bump now happens on `dev` (see release.yml), and `prod` is only
+# ever advanced by the standing promote PR, whose tree IS `dev`'s tree. So in
+# the healthy flow `prod` never carries content `dev` lacks and there is
+# nothing to sync — this workflow notices that and exits.
+#
+# It still exists for the one case that can put real content on `prod` on its
+# own: a hotfix merged straight into `prod`. Then it does what it always did —
+# opens (and auto-merges) a chore PR bringing `dev` back in line.
+#
+# The divergence test is deliberately on CONTENT (`git diff`), not on commits.
+# Every promotion leaves a merge commit on `prod` that `dev` will never
+# contain; testing commits would open a pointless sync PR after every single
+# release, which is exactly the per-release paperwork this flow removed.
 #
 # Escape hatch: include `[skip auto-sync]` in the prod commit message to
 # suppress this workflow for that prod push. Manual dispatch always attempts
-# the sync after checking whether prod is ahead of dev.
+# the sync after checking whether prod carries content dev does not.
 on:
   workflow_run:
     workflows: ['Release']
@@ -107,16 +118,22 @@ jobs:
           git config user.name 'medal-social-release-bot[bot]'
           git config user.email 'medal-social-release-bot[bot]@users.noreply.github.com'
 
-      - name: Check whether prod has commits not on dev
+      # CONTENT, not commits. A promotion always leaves a merge commit on
+      # `prod` that `dev` will never hold, but its tree came from `dev`, so
+      # there is nothing to bring back. Only a real difference in the tree —
+      # a hotfix landed directly on `prod` — is worth a sync PR.
+      - name: Check whether prod carries content dev does not
         if: steps.trigger.outputs.should_sync == 'true'
         id: divergence
         run: |
           git fetch origin dev:refs/remotes/origin/dev
-          if [ -z "$(git rev-list origin/dev..HEAD)" ]; then
+          if git diff --quiet origin/dev HEAD; then
             echo "needs_sync=false" >> "$GITHUB_OUTPUT"
-            echo "prod is not ahead of dev — nothing to sync."
+            echo "dev already carries prod's tree — nothing to sync."
           else
             echo "needs_sync=true" >> "$GITHUB_OUTPUT"
+            echo "prod and dev differ in content:"
+            git diff --stat origin/dev HEAD | tail -1
           fi
 
       # Runs BEFORE the merge, while HEAD is still prod. This case produces no
@@ -387,13 +404,18 @@ jobs:
           fi
 
           # Proof, not optimism. Opening a PR with `--auto` only SCHEDULES the
-          # merge, and the `has_existing` path does not even do that, so
-          # step success is not evidence that prod reached dev. Close only once
-          # prod is genuinely an ancestor of dev; otherwise leave the issue open
+          # merge, and the `has_existing` path does not even do that, so step
+          # success is not evidence that prod reached dev. Close only once dev
+          # genuinely carries prod's content; otherwise leave the issue open
           # and let a later run close it.
+          #
+          # The test is content, not ancestry, for the same reason the
+          # divergence check above is: every promotion leaves a merge commit on
+          # `prod` that `dev` will never contain, so ancestry is permanently
+          # false in the healthy flow and would pin this issue open forever.
           git fetch --quiet origin prod dev
-          if ! git merge-base --is-ancestor origin/prod origin/dev; then
-            echo "prod is not an ancestor of dev yet (a sync PR may still be in flight)."
+          if ! git diff --quiet origin/dev origin/prod; then
+            echo "dev does not carry prod's content yet (a sync PR may still be in flight)."
             echo "Leaving tracking issue #$number open."
             exit 0
           fi
