@@ -65,6 +65,22 @@ jobs:
     # (auto-approve etc.) trigger on the resulting PR.
     permissions:
       contents: read
+    env:
+      # This job is the third commit site in the repo and carries the same
+      # latent failure as the release `version` job: it runs `pnpm install`
+      # (which wires `core.hooksPath` via `prepare: husky`) and then
+      # `git commit --allow-empty`, which fires `pre-commit` — the full
+      # browser-backed Vitest suite — on a runner with no Playwright browser.
+      #
+      # It has never actually failed, and the reason is worth writing down:
+      # the commit lives inside the `has_review == 'true'` step, and skills
+      # have never drifted, so that step has been SKIPPED on every release to
+      # date (verified on the 2.8.0 run, job 106158955989, step 8). The green
+      # history is not evidence the path works — it is evidence the path has
+      # never been taken. The first time skills drift, it would have taken it.
+      #
+      # See the `version` job in release.yml for the full reasoning.
+      HUSKY: 0
     steps:
       - name: Generate Medal Social Release Bot token
         id: app-token
