@@ -9,9 +9,15 @@ permissions: {}
 
 jobs:
   request:
+    # Merge-up PRs carry changes that already had (or deliberately did not
+    # need) a changeset on their way into `dev`; asking for another one on the
+    # promotion hop just posts a comment nobody can action.
     if: |
       !github.event.pull_request.draft &&
       !startsWith(github.head_ref, 'changeset-release/') &&
+      !startsWith(github.head_ref, 'release/promote-') &&
+      !startsWith(github.head_ref, 'chore/auto-sync-') &&
+      github.head_ref != 'dev' &&
       github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
