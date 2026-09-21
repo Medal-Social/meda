@@ -76,11 +76,35 @@ jobs:
       # Upload lcov coverage to DeepSource so we can track it over time.
       # Requires the `DEEPSOURCE_DSN` repo secret and the Test Coverage
       # analyzer enabled in DeepSource UI. Skipped on forks (no secret).
+      # Pinned, checksum-verified download instead of `curl … | sh`.
+      #
+      # `https://cli.deepsource.com/install` is an unversioned installer piped
+      # straight into a shell: whatever that URL serves at the moment CI runs
+      # executes with the job's environment, and nothing anchors it to a
+      # release anyone reviewed. That is OpenSSF Scorecard's
+      # `PinnedDependenciesID` finding on this file ("downloadThenRun not
+      # pinned by hash"), and it is a real supply-chain edge, not a formality.
+      #
+      # Bumping this: pick a tag from
+      # https://github.com/DeepSourceCorp/cli/releases, take the
+      # `linux_amd64` line out of that release's `checksums.txt`, and update
+      # both constants below. Mismatched digest = failed job, by design.
       - name: Install DeepSource CLI
         if: ${{ env.DEEPSOURCE_DSN != '' }}
         env:
           DEEPSOURCE_DSN: ${{ secrets.DEEPSOURCE_DSN }}
-        run: curl -fsSL https://cli.deepsource.com/install | BINDIR=./bin sh
+          DEEPSOURCE_CLI_VERSION: '0.10.1'
+          DEEPSOURCE_CLI_SHA256: 'e415a6a53257457ef1dad900fdb39aeb991dd01c35c4be9cafa88a41f9e50b3b'
+        run: |
+          set -euo pipefail
+          archive="deepsource_${DEEPSOURCE_CLI_VERSION}_linux_amd64.tar.gz"
+          url="https://github.com/DeepSourceCorp/cli/releases/download/v${DEEPSOURCE_CLI_VERSION}/${archive}"
+          mkdir -p ./bin
+          curl -fsSL --retry 3 --retry-all-errors -o "$RUNNER_TEMP/$archive" "$url"
+          echo "${DEEPSOURCE_CLI_SHA256}  $RUNNER_TEMP/$archive" | sha256sum --check --strict -
+          tar -xzf "$RUNNER_TEMP/$archive" -C ./bin deepsource
+          chmod +x ./bin/deepsource
+          ./bin/deepsource --version
 
       - name: Report coverage to DeepSource
         if: ${{ env.DEEPSOURCE_DSN != '' }}

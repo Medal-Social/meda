@@ -100,6 +100,22 @@ recipe. Repeated failures update that one issue rather than piling up duplicates
 healthy sync comments on it and closes it automatically. If you see it open, follow the recipe in
 its body — and merge the resulting PR with a merge commit.
 
+## Dependencies and security advisories
+
+Dependabot is configured in `.github/dependabot.yml`: grouped weekly version updates
+for npm and for the SHA-pinned GitHub Actions, targeting `dev`. Packages that are
+deliberately held back are listed there with the condition that lifts each hold.
+
+Transitive advisories that cannot be fixed by a direct bump are closed with a
+range-scoped `pnpm.overrides` entry. Every override MUST have a row in
+[docs/dependency-overrides.md](./docs/dependency-overrides.md) naming its GHSA and the
+condition for deleting it — an override with no row is indistinguishable from a
+leftover, and a leftover can pin the tree *below* a version it could otherwise take.
+
+Third-party GitHub Actions are pinned to full commit SHAs with the version in a
+trailing comment, and anything downloaded and executed in CI is pinned to a release
+artifact and checked against a recorded `sha256`. No `curl … | sh`.
+
 ## Bundle size
 
 We gate every PR on `pnpm size-limit` — the brotli-compressed size of each

@@ -1,0 +1,123 @@
+# Dependabot configuration.
+#
+# Until this file existed, Dependabot only ran because "Dependabot security
+# updates" was ticked in repository settings. That produces alerts and the odd
+# security PR, but no scheduled version updates — and OpenSSF Scorecard's
+# Dependency-Update-Tool check, which looks for this exact filename on the
+# DEFAULT branch, scored the repository 0.
+#
+# Two things about branches are worth knowing before editing this file:
+#
+#   1. Dependabot reads this file from the DEFAULT branch only. While `prod` is
+#      the default branch, changes here do nothing until the next release
+#      promotes them — the same lag that kept 39 alerts open against `prod`
+#      while `dev` had already fixed every one of them.
+#
+#   2. `target-branch: dev` sends VERSION updates to `dev`, which is where all
+#      dependency work happens and the only branch a PR may target
+#      (CONTRIBUTING.md -> Pull Requests). Per GitHub's documentation, SECURITY
+#      updates ignore it: they "always use the default branch for the
+#      repository", and the options in this entry stop applying to them. So
+#      while `prod` is the default, a Dependabot security PR will arrive
+#      against `prod`. Do NOT merge it — `prod` is advanced only by the release
+#      PR. Close it and take the bump on `dev`.
+#
+# Both wrinkles disappear if the default branch is moved to `dev`; see the
+# release-flow notes in CONTRIBUTING.md.
+
+version: 2
+
+updates:
+  # ---------------------------------------------------------------------------
+  # GitHub Actions. Every `uses:` in this repository is pinned to a full commit
+  # SHA (Scorecard's Pinned-Dependencies check), which is only safe if
+  # something keeps moving the pins — an unmaintained SHA is a frozen
+  # vulnerability, not a secure one. This is that something: Dependabot
+  # rewrites the SHA and the trailing `# vX.Y.Z` comment together.
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Oslo
+    target-branch: dev
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci(actions)
+    groups:
+      # One PR a week for the whole workflow fleet rather than one per action.
+      github-actions:
+        patterns: ['*']
+
+  # ---------------------------------------------------------------------------
+  # npm. Grouped so a weekly sweep is one or two reviewable PRs rather than
+  # twenty. Production and development are kept apart on purpose: a production
+  # bump ships to every consumer and deserves its own read, a devDependency
+  # bump does not.
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Oslo
+    target-branch: dev
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: chore(deps)
+      prefix-development: chore(deps-dev)
+    groups:
+      production-dependencies:
+        dependency-type: production
+        patterns: ['*']
+      development-dependencies:
+        dependency-type: development
+        patterns: ['*']
+    ignore:
+      # Held deliberately — see the PR that introduced this file and
+      # docs/dependency-overrides.md. Each entry names what has to change
+      # before the hold can be lifted; none of them is "we forgot".
+
+      # @react-three/fiber 9.7.0 peers on `react >=19 <19.3`, so React 19.3
+      # cannot be installed alongside it. Two Reacts in one jsdom run is not
+      # hypothetical: it produced 734 failing tests with
+      # "Cannot read properties of null (reading 'useContext')".
+      # Lift when @react-three/fiber widens its peer range.
+      - dependency-name: react
+        versions: ['>=19.3.0']
+      - dependency-name: react-dom
+        versions: ['>=19.3.0']
+
+      # Vitest 5 removed the `vitest/reporters` entry point that
+      # @storybook/addon-vitest@10.6.0 imports, and that addon peers on
+      # `vitest: ^3 || ^4`. Support exists only on Storybook `next`
+      # (11.0.0-alpha.1). Lift when a Storybook 10.x release carries the
+      # backport, or when this repo moves to Storybook 11.
+      - dependency-name: vitest
+        versions: ['>=5.0.0']
+      - dependency-name: '@vitest/*'
+        versions: ['>=5.0.0']
+
+      # size-limit 14 switched @size-limit/preset-small-lib to rolldown by
+      # default, which measures LARGER for identical code (ai/size-limit#399,
+      # open, no documented opt-out). Every budget in .size-limit.cjs would
+      # have to be re-baselined against a worse bundler, which is how a size
+      # gate stops catching real regressions. Lift when #399 is resolved.
+      - dependency-name: size-limit
+        versions: ['>=14.0.0']
+      - dependency-name: '@size-limit/*'
+        versions: ['>=14.0.0']
+
+      # TypeScript 7 ships without a compiler API (a new one is promised for
+      # 7.1), which breaks everything that embeds `typescript`
+      # programmatically — react-docgen-typescript behind Storybook's props
+      # tables included. It also forces `stableTypeOrdering` and changes
+      # template-literal Unicode handling, both of which can change emitted
+      # `.d.ts` text, and Microsoft publishes no statement that TS 7
+      # declarations are readable by TS 6 consumers. Lift at 7.1, after
+      # diffing the full `.d.ts` tree against a TS 6 build.
+      - dependency-name: typescript
+        versions: ['>=7.0.0']
