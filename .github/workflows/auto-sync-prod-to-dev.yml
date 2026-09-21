@@ -1,13 +1,24 @@
 name: Auto-sync prod → dev
 
-# After the Changesets Release PR merges to prod and the Release workflow
-# publishes successfully, the version-bump commit lands on prod and dev falls
-# behind. This workflow opens (and auto-merges) a chore PR that brings dev
-# back in sync with prod, eliminating the manual merge-up step.
+# SAFETY NET, not part of the normal release.
+#
+# The version bump now happens on `dev` (see release.yml), and `prod` is only
+# ever advanced by the standing promote PR, whose tree IS `dev`'s tree. So in
+# the healthy flow `prod` never carries content `dev` lacks and there is
+# nothing to sync — this workflow notices that and exits.
+#
+# It still exists for the one case that can put real content on `prod` on its
+# own: a hotfix merged straight into `prod`. Then it does what it always did —
+# opens (and auto-merges) a chore PR bringing `dev` back in line.
+#
+# The divergence test is deliberately on CONTENT (`git diff`), not on commits.
+# Every promotion leaves a merge commit on `prod` that `dev` will never
+# contain; testing commits would open a pointless sync PR after every single
+# release, which is exactly the per-release paperwork this flow removed.
 #
 # Escape hatch: include `[skip auto-sync]` in the prod commit message to
 # suppress this workflow for that prod push. Manual dispatch always attempts
-# the sync after checking whether prod is ahead of dev.
+# the sync after checking whether prod carries content dev does not.
 on:
   workflow_run:
     workflows: ['Release']
@@ -107,16 +118,53 @@ jobs:
           git config user.name 'medal-social-release-bot[bot]'
           git config user.email 'medal-social-release-bot[bot]@users.noreply.github.com'
 
-      - name: Check whether prod has commits not on dev
+      # DIRECTIONAL CONTENT, not commits and not tree inequality.
+      #
+      # Commits are wrong because a promotion always leaves a merge commit on
+      # `prod` that `dev` will never hold, even though its tree came from
+      # `dev` — testing commits would open a pointless sync PR after every
+      # release.
+      #
+      # Plain tree inequality is wrong too, and in the other direction: `dev`
+      # moving ahead after a release also makes the trees differ, which would
+      # fire the sync for an ordinary feature merge and produce a PR with an
+      # empty diff.
+      #
+      # The question is one-way — does `prod` contribute anything `dev` does
+      # not already have — so ask it that way: merge the two in memory and see
+      # whether the result differs from `dev`'s tree.
+      - name: Check whether prod carries content dev does not
         if: steps.trigger.outputs.should_sync == 'true'
         id: divergence
         run: |
+          set -u
           git fetch origin dev:refs/remotes/origin/dev
-          if [ -z "$(git rev-list origin/dev..HEAD)" ]; then
+
+          # `--write-tree` prints the merged tree oid on its first line whether
+          # or not it conflicted, and exits 1 when it did. The Actions shell is
+          # `bash -e`, so the failing exit has to be caught, not inherited.
+          set +e
+          merge_out="$(git merge-tree --write-tree origin/dev HEAD)"
+          rc=$?
+          set -e
+
+          if [ "$rc" -gt 1 ]; then
+            echo "::error::git merge-tree failed (exit $rc) — cannot decide whether a sync is needed."
+            exit 1
+          fi
+
+          dev_tree="$(git rev-parse origin/dev^{tree})"
+          merged_tree="$(printf '%s\n' "$merge_out" | head -1)"
+
+          # A conflict (rc == 1) means prod definitely contributes something,
+          # so it falls through to needs_sync and the real merge downstream
+          # reports the detail.
+          if [ "$rc" -eq 0 ] && [ "$merged_tree" = "$dev_tree" ]; then
             echo "needs_sync=false" >> "$GITHUB_OUTPUT"
-            echo "prod is not ahead of dev — nothing to sync."
+            echo "dev already carries everything on prod — nothing to sync."
           else
             echo "needs_sync=true" >> "$GITHUB_OUTPUT"
+            echo "prod contributes content dev does not have (merge-tree exit $rc)."
           fi
 
       # Runs BEFORE the merge, while HEAD is still prod. This case produces no
@@ -387,13 +435,26 @@ jobs:
           fi
 
           # Proof, not optimism. Opening a PR with `--auto` only SCHEDULES the
-          # merge, and the `has_existing` path does not even do that, so
-          # step success is not evidence that prod reached dev. Close only once
-          # prod is genuinely an ancestor of dev; otherwise leave the issue open
+          # merge, and the `has_existing` path does not even do that, so step
+          # success is not evidence that prod reached dev. Close only once dev
+          # genuinely carries prod's content; otherwise leave the issue open
           # and let a later run close it.
+          #
+          # Same directional content test as the divergence check above, and
+          # for the same two reasons: ancestry is permanently false in the
+          # healthy flow (every promotion leaves a merge commit on `prod` that
+          # `dev` will never contain), and plain tree inequality is also false
+          # as soon as `dev` moves ahead — either would pin this issue open
+          # forever. The question is only whether `prod` still has something
+          # `dev` lacks.
           git fetch --quiet origin prod dev
-          if ! git merge-base --is-ancestor origin/prod origin/dev; then
-            echo "prod is not an ancestor of dev yet (a sync PR may still be in flight)."
+          set +e
+          merge_out="$(git merge-tree --write-tree origin/dev origin/prod)"
+          rc=$?
+          set -e
+          if [ "$rc" -ne 0 ] ||
+            [ "$(printf '%s\n' "$merge_out" | head -1)" != "$(git rev-parse origin/dev^{tree})" ]; then
+            echo "dev does not carry prod's content yet (a sync PR may still be in flight)."
             echo "Leaving tracking issue #$number open."
             exit 0
           fi

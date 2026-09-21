@@ -272,7 +272,15 @@ not committed to this repository.
 
 ## Release
 
-Changesets + GitHub Actions (OIDC trusted publishing). Add a changeset with `pnpm changeset`, merge to the release branch, and the `Release` workflow handles npm publish with provenance.
+Changesets + GitHub Actions (OIDC trusted publishing). Add a changeset with
+`pnpm changeset` and merge into `dev`; the version bump lands on `dev` by itself, and a
+standing `release: promote dev → prod` pull request is kept open for you. **Approving
+that PR is the release** — it merges itself and publishes to npm with provenance.
+
+Need a build before then? Run the `Release` workflow with `mode: snapshot` for a
+throwaway prerelease under its own dist-tag.
+
+Full flow, hotfixes and failure handling: [CONTRIBUTING.md → Releasing](./CONTRIBUTING.md#releasing).
 
 ## License
 
