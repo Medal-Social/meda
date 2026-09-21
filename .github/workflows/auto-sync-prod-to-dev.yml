@@ -24,9 +24,10 @@ concurrency:
 #   - Medal Approvals (MEDAL_APPROVALS_*)         APPROVES the sync PR
 # These are different App identities, so Medal Approvals can approve a PR
 # opened by Release Bot without hitting "cannot approve your own PR".
-# GITHUB_TOKEN is intentionally left at zero perms — using it here would
-# attribute events to github-actions[bot], which per GitHub's docs does
-# NOT cascade to other workflows.
+# GITHUB_TOKEN is intentionally left at zero perms for everything that has to
+# cascade — using it for the branch push or the PR would attribute events to
+# github-actions[bot], which per GitHub's docs does NOT trigger other
+# workflows (auto-approve, auto-merge).
 permissions: {}
 
 jobs:
@@ -37,7 +38,18 @@ jobs:
       (github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.head_branch == 'prod')
-    permissions: {}
+    # `issues: write` is the ONE added scope, and it is on GITHUB_TOKEN rather
+    # than the Release Bot App, deliberately: the tracking issue is meant for a
+    # human, so the "must cascade to other workflows" argument above does not
+    # apply, and this keeps the App's installation permissions untouched. Every
+    # git/PR write below still uses the App token. GITHUB_TOKEN gets no
+    # `contents` scope — `actions/checkout` is passed the App token explicitly.
+    permissions:
+      issues: write
+    env:
+      # One tracking issue, found by exact title so the workflow can update
+      # rather than pile up duplicates.
+      TRACKING_ISSUE_TITLE: 'Auto-sync prod → dev needs a manual merge'
     steps:
       - name: Classify trigger
         id: trigger
@@ -107,6 +119,29 @@ jobs:
             echo "needs_sync=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # Runs BEFORE the merge, while HEAD is still prod. This case produces no
+      # conflict at all — the merge happily keeps dev's copy of a changeset the
+      # release already consumed — so without this step it is invisible until
+      # the next release republishes the notes and over-bumps the version.
+      - name: Detect changesets released on prod but still present on dev
+        if: steps.divergence.outputs.needs_sync == 'true'
+        id: stale
+        run: |
+          # pipefail matters here: the Actions default shell is `bash -e`, which
+          # does NOT set it, so piping the detector through `tee` would adopt
+          # tee's exit status and turn a crashed detector into an empty — i.e.
+          # "clean" — report. Redirect instead, and let a non-zero detector fail
+          # the step; the report step below picks that up too.
+          set -euo pipefail
+          node scripts/detect-stale-changesets.mjs --prod HEAD --dev origin/dev \
+            > "$RUNNER_TEMP/stale.md"
+          if [ -s "$RUNNER_TEMP/stale.md" ]; then
+            cat "$RUNNER_TEMP/stale.md"
+            echo "Stale changesets detected — blocking the automatic sync."
+          else
+            echo "No released-but-unremoved changesets on dev."
+          fi
+
       - name: Check for an existing auto-sync PR
         if: steps.divergence.outputs.needs_sync == 'true'
         id: existing-sync-pr
@@ -153,34 +188,217 @@ jobs:
             echo "has_existing=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # A stale changeset BLOCKS the automatic sync rather than riding along
+      # with it. Not just tidiness: the detector can only see the problem while
+      # `prod` is still ahead, because it looks at release commits in
+      # `merge-base(prod, dev)..prod`. Let the sync land and that range empties,
+      # the file becomes undetectable, and the next no-op run would close the
+      # tracking issue while `dev` still carries a spent changeset.
       - name: Create sync branch and merge dev into it
-        if: steps.divergence.outputs.needs_sync == 'true' && steps.existing-sync-pr.outputs.has_existing != 'true'
+        if: |
+          steps.divergence.outputs.needs_sync == 'true' &&
+          steps.existing-sync-pr.outputs.has_existing != 'true' &&
+          steps.stale.outputs.stale != 'true'
         id: branch
         run: |
           BRANCH="chore/auto-sync-prod-to-dev-${{ github.run_id }}"
           git checkout -b "$BRANCH"
           # Merge origin/dev into the prod-based branch so the resulting PR
           # cleanly fast-forwards (or three-way merges) into dev.
-          git merge --no-edit origin/dev || {
+          if ! git merge --no-edit origin/dev; then
+            # Record the conflicted paths, then ABORT. The branch is never
+            # pushed and no PR is opened from a conflicted tree: this repo runs
+            # auto-approve and `gh pr merge --auto` on the
+            # `chore/auto-sync-prod-to-dev-` prefix, so a PR carrying conflict
+            # markers would be one rule away from landing on dev. The report
+            # step below fails the job.
+            git diff --name-only --diff-filter=U > "$RUNNER_TEMP/conflicts.txt"
+            git merge --abort || true
             echo "Merge conflict between prod and dev — manual intervention required."
-            exit 1
-          }
+            cat "$RUNNER_TEMP/conflicts.txt"
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           git push origin "$BRANCH"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
       - name: Open PR and enable auto-merge
-        if: steps.divergence.outputs.needs_sync == 'true' && steps.existing-sync-pr.outputs.has_existing != 'true'
+        if: |
+          steps.divergence.outputs.needs_sync == 'true' &&
+          steps.existing-sync-pr.outputs.has_existing != 'true' &&
+          steps.stale.outputs.stale != 'true' &&
+          steps.branch.outputs.conflict != 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           BRANCH: ${{ steps.branch.outputs.branch }}
         run: |
+          set -euo pipefail
+          BODY="$RUNNER_TEMP/sync-pr.md"
+          {
+            echo 'Automated sync after a successful Changesets release on `prod`. Brings `dev`'
+            echo 'back in line with `prod` so the next feat → dev → prod cycle starts from a'
+            echo 'clean ancestry.'
+            echo
+            echo '**Merge this with a merge commit, never a squash.** A squash drops the second'
+            echo 'parent, so `prod` does not become an ancestor of `dev` and the next auto-sync'
+            echo 'conflicts all over again — exactly what happened with #222 and needed #223 to'
+            echo 'repair.'
+          } > "$BODY"
+
           PR_URL=$(gh pr create \
             --repo "${{ github.repository }}" \
             --base dev \
             --head "$BRANCH" \
             --title 'chore: auto-sync prod → dev' \
-            --body 'Automated sync after a successful Changesets release on `prod`. Brings `dev` back in line with `prod` so the next feat → dev → prod cycle starts from a clean ancestry.')
+            --body-file "$BODY")
           echo "Opened: $PR_URL"
           gh pr merge --auto --merge \
             --repo "${{ github.repository }}" \
             "$PR_URL"
+
+      # ---------------------------------------------------------------------
+      # Make a sync that needs hands impossible to miss.
+      #
+      # Two conditions land here, and neither used to surface anywhere a human
+      # would look: a merge conflict (previously a bare `exit 1` inside a step
+      # log) and a released-but-unremoved changeset (previously nothing at all,
+      # because it does not conflict).
+      # ---------------------------------------------------------------------
+      - name: Report a sync that needs hands
+        if: |
+          !cancelled() &&
+          (steps.branch.outputs.conflict == 'true' ||
+           steps.stale.outputs.stale == 'true' ||
+           steps.stale.outcome == 'failure')
+        id: report
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CONFLICT: ${{ steps.branch.outputs.conflict }}
+          STALE: ${{ steps.stale.outputs.stale }}
+          DETECTOR_OUTCOME: ${{ steps.stale.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          PROD_SHA="$(git rev-parse origin/prod 2>/dev/null || git rev-parse HEAD)"
+          DEV_SHA="$(git rev-parse origin/dev)"
+          BODY="$RUNNER_TEMP/tracking-issue.md"
+
+          {
+            echo "\`prod\` has changes that could not be synced into \`dev\` automatically."
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| \`prod\` | \`$PROD_SHA\` |"
+            echo "| \`dev\` | \`$DEV_SHA\` |"
+            echo "| run | $RUN_URL |"
+            echo
+          } > "$BODY"
+
+          if [ "$CONFLICT" = 'true' ]; then
+            {
+              echo "### Merge conflict"
+              echo
+              echo "Merging \`origin/dev\` into \`prod\` conflicts in:"
+              echo
+              sed 's/^/- `/; s/$/`/' "$RUNNER_TEMP/conflicts.txt"
+              echo
+              echo "Nothing was pushed and no PR was opened — the merge was aborted on the"
+              echo "runner so a conflicted tree can never reach a branch that auto-merge watches."
+              echo
+            } >> "$BODY"
+          fi
+
+          if [ "$STALE" = 'true' ]; then
+            cat "$RUNNER_TEMP/stale.md" >> "$BODY"
+            echo >> "$BODY"
+            {
+              echo "The automatic sync was **not** attempted: this has to be fixed in the same"
+              echo "merge. The detector can only see a spent changeset while \`prod\` is still"
+              echo "ahead — once a sync lands, \`merge-base(prod, dev)..prod\` is empty and the"
+              echo "file becomes invisible."
+              echo
+            } >> "$BODY"
+          fi
+
+          if [ "$DETECTOR_OUTCOME" = 'failure' ]; then
+            {
+              echo "### The stale-changeset detector itself failed"
+              echo
+              echo "\`scripts/detect-stale-changesets.mjs\` exited non-zero, so this run could"
+              echo "not prove \`dev\` is free of already-released changesets. The sync was"
+              echo "blocked rather than run unchecked — see the step log for the error."
+              echo
+            } >> "$BODY"
+          fi
+
+          {
+            echo "### Manual recipe"
+            echo
+            echo '```bash'
+            echo "git fetch origin"
+            echo "git switch -c chore/sync-prod-to-dev origin/dev"
+            echo "git merge origin/prod         # resolve any conflicts"
+            echo "git rm .changeset/<released>.md   # only if listed above"
+            echo "pnpm exec changeset status --verbose   # confirm the next bump"
+            echo "git push -u origin chore/sync-prod-to-dev"
+            echo '```'
+            echo
+            echo "Open the PR against \`dev\` and **merge it with a merge commit, not a squash**"
+            echo "— a squash discards the second parent, so \`prod\` never becomes an ancestor of"
+            echo "\`dev\` and the next auto-sync conflicts again (#222 → #223)."
+            echo
+            echo "This issue is updated on every failed run and closed automatically by the"
+            echo "first healthy sync."
+          } >> "$BODY"
+
+          cat "$BODY" >> "$GITHUB_STEP_SUMMARY"
+
+          number="$(gh issue list --repo "${{ github.repository }}" --state open --limit 100 \
+            --json number,title \
+            --jq "[.[] | select(.title == \"$TRACKING_ISSUE_TITLE\")][0].number // empty")"
+
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --repo "${{ github.repository }}" --body-file "$BODY"
+            gh issue comment "$number" --repo "${{ github.repository }}" \
+              --body "Still needs a manual merge — refreshed from $RUN_URL."
+            echo "Updated tracking issue #$number"
+          else
+            gh issue create --repo "${{ github.repository }}" \
+              --title "$TRACKING_ISSUE_TITLE" --body-file "$BODY"
+          fi
+
+          echo "::error::prod → dev needs a manual merge. See the job summary and the tracking issue."
+          exit 1
+
+      - name: Close the tracking issue after a healthy sync
+        if: success() && steps.trigger.outputs.should_sync == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          number="$(gh issue list --repo "${{ github.repository }}" --state open --limit 100 \
+            --json number,title \
+            --jq "[.[] | select(.title == \"$TRACKING_ISSUE_TITLE\")][0].number // empty")"
+
+          if [ -z "$number" ]; then
+            echo "No open tracking issue — nothing to close."
+            exit 0
+          fi
+
+          # Proof, not optimism. Opening a PR with `--auto` only SCHEDULES the
+          # merge, and the `has_existing` path does not even do that, so
+          # step success is not evidence that prod reached dev. Close only once
+          # prod is genuinely an ancestor of dev; otherwise leave the issue open
+          # and let a later run close it.
+          git fetch --quiet origin prod dev
+          if ! git merge-base --is-ancestor origin/prod origin/dev; then
+            echo "prod is not an ancestor of dev yet (a sync PR may still be in flight)."
+            echo "Leaving tracking issue #$number open."
+            exit 0
+          fi
+
+          gh issue comment "$number" --repo "${{ github.repository }}" \
+            --body "prod is an ancestor of dev again as of $RUN_URL. Closing."
+          gh issue close "$number" --repo "${{ github.repository }}"
+          echo "Closed tracking issue #$number"
