@@ -173,6 +173,22 @@ If you legitimately need to bump a limit (a new dep, a real feature growth):
 
 Reviewers MUST flag a silent limit bump.
 
+## Dependencies and security advisories
+
+Dependabot is configured in `.github/dependabot.yml`: grouped weekly version updates
+for npm and for the SHA-pinned GitHub Actions, targeting `dev`. Packages that are
+deliberately held back are listed there with the condition that lifts each hold.
+
+Transitive advisories that cannot be fixed by a direct bump are closed with a
+range-scoped `pnpm.overrides` entry. Every override MUST have a row in
+[docs/dependency-overrides.md](./docs/dependency-overrides.md) naming its GHSA and the
+condition for deleting it — an override with no row is indistinguishable from a
+leftover, and a leftover can pin the tree *below* a version it could otherwise take.
+
+Third-party GitHub Actions are pinned to full commit SHAs with the version in a
+trailing comment, and anything downloaded and executed in CI is pinned to a release
+artifact and checked against a recorded `sha256`. No `curl … | sh`.
+
 ## Visual review (Chromatic)
 
 Visual review runs through Chromatic. The `Chromatic` GitHub workflow publishes
