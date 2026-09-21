@@ -1,5 +1,46 @@
 # @medalsocial/meda
 
+## 2.8.1
+
+### Patch Changes
+
+- [#217](https://github.com/Medal-Social/meda/pull/217) [`e42eb45`](https://github.com/Medal-Social/meda/commit/e42eb45089eacdb19b0d50cb94c4534f8f4792a5) Thanks [@adaadev](https://github.com/adaadev)! - Close the five live advisories and take the safe patch upgrades.
+  
+  The existing `sharp` override lifted only to `^0.35.0`, which still permitted
+  the vulnerable 0.35.3 — it is retargeted at `^0.35.4`, the version that fixes
+  GHSA-rgj7-g3m4-5g8c. Three more transitive advisories get overrides, and
+  wrangler moves to 4.130.0 to match the rest of the estate.
+
+- [#225](https://github.com/Medal-Social/meda/pull/225) [`6b1581f`](https://github.com/Medal-Social/meda/commit/6b1581f15fa9250b4fd76925412714d3d0ff41b9) Thanks [@adaadev](https://github.com/adaadev)! - Refresh every dependency to the newest version this package can take. The code this
+  package ships is unchanged — all 467 files in `dist/` are byte-identical before and
+  after — and no export, no type and no `peerDependencies` range moved, so nothing in a
+  consuming app has to change to take this.
+  
+  Three runtime dependencies do move underneath it: `@base-ui/react` 1.7.0 → 1.8.0,
+  `react-resizable-panels` 4.12.4 → 4.13.1 and `tailwind-merge` 3.6.0 → 3.7.0. Those
+  resolve in your install rather than being bundled here, so behaviour inherited from
+  them can differ even though meda's own output does not.
+
+- [#216](https://github.com/Medal-Social/meda/pull/216) [`46aab63`](https://github.com/Medal-Social/meda/commit/46aab631130d46072b4bfca158deace27c54160e) Thanks [@adaadev](https://github.com/adaadev)! - Remove the unused `fast-glob` devDependency added in [#215](https://github.com/Medal-Social/meda/issues/215).
+  
+  `scripts/lint-tokens.mjs` on this branch uses Node's built-in
+  `glob` from `node:fs/promises`; nothing in the repo imports `fast-glob`.
+  The CI wiring from [#215](https://github.com/Medal-Social/meda/issues/215) stays — `pnpm lint:tokens` still runs, and still fails
+  on a violation.
+
+- [#215](https://github.com/Medal-Social/meda/pull/215) [`6a846a7`](https://github.com/Medal-Social/meda/commit/6a846a718257059805c0083ccc8f6f1c67c8ca54) Thanks [@adaadev](https://github.com/adaadev)! - Declare `fast-glob`, which `scripts/lint-tokens.mjs` imports, and run
+  `lint:tokens` in CI.
+  
+  The design-token linter has been dead: `fast-glob` was never declared, so
+  `pnpm lint:tokens` failed with `ERR_MODULE_NOT_FOUND` on a clean install. It
+  went unnoticed because it only ever ran through the `quality` script, and CI
+  runs `lint`, `typecheck`, `check:stories`, `build`, `test:coverage`,
+  `registry:validate` and `size-limit` — never `quality`.
+  
+  No runtime change; devDependency and CI only.
+
+- [#210](https://github.com/Medal-Social/meda/pull/210) [`40b56bd`](https://github.com/Medal-Social/meda/commit/40b56bdb21ccb9d1336d130346d2bcbb484a8730) Thanks [@adaadev](https://github.com/adaadev)! - Dependency security refresh: upgrade all dependencies to latest (vitest 4.1.11 clearing three critical @vitest/browser advisories, vite 8.2.2, storybook 10.5.10, biome 2.5.11, wrangler 4.127.1, changesets 3, size-limit 13, jsdom 30, @testing-library/jest-dom 7, chromatic 18, three 0.185, @base-ui/react 1.7, and more), resolving all 31 open Dependabot alerts (undici, js-yaml, postcss, ws, sharp, esbuild, @babel/core, brace-expansion, vite). The mobile dock brand chip now uses the `--color-brand-600` token instead of a hard-coded hex so it follows consumer themes.
+
 ## 2.8.0
 
 ### Minor Changes
