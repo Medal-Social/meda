@@ -1,0 +1,8 @@
+/* @medalsocial/meda/calendar/styles.css
+ *
+ * Generates only the Tailwind utilities used by `@medalsocial/meda/calendar`.
+ * Requires the theme bridge: import `@medalsocial/meda/styles/base.css`
+ * (meda tokens) or `@medalsocial/meda/styles/bridge.css` (your own tokens)
+ * once, before this file. Paths resolve relative to dist/styles/.
+ */
+@source "../calendar/**/*.js";

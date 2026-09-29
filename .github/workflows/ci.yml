@@ -136,3 +136,8 @@ jobs:
       # in a separate job. The `build` job name is preserved so the required
       # status-check rule on dev/prod still resolves.
       - run: pnpm size-limit
+
+      # Lean-consumer budget: calendar + booking primitives JS (esbuild) and
+      # the CSS the lean stylesheet entries add to a consumer Tailwind build
+      # (@tailwindcss/cli against a fixture). Reuses the dist/ built above.
+      - run: pnpm size:budget

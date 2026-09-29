@@ -92,6 +92,10 @@
       "types": "./dist/post-preview/index.d.ts",
       "default": "./dist/post-preview/index.js"
     },
+    "./primitives": {
+      "types": "./dist/primitives/index.d.ts",
+      "default": "./dist/primitives/index.js"
+    },
     "./styles": {
       "default": "./dist/styles/theme.css"
     },
@@ -100,6 +104,24 @@
     },
     "./styles/tokens": {
       "default": "./dist/styles/tokens.css"
+    },
+    "./styles/tokens.css": {
+      "default": "./dist/styles/tokens.css"
+    },
+    "./styles/bridge.css": {
+      "default": "./dist/styles/bridge.css"
+    },
+    "./styles/base.css": {
+      "default": "./dist/styles/base.css"
+    },
+    "./calendar/styles.css": {
+      "default": "./dist/styles/calendar.css"
+    },
+    "./primitives/styles.css": {
+      "default": "./dist/styles/primitives.css"
+    },
+    "./workflow-builder/styles.css": {
+      "default": "./dist/styles/workflow-builder.css"
     },
     "./shell/primitives": {
       "types": "./dist/shell/primitives.d.ts",
@@ -148,6 +170,7 @@
     "chromatic": "chromatic --build-script-name=storybook:build --exit-zero-on-changes",
     "size-limit": "size-limit",
     "size-limit:why": "size-limit --why",
+    "size:budget": "node ./scripts/size-budget.mjs",
     "version": "changeset version",
     "release": "pnpm build && changeset publish",
     "registry:validate": "node ./registry/scripts/validate-registry.mjs",
@@ -167,23 +190,24 @@
     "react-dom": ">=19",
     "react-markdown": "^10.0.0",
     "rehype-highlight": "^7.0.0",
-    "remark-gfm": "^4.0.0"
+    "remark-gfm": "^4.0.0",
+    "three": ">=0.160.0"
   },
   "peerDependenciesMeta": {
     "@dnd-kit/core": {
-      "optional": false
+      "optional": true
     },
     "@dnd-kit/sortable": {
-      "optional": false
+      "optional": true
     },
     "@dnd-kit/utilities": {
-      "optional": false
+      "optional": true
     },
     "@react-three/fiber": {
       "optional": true
     },
     "@xyflow/react": {
-      "optional": false
+      "optional": true
     },
     "next-themes": {
       "optional": true
@@ -196,18 +220,18 @@
     },
     "remark-gfm": {
       "optional": true
+    },
+    "three": {
+      "optional": true
     }
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",
-    "@fontsource-variable/geist": "5.3.0",
-    "@fontsource-variable/geist-mono": "5.3.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "cmdk": "1.1.1",
     "react-resizable-panels": "4.13.1",
     "tailwind-merge": "3.7.0",
-    "three": "0.185.1",
     "vaul": "1.1.2"
   },
   "devDependencies": {
@@ -217,6 +241,8 @@
     "@dnd-kit/core": "6.3.1",
     "@dnd-kit/sortable": "10.0.0",
     "@dnd-kit/utilities": "3.2.2",
+    "@fontsource-variable/geist": "5.3.0",
+    "@fontsource-variable/geist-mono": "5.3.0",
     "@react-three/fiber": "9.7.0",
     "@size-limit/preset-small-lib": "13.0.3",
     "@storybook/addon-a11y": "10.6.0",
@@ -225,6 +251,7 @@
     "@storybook/addon-themes": "10.6.0",
     "@storybook/addon-vitest": "10.6.0",
     "@storybook/react-vite": "10.6.0",
+    "@tailwindcss/cli": "4.3.3",
     "@tailwindcss/vite": "4.3.3",
     "@tanstack/intent": "0.4.0",
     "@testing-library/jest-dom": "7.0.1",
@@ -238,6 +265,7 @@
     "@vitest/coverage-v8": "4.1.11",
     "@xyflow/react": "12.11.6",
     "chromatic": "18.9.4",
+    "esbuild": "0.28.2",
     "fast-check": "4.10.2",
     "husky": "9.1.7",
     "jsdom": "30.1.0",
@@ -251,6 +279,7 @@
     "size-limit": "13.0.3",
     "storybook": "10.6.0",
     "tailwindcss": "4.3.3",
+    "three": "0.185.1",
     "typescript": "~6.0.3",
     "vite": "8.3.0",
     "vitest": "4.1.11",
