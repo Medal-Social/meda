@@ -83,6 +83,16 @@ module.exports = [
     limit: '13 kB',
   },
   {
+    // Booking-ready primitives subpath (Button, Input, ToggleGroup, Avatar,
+    // Card, Skeleton, ...). Dependency-free apart from tailwind-merge (via
+    // cn), which dominates the number. The lean-consumer JS + CSS budget for
+    // calendar + primitives lives in scripts/size-budget.mjs (pnpm size:budget).
+    // Measured 11.13 kB brotli on first build; ~15% headroom.
+    name: 'primitives',
+    path: 'dist/primitives/index.js',
+    limit: '13 kB',
+  },
+  {
     name: 'chat',
     path: 'dist/chat/index.js',
     limit: '6.5 kB',
