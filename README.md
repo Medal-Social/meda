@@ -71,6 +71,7 @@ only the utilities its own compiled output uses:
 | `styles/tokens.css` | Raw CSS custom properties only. |
 | `primitives/styles.css` | Utilities for the foundation primitives (Card, Skeleton, StatusPill, EmptyState, FilterRail). |
 | `calendar/styles.css` | Utilities for `@medalsocial/meda/calendar`. |
+| `workflow-builder/styles.css` | `@xyflow/react`'s stylesheet + utilities for `@medalsocial/meda/workflow-builder`. The only lean entry that ships xyflow CSS. |
 
 Feature stylesheets never include the foundation, so importing several of them
 does not duplicate tokens — import exactly one foundation first. Never combine

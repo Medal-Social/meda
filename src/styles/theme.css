@@ -9,7 +9,7 @@
  * "Lean consumer setup".
  */
 @import "./base.css";
-@import "@xyflow/react/dist/style.css";
+@import "./workflow-builder.css";
 
 /* Tell Tailwind v4 to scan meda's compiled component output so utilities
    like `h-full`, `mt-auto`, `py-3.5`, and `bg-shell-rail` (used by IconRail,

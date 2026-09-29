@@ -116,6 +116,9 @@
     "./primitives/styles.css": {
       "default": "./dist/styles/primitives.css"
     },
+    "./workflow-builder/styles.css": {
+      "default": "./dist/styles/workflow-builder.css"
+    },
     "./shell/primitives": {
       "types": "./dist/shell/primitives.d.ts",
       "default": "./dist/shell/primitives.js"

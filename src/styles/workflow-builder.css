@@ -1,0 +1,13 @@
+/* @medalsocial/meda/workflow-builder/styles.css
+ *
+ * @xyflow/react's base stylesheet + the Tailwind utilities used by
+ * `@medalsocial/meda/workflow-builder`. This is the ONLY lean entry that pulls
+ * in xyflow's CSS, so sites that never render a workflow canvas don't pay for
+ * it. Requires the theme bridge: import `@medalsocial/meda/styles/base.css`
+ * or `.../styles/bridge.css` once, before this file. theme.css imports this
+ * file, so `@medalsocial/meda/styles.css` consumers keep getting xyflow's CSS.
+ * Paths resolve relative to dist/styles/.
+ */
+@import "@xyflow/react/dist/style.css";
+
+@source "../workflow-builder/**/*.js";

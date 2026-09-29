@@ -58,10 +58,25 @@ describe('lean stylesheet entry points', () => {
     expect(css).not.toContain('**');
   });
 
+  it('workflow-builder.css owns the xyflow stylesheet and scans only workflow output', () => {
+    const css = code('workflow-builder.css');
+    expect(css).toMatch(/@import\s+["']@xyflow\/react\/dist\/style\.css["']/);
+    const sources = [...css.matchAll(/@source\s+(not\s+)?["']([^"']+)["']/g)].map((m) => m[2]);
+    expect(sources).toEqual(['../workflow-builder/**/*.js']);
+  });
+
+  it('keeps xyflow CSS out of every lean entry except workflow-builder.css', () => {
+    for (const file of ['base.css', 'bridge.css', 'tokens.css', 'calendar.css', 'primitives.css']) {
+      expect(code(file)).not.toContain('@xyflow');
+    }
+  });
+
   it('theme.css stays batteries-included (base + full component scan)', () => {
     const theme = code('theme.css');
     expect(theme).toMatch(/@import\s+["']\.\/base\.css["']/);
     expect(theme).toMatch(/@source\s+["']\.\.\/\*\*\/\*\.js["']/);
+    // Backward compat: styles.css consumers still receive xyflow's CSS.
+    expect(theme).toMatch(/@import\s+["']\.\/workflow-builder\.css["']/);
   });
 
   it.each([
@@ -73,6 +88,7 @@ describe('lean stylesheet entry points', () => {
     ['./styles/base.css', 'base.css'],
     ['./calendar/styles.css', 'calendar.css'],
     ['./primitives/styles.css', 'primitives.css'],
+    ['./workflow-builder/styles.css', 'workflow-builder.css'],
   ])('exports %s -> dist/styles/%s with a matching source file', (key, file) => {
     expect(exportTarget(key)).toBe(`./dist/styles/${file}`);
     expect(fs.existsSync(path.join(stylesDir, file))).toBe(true);
