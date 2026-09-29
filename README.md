@@ -18,7 +18,7 @@ them (package managers no longer auto-install them):
 | Peer | Needed by |
 | --- | --- |
 | `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` | `@medalsocial/meda` (root barrel), `/shell`, `/kanban`, `/email-builder` |
-| `@xyflow/react` | `@medalsocial/meda` (root barrel), `/workflow-builder` |
+| `@xyflow/react` | `@medalsocial/meda` (root barrel), `/workflow-builder`, and the CSS entries `styles.css` + `workflow-builder/styles.css` (they `@import` xyflow's stylesheet, so Tailwind fails to resolve it when the package is missing) |
 | `three`, `@react-three/fiber` | `/voice` (`VoiceOrb`) |
 | `react-markdown`, `remark-gfm`, `rehype-highlight` | `/markdown-view` |
 | `next-themes` | `NextThemesAdapter` / `themeAdapter="next-themes"` in `/shell` |
