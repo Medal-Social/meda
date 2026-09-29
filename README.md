@@ -12,6 +12,28 @@ pnpm add @medalsocial/meda lucide-react
 
 Peer deps: `react >= 19`, `react-dom >= 19`, and `lucide-react`.
 
+Feature peers are **optional** — install them only for the entry points that use
+them (package managers no longer auto-install them):
+
+| Peer | Needed by |
+| --- | --- |
+| `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` | `@medalsocial/meda` (root barrel), `/shell`, `/kanban`, `/email-builder` |
+| `@xyflow/react` | `@medalsocial/meda` (root barrel), `/workflow-builder` |
+| `three`, `@react-three/fiber` | `/voice` (`VoiceOrb`) |
+| `react-markdown`, `remark-gfm`, `rehype-highlight` | `/markdown-view` |
+| `next-themes` | `NextThemesAdapter` / `themeAdapter="next-themes"` in `/shell` |
+
+```bash
+# Full Medal app (root barrel / shell):
+pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities @xyflow/react
+```
+
+Lean surfaces such as `@medalsocial/meda/calendar` and
+`@medalsocial/meda/primitives` need none of them. Fonts are not bundled either:
+the tokens name `Geist` / `Geist Mono`, so load them yourself (for example
+`@fontsource-variable/geist` + `@fontsource-variable/geist-mono`, or
+`next/font`).
+
 ## Tailwind CSS v4 setup
 
 Meda ships a `styles.css` with its design tokens. Import it once in your entry stylesheet or entry script:
