@@ -92,6 +92,10 @@
       "types": "./dist/post-preview/index.d.ts",
       "default": "./dist/post-preview/index.js"
     },
+    "./primitives": {
+      "types": "./dist/primitives/index.d.ts",
+      "default": "./dist/primitives/index.js"
+    },
     "./styles": {
       "default": "./dist/styles/theme.css"
     },

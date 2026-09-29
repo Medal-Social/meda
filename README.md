@@ -91,7 +91,7 @@ only the utilities its own compiled output uses:
 | `styles/base.css` | `tokens.css` + `bridge.css` + the `color-scheme` base layer + Geist font mapping. No component scan, no xyflow. |
 | `styles/bridge.css` | `@custom-variant dark` + the `@theme inline` mappings (`bg-primary`, `text-muted-foreground`, `bg-brand-500`, ...). No token values, no fonts. |
 | `styles/tokens.css` | Raw CSS custom properties only. |
-| `primitives/styles.css` | Utilities for the foundation primitives (Card, Skeleton, StatusPill, EmptyState, FilterRail). |
+| `primitives/styles.css` | Utilities for `@medalsocial/meda/primitives` (Button, Input, ToggleGroup, Avatar, Card, Skeleton, StatusPill, EmptyState, FilterRail; not MarkdownView). |
 | `calendar/styles.css` | Utilities for `@medalsocial/meda/calendar`. |
 | `workflow-builder/styles.css` | `@xyflow/react`'s stylesheet + utilities for `@medalsocial/meda/workflow-builder`. The only lean entry that ships xyflow CSS. |
 
@@ -284,6 +284,7 @@ See the [demo app](./demo) for a live playground.
 - `@medalsocial/meda/recipes/next` — copyable Next.js adoption recipe metadata
 - `@medalsocial/meda/theme` — app-scoped token bridge helpers
 - `@medalsocial/meda/marketing` — marketing sections and campaign blocks
+- `@medalsocial/meda/primitives` — foundation primitives (`Button`, `Input`, `ToggleGroup`, `Avatar` + `getInitials`, `Card`, `Skeleton`, `StatusPill`, `EmptyState`, `FilterRail`); also re-exported from the root
 - `@medalsocial/meda/styles.css` — design tokens + base styles + every component's utilities
 - `@medalsocial/meda/styles/base.css`, `@medalsocial/meda/styles/bridge.css`, `@medalsocial/meda/<feature>/styles.css` — lean stylesheet entries (see [Lean consumer setup](#lean-consumer-setup))
 
