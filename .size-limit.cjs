@@ -135,9 +135,16 @@ module.exports = [
     limit: '15 kB',
   },
   {
+    // Raised 2.5 kB → 5.5 kB (3.0, lean entries): @xyflow/react's stylesheet
+    // is now vendored into dist/styles/vendor/xyflow.css so styles.css
+    // compiles without the (now optional) peer. size-limit used to treat the
+    // `@xyflow/react/dist/style.css` import as an external peer and skip it;
+    // it now follows the vendored file. Consumers pay the same bytes as
+    // before — they previously got them from their own node_modules.
+    // Measured 4.52 kB brotli; ~20% headroom.
     name: 'theme.css',
     path: 'dist/styles/theme.css',
-    limit: '2.5 kB',
+    limit: '5.5 kB',
   },
   {
     // Bumped from 1 kB → 2 kB: canonical .lib.pen contract adds 6 full color

@@ -7,6 +7,10 @@
  * or `.../styles/bridge.css` once, before this file. theme.css imports this
  * file, so `@medalsocial/meda/styles.css` consumers keep getting xyflow's CSS.
  * Paths resolve relative to dist/styles/.
+ *
+ * The build rewrites the xyflow import below to a vendored copy
+ * (dist/styles/vendor/xyflow.css), so the shipped sheet compiles even when
+ * the optional @xyflow/react peer is not installed.
  */
 @import "@xyflow/react/dist/style.css";
 

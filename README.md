@@ -18,7 +18,7 @@ them (package managers no longer auto-install them):
 | Peer | Needed by |
 | --- | --- |
 | `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` | `@medalsocial/meda` (root barrel), `/shell`, `/kanban`, `/email-builder` |
-| `@xyflow/react` | `@medalsocial/meda` (root barrel), `/workflow-builder`, and the CSS entries `styles.css` + `workflow-builder/styles.css` (they `@import` xyflow's stylesheet, so Tailwind fails to resolve it when the package is missing) |
+| `@xyflow/react` | `@medalsocial/meda` (root barrel), `/workflow-builder`. (Its stylesheet is vendored into `styles.css` / `workflow-builder/styles.css`, so the CSS compiles without the package.) |
 | `three`, `@react-three/fiber` | `/voice` (`VoiceOrb`) |
 | `react-markdown`, `remark-gfm`, `rehype-highlight` | `/markdown-view` |
 | `next-themes` | `NextThemesAdapter` / `themeAdapter="next-themes"` in `/shell` |
@@ -33,6 +33,34 @@ Lean surfaces such as `@medalsocial/meda/calendar` and
 the tokens name `Geist` / `Geist Mono`, so load them yourself (for example
 `@fontsource-variable/geist` + `@fontsource-variable/geist-mono`, or
 `next/font`).
+
+## Upgrading to 3.0
+
+3.0 makes the feature peers **optional**, so npm and pnpm no longer install them
+for you. Nothing else in the API changed.
+
+**If you import any of** the root `@medalsocial/meda`, `@medalsocial/meda/shell`,
+`/email-builder`, `/kanban`, `/workflow-builder`, or `@medalsocial/meda/styles.css`,
+add the peers to your own `package.json`:
+
+```bash
+pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities @xyflow/react
+```
+
+**If you render the 3D `VoiceOrb`** (`@medalsocial/meda/voice`), also add:
+
+```bash
+pnpm add three @react-three/fiber
+```
+
+`three` used to be a regular dependency of meda; it is now an optional peer.
+The `@fontsource-variable/geist*` packages are no longer installed by meda
+either — if you `@import` them, list them yourself.
+
+**Lean consumers need nothing:** `@medalsocial/meda/calendar`,
+`@medalsocial/meda/primitives`, `styles/bridge.css`, `styles/base.css` and the
+per-feature stylesheets never reach an optional peer (see
+[Lean consumer setup](#lean-consumer-setup)).
 
 ## Tailwind CSS v4 setup
 
