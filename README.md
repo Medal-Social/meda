@@ -42,6 +42,48 @@ Avoid placing token overrides before the Meda import; `tokens.css` defines the p
 @import '@medalsocial/meda/styles.css';
 ```
 
+### Lean consumer setup
+
+`styles.css` is batteries-included: it scans **every** meda component so
+Tailwind generates all of their utilities (~22 KB gzip of CSS), and it pulls in
+the `@xyflow/react` stylesheet. That is right for full Medal apps; it is
+overkill for a marketing or customer site that renders a calendar and a few
+primitives. Use the lean entries instead — each feature stylesheet generates
+only the utilities its own compiled output uses:
+
+```css
+@import 'tailwindcss';
+
+/* 1. Foundation — pick ONE */
+@import '@medalsocial/meda/styles/base.css';   /* meda tokens + theme bridge + base layer */
+/* @import '@medalsocial/meda/styles/bridge.css'; */ /* theme bridge only: bring your own tokens */
+
+/* 2. Only the surfaces you render */
+@import '@medalsocial/meda/primitives/styles.css';
+@import '@medalsocial/meda/calendar/styles.css';
+```
+
+| Entry | Contains |
+| --- | --- |
+| `styles.css` | `styles/base.css` + every feature (full component scan + xyflow CSS). Unchanged for existing consumers. |
+| `styles/base.css` | `tokens.css` + `bridge.css` + the `color-scheme` base layer + Geist font mapping. No component scan, no xyflow. |
+| `styles/bridge.css` | `@custom-variant dark` + the `@theme inline` mappings (`bg-primary`, `text-muted-foreground`, `bg-brand-500`, ...). No token values, no fonts. |
+| `styles/tokens.css` | Raw CSS custom properties only. |
+| `primitives/styles.css` | Utilities for the foundation primitives (Card, Skeleton, StatusPill, EmptyState, FilterRail). |
+| `calendar/styles.css` | Utilities for `@medalsocial/meda/calendar`. |
+
+Feature stylesheets never include the foundation, so importing several of them
+does not duplicate tokens — import exactly one foundation first. Never combine
+the lean entries with `styles.css` (it already contains all of them).
+
+**Bring your own tokens.** meda components use shadcn-style semantic tokens
+(`--background`, `--foreground`, `--primary`, `--primary-foreground`, `--card`,
+`--muted`, `--muted-foreground`, `--accent`, `--border`, `--input`, `--ring`,
+`--destructive`, ...). A site that already defines those names can import
+`styles/bridge.css` instead of `styles/base.css`, and meda parts re-theme to the
+site's palette automatically. `bridge.css` does not map `--font-sans`, so the
+site's own font stack is kept.
+
 ## Usage
 
 Use `AppShell` for the styled shell surface:
@@ -219,7 +261,8 @@ See the [demo app](./demo) for a live playground.
 - `@medalsocial/meda/recipes/next` — copyable Next.js adoption recipe metadata
 - `@medalsocial/meda/theme` — app-scoped token bridge helpers
 - `@medalsocial/meda/marketing` — marketing sections and campaign blocks
-- `@medalsocial/meda/styles.css` — design tokens + base styles
+- `@medalsocial/meda/styles.css` — design tokens + base styles + every component's utilities
+- `@medalsocial/meda/styles/base.css`, `@medalsocial/meda/styles/bridge.css`, `@medalsocial/meda/<feature>/styles.css` — lean stylesheet entries (see [Lean consumer setup](#lean-consumer-setup))
 
 ## Alternative: shadcn registry
 

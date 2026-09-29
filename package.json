@@ -101,6 +101,21 @@
     "./styles/tokens": {
       "default": "./dist/styles/tokens.css"
     },
+    "./styles/tokens.css": {
+      "default": "./dist/styles/tokens.css"
+    },
+    "./styles/bridge.css": {
+      "default": "./dist/styles/bridge.css"
+    },
+    "./styles/base.css": {
+      "default": "./dist/styles/base.css"
+    },
+    "./calendar/styles.css": {
+      "default": "./dist/styles/calendar.css"
+    },
+    "./primitives/styles.css": {
+      "default": "./dist/styles/primitives.css"
+    },
     "./shell/primitives": {
       "types": "./dist/shell/primitives.d.ts",
       "default": "./dist/shell/primitives.js"
