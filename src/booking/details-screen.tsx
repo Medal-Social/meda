@@ -231,12 +231,34 @@ export interface DetailsScreenProps {
  * that cannot receive anything. Not RFC 5322 — a stricter pattern rejects real
  * addresses.
  */
-const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/**
+ * A random submission id. `crypto.randomUUID` only exists in secure contexts
+ * (https, localhost); a plain-http origin falls back to `getRandomValues`,
+ * which is available everywhere, shaped as a v4 UUID.
+ */
+function mintNonce(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
 
 /** Blank is fine (the field is optional). Anything else has to be reachable. */
 export function looksLikeEmail(value: string): boolean {
   const trimmed = value.trim();
-  return trimmed.length === 0 || EMAIL_SHAPE.test(trimmed);
+  if (trimmed.length === 0) return true;
+  // Hand-rolled rather than a regex: linear on any input, same rule as
+  // /^[^\s@]+@[^\s@]+\.[^\s@]+$/.
+  if (/\s/.test(trimmed)) return false;
+  const at = trimmed.indexOf('@');
+  if (at < 1 || at !== trimmed.lastIndexOf('@')) return false;
+  const domain = trimmed.slice(at + 1);
+  for (let index = 1; index < domain.length - 1; index += 1) {
+    if (domain[index] === '.') return true;
+  }
+  return false;
 }
 
 /** The child's two fields as typed — both strings, including the year. */
@@ -338,8 +360,10 @@ export function DetailsScreen({
 
   // Minted once per mount (a lazy initialiser), never per press: a
   // double-tapped submit must carry the same nonce twice.
-  const [ownNonce] = useState(() => crypto.randomUUID());
-  const submissionNonce = nonceProp ?? ownNonce;
+  // Only minted when the caller does not pass one (lazily, once per mount).
+  const ownNonce = useRef<string | null>(null);
+  if (nonceProp === undefined && ownNonce.current === null) ownNonce.current = mintNonce();
+  const submissionNonce = nonceProp ?? ownNonce.current ?? '';
 
   // Which field has focus: the phone error is held back while the visitor is
   // still typing and appears the moment the field is left.

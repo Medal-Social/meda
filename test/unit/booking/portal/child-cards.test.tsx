@@ -164,3 +164,14 @@ describe('ChildCards', () => {
     ).toHaveNoViolations();
   });
 });
+
+describe('ChildCards keys', () => {
+  it('keeps twins without Medal ids apart (no duplicate React keys)', () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const twin = { ...MIA, personId: null };
+    renderCards({ kids: [twin, { ...twin }] });
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+    expect(errors.mock.calls.flat().join(' ')).not.toMatch(/same key/);
+    errors.mockRestore();
+  });
+});

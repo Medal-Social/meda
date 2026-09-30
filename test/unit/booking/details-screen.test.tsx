@@ -409,6 +409,20 @@ describe('DetailsScreen', () => {
     expect(onSubmit.mock.calls[2]?.[0].submissionNonce).toBe('held-by-shell');
   });
 
+  it('mints a v4-shaped nonce outside secure contexts (no crypto.randomUUID)', () => {
+    const original = crypto.randomUUID;
+    Object.defineProperty(crypto, 'randomUUID', { value: undefined, configurable: true });
+    try {
+      const { onSubmit } = setup();
+      fireEvent.click(submitButton());
+      expect(onSubmit.mock.calls[0]?.[0].submissionNonce).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+      );
+    } finally {
+      Object.defineProperty(crypto, 'randomUUID', { value: original, configurable: true });
+    }
+  });
+
   it('raises the child fields as actions, so the machine owns the answers too', () => {
     const { onChange } = setup({
       state: readyState({ items: [{ service: KIDS }, { service: WASH }] }),
@@ -623,5 +637,20 @@ describe('looksLikeEmail', () => {
     expect(looksLikeEmail('kari@')).toBe(false);
     expect(looksLikeEmail('kari example.no')).toBe(false);
     expect(looksLikeEmail('kari@example')).toBe(false);
+  });
+
+  it('matches the loose one-@-and-a-dot rule at the edges', () => {
+    for (const ok of ['a@b.c', 'a@b..c', 'a.b@c.d.e', ' a@b.c '])
+      expect(looksLikeEmail(ok), ok).toBe(true);
+    for (const bad of ['@b.c', 'a@.b', 'a@b.', 'a@b@c.d', 'a b@c.d', 'a@b .c']) {
+      expect(looksLikeEmail(bad), bad).toBe(false);
+    }
+  });
+
+  it('stays linear on pathological input', () => {
+    const started = performance.now();
+    looksLikeEmail(`!@!${'.!'.repeat(50_000)}`);
+    looksLikeEmail(`a@${'.'.repeat(100_000)}`);
+    expect(performance.now() - started).toBeLessThan(200);
   });
 });

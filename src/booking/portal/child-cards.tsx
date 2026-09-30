@@ -141,7 +141,8 @@ export function ChildCards({
     >
       {kids.map((child, index) => (
         <Card
-          key={child.personId ?? `${child.name}-${child.birthYear}`}
+          // Twins without Medal ids share name and year; the position keeps them apart.
+          key={child.personId ?? `${child.name}-${child.birthYear}-${index}`}
           child={child}
           index={index}
           variant={variant}

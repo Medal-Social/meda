@@ -136,9 +136,20 @@ export function createDemoClock(options: DemoClockOptions): BookingClock {
   return clock;
 }
 
+/** Drops trailing «(…)» groups, linearly (no backtracking regex). */
+function stripTrailingGroups(value: string): string {
+  let rest = value.trimEnd();
+  while (rest.endsWith(')')) {
+    const open = rest.lastIndexOf('(');
+    if (open === -1 || rest.slice(open + 1, -1).includes(')')) break;
+    rest = rest.slice(0, open).trimEnd();
+  }
+  return rest;
+}
+
 function stylistName(name: string): string {
   const trimmed = name.trim();
-  const stripped = trimmed.replace(/(?:\s*\([^()]*\))+\s*$/u, '').trim() || trimmed;
+  const stripped = stripTrailingGroups(trimmed) || trimmed;
   return stripped === '' ? '' : `${stripped.charAt(0).toUpperCase()}${stripped.slice(1)}`;
 }
 

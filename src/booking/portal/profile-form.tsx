@@ -209,11 +209,12 @@ export function ProfileForm({
         setConsent(result.marketingConsent);
         return;
       }
+      // Nothing was saved either way, so the box goes back first.
+      setConsent(previous);
       if (result.kind === 'session') {
         onSessionExpired?.();
         return;
       }
-      setConsent(previous);
       setConsentError(labels['profileForm.unreachable']);
     });
   }

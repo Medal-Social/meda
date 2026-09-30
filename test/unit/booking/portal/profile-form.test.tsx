@@ -238,9 +238,14 @@ describe('ProfileForm', () => {
       onConsentChange.mockResolvedValue({ ok: false, kind: 'session' });
       renderForm();
 
-      fireEvent.click(screen.getByRole('checkbox'));
+      const box = screen.getByRole('checkbox');
+      const before = (box as HTMLInputElement).checked;
+      fireEvent.click(box);
 
       await waitFor(() => expect(onSessionExpired).toHaveBeenCalledTimes(1));
+      // The unsaved change does not linger behind the expired session.
+      await waitFor(() => expect((box as HTMLInputElement).checked).toBe(before));
+      expect(screen.queryByText(UNREACHABLE)).not.toBeInTheDocument();
     });
   });
 
