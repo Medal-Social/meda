@@ -96,6 +96,15 @@ module.exports = [
     limit: '15 kB',
   },
   {
+    // Booking screens subpath (every screen: wizard steps, manage, login,
+    // portal). Built on the primitives + tailwind-merge (via cn). The lean
+    // booking-page JS + CSS budget lives in scripts/size-budget.mjs.
+    name: 'booking',
+    path: 'dist/booking/index.js',
+    // Measured 37.62 kB brotli on first build; ~14% headroom.
+    limit: '43 kB',
+  },
+  {
     name: 'chat',
     path: 'dist/chat/index.js',
     limit: '6.5 kB',

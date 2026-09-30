@@ -64,6 +64,10 @@
       "types": "./dist/calendar/index.d.ts",
       "import": "./dist/calendar/index.js"
     },
+    "./booking": {
+      "types": "./dist/booking/index.d.ts",
+      "default": "./dist/booking/index.js"
+    },
     "./workflow-builder": {
       "types": "./dist/workflow-builder/index.d.ts",
       "import": "./dist/workflow-builder/index.js"
@@ -116,6 +120,9 @@
     },
     "./calendar/styles.css": {
       "default": "./dist/styles/calendar.css"
+    },
+    "./booking/styles.css": {
+      "default": "./dist/styles/booking.css"
     },
     "./primitives/styles.css": {
       "default": "./dist/styles/primitives.css"

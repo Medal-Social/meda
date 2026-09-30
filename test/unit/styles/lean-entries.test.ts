@@ -51,6 +51,13 @@ describe('lean stylesheet entry points', () => {
     expect(sources.map((m) => m[2])).toEqual(['../calendar/**/*.js']);
   });
 
+  it('booking.css scans only the booking screens output', () => {
+    const sources = [...code('booking.css').matchAll(/@source\s+(not\s+)?["']([^"']+)["']/g)];
+    expect(sources.map((m) => m[2])).toEqual(['../booking/**/*.js']);
+    expect(code('booking.css')).not.toContain('@import');
+    expect(exportTarget('./booking/styles.css')).toBe('./dist/styles/booking.css');
+  });
+
   it('primitives.css scans the primitives output and excludes MarkdownView', () => {
     const css = code('primitives.css');
     expect(css).toMatch(/@source\s+["']\.\.\/primitives\/\*\.js["']/);
@@ -66,7 +73,14 @@ describe('lean stylesheet entry points', () => {
   });
 
   it('keeps xyflow CSS out of every lean entry except workflow-builder.css', () => {
-    for (const file of ['base.css', 'bridge.css', 'tokens.css', 'calendar.css', 'primitives.css']) {
+    for (const file of [
+      'base.css',
+      'bridge.css',
+      'tokens.css',
+      'calendar.css',
+      'primitives.css',
+      'booking.css',
+    ]) {
       expect(code(file)).not.toContain('@xyflow');
     }
   });
