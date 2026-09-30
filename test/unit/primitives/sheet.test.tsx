@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
@@ -90,6 +90,119 @@ describe('Sheet', () => {
     fireEvent.click(screen.getByLabelText('Name'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('sheet'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('a press that starts inside and ends on the backdrop does not close', () => {
+    render(<Demo defaultOpen />);
+    fireEvent.pointerDown(screen.getByLabelText('Name'));
+    fireEvent.click(screen.getByTestId('sheet'), { detail: 1 });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    fireEvent.pointerDown(screen.getByTestId('sheet'));
+    fireEvent.click(screen.getByTestId('sheet'), { detail: 1 });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('keeps padding off the <dialog> so its own box is only ever the backdrop', () => {
+    render(<Demo defaultOpen />);
+    expect(screen.getByTestId('sheet')).toHaveClass('p-0');
+    expect(screen.getByTestId('sheet').className).not.toMatch(/\bpb-/);
+    expect(document.querySelector('[data-slot="sheet-body"]')).toHaveClass('p-6', 'md:pb-6');
+  });
+
+  it('a native close (form method="dialog", dialog.close()) syncs the state', () => {
+    const onOpenChange = vi.fn();
+    render(<Demo defaultOpen onOpenChange={onOpenChange} />);
+    const dialog = screen.getByRole('dialog');
+    dialog.removeAttribute('open');
+    fireEvent(dialog, new Event('close'));
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.documentElement.style.overflow).toBe('');
+  });
+
+  it('with dismissible={false} a native close re-opens the modal', () => {
+    render(<Demo defaultOpen dismissible={false} />);
+    const dialog = screen.getByRole('dialog');
+    dialog.removeAttribute('open');
+    fireEvent(dialog, new Event('close'));
+    expect(dialog).toHaveAttribute('open');
+  });
+
+  it('keeps the page locked until the LAST open sheet closes', () => {
+    document.documentElement.style.overflow = 'scroll';
+    function Two() {
+      const [a, setA] = useState(true);
+      const [b, setB] = useState(true);
+      return (
+        <>
+          <Sheet open={a} onOpenChange={setA}>
+            <Sheet.Content>
+              <Sheet.Title>A</Sheet.Title>
+              <Sheet.Close>Close A</Sheet.Close>
+            </Sheet.Content>
+          </Sheet>
+          <Sheet open={b} onOpenChange={setB}>
+            <Sheet.Content>
+              <Sheet.Title>B</Sheet.Title>
+              <Sheet.Close>Close B</Sheet.Close>
+            </Sheet.Content>
+          </Sheet>
+        </>
+      );
+    }
+    render(<Two />);
+    expect(document.documentElement.style.overflow).toBe('hidden');
+    fireEvent.click(screen.getByRole('button', { name: 'Close A' }));
+    expect(document.documentElement.style.overflow).toBe('hidden');
+    fireEvent.click(screen.getByRole('button', { name: 'Close B' }));
+    expect(document.documentElement.style.overflow).toBe('scroll');
+  });
+
+  it('custom Title / Description ids are the ones the dialog references', () => {
+    render(
+      <Sheet defaultOpen>
+        <Sheet.Content>
+          <Sheet.Title id="my-title">Named</Sheet.Title>
+          <Sheet.Description id="my-desc">Described</Sheet.Description>
+        </Sheet.Content>
+      </Sheet>
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Named' });
+    expect(dialog).toHaveAttribute('aria-labelledby', 'my-title');
+    expect(dialog).toHaveAttribute('aria-describedby', 'my-desc');
+    expect(dialog).toHaveAccessibleDescription('Described');
+  });
+
+  it('rendered anchors do not navigate; rendered bare buttons do not submit', () => {
+    const onSubmit = vi.fn((event: { preventDefault(): void }) => event.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <Sheet>
+          {/* biome-ignore lint/a11y/useButtonType: exercising the type="button" default for bare hosts */}
+          <Sheet.Trigger render={<button>Open in form</button>} />
+          <Sheet.Content>
+            <Sheet.Title>T</Sheet.Title>
+            <Sheet.Close render={<a href="#away">Close link</a>} />
+            <Sheet.Close render={<button type="submit">Explicit submit</button>} />
+          </Sheet.Content>
+        </Sheet>
+      </form>
+    );
+    const trigger = screen.getByRole('button', { name: 'Open in form' });
+    expect(trigger).toHaveAttribute('type', 'button');
+    fireEvent.click(trigger);
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Explicit submit' })).toHaveAttribute(
+      'type',
+      'submit'
+    );
+    const link = screen.getByRole('link', { name: 'Close link' });
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+    act(() => {
+      link.dispatchEvent(click);
+    });
+    expect(click.defaultPrevented).toBe(true);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 

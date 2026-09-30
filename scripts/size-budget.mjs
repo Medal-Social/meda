@@ -33,7 +33,7 @@ const JS_BUDGET = 25 * KB;
 // bridge raised 4 KB → 4.5 KB (form + sheet primitives): primitives.css scans
 // every primitive, so Checkbox, Field, Textarea and the native-<dialog> Sheet
 // (bottom-sheet → centred-dialog layout, ::backdrop scrim, safe-area padding)
-// add their utilities to every lean consumer. Measured 4.15 KB (was 3.57 KB)
+// add their utilities to every lean consumer. Measured 4.17 KB (was 3.57 KB)
 // after reusing Input's focus/invalid classes; ~8% headroom.
 const CSS_BUDGETS = {
   bridge: 4.5 * KB,

@@ -34,11 +34,28 @@ describe('Field', () => {
   it('Field.Error renders nothing when empty and each unique message from errors', () => {
     const { container, rerender } = render(<Field.Error />);
     expect(container).toBeEmptyDOMElement();
-    rerender(<Field.Error errors={['Too short', 'Too short', 'Missing @']} />);
+    rerender(<Field.Error id="errs" errors={['Too short', 'Too short', 'Missing @']} />);
     expect(screen.getAllByText(/Too short|Missing @/)).toHaveLength(2);
     for (const node of screen.getAllByText(/Too short|Missing @/)) {
       expect(node).toHaveAttribute('data-slot', 'field-error');
+      expect(node).not.toHaveAttribute('id');
     }
+    expect(container.querySelectorAll('#errs')).toHaveLength(1);
+    expect(container.querySelector('#errs')).toHaveTextContent('Too shortMissing @');
+  });
+
+  it('a disabled field (prop or disabled control) carries the dimming hooks', () => {
+    render(
+      <Field data-testid="f" disabled>
+        <Field.Label htmlFor="x">X</Field.Label>
+        <Input id="x" disabled />
+      </Field>
+    );
+    expect(screen.getByTestId('f')).toHaveAttribute('data-disabled', 'true');
+    expect(screen.getByText('X')).toHaveClass(
+      'group-has-disabled/field:opacity-50',
+      'group-data-[disabled=true]/field:opacity-50'
+    );
   });
 
   it('Field.Set and Field.Legend group related controls', () => {

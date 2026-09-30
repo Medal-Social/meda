@@ -4,7 +4,9 @@ import {
   type ButtonHTMLAttributes,
   type ComponentProps,
   createContext,
+  isValidElement,
   type MouseEvent,
+  type PointerEvent,
   type ReactNode,
   type SyntheticEvent,
   useCallback,
@@ -28,9 +30,9 @@ export interface SheetProps {
   /** Called with the requested state (trigger, close button, Escape, backdrop). */
   onOpenChange?: (open: boolean) => void;
   /**
-   * `false` ignores every close request (Escape, backdrop, `Sheet.Close`) —
-   * use it while a submit is in flight so the sheet cannot vanish under the
-   * user. Default `true`.
+   * `false` ignores every close request (Escape, backdrop, `Sheet.Close`,
+   * a native `dialog.close()`) — use it while a submit is in flight so the
+   * sheet cannot vanish under the user. Default `true`.
    */
   dismissible?: boolean;
   children?: ReactNode;
@@ -47,6 +49,8 @@ export interface SheetContentProps extends Omit<ComponentProps<'dialog'>, 'open'
    * `md` up. `bottom` keeps the bottom sheet at every width.
    */
   side?: SheetSide;
+  /** Class for the padded inner wrapper that holds the children. */
+  bodyClassName?: string;
 }
 
 export interface SheetCloseProps extends ComponentProps<'button'> {
@@ -56,13 +60,15 @@ export interface SheetCloseProps extends ComponentProps<'button'> {
 
 interface SheetContextValue {
   open: boolean;
+  dismissible: boolean;
   requestOpenChange: (open: boolean) => void;
-  titleId: string;
-  descriptionId: string;
-  hasTitle: boolean;
-  hasDescription: boolean;
-  registerTitle: (present: boolean) => void;
-  registerDescription: (present: boolean) => void;
+  /** The id `Sheet.Title` actually rendered with, once it has mounted. */
+  titleId: string | undefined;
+  descriptionId: string | undefined;
+  defaultTitleId: string;
+  defaultDescriptionId: string;
+  registerTitle: (id: string | undefined) => void;
+  registerDescription: (id: string | undefined) => void;
   triggerRef: { current: HTMLElement | null };
 }
 
@@ -77,6 +83,40 @@ function useSheetContext(part: string) {
 const FOCUSABLE =
   'a[href],area[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"]),[contenteditable="true"]';
 
+// One page-wide scroll lock, reference-counted, so a second sheet closing
+// cannot unlock the page under a first that is still open.
+let scrollLocks = 0;
+let scrollOverflowBefore = '';
+
+function lockScroll() {
+  const root = document.documentElement;
+  if (scrollLocks === 0) {
+    scrollOverflowBefore = root.style.overflow;
+    root.style.overflow = 'hidden';
+  }
+  scrollLocks += 1;
+}
+
+function unlockScroll() {
+  scrollLocks = Math.max(0, scrollLocks - 1);
+  if (scrollLocks === 0) document.documentElement.style.overflow = scrollOverflowBefore;
+}
+
+/**
+ * A rendered host that is a bare `<button>` defaults to `type="submit"` inside
+ * a form; give it `type="button"` unless the caller chose a type.
+ */
+function hostDefaults(render: RenderElement<ButtonHTMLAttributes<HTMLElement>>) {
+  if (!isValidElement(render) || render.type !== 'button') return {};
+  const own = (render.props as { type?: string }).type;
+  return own === undefined ? { type: 'button' as const } : {};
+}
+
+/** A rendered `<a href>` must not navigate away from the sheet it opens or closes. */
+function stopAnchorNavigation(event: MouseEvent<HTMLElement>) {
+  if (event.currentTarget instanceof HTMLAnchorElement) event.preventDefault();
+}
+
 function SheetRoot({
   open: openProp,
   defaultOpen = false,
@@ -87,11 +127,11 @@ function SheetRoot({
   const [uncontrolled, setUncontrolled] = useState(defaultOpen);
   const isControlled = openProp !== undefined;
   const open = isControlled ? openProp : uncontrolled;
-  const [hasTitle, setHasTitle] = useState(false);
-  const [hasDescription, setHasDescription] = useState(false);
+  const [titleId, registerTitle] = useState<string | undefined>(undefined);
+  const [descriptionId, registerDescription] = useState<string | undefined>(undefined);
   const triggerRef = useRef<HTMLElement | null>(null);
-  const titleId = useId();
-  const descriptionId = useId();
+  const defaultTitleId = useId();
+  const defaultDescriptionId = useId();
 
   const requestOpenChange = useCallback(
     (next: boolean) => {
@@ -106,13 +146,14 @@ function SheetRoot({
     <SheetContext.Provider
       value={{
         open,
+        dismissible,
         requestOpenChange,
         titleId,
         descriptionId,
-        hasTitle,
-        hasDescription,
-        registerTitle: setHasTitle,
-        registerDescription: setHasDescription,
+        defaultTitleId,
+        defaultDescriptionId,
+        registerTitle,
+        registerDescription,
         triggerRef,
       }}
     >
@@ -126,6 +167,7 @@ function SheetTrigger({ render, onClick, className, children, ...props }: SheetT
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     onClick?.(event);
     if (event.defaultPrevented) return;
+    stopAnchorNavigation(event);
     sheet.triggerRef.current = event.currentTarget;
     sheet.requestOpenChange(true);
   };
@@ -141,6 +183,7 @@ function SheetTrigger({ render, onClick, className, children, ...props }: SheetT
   if (render) {
     // Children given to the trigger win; otherwise the rendered element keeps its own.
     return renderElement(render, {
+      ...hostDefaults(render),
       ...triggerProps,
       ...(children == null ? {} : { children }),
     } as ButtonHTMLAttributes<HTMLElement>);
@@ -154,26 +197,52 @@ function SheetTrigger({ render, onClick, className, children, ...props }: SheetT
 
 const SIDE_CLASSES: Record<SheetSide, string> = {
   responsive: cn(
-    'inset-x-0 top-auto bottom-0 w-full max-w-none rounded-t-2xl pb-[max(1.5rem,env(safe-area-inset-bottom))]',
-    'md:inset-x-auto md:top-1/2 md:bottom-auto md:left-1/2 md:w-full md:max-w-md md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-xl md:pb-6'
+    'inset-x-0 top-auto bottom-0 w-full max-w-none rounded-t-2xl',
+    'md:inset-x-auto md:top-1/2 md:bottom-auto md:left-1/2 md:w-full md:max-w-md md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-xl'
   ),
-  bottom:
-    'inset-x-0 top-auto bottom-0 w-full max-w-none rounded-t-2xl pb-[max(1.5rem,env(safe-area-inset-bottom))]',
+  bottom: 'inset-x-0 top-auto bottom-0 w-full max-w-none rounded-t-2xl',
+};
+
+// Padding lives on the inner wrapper, never on the <dialog>: a click that
+// lands on the <dialog> element itself is then always a backdrop click.
+const BODY_CLASSES: Record<SheetSide, string> = {
+  responsive: 'pb-[max(1.5rem,env(safe-area-inset-bottom))] md:pb-6',
+  bottom: 'pb-[max(1.5rem,env(safe-area-inset-bottom))]',
 };
 
 function SheetContent({
   side = 'responsive',
   className,
+  bodyClassName,
   children,
   onCancel,
   onClick,
+  onClose,
   onKeyDown,
+  onPointerDown,
   ...props
 }: SheetContentProps) {
   const sheet = useSheetContext('Content');
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const restoreRef = useRef<HTMLElement | null>(null);
-  const { open } = sheet;
+  const closingRef = useRef(false);
+  const pressStartedOnBackdrop = useRef(false);
+  const { open, dismissible, requestOpenChange } = sheet;
+
+  const showDialog = useCallback((dialog: HTMLDialogElement) => {
+    if (typeof dialog.showModal === 'function') {
+      dialog.showModal();
+      return;
+    }
+    dialog.setAttribute('open', '');
+    // React focuses `autoFocus` children itself (it never renders the
+    // attribute), so only pick a target when focus is still outside.
+    if (dialog.contains(document.activeElement)) return;
+    const target =
+      dialog.querySelector<HTMLElement>('[autofocus]') ??
+      dialog.querySelector<HTMLElement>(FOCUSABLE);
+    target?.focus();
+  }, []);
 
   // Open with showModal(): the browser puts the sheet in the top layer, makes
   // everything behind it inert and traps Tab inside. Environments without it
@@ -187,38 +256,25 @@ function SheetContent({
       const active = document.activeElement;
       restoreRef.current =
         sheet.triggerRef.current ?? (active instanceof HTMLElement ? active : null);
-      if (typeof dialog.showModal === 'function') {
-        dialog.showModal();
-      } else {
-        dialog.setAttribute('open', '');
-        // React focuses `autoFocus` children itself (it never renders the
-        // attribute), so only pick a target when focus is still outside.
-        if (dialog.contains(document.activeElement)) return;
-        const target =
-          dialog.querySelector<HTMLElement>('[autofocus]') ??
-          dialog.querySelector<HTMLElement>(FOCUSABLE);
-        target?.focus();
-      }
+      showDialog(dialog);
       return;
     }
     if (!dialog.hasAttribute('open')) return;
+    closingRef.current = true;
     if (typeof dialog.close === 'function') dialog.close();
     else dialog.removeAttribute('open');
+    closingRef.current = false;
     const restore = restoreRef.current;
     restoreRef.current = null;
     if (restore?.isConnected) restore.focus();
-  }, [open, sheet.triggerRef]);
+  }, [open, sheet.triggerRef, showDialog]);
 
   // The top layer does not stop the page behind from scrolling on touch
   // devices, so hold the root's overflow while the sheet is open.
   useEffect(() => {
     if (!open) return;
-    const root = document.documentElement;
-    const previous = root.style.overflow;
-    root.style.overflow = 'hidden';
-    return () => {
-      root.style.overflow = previous;
-    };
+    lockScroll();
+    return unlockScroll;
   }, [open]);
 
   // Unmounting while open (route change) must still hand focus back.
@@ -236,15 +292,44 @@ function SheetContent({
     onCancel?.(event);
     const consumerPrevented = event.defaultPrevented;
     event.preventDefault();
-    if (!consumerPrevented) sheet.requestOpenChange(false);
+    if (!consumerPrevented) requestOpenChange(false);
+  };
+
+  // A close nobody asked React for — `<form method="dialog">`, a direct
+  // `dialog.close()` — must not leave the state (and the scroll lock) open.
+  const handleClose = (event: SyntheticEvent<HTMLDialogElement>) => {
+    onClose?.(event);
+    if (closingRef.current || !open) return;
+    const dialog = event.currentTarget;
+    if (!dismissible) {
+      showDialog(dialog);
+      return;
+    }
+    requestOpenChange(false);
+  };
+
+  const handlePointerDown = (event: PointerEvent<HTMLDialogElement>) => {
+    onPointerDown?.(event);
+    pressStartedOnBackdrop.current = event.target === event.currentTarget;
   };
 
   const handleClick = (event: MouseEvent<HTMLDialogElement>) => {
     onClick?.(event);
-    if (event.defaultPrevented) return;
-    // A click on the ::backdrop targets the <dialog> itself (the content
-    // lives in an inner wrapper), so it only closes on a real outside click.
-    if (event.target === event.currentTarget) sheet.requestOpenChange(false);
+    const startedOnBackdrop = pressStartedOnBackdrop.current;
+    pressStartedOnBackdrop.current = false;
+    if (event.defaultPrevented || event.target !== event.currentTarget) return;
+    // A press that began inside (selecting text) and ended over the
+    // backdrop is not a dismissal. `detail === 0` is a keyboard/synthetic
+    // click, which has no pointerdown to compare against.
+    if (!startedOnBackdrop && event.detail !== 0) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const inside =
+      rect.width > 0 &&
+      event.clientX >= rect.left &&
+      event.clientX <= rect.right &&
+      event.clientY >= rect.top &&
+      event.clientY <= rect.bottom;
+    if (!inside) requestOpenChange(false);
   };
 
   return (
@@ -254,17 +339,19 @@ function SheetContent({
       data-side={side}
       data-state={open ? 'open' : 'closed'}
       aria-modal="true"
-      aria-labelledby={sheet.hasTitle ? sheet.titleId : undefined}
-      aria-describedby={sheet.hasDescription ? sheet.descriptionId : undefined}
+      aria-labelledby={sheet.titleId}
+      aria-describedby={sheet.descriptionId}
       onCancel={handleCancel}
+      onClose={handleClose}
       onClick={handleClick}
+      onPointerDown={handlePointerDown}
       onKeyDown={(event) => {
         onKeyDown?.(event);
         // Handle Escape here (preventing it also stops the native `cancel`),
         // so it behaves the same in every engine, jsdom included.
         if (!event.defaultPrevented && event.key === 'Escape') {
           event.preventDefault();
-          sheet.requestOpenChange(false);
+          requestOpenChange(false);
         }
       }}
       className={cn(
@@ -279,7 +366,10 @@ function SheetContent({
       {...props}
     >
       {open ? (
-        <div data-slot="sheet-body" className="relative p-6">
+        <div
+          data-slot="sheet-body"
+          className={cn('relative p-6', BODY_CLASSES[side], bodyClassName)}
+        >
           {children}
         </div>
       ) : null}
@@ -290,14 +380,15 @@ function SheetContent({
 function SheetTitle({ className, id, ...props }: ComponentProps<'h2'>) {
   const sheet = useSheetContext('Title');
   const { registerTitle } = sheet;
+  const resolvedId = id ?? sheet.defaultTitleId;
   useLayoutEffect(() => {
-    registerTitle(true);
-    return () => registerTitle(false);
-  }, [registerTitle]);
+    registerTitle(resolvedId);
+    return () => registerTitle(undefined);
+  }, [registerTitle, resolvedId]);
   return (
     <h2
       data-slot="sheet-title"
-      id={id ?? sheet.titleId}
+      id={resolvedId}
       className={cn('text-lg font-semibold', className)}
       {...props}
     />
@@ -307,14 +398,15 @@ function SheetTitle({ className, id, ...props }: ComponentProps<'h2'>) {
 function SheetDescription({ className, id, ...props }: ComponentProps<'p'>) {
   const sheet = useSheetContext('Description');
   const { registerDescription } = sheet;
+  const resolvedId = id ?? sheet.defaultDescriptionId;
   useLayoutEffect(() => {
-    registerDescription(true);
-    return () => registerDescription(false);
-  }, [registerDescription]);
+    registerDescription(resolvedId);
+    return () => registerDescription(undefined);
+  }, [registerDescription, resolvedId]);
   return (
     <p
       data-slot="sheet-description"
-      id={id ?? sheet.descriptionId}
+      id={resolvedId}
       className={cn('text-muted-foreground', className)}
       {...props}
     />
@@ -325,11 +417,14 @@ function SheetClose({ render, onClick, children, ...props }: SheetCloseProps) {
   const sheet = useSheetContext('Close');
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     onClick?.(event);
-    if (!event.defaultPrevented) sheet.requestOpenChange(false);
+    if (event.defaultPrevented) return;
+    stopAnchorNavigation(event);
+    sheet.requestOpenChange(false);
   };
   const closeProps = { ...props, 'data-slot': 'sheet-close', onClick: handleClick };
   if (render) {
     return renderElement(render, {
+      ...hostDefaults(render),
       ...closeProps,
       ...(children == null ? {} : { children }),
     } as ButtonHTMLAttributes<HTMLElement>);
