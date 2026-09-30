@@ -1,3 +1,7 @@
+export type { AvatarProps, AvatarSize } from './avatar.js';
+export { Avatar, getInitials } from './avatar.js';
+export type { ButtonProps, ButtonSize, ButtonVariant } from './button.js';
+export { Button } from './button.js';
 export type {
   CardBodyProps,
   CardFooterProps,
@@ -9,6 +13,8 @@ export type { EmptyStateProps, EmptyStateVariant } from './empty-state.js';
 export { EmptyState } from './empty-state.js';
 export type { FilterRailGroupProps, FilterRailProps } from './filter-rail.js';
 export { FilterRail } from './filter-rail.js';
+export type { InputProps } from './input.js';
+export { Input } from './input.js';
 // MarkdownView intentionally NOT re-exported here — neither value NOR
 // type. Its peers (react-markdown / remark-gfm / rehype-highlight) are
 // declared as optional peer dependencies; re-exporting types still
@@ -22,3 +28,12 @@ export type { SkeletonProps } from './skeleton.js';
 export { Skeleton } from './skeleton.js';
 export type { StatusPillProps, StatusPillSize, StatusPillTone } from './status-pill.js';
 export { StatusPill } from './status-pill.js';
+export type {
+  ToggleGroupItemProps,
+  ToggleGroupMultipleProps,
+  ToggleGroupOrientation,
+  ToggleGroupProps,
+  ToggleGroupSingleProps,
+  ToggleGroupSize,
+} from './toggle-group.js';
+export { ToggleGroup } from './toggle-group.js';

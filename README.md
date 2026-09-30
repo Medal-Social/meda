@@ -12,6 +12,56 @@ pnpm add @medalsocial/meda lucide-react
 
 Peer deps: `react >= 19`, `react-dom >= 19`, and `lucide-react`.
 
+Feature peers are **optional** — install them only for the entry points that use
+them (package managers no longer auto-install them):
+
+| Peer | Needed by |
+| --- | --- |
+| `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` | `@medalsocial/meda` (root barrel), `/shell`, `/kanban`, `/email-builder` |
+| `@xyflow/react` | `@medalsocial/meda` (root barrel), `/workflow-builder`. (Its stylesheet is vendored into `styles.css` / `workflow-builder/styles.css`, so the CSS compiles without the package.) |
+| `three`, `@react-three/fiber` | `/voice` (`VoiceOrb`) |
+| `react-markdown`, `remark-gfm`, `rehype-highlight` | `/markdown-view` |
+| `next-themes` | `NextThemesAdapter` / `themeAdapter="next-themes"` in `/shell` |
+
+```bash
+# Full Medal app (root barrel / shell):
+pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities @xyflow/react
+```
+
+Lean surfaces such as `@medalsocial/meda/calendar` and
+`@medalsocial/meda/primitives` need none of them. Fonts are not bundled either:
+the tokens name `Geist` / `Geist Mono`, so load them yourself (for example
+`@fontsource-variable/geist` + `@fontsource-variable/geist-mono`, or
+`next/font`).
+
+## Upgrading to 3.0
+
+3.0 makes the feature peers **optional**, so npm and pnpm no longer install them
+for you. Nothing else in the API changed.
+
+**If you import any of** the root `@medalsocial/meda`, `@medalsocial/meda/shell`,
+`/email-builder`, `/kanban`, `/workflow-builder`, or `@medalsocial/meda/styles.css`,
+add the peers to your own `package.json`:
+
+```bash
+pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities @xyflow/react
+```
+
+**If you render the 3D `VoiceOrb`** (`@medalsocial/meda/voice`), also add:
+
+```bash
+pnpm add three @react-three/fiber
+```
+
+`three` used to be a regular dependency of meda; it is now an optional peer.
+The `@fontsource-variable/geist*` packages are no longer installed by meda
+either — if you `@import` them, list them yourself.
+
+**Lean consumers need nothing:** `@medalsocial/meda/calendar`,
+`@medalsocial/meda/primitives`, `styles/bridge.css`, `styles/base.css` and the
+per-feature stylesheets never reach an optional peer (see
+[Lean consumer setup](#lean-consumer-setup)).
+
 ## Tailwind CSS v4 setup
 
 Meda ships a `styles.css` with its design tokens. Import it once in your entry stylesheet or entry script:
@@ -41,6 +91,49 @@ Avoid placing token overrides before the Meda import; `tokens.css` defines the p
 
 @import '@medalsocial/meda/styles.css';
 ```
+
+### Lean consumer setup
+
+`styles.css` is batteries-included: it scans **every** meda component so
+Tailwind generates all of their utilities (~22 KB gzip of CSS), and it pulls in
+the `@xyflow/react` stylesheet. That is right for full Medal apps; it is
+overkill for a marketing or customer site that renders a calendar and a few
+primitives. Use the lean entries instead — each feature stylesheet generates
+only the utilities its own compiled output uses:
+
+```css
+@import 'tailwindcss';
+
+/* 1. Foundation — pick ONE */
+@import '@medalsocial/meda/styles/base.css';   /* meda tokens + theme bridge + base layer */
+/* @import '@medalsocial/meda/styles/bridge.css'; */ /* theme bridge only: bring your own tokens */
+
+/* 2. Only the surfaces you render */
+@import '@medalsocial/meda/primitives/styles.css';
+@import '@medalsocial/meda/calendar/styles.css';
+```
+
+| Entry | Contains |
+| --- | --- |
+| `styles.css` | `styles/base.css` + every feature (full component scan + xyflow CSS). Unchanged for existing consumers. |
+| `styles/base.css` | `tokens.css` + `bridge.css` + the `color-scheme` base layer + Geist font mapping. No component scan, no xyflow. |
+| `styles/bridge.css` | `@custom-variant dark` + the `@theme inline` mappings (`bg-primary`, `text-muted-foreground`, `bg-brand-500`, ...). No token values, no fonts. |
+| `styles/tokens.css` | Raw CSS custom properties only. |
+| `primitives/styles.css` | Utilities for `@medalsocial/meda/primitives` (Button, Input, ToggleGroup, Avatar, Card, Skeleton, StatusPill, EmptyState, FilterRail; not MarkdownView). |
+| `calendar/styles.css` | Utilities for `@medalsocial/meda/calendar`. |
+| `workflow-builder/styles.css` | `@xyflow/react`'s stylesheet + utilities for `@medalsocial/meda/workflow-builder`. The only lean entry that ships xyflow CSS. |
+
+Feature stylesheets never include the foundation, so importing several of them
+does not duplicate tokens — import exactly one foundation first. Never combine
+the lean entries with `styles.css` (it already contains all of them).
+
+**Bring your own tokens.** meda components use shadcn-style semantic tokens
+(`--background`, `--foreground`, `--primary`, `--primary-foreground`, `--card`,
+`--muted`, `--muted-foreground`, `--accent`, `--border`, `--input`, `--ring`,
+`--destructive`, ...). A site that already defines those names can import
+`styles/bridge.css` instead of `styles/base.css`, and meda parts re-theme to the
+site's palette automatically. `bridge.css` does not map `--font-sans`, so the
+site's own font stack is kept.
 
 ## Usage
 
@@ -219,7 +312,9 @@ See the [demo app](./demo) for a live playground.
 - `@medalsocial/meda/recipes/next` — copyable Next.js adoption recipe metadata
 - `@medalsocial/meda/theme` — app-scoped token bridge helpers
 - `@medalsocial/meda/marketing` — marketing sections and campaign blocks
-- `@medalsocial/meda/styles.css` — design tokens + base styles
+- `@medalsocial/meda/primitives` — foundation primitives (`Button`, `Input`, `ToggleGroup`, `Avatar` + `getInitials`, `Card`, `Skeleton`, `StatusPill`, `EmptyState`, `FilterRail`); also re-exported from the root
+- `@medalsocial/meda/styles.css` — design tokens + base styles + every component's utilities
+- `@medalsocial/meda/styles/base.css`, `@medalsocial/meda/styles/bridge.css`, `@medalsocial/meda/<feature>/styles.css` — lean stylesheet entries (see [Lean consumer setup](#lean-consumer-setup))
 
 ## Alternative: shadcn registry
 
