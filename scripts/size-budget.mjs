@@ -1,18 +1,22 @@
 #!/usr/bin/env node
 // Lean-consumer size budget.
 //
-// Measures what a customer site (e.g. a booking page) pays when it renders
-// meda's calendar + booking primitives — NOT what a full Medal app pays for
-// the batteries-included `styles.css` / root barrel (size-limit covers those).
+// Measures what a customer site pays when it renders one lean meda surface —
+// NOT what a full Medal app pays for the batteries-included `styles.css` /
+// root barrel (size-limit covers those). Two consumers are measured:
 //
-//   JS  — esbuild bundles `@medalsocial/meda/calendar` + the booking
-//         primitives from `@medalsocial/meda/primitives`, minified, with
-//         react / react-dom / lucide-react external (every consumer already
-//         ships those). Budget: gzip <= JS_BUDGET.
+//   calendar lean consumer — `@medalsocial/meda/calendar` + the booking-ready
+//         primitives (Avatar, Button, Input, ToggleGroup).
+//   booking lean consumer  — a booking page: the wizard screens from
+//         `@medalsocial/meda/booking` + the primitives they are built on.
+//
+//   JS  — esbuild bundles the consumer's imports, minified, with react /
+//         react-dom / lucide-react external (every consumer already ships
+//         those). Budget: gzip <= JS_BUDGET.
 //   CSS — @tailwindcss/cli compiles a tiny consumer fixture with and without
 //         meda's lean stylesheet entries; the gzip DELTA is what meda adds.
-//         Budgeted for both foundations (bring-your-own-tokens bridge, and
-//         meda's own tokens). `styles.css` is reported for comparison only.
+//         Budgeted on the bring-your-own-tokens bridge (and, for calendar,
+//         on meda's own tokens). `styles.css` is reported for comparison only.
 //
 // Specifiers resolve through package.json#exports via package self-reference
 // (the fixture lives inside this package), so a broken exports map fails
@@ -30,16 +34,52 @@ import { build } from 'esbuild';
 
 const KB = 1024;
 const JS_BUDGET = 25 * KB;
+// bridge raised 4 KB → 4.5 KB (form + sheet primitives): primitives.css scans
+// every primitive, so Checkbox, Field, Textarea and the native-<dialog> Sheet
+// (bottom-sheet → centred-dialog layout, ::backdrop scrim, safe-area padding)
+// add their utilities to every lean consumer. Measured 4.17 KB (was 3.57 KB)
+// after reusing Input's focus/invalid classes; ~8% headroom.
 const CSS_BUDGETS = {
-  bridge: 4 * KB,
+  bridge: 4.5 * KB,
   base: 6 * KB,
 };
+// Booking lean consumer: a customer's booking PAGE — the wizard steps, the
+// summary bar, the confirmation, the pending skeleton and the login sheet
+// (manage and portal screens are other pages; size-limit guards the whole
+// subpath).
+//
+// The booking-extraction plan pencilled in 25 KB JS / 4 KB CSS before the
+// screens existed. Measured on the first build, at markup parity with the
+// customer components they were extracted from: JS 28.89 KB (of which
+// ~8 KB is tailwind-merge, which every shadcn site already ships and dedupes
+// — reported below), CSS delta 6.16 KB (the whole subpath: booking.css cannot
+// be tree-shaken per page). Budgets are measured + ~14%; see the PR.
+const BOOKING_BUDGETS = {
+  js: 33 * KB,
+  bridge: 7 * KB,
+};
+const BOOKING_PAGE_SCREENS = [
+  'WhoScreen',
+  'AddChildSheet',
+  'ServiceScreen',
+  'StylistScreen',
+  'TimeScreen',
+  'DetailsScreen',
+  'SummaryBar',
+  'Confirmation',
+  'BookingSkeleton',
+  'LiveStatus',
+  'LoginSheet',
+];
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const workDir = join(packageRoot, 'node_modules/.cache/meda-size-budget');
 const tailwindBin = join(packageRoot, 'node_modules/.bin/tailwindcss');
 
-if (!existsSync(join(packageRoot, 'dist/calendar/index.js'))) {
+if (
+  !existsSync(join(packageRoot, 'dist/calendar/index.js')) ||
+  !existsSync(join(packageRoot, 'dist/booking/index.js'))
+) {
   console.error('size-budget: dist/ is missing — run `pnpm build` first.');
   process.exit(1);
 }
@@ -54,29 +94,39 @@ const fmt = (bytes) => `${(bytes / KB).toFixed(2)} KB`;
 // JS
 // ---------------------------------------------------------------------------
 
-const jsEntry = join(workDir, 'entry.js');
-await writeFile(
-  jsEntry,
-  [
-    "export * from '@medalsocial/meda/calendar';",
-    "export { Avatar, Button, getInitials, Input, ToggleGroup } from '@medalsocial/meda/primitives';",
-    '',
-  ].join('\n')
-);
+async function bundleGzip(name, lines, { alsoExternal = [] } = {}) {
+  const entry = join(workDir, `${name}.entry.js`);
+  await writeFile(entry, [...lines, ''].join('\n'));
+  const result = await build({
+    entryPoints: [entry],
+    absWorkingDir: workDir,
+    bundle: true,
+    minify: true,
+    format: 'esm',
+    platform: 'browser',
+    target: 'es2022',
+    write: false,
+    logLevel: 'silent',
+    external: ['react', 'react-dom', 'react/jsx-runtime', 'lucide-react', ...alsoExternal],
+  });
+  return gzip(result.outputFiles[0].contents);
+}
 
-const jsResult = await build({
-  entryPoints: [jsEntry],
-  absWorkingDir: workDir,
-  bundle: true,
-  minify: true,
-  format: 'esm',
-  platform: 'browser',
-  target: 'es2022',
-  write: false,
-  logLevel: 'silent',
-  external: ['react', 'react-dom', 'react/jsx-runtime', 'lucide-react'],
+const jsCalendar = await bundleGzip('calendar', [
+  "export * from '@medalsocial/meda/calendar';",
+  "export { Avatar, Button, getInitials, Input, ToggleGroup } from '@medalsocial/meda/primitives';",
+]);
+
+// The screens import the primitives they are built on themselves, so those
+// are counted.
+const bookingPage = `export { ${BOOKING_PAGE_SCREENS.join(', ')} } from '@medalsocial/meda/booking';`;
+const jsBooking = await bundleGzip('booking', [bookingPage]);
+const jsBookingShared = await bundleGzip('booking-shared', [bookingPage], {
+  alsoExternal: ['tailwind-merge'],
 });
-const jsGzip = gzip(jsResult.outputFiles[0].contents);
+const jsBookingAll = await bundleGzip('booking-all', [
+  "export * from '@medalsocial/meda/booking';",
+]);
 
 // ---------------------------------------------------------------------------
 // CSS
@@ -108,17 +158,28 @@ async function compileCss(name, imports) {
   return gzip(await readFile(output));
 }
 
-const LEAN_FEATURES = [
+const CALENDAR_FEATURES = [
   '@medalsocial/meda/calendar/styles.css',
+  '@medalsocial/meda/primitives/styles.css',
+];
+const BOOKING_FEATURES = [
+  '@medalsocial/meda/booking/styles.css',
   '@medalsocial/meda/primitives/styles.css',
 ];
 
 const cssBaseline = await compileCss('baseline', []);
 const cssBridge = await compileCss('bridge', [
   '@medalsocial/meda/styles/bridge.css',
-  ...LEAN_FEATURES,
+  ...CALENDAR_FEATURES,
 ]);
-const cssBase = await compileCss('base', ['@medalsocial/meda/styles/base.css', ...LEAN_FEATURES]);
+const cssBase = await compileCss('base', [
+  '@medalsocial/meda/styles/base.css',
+  ...CALENDAR_FEATURES,
+]);
+const cssBookingBridge = await compileCss('booking-bridge', [
+  '@medalsocial/meda/styles/bridge.css',
+  ...BOOKING_FEATURES,
+]);
 const cssFull = await compileCss('full', ['@medalsocial/meda/styles.css']);
 
 // ---------------------------------------------------------------------------
@@ -126,9 +187,10 @@ const cssFull = await compileCss('full', ['@medalsocial/meda/styles.css']);
 // ---------------------------------------------------------------------------
 
 const rows = [
+  { heading: 'calendar lean consumer' },
   {
     label: 'JS  calendar + primitives (gzip)',
-    size: jsGzip,
+    size: jsCalendar,
     budget: JS_BUDGET,
   },
   {
@@ -141,6 +203,26 @@ const rows = [
     size: cssBase - cssBaseline,
     budget: CSS_BUDGETS.base,
   },
+  { heading: 'booking lean consumer' },
+  {
+    label: 'JS  booking page + primitives (gzip)',
+    size: jsBooking,
+    budget: BOOKING_BUDGETS.js,
+  },
+  {
+    label: 'JS  … same, tailwind-merge shared (reference)',
+    size: jsBookingShared,
+  },
+  {
+    label: 'JS  every booking screen (reference)',
+    size: jsBookingAll,
+  },
+  {
+    label: 'CSS delta  bridge.css + booking + primitives',
+    size: cssBookingBridge - cssBaseline,
+    budget: BOOKING_BUDGETS.bridge,
+  },
+  { heading: 'reference' },
   {
     label: 'CSS delta  styles.css (full, reference only)',
     size: cssFull - cssBaseline,
@@ -149,11 +231,15 @@ const rows = [
 
 console.log(`size-budget (tailwind baseline ${fmt(cssBaseline)} gzip)`);
 let failed = false;
-for (const { label, size, budget } of rows) {
+for (const { heading, label, size, budget } of rows) {
+  if (heading) {
+    console.log(`  ${heading}`);
+    continue;
+  }
   const over = budget !== undefined && size > budget;
   failed ||= over;
   const verdict = budget === undefined ? '' : `${over ? 'FAIL' : 'ok'}  (budget ${fmt(budget)})`;
-  console.log(`  ${label.padEnd(48)} ${fmt(size).padStart(10)}  ${verdict}`);
+  console.log(`    ${label.padEnd(46)} ${fmt(size).padStart(10)}  ${verdict}`);
 }
 
 await rm(workDir, { recursive: true, force: true });
