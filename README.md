@@ -28,7 +28,7 @@ them (package managers no longer auto-install them):
 pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities @xyflow/react
 ```
 
-Lean surfaces such as `@medalsocial/meda/calendar` and
+Lean surfaces such as `@medalsocial/meda/calendar`, `@medalsocial/meda/booking` and
 `@medalsocial/meda/primitives` need none of them. Fonts are not bundled either:
 the tokens name `Geist` / `Geist Mono`, so load them yourself (for example
 `@fontsource-variable/geist` + `@fontsource-variable/geist-mono`, or
@@ -61,6 +61,39 @@ either — if you `@import` them, list them yourself.
 `@medalsocial/meda/primitives`, `styles/bridge.css`, `styles/base.css` and the
 per-feature stylesheets never reach an optional peer (see
 [Lean consumer setup](#lean-consumer-setup)).
+
+## Booking screens (`@medalsocial/meda/booking`)
+
+Unbranded, presentational screens for a customer booking flow: the wizard steps
+(`WhoScreen`, `ServiceScreen`, `StylistScreen`, `TimeScreen`, `DetailsScreen`,
+`SummaryBar`, `Confirmation`, `BookingSkeleton`, `AddChildSheet`), `ManageScreen`,
+login (`LoginSheet`, `LoginPanel`, `OtpSlots`, `VippsButton`) and the customer
+portal (`PortalShell`, `UpcomingBookings`, `VisitHistory`, `ChildCards`,
+`RebookCards`, `FamilyEditor`, `ProfileForm`, `DataControls`, `AccountCard`,
+`PortalUnreachable`, …).
+
+They are **props in, callbacks out**: nothing fetches, routes or touches storage.
+The data is plain structural shapes (`BookingServiceDto`, `WizardState`, …), every
+date and price goes through the `format` prop (`BookingFormat`: the business's
+clock, money, phone and name formatting), and every word through `labels` — meda
+ships no default language and no brand. Override, cheapest first:
+
+1. **CSS variables** — the shadcn tokens the bridge maps (`--primary`, `--card`,
+   `--muted`, `--border`, `--ring`, `--radius`, …). Colours come from nowhere else.
+2. **`labels`** — a flat record (`'who.heading'`, …); `BookingLabels` is the full set
+   and `BOOKING_LABEL_KEYS` lists it. `{placeholders}` are filled by the screen.
+3. **`classNames`** — per documented slot (`root`, `card`, `cardSelected`, `chip`, …),
+   merged after the defaults so an override wins.
+4. **`components`** — card renderers (`ServiceCard`, `StylistCard`, `TimeChip`,
+   `DayChip`, `PersonCard`, …). The defaults are exported (`DefaultServiceCard`, …)
+   so an override can wrap them.
+
+```css
+@import 'tailwindcss';
+@import '@medalsocial/meda/styles/bridge.css';      /* your own shadcn tokens */
+@import '@medalsocial/meda/primitives/styles.css';
+@import '@medalsocial/meda/booking/styles.css';
+```
 
 ## Tailwind CSS v4 setup
 
@@ -119,8 +152,9 @@ only the utilities its own compiled output uses:
 | `styles/base.css` | `tokens.css` + `bridge.css` + the `color-scheme` base layer + Geist font mapping. No component scan, no xyflow. |
 | `styles/bridge.css` | `@custom-variant dark` + the `@theme inline` mappings (`bg-primary`, `text-muted-foreground`, `bg-brand-500`, ...). No token values, no fonts. |
 | `styles/tokens.css` | Raw CSS custom properties only. |
-| `primitives/styles.css` | Utilities for `@medalsocial/meda/primitives` (Button, Input, ToggleGroup, Avatar, Card, Skeleton, StatusPill, EmptyState, FilterRail; not MarkdownView). |
+| `primitives/styles.css` | Utilities for `@medalsocial/meda/primitives` (Button, Input, Textarea, Checkbox, Field, Sheet, ToggleGroup, Avatar, Card, Skeleton, StatusPill, EmptyState, FilterRail; not MarkdownView). |
 | `calendar/styles.css` | Utilities for `@medalsocial/meda/calendar`. |
+| `booking/styles.css` | Utilities for `@medalsocial/meda/booking`. Import `primitives/styles.css` too — the screens are built on the primitives. |
 | `workflow-builder/styles.css` | `@xyflow/react`'s stylesheet + utilities for `@medalsocial/meda/workflow-builder`. The only lean entry that ships xyflow CSS. |
 
 Feature stylesheets never include the foundation, so importing several of them
