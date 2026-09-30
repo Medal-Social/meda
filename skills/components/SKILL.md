@@ -111,6 +111,40 @@ import { StatusPill } from '@medalsocial/meda';
 
 **Why solid backgrounds (not tinted):** the 11px small size needs ≥4.5:1 contrast to pass WCAG AA. Tinted backgrounds (`bg-info/15 text-info`) fail axe gates at this size. Solid `bg-info text-info-foreground` etc. always passes via the theme tokens. If you need a tinted variant, use it at `size="md"` or larger only, and verify with `vitest-axe`.
 
+## Form + sheet primitives — native elements, exported
+
+`Checkbox`, `Field`, `Textarea` and `Sheet` ARE exported from `@medalsocial/meda` and
+`@medalsocial/meda/primitives` (unlike the `src/components/ui/` adapters). They sit on
+native elements so they stay small and work without JavaScript-heavy machinery:
+
+```tsx
+import { Checkbox, Field, Input, Sheet, Textarea } from '@medalsocial/meda/primitives';
+
+<Field>
+  <Field.Label htmlFor="email">E-mail</Field.Label>
+  <Input id="email" invalid aria-describedby="email-error" />
+  <Field.Error id="email-error">Enter a valid e-mail address.</Field.Error>
+</Field>
+
+<Checkbox id="terms" onCheckedChange={setAccepted} />   {/* native <input type="checkbox"> */}
+
+<Sheet open={open} onOpenChange={setOpen} dismissible={!saving}>
+  <Sheet.Trigger render={<Button variant="outline" />}>Add child</Sheet.Trigger>
+  <Sheet.Content>                                       {/* native <dialog>, showModal() */}
+    <Sheet.Title>Add child</Sheet.Title>
+    <Sheet.Description>Only for this booking.</Sheet.Description>
+    …
+    <Sheet.Close render={<Button variant="ghost" size="sm" />} aria-label="Close">×</Sheet.Close>
+  </Sheet.Content>
+</Sheet>
+```
+
+- `Field` owns no ids or state — wire `htmlFor` / `aria-describedby` yourself.
+- `Sheet` is a bottom sheet on phones and a centred dialog from `md` (`side="bottom"` pins
+  the bottom sheet). Escape, backdrop click and `Sheet.Close` all go through `onOpenChange`;
+  `dismissible={false}` blocks them while a submit is in flight. Focus returns to the trigger.
+- Reach for `src/components/ui/` (Base UI) only for menus, popovers and comboboxes.
+
 ## ui-adapters — NOT exported from the npm package
 
 shadcn-style adapters in `src/components/ui/` (`Dialog`, `DropdownMenu`, `Tooltip`, `Drawer`, `Command`, `Checkbox`, `Collapsible`) wrap `@base-ui/react`. **They are intentionally NOT exported from `@medalsocial/meda`** — meda follows the shadcn philosophy: you own the ui code.

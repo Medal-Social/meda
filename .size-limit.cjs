@@ -88,9 +88,12 @@ module.exports = [
     // cn), which dominates the number. The lean-consumer JS + CSS budget for
     // calendar + primitives lives in scripts/size-budget.mjs (pnpm size:budget).
     // Measured 11.13 kB brotli on first build; ~15% headroom.
+    // Raised 13 kB → 15 kB (form + sheet primitives): Checkbox, Field,
+    // Textarea and the native-<dialog> Sheet add ~2.2 kB. Measured 13.29 kB;
+    // ~15% headroom.
     name: 'primitives',
     path: 'dist/primitives/index.js',
-    limit: '13 kB',
+    limit: '15 kB',
   },
   {
     name: 'chat',
