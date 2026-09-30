@@ -36,6 +36,13 @@ export type VippsStartAction = (
 export type VippsButtonSlot = 'root' | 'button' | 'notice';
 
 export interface VippsButtonProps {
+  /**
+   * The start action, handed to `useActionState` unwrapped so a server action
+   * can be passed straight through (the form then works before hydration, and
+   * a framework redirect thrown from it propagates). Report failures by
+   * returning `{ reason }` — they become the notice under the button. A thrown
+   * error is not caught here; it reaches the host's error boundary.
+   */
   onVipps: VippsStartAction;
   /** Where to land afterwards; rides along as a hidden `next` field. */
   next?: string | null;
