@@ -1,5 +1,11 @@
 # @medalsocial/meda
 
+## 3.1.0
+
+### Minor Changes
+
+- [#242](https://github.com/Medal-Social/meda/pull/242) [`625b3f6`](https://github.com/Medal-Social/meda/commit/625b3f69f9b41d66329d93dfa215bed8d4a617ee) Thanks [@alioftech](https://github.com/alioftech)! - Add `Checkbox`, `Field` (`Field.Label`, `Field.Description`, `Field.Error`, `Field.Set`, `Field.Legend`), `Textarea` and `Sheet` primitives to `@medalsocial/meda/primitives` (and the root). `Sheet` is built on the native `<dialog>` element (`showModal()`, inert background, focus return, Escape / backdrop dismissal, scroll lock, `prefers-reduced-motion`) and lays out as a bottom sheet on phones and a centred dialog from `md` up. `Checkbox` is a native `<input type="checkbox">` with an `onCheckedChange` callback.
+
 ## 3.0.0
 
 ### Major Changes
