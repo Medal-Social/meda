@@ -98,10 +98,13 @@ land its later glyphs a sub-pixel apart. The pack decides; a screen never splits
 string on its own:
 
 ```ts
-const labels = {
-  // One text node: «Total 840 kr · paid at the salon».
+// One text node: «Total 840 kr · paid at the salon».
+const asOneNode = {
   'confirmation.party.total': 'Total {total} · paid at the salon',
-  // Four text nodes, the DOM of `Total {total}{' · '}paid at the salon` in JSX.
+} satisfies Partial<BookingLabels>;
+
+// Four text nodes, the DOM of `Total {total}{' · '}paid at the salon` in JSX.
+const asPieces = {
   'confirmation.party.total': ['Total ', '{total}', ' · ', 'paid at the salon'],
 } satisfies Partial<BookingLabels>;
 ```

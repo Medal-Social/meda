@@ -996,6 +996,7 @@ function ConfirmCancel({
       <fieldset className="flex flex-wrap gap-2">
         <legend className="sr-only">{labels['manage.cancel.reasonLegend']}</legend>
         {CANCEL_REASON_KEYS.map((key) => {
+          // The reason travels as text; the chip shows the label in its own pieces.
           const option = labelText(labels[key]);
           const picked = reason === option;
           return (
@@ -1009,7 +1010,7 @@ function ConfirmCancel({
               onClick={() => onPickReason(picked ? null : option)}
               className={cn('rounded-full', picked ? 'border-primary ring-2 ring-primary' : '')}
             >
-              {option}
+              {labels[key]}
             </BookingButton>
           );
         })}

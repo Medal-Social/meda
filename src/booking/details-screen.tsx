@@ -380,7 +380,8 @@ export function DetailsScreen({
   const showTermsError = attempted && !state.consentTerms;
 
   const price = format.price(totalOre);
-  const phonePrefix = labels['details.phone.prefix'];
+  // `null` when the pack leaves it blank, in either form: no box, no description.
+  const phonePrefix = renderLabel(labels['details.phone.prefix']);
   const FamilyChip = components?.FamilyChip ?? DefaultFamilyChip;
 
   function setContact(name: keyof WizardState['contact'], value: string) {

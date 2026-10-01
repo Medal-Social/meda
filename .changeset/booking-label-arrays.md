@@ -9,6 +9,7 @@ Booking labels can be a string or an array of strings (`BookingLabel`), and the 
 - `joinLabelParts(parts, separator, { pieces })`: a line joined from plain strings (the confirmation card, the portal's booking lines) is one text node; it renders in pieces once one of its labels is an array, and `pieces` forces either.
 - `labelParts` keeps a string's text runs whole around element holes and an array's elements apart.
 - `BookingLabels` and every screen's `*Labels` type accept either form for every key. Text-only targets (`aria-label`, placeholders, file names, messages, a value filled into another label, a custom component's `string` prop) read an array joined, through `fillLabel` or the new `labelText`.
+- `LoginPanel`'s `heading` render prop receives the label as `ReactNode` (its pieces), not a `string`.
 - New exports: `BookingLabel`, `labelText`, `fillLabelPieces`, `JoinLabelPartsOptions`.
 
 A pack that relied on 3.3's automatic split writes those labels as arrays.

@@ -572,4 +572,17 @@ describe('ManageScreen — text nodes', () => {
       ' – velg ny tid',
     ]);
   });
+
+  it('shows a cancel reason in its pieces and sends it as text', async () => {
+    const { onCancel } = setup({
+      labels: { ...L, 'manage.cancel.reason.illness': ['Syk', 'dom'] },
+    });
+    fireEvent.click(screen.getByRole('button', { name: L['manage.cancel'] }));
+    const chip = screen.getByRole('button', { name: 'Sykdom' });
+    expect(textNodes(chip)).toEqual(['Syk', 'dom']);
+    fireEvent.click(chip);
+    fireEvent.click(screen.getByRole('button', { name: L['manage.cancel.confirm'] }));
+    await screen.findByRole('link', { name: L['manage.cancelled.findNew'] });
+    expect(onCancel).toHaveBeenCalledWith('Sykdom');
+  });
 });

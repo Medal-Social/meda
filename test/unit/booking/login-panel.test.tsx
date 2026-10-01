@@ -440,3 +440,30 @@ describe('LoginPanel a11y', () => {
     ).toHaveNoViolations();
   });
 });
+
+describe('LoginPanel — label forms', () => {
+  const nodes = (element: Element) =>
+    Array.from(element.childNodes)
+      .filter((node) => node.nodeType === Node.TEXT_NODE)
+      .map((node) => node.textContent);
+
+  it('hands the heading over in the form the pack wrote it', () => {
+    renderPanel({
+      labels: { ...labels, 'login.heading': ['Logg ', 'inn'] },
+      heading: (text) => <h1>{text}</h1>,
+    });
+    expect(nodes(screen.getByRole('heading', { name: 'Logg inn' }))).toEqual(['Logg ', 'inn']);
+  });
+
+  it('describes no input by a notice the pack left blank', async () => {
+    onStartLogin.mockResolvedValue({ ok: false, reason: 'invalidEmail' });
+    renderPanel({ labels: { ...labels, 'login.notice.badEmail': [] } });
+    fireEvent.change(screen.getByLabelText(labels['login.emailLabel']), {
+      target: { value: 'demo@localhost' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: labels['login.sendCode'] }));
+    const input = screen.getByLabelText(labels['login.emailLabel']);
+    await waitFor(() => expect(input).toHaveAttribute('aria-invalid', 'true'));
+    expect(input).not.toHaveAttribute('aria-describedby');
+  });
+});

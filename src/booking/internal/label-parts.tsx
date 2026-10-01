@@ -93,14 +93,10 @@ export function joinLabelParts(
   separator: string,
   options: JoinLabelPartsOptions = {}
 ): ReactNode {
+  // Blank = renders no text: nothing at all, or text pieces that are all empty.
   const present = parts.filter(
     (part) =>
-      part !== null &&
-      part !== undefined &&
-      part !== false &&
-      part !== true &&
-      part !== '' &&
-      !(Array.isArray(part) && part.length === 0)
+      part !== null && part !== undefined && typeof part !== 'boolean' && partText(part) !== ''
   );
   const pieces =
     options.pieces ?? present.some((part) => typeof part !== 'string' && typeof part !== 'number');

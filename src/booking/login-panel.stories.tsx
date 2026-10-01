@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { ReactNode } from 'react';
 import { loginPanelLabelsEn, loginPanelLabelsNb } from './__stories__/labels.portal.js';
 import { BookingColumn, bookingStoryParameters, SecondBrand } from './__stories__/story-helpers.js';
 import { LoginPanel, type LoginStartResult, type LoginVerifyResult } from './login-panel.js';
@@ -18,7 +19,7 @@ const meta: Meta<typeof LoginPanel> = {
     onVerify: verify,
     onSignedIn: () => undefined,
     onVipps: vipps,
-    heading: (text: string) => <h1 className="font-sans text-2xl font-bold">{text}</h1>,
+    heading: (text: ReactNode) => <h1 className="font-sans text-2xl font-bold">{text}</h1>,
   },
   render: (args) => (
     <BookingColumn>

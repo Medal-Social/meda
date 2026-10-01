@@ -152,6 +152,15 @@ describe('joinLabelParts', () => {
     expect(joinLabelParts([null, ''], ' · ')).toBeNull();
   });
 
+  it('drops a part whose text pieces are all empty, in every mode', () => {
+    const blank = renderLabel(['', '{a}'], { a: '' });
+    for (const pieces of [undefined, true, false]) {
+      expect(
+        nodesOf(joinLabelParts([[''], 'Cut', ['', ''], 'Ada', blank], ' · ', { pieces }))
+      ).toEqual(pieces ? ['Cut', ' · ', 'Ada'] : ['Cut · Ada']);
+    }
+  });
+
   it('keeps pieces as soon as one part is split', () => {
     expect(
       nodesOf(
