@@ -482,3 +482,81 @@ describe('StylistScreen — overrides and a11y', () => {
     ).toHaveNoViolations();
   });
 });
+
+/** The text nodes directly under `element`, in order. */
+function textNodes(element: Element): string[] {
+  return Array.from(element.childNodes)
+    .filter((node) => node.nodeType === Node.TEXT_NODE)
+    .map((node) => node.textContent ?? '');
+}
+
+describe('StylistScreen — text pieces', () => {
+  const partyProps = { serviceIds: ['svc-kids', 'svc-kids-wash'], resources: [ADA, CLEO] };
+  const party = {
+    mode: 'parallel' as const,
+    minutes: { sequential: 60, parallel: 30 },
+    onMode: vi.fn(),
+  };
+
+  it('renders the parallel note as its template pieces, the size word its own text node', () => {
+    renderStylist({
+      ...partyProps,
+      labels: {
+        ...labels,
+        'stylist.party.parallelNote.two': 'Vi finner {sizeWord} behandlere som er ledige samtidig.',
+      },
+      party: { ...party, size: 2, sizeWord: 'to' },
+    });
+    const note = screen.getByText('Vi finner to behandlere som er ledige samtidig.');
+    expect(textNodes(note)).toEqual(['Vi finner ', 'to', ' behandlere som er ledige samtidig.']);
+  });
+
+  it('fills {sizeWord} with the number when no word is given, and splits {count} too', () => {
+    renderStylist({
+      ...partyProps,
+      labels: { ...labels, 'stylist.party.parallelNote.two': 'Vi finner {sizeWord} behandlere.' },
+      party: { ...party, size: 2 },
+    });
+    expect(textNodes(screen.getByText('Vi finner 2 behandlere.'))).toEqual([
+      'Vi finner ',
+      '2',
+      ' behandlere.',
+    ]);
+  });
+
+  it('splits the .other note around {count}', () => {
+    renderStylist({ ...partyProps, party: { ...party, size: 4 } });
+    const text = labels['stylist.party.parallelNote.other'].replace('{count}', '4');
+    const [before, after] = labels['stylist.party.parallelNote.other'].split('{count}');
+    expect(textNodes(screen.getByText(text))).toEqual([before, '4', after]);
+  });
+
+  it("splits the mode cards' minutes around {minutes}", () => {
+    renderStylist({ ...partyProps, party: { ...party, size: 2 } });
+    const template = labels['stylist.party.parallelMinutes'];
+    const [before, after] = template.split('{minutes}');
+    const node = screen.getByText(template.replace('{minutes}', '30'));
+    expect(textNodes(node)).toEqual([before, '30', after].filter(Boolean));
+  });
+});
+
+describe('StylistScreen — nextAvailable slot', () => {
+  it('merges the slot onto the next-opening line and leaves the default alone without it', () => {
+    const { unmount } = renderStylist({ nextAvailableTs: { 'res-ada': AT_THREE } });
+    const plain = screen
+      .getAllByTestId('next-available-row')
+      .find((row) => row.textContent?.includes(labels['stylist.nextAvailable']));
+    expect(plain?.className).toContain('text-foreground');
+    unmount();
+
+    renderStylist({
+      nextAvailableTs: { 'res-ada': AT_THREE },
+      classNames: { nextAvailable: 'text-primary' },
+    });
+    const row = screen
+      .getAllByTestId('next-available-row')
+      .find((entry) => entry.textContent?.includes(labels['stylist.nextAvailable']));
+    expect(row?.className).toContain('text-primary');
+    expect(row?.className).not.toContain('text-foreground');
+  });
+});

@@ -3,7 +3,7 @@
 import { type ComponentType, useState } from 'react';
 import { cn } from '../../lib/utils.js';
 import type { BookingClock, BookingFormat } from '../format.js';
-import { fillLabel } from '../labels.js';
+import { renderLabel } from '../internal/label-parts.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 import type { PortalBookingDto } from '../types.js';
 
@@ -200,7 +200,7 @@ export function VisitHistory({
             )}
           >
             <span className="font-semibold">
-              {fillLabel(
+              {renderLabel(
                 labels[shown.visits.length === 1 ? 'history.count.one' : 'history.count.other'],
                 { count: shown.visits.length, year: shown.year }
               )}

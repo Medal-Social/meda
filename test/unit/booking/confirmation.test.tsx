@@ -283,3 +283,49 @@ describe('Confirmation', () => {
     ).toHaveNoViolations();
   });
 });
+
+/** The text nodes directly under `element`, in order. */
+function textNodes(element: Element): string[] {
+  return Array.from(element.childNodes)
+    .filter((node) => node.nodeType === Node.TEXT_NODE)
+    .map((node) => node.textContent ?? '');
+}
+
+describe('Confirmation — text pieces', () => {
+  it('renders the party total as its template pieces, the total its own text node', () => {
+    setup({ lines: [line(JONAS), line(EMMA, { startTs: MONDAY_15 + HALF_HOUR })] });
+    const total = demoFormatNb.price(78_000);
+    const [before, after] = L['confirmation.party.total'].split('{total}');
+    const node = screen.getByText(`${before}${total}${after}`, { normalizer: exactly });
+    expect(textNodes(node)).toEqual([before, total, after]);
+  });
+
+  it('renders the party heading around its {day}', () => {
+    setup({ lines: [line(JONAS), line(EMMA, { startTs: MONDAY_15 + HALF_HOUR })] });
+    expect(textNodes(screen.getByText('Felles besøk · i dag'))).toEqual([
+      'Felles besøk · ',
+      'i dag',
+    ]);
+  });
+
+  it('renders the single card as pieces and separators', () => {
+    setup();
+    const node = screen.getByText('Barneklipp for Jonas · Ada · i dag kl. 15:00 · 390 kr');
+    expect(node.textContent).toBe(
+      `Barneklipp for Jonas · Ada · i dag kl. 15:00 · ${demoFormatNb.price(39_000)}`
+    );
+    expect(textNodes(node)).toEqual([
+      'Barneklipp',
+      ' for ',
+      'Jonas',
+      ' · ',
+      'Ada',
+      ' · ',
+      'i dag',
+      ' kl. ',
+      '15:00',
+      ' · ',
+      demoFormatNb.price(39_000),
+    ]);
+  });
+});

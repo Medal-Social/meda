@@ -1,9 +1,17 @@
 'use client';
 
-import { type ComponentType, type KeyboardEvent, type Ref, useEffect, useId, useRef } from 'react';
+import {
+  type ComponentType,
+  type KeyboardEvent,
+  type ReactNode,
+  type Ref,
+  useEffect,
+  useId,
+  useRef,
+} from 'react';
 import { cn } from '../lib/utils.js';
 import type { BookingFormat } from './format.js';
-import { fillLabel } from './labels.js';
+import { renderLabel } from './internal/label-parts.js';
 import { LiveStatus } from './live-status.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { BookingResourceDto, PartyMode } from './types.js';
@@ -54,6 +62,7 @@ export type StylistScreenLabels = Record<(typeof STYLIST_SCREEN_LABEL_KEYS)[numb
  * - `group` — the radiogroup (the sideways row / the column)
  * - `card` / `cardSelected` — a stylist option / the checked one (passed to `StylistCard`)
  * - `modeCard` / `modeCardSelected` — a family's mode card / the pressed one
+ * - `nextAvailable` — a stylist option's next-opening line (passed to `StylistCard`)
  */
 export type StylistScreenSlot =
   | 'root'
@@ -62,7 +71,8 @@ export type StylistScreenSlot =
   | 'card'
   | 'cardSelected'
   | 'modeCard'
-  | 'modeCardSelected';
+  | 'modeCardSelected'
+  | 'nextAvailable';
 
 /** One option of the radiogroup as the card draws it. */
 export interface StylistOption {
@@ -91,6 +101,8 @@ export interface StylistCardProps {
   labels: StylistScreenLabels;
   className?: string;
   selectedClassName?: string;
+  /** Merged onto the next-opening line (the `nextAvailable` slot). */
+  nextAvailableClassName?: string;
 }
 
 export interface StylistScreenComponents {
@@ -140,6 +152,14 @@ export interface StylistScreenProps {
     mode: PartyMode;
     /** How many people, for the option labels. */
     size: number;
+    /**
+     * The size as the copy spells it (e.g. «two»), filled into `{sizeWord}`
+     * in `stylist.party.parallel.*` and `stylist.party.parallelNote.*`.
+     * Default: the number. Lets a pack keep the word as its own text piece
+     * (`'We find {sizeWord} stylists …'`) rather than writing it into the
+     * sentence.
+     */
+    sizeWord?: string;
     /** How long the visit is in each mode. */
     minutes: { sequential: number; parallel: number };
     onMode: (mode: PartyMode) => void;
@@ -167,14 +187,18 @@ function firstName(displayName: string): string {
 /** Sizes the label packs write out in words; any other size reads `.other`. */
 const SIZE_WORDS: Record<number, 'two' | 'three'> = { 2: 'two', 3: 'three' };
 
-/** The size-specific label: `.two`, `.three`, else `.other` with `{count}`. */
+/**
+ * The size-specific label: `.two`, `.three`, else `.other`, filled with
+ * `{count}` (the number) and `{sizeWord}` (`party.sizeWord`, else the number).
+ */
 function bySize(
   labels: StylistScreenLabels,
   base: 'stylist.party.parallel' | 'stylist.party.parallelNote',
-  size: number
-): string {
+  size: number,
+  sizeWord: string | undefined
+): ReactNode {
   const suffix = SIZE_WORDS[size] ?? 'other';
-  return fillLabel(labels[`${base}.${suffix}`], { count: size });
+  return renderLabel(labels[`${base}.${suffix}`], { count: size, sizeWord: sizeWord ?? size });
 }
 
 export function StylistScreen({
@@ -264,7 +288,7 @@ export function StylistScreen({
             selected={party.mode === 'sequential'}
             onClick={() => party.onMode('sequential')}
             title={labels['stylist.party.sequential']}
-            subtitle={fillLabel(labels['stylist.party.sequentialMinutes'], {
+            subtitle={renderLabel(labels['stylist.party.sequentialMinutes'], {
               minutes: party.minutes.sequential,
             })}
             classNames={classNames}
@@ -272,8 +296,8 @@ export function StylistScreen({
           <ModeCard
             selected={party.mode === 'parallel'}
             onClick={() => party.onMode('parallel')}
-            title={bySize(labels, 'stylist.party.parallel', party.size)}
-            subtitle={fillLabel(labels['stylist.party.parallelMinutes'], {
+            title={bySize(labels, 'stylist.party.parallel', party.size, party.sizeWord)}
+            subtitle={renderLabel(labels['stylist.party.parallelMinutes'], {
               minutes: party.minutes.parallel,
             })}
             classNames={classNames}
@@ -288,7 +312,7 @@ export function StylistScreen({
         // chosen. A list left on screen would show a stylist the search is
         // quietly ignoring, which is the worse of the two ways to be wrong.
         <p className="rounded-lg border border-border bg-card px-5 py-4 text-sm">
-          {bySize(labels, 'stylist.party.parallelNote', party.size)}
+          {bySize(labels, 'stylist.party.parallelNote', party.size, party.sizeWord)}
         </p>
       ) : (
         <StylistRadioGroup
@@ -416,6 +440,7 @@ function StylistRadioGroup({
           labels={labels}
           className={classNames?.card}
           selectedClassName={classNames?.cardSelected}
+          nextAvailableClassName={classNames?.nextAvailable}
         />
       ))}
       {Array.from({ length: skeletons }, (_, index) => (
@@ -463,8 +488,8 @@ function ModeCard({
 }: {
   selected: boolean;
   onClick: () => void;
-  title: string;
-  subtitle: string;
+  title: ReactNode;
+  subtitle: ReactNode;
   classNames: SlotClassNames<StylistScreenSlot> | undefined;
 }) {
   return (
@@ -497,6 +522,7 @@ export function DefaultStylistCard({
   labels,
   className,
   selectedClassName,
+  nextAvailableClassName,
 }: StylistCardProps) {
   const id = useId();
   const nameId = `${id}-name`;
@@ -580,7 +606,10 @@ export function DefaultStylistCard({
           <span
             id={nextId}
             data-testid="next-available-row"
-            className="line-clamp-2 h-8 text-xs leading-4 text-foreground tabular-nums md:line-clamp-1 md:h-5 md:text-sm md:leading-5"
+            className={cn(
+              'line-clamp-2 h-8 text-xs leading-4 text-foreground tabular-nums md:line-clamp-1 md:h-5 md:text-sm md:leading-5',
+              nextAvailableClassName
+            )}
           >
             <span className="sr-only md:not-sr-only">{labels['stylist.nextAvailable']}</span>{' '}
             {availability}

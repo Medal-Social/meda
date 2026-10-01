@@ -6,6 +6,7 @@ import { Field } from '../primitives/field.js';
 import { Input } from '../primitives/input.js';
 import { Textarea } from '../primitives/textarea.js';
 import type { BookingFormat } from './format.js';
+import { renderLabel } from './internal/label-parts.js';
 import {
   BOOKING_CHECKBOX_CLASS,
   BOOKING_INPUT_CLASS,
@@ -544,7 +545,7 @@ export function DetailsScreen({
               // biome-ignore lint/suspicious/noArrayIndexKey: two lines can share a service; the index is the identity
               <li key={index}>
                 <span className="font-semibold">{item.service.name}</span>{' '}
-                {fillLabel(labels['details.known.for'], { who: knownWho(state, index, labels) })}
+                {renderLabel(labels['details.known.for'], { who: knownWho(state, index, labels) })}
               </li>
             ) : null
           )}
@@ -665,7 +666,7 @@ export function DetailsScreen({
         aria-busy={submitting || undefined}
         onClick={handleSubmit}
       >
-        {fillLabel(labels['details.submit'], { price })}
+        {renderLabel(labels['details.submit'], { price })}
       </BookingButton>
     </section>
   );
@@ -782,7 +783,8 @@ function SubmitFailure({
   labels: DetailsScreenLabels;
   className: string;
 }) {
-  const call = phone ? fillLabel(labels['details.call.link'], { phone }) : null;
+  const template = labels['details.call.link'];
+  const call = phone ? fillLabel(template, { phone }) : null;
   return (
     <p role="alert" className={className}>
       {labels[DETAILS_ERROR_LABEL_KEYS[error]]}{' '}
@@ -792,7 +794,7 @@ function SubmitFailure({
           aria-label={call}
           className="font-semibold text-primary underline underline-offset-4"
         >
-          {call}
+          {renderLabel(template, { phone })}
         </a>
       ) : (
         labels['details.call.none']

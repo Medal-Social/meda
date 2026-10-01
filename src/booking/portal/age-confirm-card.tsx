@@ -2,8 +2,8 @@
 
 import { useId, useState } from 'react';
 import { Field } from '../../primitives/field.js';
+import { renderLabel } from '../internal/label-parts.js';
 import { BookingButton } from '../internal/ui.js';
-import { fillLabel } from '../labels.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 
 export const AGE_CONFIRM_CARD_LABEL_KEYS = [
@@ -89,7 +89,7 @@ export function AgeConfirmCard({
           id={headingId}
           className={slotClass(classNames, 'heading', 'font-sans text-lg font-bold')}
         >
-          {fillLabel(labels['ageConfirm.heading'], { name })}
+          {renderLabel(labels['ageConfirm.heading'], { name })}
         </h3>
         <p className="text-sm text-muted-foreground">{labels['ageConfirm.lead']}</p>
       </div>
@@ -102,7 +102,7 @@ export function AgeConfirmCard({
         className={slotClass(classNames, 'form', 'space-y-3')}
       >
         <fieldset disabled={busy} className="grid min-w-0 grid-cols-2 gap-3">
-          <legend className="sr-only">{fillLabel(labels['ageConfirm.legend'], { name })}</legend>
+          <legend className="sr-only">{renderLabel(labels['ageConfirm.legend'], { name })}</legend>
           <Field>
             <Field.Label htmlFor={`${id}-year`}>{labels['ageConfirm.birthYear']}</Field.Label>
             <select

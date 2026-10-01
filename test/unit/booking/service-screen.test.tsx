@@ -471,3 +471,40 @@ describe('ServiceScreen — overrides and a11y', () => {
     ).toHaveNoViolations();
   });
 });
+
+describe('ServiceScreen — price slot', () => {
+  it('merges classNames.price onto every card price, and changes nothing without it', () => {
+    const price = demoFormatNb.price(KIDS_CUT.priceOre);
+    const { unmount } = renderService();
+    expect(screen.getByText(price, { normalizer: (text) => text }).className).toBe(
+      'whitespace-nowrap font-semibold text-foreground tabular-nums'
+    );
+    unmount();
+
+    renderService({ classNames: { price: 'text-primary' } });
+    const node = screen.getByText(price, { normalizer: (text) => text });
+    expect(node).toHaveClass('text-primary', 'font-semibold');
+    expect(node).not.toHaveClass('text-foreground');
+  });
+
+  it('reaches the «same as last time» card too', () => {
+    renderService({
+      services: [KIDS_CUT, KIDS_WASH],
+      suggestion: { service: KIDS_WASH },
+      classNames: { price: 'text-primary' },
+    });
+    const sameAsLast = screen.getByText(labels['service.sameAsLast']).closest('button');
+    const price = sameAsLast?.querySelector('.tabular-nums.font-semibold');
+    expect(price).toHaveClass('text-primary');
+  });
+
+  it('splits the duration around {minutes}', () => {
+    renderService();
+    const template = labels['service.duration'];
+    const node = screen.getByText(template.replace('{minutes}', String(KIDS_CUT.durationMinutes)));
+    const [before, after] = template.split('{minutes}');
+    expect(Array.from(node.childNodes).map((child) => child.textContent)).toEqual(
+      [before, String(KIDS_CUT.durationMinutes), after].filter(Boolean)
+    );
+  });
+});

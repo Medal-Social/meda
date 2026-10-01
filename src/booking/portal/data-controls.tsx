@@ -3,6 +3,7 @@
 import { type FormEvent, useId, useState, useTransition } from 'react';
 import { Field } from '../../primitives/field.js';
 import { Input } from '../../primitives/input.js';
+import { renderLabel } from '../internal/label-parts.js';
 import { BOOKING_INPUT_CLASS, BookingButton } from '../internal/ui.js';
 import { fillLabel } from '../labels.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
@@ -180,7 +181,7 @@ export function DataControls({
           <p className="text-sm">{labels['dataControls.consequences']}</p>
           <Field>
             <Field.Label htmlFor={confirmId}>
-              {fillLabel(labels['dataControls.confirmLabel'], { word })}
+              {renderLabel(labels['dataControls.confirmLabel'], { word })}
             </Field.Label>
             <Input
               id={confirmId}

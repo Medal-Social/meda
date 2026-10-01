@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
 import { cn } from '../../lib/utils.js';
 import type { BookingFormat } from '../format.js';
-import { fillLabel } from '../labels.js';
+import { renderLabel } from '../internal/label-parts.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 import type { ChildSummary } from '../types.js';
 
@@ -93,13 +93,13 @@ function lastVisitLine(
   child: ChildSummary,
   labels: ChildCardsLabels,
   format: ChildCardProps['format']
-): string {
+): ReactNode {
   const age = format.ageLabel(child.ageRange);
-  if (child.lastVisitTs === null) return fillLabel(labels['childCards.neverVisited'], { age });
+  if (child.lastVisitTs === null) return renderLabel(labels['childCards.neverVisited'], { age });
   const date = format.clock.date(child.lastVisitTs);
   return child.serviceName
-    ? fillLabel(labels['childCards.lastVisit'], { age, service: child.serviceName, date })
-    : fillLabel(labels['childCards.lastVisitNoService'], { age, date });
+    ? renderLabel(labels['childCards.lastVisit'], { age, service: child.serviceName, date })
+    : renderLabel(labels['childCards.lastVisitNoService'], { age, date });
 }
 
 /**
@@ -227,7 +227,7 @@ export function DefaultChildCard({
             : 'ms-auto shrink-0 text-sm'
         )}
       >
-        {fillLabel(labels['childCards.book'], { name: child.name })}
+        {renderLabel(labels['childCards.book'], { name: child.name })}
         {variant === 'full' && <ArrowRight aria-hidden="true" className="size-4" />}
       </a>
     </li>
