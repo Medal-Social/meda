@@ -13,6 +13,7 @@ import {
 } from './__stories__/fixtures.js';
 import { timeLabelsEn, timeLabelsNb } from './__stories__/labels.time.js';
 import { BookingColumn, bookingStoryParameters, SecondBrand } from './__stories__/story-helpers.js';
+import { labelText } from './labels.js';
 import { TimeScreen } from './time-screen.js';
 
 /** «Barneklipp»: 390 kr, +10 % at the weekend. */
@@ -55,7 +56,9 @@ type Story = StoryObj<typeof TimeScreen>;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const group = canvas.getByRole('group', { name: timeLabelsNb['time.dayStrip.legend'] });
+    const group = canvas.getByRole('group', {
+      name: labelText(timeLabelsNb['time.dayStrip.legend']),
+    });
     const [first, second] = within(group).getAllByRole('button');
     first?.focus();
     await userEvent.tab();

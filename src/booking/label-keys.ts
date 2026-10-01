@@ -2,6 +2,7 @@ import { ADD_CHILD_SHEET_LABEL_KEYS } from './add-child-sheet.js';
 import { BOOKING_SKELETON_LABEL_KEYS } from './booking-skeleton.js';
 import { CONFIRMATION_LABEL_KEYS } from './confirmation.js';
 import { DETAILS_SCREEN_LABEL_KEYS } from './details-screen.js';
+import type { BookingLabel } from './labels.js';
 import { LOGIN_SHEET_LABEL_KEYS } from './login-sheet.js';
 import { MANAGE_SCREEN_LABEL_KEYS } from './manage-screen.js';
 import { CHILD_CARDS_LABEL_KEYS } from './portal/child-cards.js';
@@ -81,4 +82,4 @@ export type BookingLabelKey =
   | (typeof VIPPS_LINK_ROW_LABEL_KEYS)[number];
 
 /** A complete label pack for one locale. */
-export type BookingLabels = Record<BookingLabelKey, string>;
+export type BookingLabels = Record<BookingLabelKey, BookingLabel>;

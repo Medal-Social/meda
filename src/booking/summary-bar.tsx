@@ -1,6 +1,7 @@
 'use client';
 
 import { BookingButton } from './internal/ui.js';
+import type { BookingLabel } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { WizardStep } from './types.js';
 
@@ -21,7 +22,7 @@ export const SUMMARY_BAR_LABEL_KEYS = [
   'summary.next',
 ] as const;
 
-export type SummaryBarLabels = Record<(typeof SUMMARY_BAR_LABEL_KEYS)[number], string>;
+export type SummaryBarLabels = Record<(typeof SUMMARY_BAR_LABEL_KEYS)[number], BookingLabel>;
 
 /** `root` the bar, `line` the summary sentence, `next` the button. */
 export type SummaryBarSlot = 'root' | 'line' | 'next';

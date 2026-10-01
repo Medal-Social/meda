@@ -3,6 +3,7 @@
 import { useActionState, useId } from 'react';
 import { useFormStatus } from 'react-dom';
 import { bookingButtonClass } from './internal/ui.js';
+import { type BookingLabel, labelText } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 
 export const VIPPS_BUTTON_LABEL_KEYS = [
@@ -10,7 +11,7 @@ export const VIPPS_BUTTON_LABEL_KEYS = [
   'vipps.unavailable',
   'vipps.throttled',
 ] as const;
-export type VippsButtonLabels = Record<(typeof VIPPS_BUTTON_LABEL_KEYS)[number], string>;
+export type VippsButtonLabels = Record<(typeof VIPPS_BUTTON_LABEL_KEYS)[number], BookingLabel>;
 
 /** Why a Vipps start did NOT end in a redirect. `null` is silence. */
 export type VippsStartState = { ok: false; reason: 'unavailable' | 'throttled' } | null;
@@ -89,7 +90,7 @@ export function VippsButton({ onVipps, next = null, label, labels, classNames }:
     >
       {next && <input type="hidden" name="next" value={next} />}
       <SubmitButton
-        label={label ?? labels['vipps.button']}
+        label={label ?? labelText(labels['vipps.button'])}
         className={bookingButtonClass({
           size: 'lg',
           className: slotClass(

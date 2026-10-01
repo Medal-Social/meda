@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 import { otpSlotsLabelsEn, otpSlotsLabelsNb } from './__stories__/labels.portal.js';
 import { BookingColumn, bookingStoryParameters, SecondBrand } from './__stories__/story-helpers.js';
+import { labelText } from './labels.js';
 import { OtpSlots, type OtpSlotsProps } from './otp-slots.js';
 
 function Controlled(props: Omit<OtpSlotsProps, 'onChange'>) {
@@ -32,7 +33,7 @@ export const English: Story = {
   args: { labels: otpSlotsLabelsEn, value: '' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const input = canvas.getByLabelText(otpSlotsLabelsEn['otp.label']);
+    const input = canvas.getByLabelText(labelText(otpSlotsLabelsEn['otp.label']));
     await userEvent.click(input);
     await userEvent.keyboard('4921');
     await expect(input).toHaveValue('4921');

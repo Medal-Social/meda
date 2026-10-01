@@ -2,6 +2,7 @@
 
 import { type ComponentType, type ReactNode, useState } from 'react';
 import { cn } from '../../lib/utils.js';
+import { type BookingLabel, labelText } from '../labels.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 
 export const PORTAL_SHELL_LABEL_KEYS = ['portalShell.nav', 'portalShell.navBar'] as const;
@@ -10,7 +11,7 @@ export const PORTAL_SHELL_LABEL_KEYS = ['portalShell.nav', 'portalShell.navBar']
  * bottom bar. Only one of the two is displayed at a time; a pack may give both
  * the same name.
  */
-export type PortalShellLabels = Record<(typeof PORTAL_SHELL_LABEL_KEYS)[number], string>;
+export type PortalShellLabels = Record<(typeof PORTAL_SHELL_LABEL_KEYS)[number], BookingLabel>;
 
 /** An icon the shell draws beside a tab label (e.g. a lucide icon). */
 export type PortalShellIcon = ComponentType<{
@@ -116,7 +117,7 @@ export function PortalShell<Id extends string = string>({
         <aside className={slotClass(classNames, 'rail', 'hidden lg:block')}>
           <div className="sticky top-8 space-y-4">
             {account}
-            <nav aria-label={labels['portalShell.nav']}>
+            <nav aria-label={labelText(labels['portalShell.nav'])}>
               <ul className="space-y-1">
                 {tabs.map(({ id, label, icon: Icon }) => (
                   <li key={id}>
@@ -167,7 +168,7 @@ export function PortalShell<Id extends string = string>({
       </div>
 
       <nav
-        aria-label={labels['portalShell.navBar']}
+        aria-label={labelText(labels['portalShell.navBar'])}
         className={slotClass(
           classNames,
           'bar',

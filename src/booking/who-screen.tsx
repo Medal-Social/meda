@@ -10,6 +10,7 @@ import {
 } from './add-child-sheet.js';
 import type { BookingFormat } from './format.js';
 import { renderLabel } from './internal/label-parts.js';
+import { type BookingLabel, labelText } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { NewChild, SaveResult, WizardPerson } from './types.js';
 
@@ -58,7 +59,7 @@ export const WHO_SCREEN_LABEL_KEYS = [
   ...ADD_CHILD_SHEET_LABEL_KEYS,
 ] as const;
 
-export type WhoScreenLabels = Record<(typeof WHO_SCREEN_LABEL_KEYS)[number], string> &
+export type WhoScreenLabels = Record<(typeof WHO_SCREEN_LABEL_KEYS)[number], BookingLabel> &
   AddChildSheetLabels;
 
 /**
@@ -248,7 +249,7 @@ export function WhoScreen({
             onChoose={onChoose}
           />
           {addedChildren.length > 0 && (
-            <ul aria-label={labels['who.guest.addedList']} className="space-y-2">
+            <ul aria-label={labelText(labels['who.guest.addedList'])} className="space-y-2">
               {addedChildren.map((entry, index) => (
                 <li key={entry.person.key}>
                   <PersonCard
@@ -385,7 +386,7 @@ function GuestChips({
   return (
     <div
       role="radiogroup"
-      aria-label={labels['who.guest.groupLabel']}
+      aria-label={labelText(labels['who.guest.groupLabel'])}
       className="grid grid-cols-2 gap-2 sm:grid-cols-4"
     >
       {choices.map((choice, index) => {

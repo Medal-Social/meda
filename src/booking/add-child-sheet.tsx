@@ -13,6 +13,7 @@ import {
   BOOKING_TEXTAREA_CLASS,
   BookingButton,
 } from './internal/ui.js';
+import { type BookingLabel, labelText } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { NewChild, SaveResult } from './types.js';
 
@@ -44,7 +45,7 @@ export const ADD_CHILD_SHEET_LABEL_KEYS = [
   'addChild.close',
 ] as const;
 
-export type AddChildSheetLabels = Record<(typeof ADD_CHILD_SHEET_LABEL_KEYS)[number], string>;
+export type AddChildSheetLabels = Record<(typeof ADD_CHILD_SHEET_LABEL_KEYS)[number], BookingLabel>;
 
 /**
  * - `root` — the dashed trigger card (the only element in the page flow)
@@ -105,7 +106,7 @@ export function AddChildSheet({
     event.preventDefault();
     const trimmed = name.trim();
     if (trimmed === '' || year === '') {
-      setError(labels['addChild.missing']);
+      setError(labelText(labels['addChild.missing']));
       return;
     }
     startTransition(async () => {

@@ -2,12 +2,13 @@
 
 import { type FormEvent, useState, useTransition } from 'react';
 import { BookingButton } from '../internal/ui.js';
+import { type BookingLabel, labelText } from '../labels.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 import type { SaveResult } from '../types.js';
 
 export const LOGOUT_BUTTON_LABEL_KEYS = ['logout.button', 'logout.unreachable'] as const;
 
-export type LogoutButtonLabels = Record<(typeof LOGOUT_BUTTON_LABEL_KEYS)[number], string>;
+export type LogoutButtonLabels = Record<(typeof LOGOUT_BUTTON_LABEL_KEYS)[number], BookingLabel>;
 
 /** `root` (the form), `button`, `error` (the live line under it). */
 export type LogoutButtonSlot = 'root' | 'button' | 'error';
@@ -41,7 +42,7 @@ export function LogoutButton({ labels, onLogout, classNames }: LogoutButtonProps
       } catch {
         result = { ok: false, message: '' };
       }
-      if (!result.ok) setError(result.message || labels['logout.unreachable']);
+      if (!result.ok) setError(result.message || labelText(labels['logout.unreachable']));
     });
   }
 

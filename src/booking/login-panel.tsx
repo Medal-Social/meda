@@ -15,6 +15,7 @@ import { Field } from '../primitives/field.js';
 import { Input } from '../primitives/input.js';
 import { renderLabel } from './internal/label-parts.js';
 import { BOOKING_INPUT_CLASS, BookingButton } from './internal/ui.js';
+import type { BookingLabel } from './labels.js';
 import {
   OTP_SLOTS_LABEL_KEYS,
   OtpSlots,
@@ -74,7 +75,7 @@ export const LOGIN_PANEL_LABEL_KEYS = [
  * Placeholders: `login.codeHelp` `{email}`, `login.vippsSentTo` `{to}`,
  * `login.cooldownWait` `{seconds}`, `login.resendIn` `{time}` («0:30»).
  */
-export type LoginPanelLabels = Record<(typeof LOGIN_PANEL_OWN_LABEL_KEYS)[number], string> &
+export type LoginPanelLabels = Record<(typeof LOGIN_PANEL_OWN_LABEL_KEYS)[number], BookingLabel> &
   OtpSlotsLabels &
   VippsButtonLabels;
 
@@ -165,7 +166,7 @@ export interface LoginPanelProps {
   memory?: LoginPanelMemory;
   onMemoryChange?: Dispatch<SetStateAction<LoginPanelMemory>>;
   /** Draws the heading («Log in» / «Check your e-mail»). Default: none — the page has its own. */
-  heading?: (text: string) => ReactNode;
+  heading?: (text: ReactNode) => ReactNode;
   /** Drawn above the Vipps button on the first screen. */
   intro?: ReactNode;
   /** Wait between codes. Default 30 s. */
@@ -366,7 +367,8 @@ export function LoginPanel({
   }
 
   const isFieldError = notice !== null && FIELD_ERRORS.has(notice);
-  const noticeText = notice === null ? null : labels[`login.notice.${notice}`];
+  // `null` for a blank notice, so no input is described by an empty one.
+  const noticeText = notice === null ? null : renderLabel(labels[`login.notice.${notice}`]);
 
   // One live region for the whole flow, ABOVE the switch between the two
   // screens so it stays mounted across it: a region that arrives already
@@ -408,7 +410,7 @@ export function LoginPanel({
 
   return (
     <div className={slotClass(classNames, 'root', 'space-y-6')}>
-      {heading(mode === 'start' ? labels['login.heading'] : labels['login.codeHeading'])}
+      {heading(renderLabel(labels[mode === 'start' ? 'login.heading' : 'login.codeHeading']))}
       {mode === 'vipps' && (
         // Text, never markup: `sentTo` may have come in on a URL.
         <p className="text-muted-foreground">
