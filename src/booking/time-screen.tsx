@@ -1,9 +1,10 @@
 'use client';
 
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, X } from 'lucide-react';
-import { type ComponentType, useEffect, useState } from 'react';
+import { type ComponentType, type ReactNode, useEffect, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import type { BookingClock, BookingDaypart, BookingFormat } from './format.js';
+import { renderLabel } from './internal/label-parts.js';
 import { BookingButton, bookingButtonClass } from './internal/ui.js';
 import { fillLabel } from './labels.js';
 import { LiveStatus } from './live-status.js';
@@ -395,11 +396,11 @@ function weekendSentence(
   labels: TimeScreenLabels,
   format: BookingFormat,
   note: WeekendNote
-): string {
+): ReactNode {
   const price = format.price(note.priceOre);
   return note.pct === null
-    ? fillLabel(labels['time.weekend.mixed'], { price })
-    : fillLabel(labels['time.weekend.pct'], { pct: note.pct, price });
+    ? renderLabel(labels['time.weekend.mixed'], { price })
+    : renderLabel(labels['time.weekend.pct'], { pct: note.pct, price });
 }
 
 // Month grid — pure calendar arithmetic over the business-local date, so a
@@ -590,9 +591,9 @@ export function TimeScreen({
       )}
 
       {surcharge !== null && (
-        // One string rather than JSX children: the non-breaking spaces in the
-        // label are load-bearing, and JSX whitespace between children is not
-        // the place to rely on which kind of space survived.
+        // The label's own pieces rather than JSX whitespace: the non-breaking
+        // spaces in the label are load-bearing, and JSX whitespace between
+        // children is not the place to rely on which kind of space survived.
         <p
           data-testid="surcharge-row"
           className={slotClass(classNames, 'surcharge', 'min-h-5 text-sm text-muted-foreground')}
@@ -853,7 +854,7 @@ function MonthCalendar({
   const { year, month, day: anchorDay } = ymd(clock, monthTs);
   const firstOfMonth = clock.dayStart(monthTs, 1 - anchorDay);
   const monthName = clock.monthName(month);
-  const heading = fillLabel(labels['time.month.heading'], {
+  const heading = renderLabel(labels['time.month.heading'], {
     month: `${monthName.charAt(0).toUpperCase()}${monthName.slice(1)}`,
     year,
   });
@@ -1085,9 +1086,9 @@ function ParallelInstead({
         className
       )}
     >
-      <p className="text-sm">{fillLabel(offer, { day: clock.dayLabel(day, now), time })}</p>
+      <p className="text-sm">{renderLabel(offer, { day: clock.dayLabel(day, now), time })}</p>
       <BookingButton size="lg" onClick={onAccept} className="tabular-nums">
-        {fillLabel(labels['time.parallel.accept'], { time })}
+        {renderLabel(labels['time.parallel.accept'], { time })}
       </BookingButton>
     </div>
   );
@@ -1127,18 +1128,18 @@ function NothingFreeCard({
   if (standing === 'closed' || standing === 'over') {
     return (
       <p className={cardClass}>
-        {fillLabel(labels[standing === 'closed' ? 'time.empty.closed' : 'time.empty.over'], {
+        {renderLabel(labels[standing === 'closed' ? 'time.empty.closed' : 'time.empty.over'], {
           day: dayLabel,
         })}
       </p>
     );
   }
 
-  let lead = fillLabel(labels['time.empty.unknown'], { day: dayLabel });
+  let lead = renderLabel(labels['time.empty.unknown'], { day: dayLabel });
   if (standing === 'open') {
     lead = stylistName
-      ? fillLabel(labels['time.empty.stylist'], { stylist: stylistName, day: dayLabel })
-      : fillLabel(labels['time.empty.full'], { day: dayLabel });
+      ? renderLabel(labels['time.empty.stylist'], { stylist: stylistName, day: dayLabel })
+      : renderLabel(labels['time.empty.full'], { day: dayLabel });
   }
 
   return (
@@ -1151,7 +1152,7 @@ function NothingFreeCard({
             aria-label={fillLabel(labels['time.empty.callLinkAria'], { phone })}
             className="font-semibold text-primary underline underline-offset-4"
           >
-            {fillLabel(labels['time.empty.callLink'], { phone })}
+            {renderLabel(labels['time.empty.callLink'], { phone })}
           </a>
           {labels['time.empty.callSuffix']}
         </>

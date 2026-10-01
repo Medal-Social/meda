@@ -12,6 +12,7 @@ export * from './booking-skeleton.js';
 export * from './confirmation.js';
 export * from './details-screen.js';
 export type { BookingClock, BookingDaypart, BookingFormat } from './format.js';
+export { joinLabelParts, labelParts, renderLabel } from './internal/label-parts.js';
 export * from './internal/ui.js';
 export * from './label-keys.js';
 export { fillLabel } from './labels.js';

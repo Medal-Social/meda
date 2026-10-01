@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { BookingFormat } from '../format.js';
-import { fillLabel } from '../labels.js';
+import { renderLabel } from '../internal/label-parts.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 
 export const PORTAL_UNREACHABLE_LABEL_KEYS = [
@@ -71,7 +71,7 @@ export function PortalUnreachable({
         </a>
         {phone && (
           <a href={format.telHref(phone)} className={link}>
-            {fillLabel(labels['portalUnreachable.call'], { phone })}
+            {renderLabel(labels['portalUnreachable.call'], { phone })}
           </a>
         )}
         {logout}

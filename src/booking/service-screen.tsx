@@ -3,6 +3,7 @@
 import { type ComponentType, type ReactNode, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import type { BookingFormat } from './format.js';
+import { renderLabel } from './internal/label-parts.js';
 import { BookingButton } from './internal/ui.js';
 import { fillLabel } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
@@ -40,6 +41,7 @@ export type ServiceScreenLabels = Record<(typeof SERVICE_SCREEN_LABEL_KEYS)[numb
  * - `pill` / `pillSelected` — a category pill / the marked one
  * - `groupHeading` — a category's (or a party member's) `<h3>`
  * - `card` / `cardSelected` — a service card / a pressed one (passed to `ServiceCard`)
+ * - `price` — a card's price (passed to `ServiceCard`, and the «same as last time» card's)
  */
 export type ServiceScreenSlot =
   | 'root'
@@ -48,7 +50,8 @@ export type ServiceScreenSlot =
   | 'pillSelected'
   | 'groupHeading'
   | 'card'
-  | 'cardSelected';
+  | 'cardSelected'
+  | 'price';
 
 /** One service group, in display order. */
 export interface ServiceScreenCategory {
@@ -90,6 +93,8 @@ export interface ServiceCardProps {
   labels: ServiceScreenLabels;
   className?: string;
   selectedClassName?: string;
+  /** Merged onto the price (the `price` slot). */
+  priceClassName?: string;
 }
 
 export interface ServiceScreenComponents {
@@ -207,6 +212,7 @@ function cardProps(shared: Shared) {
     labels: shared.labels,
     className: shared.classNames?.card,
     selectedClassName: shared.classNames?.cardSelected,
+    priceClassName: shared.classNames?.price,
   };
 }
 
@@ -574,7 +580,7 @@ function NothingInThisParty({
   return (
     <div className="space-y-2 rounded-lg border border-dashed border-border px-5 py-4 text-sm">
       <p>
-        {fillLabel(
+        {renderLabel(
           labels[person.adult ? 'service.party.adultAlone' : 'service.party.nothingFits'],
           values
         )}
@@ -585,7 +591,7 @@ function NothingInThisParty({
           onClick={onRemove}
           className="font-semibold text-primary underline underline-offset-4"
         >
-          {fillLabel(labels['service.party.remove'], values)}
+          {renderLabel(labels['service.party.remove'], values)}
         </button>
       )}
     </div>
@@ -689,9 +695,15 @@ function SameAsLast({
         </span>
         <span className="flex items-baseline gap-4 text-right">
           <span className="text-sm text-muted-foreground tabular-nums">
-            {fillLabel(labels['service.duration'], { minutes: service.durationMinutes })}
+            {renderLabel(labels['service.duration'], { minutes: service.durationMinutes })}
           </span>
-          <span className="whitespace-nowrap font-semibold text-foreground tabular-nums">
+          <span
+            className={slotClass(
+              classNames,
+              'price',
+              'whitespace-nowrap font-semibold text-foreground tabular-nums'
+            )}
+          >
             {format.price(service.priceOre)}
           </span>
         </span>
@@ -721,10 +733,13 @@ export function DefaultServiceCard({
   labels,
   className,
   selectedClassName,
+  priceClassName,
 }: ServiceCardProps) {
-  const duration = fillLabel(labels['service.duration'], { minutes: service.durationMinutes });
+  const duration = renderLabel(labels['service.duration'], { minutes: service.durationMinutes });
   const price = (
-    <span className="whitespace-nowrap font-semibold text-foreground tabular-nums">
+    <span
+      className={cn('whitespace-nowrap font-semibold text-foreground tabular-nums', priceClassName)}
+    >
       {format.price(service.priceOre)}
     </span>
   );

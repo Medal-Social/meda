@@ -2,6 +2,7 @@
 
 import type { ComponentType } from 'react';
 import type { BookingFormat } from './format.js';
+import { joinLabelParts, renderLabel } from './internal/label-parts.js';
 import { BookingButton } from './internal/ui.js';
 import { fillLabel } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
@@ -185,24 +186,25 @@ export function Confirmation({
         'rounded-lg border border-border bg-card px-5 py-4 font-medium'
       )}
     >
-      {[
-        first.item.bookedForName
-          ? fillLabel(labels['confirmation.serviceFor'], {
-              service: first.item.service.name,
-              name: first.item.bookedForName,
-            })
-          : first.item.service.name,
-        first.stylistName,
-        fillLabel(labels['confirmation.when'], {
-          day: clock.dayLabel(startTs, now),
-          time: clock.formatTime(startTs),
-        }),
-        // This line's own price, which for one person is the whole total.
-        format.price(first.priceOre),
-      ]
-        // Filtered, not conditionally joined: an absent stylist closes the gap.
-        .filter((part): part is string => Boolean(part))
-        .join(SEPARATOR)}
+      {/* Filtered, not conditionally joined: an absent stylist closes the gap. */}
+      {joinLabelParts(
+        [
+          first.item.bookedForName
+            ? renderLabel(labels['confirmation.serviceFor'], {
+                service: first.item.service.name,
+                name: first.item.bookedForName,
+              })
+            : first.item.service.name,
+          first.stylistName,
+          renderLabel(labels['confirmation.when'], {
+            day: clock.dayLabel(startTs, now),
+            time: clock.formatTime(startTs),
+          }),
+          // This line's own price, which for one person is the whole total.
+          format.price(first.priceOre),
+        ],
+        SEPARATOR
+      )}
     </p>
   ) : null;
 
@@ -316,7 +318,9 @@ function PartyCard({
       )}
     >
       <p className="font-semibold">
-        {fillLabel(labels['confirmation.party.heading'], { day: clock.dayLabel(firstStart, now) })}
+        {renderLabel(labels['confirmation.party.heading'], {
+          day: clock.dayLabel(firstStart, now),
+        })}
       </p>
       <ul className="space-y-1">
         {lines.map((line, index) => {
@@ -355,7 +359,7 @@ function PartyCard({
         })}
       </ul>
       <p className="font-semibold">
-        {fillLabel(labels['confirmation.party.total'], { total: format.price(totalOre) })}
+        {renderLabel(labels['confirmation.party.total'], { total: format.price(totalOre) })}
       </p>
     </div>
   );

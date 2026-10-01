@@ -13,8 +13,8 @@ import {
 } from 'react';
 import { Field } from '../primitives/field.js';
 import { Input } from '../primitives/input.js';
+import { renderLabel } from './internal/label-parts.js';
 import { BOOKING_INPUT_CLASS, BookingButton } from './internal/ui.js';
-import { fillLabel } from './labels.js';
 import {
   OTP_SLOTS_LABEL_KEYS,
   OtpSlots,
@@ -392,7 +392,7 @@ export function LoginPanel({
   // the two things worth hearing — how long, and that it is over.
   const cooldownSentence =
     waitSeconds > 0
-      ? fillLabel(labels['login.cooldownWait'], { seconds: Math.ceil(resendCooldownMs / 1000) })
+      ? renderLabel(labels['login.cooldownWait'], { seconds: Math.ceil(resendCooldownMs / 1000) })
       : labels['login.cooldownReady'];
   const cooldownRegion = (
     <p aria-live="polite" className="sr-only">
@@ -414,7 +414,7 @@ export function LoginPanel({
         <p className="text-muted-foreground">
           {sentTo === ''
             ? labels['login.vippsSentToUnknown']
-            : fillLabel(labels['login.vippsSentTo'], { to: sentTo })}
+            : renderLabel(labels['login.vippsSentTo'], { to: sentTo })}
         </p>
       )}
       {liveRegion}
@@ -495,7 +495,7 @@ export function LoginPanel({
               <Field.Description id={`${codeId}-help`}>
                 {mode === 'vipps'
                   ? labels['login.codeHelpVipps']
-                  : fillLabel(labels['login.codeHelp'], { email: sentTo })}
+                  : renderLabel(labels['login.codeHelp'], { email: sentTo })}
               </Field.Description>
             </Field>
             <BookingButton
@@ -520,7 +520,7 @@ export function LoginPanel({
                 className={link}
               >
                 {waitSeconds > 0
-                  ? fillLabel(labels['login.resendIn'], { time: timer(waitSeconds) })
+                  ? renderLabel(labels['login.resendIn'], { time: timer(waitSeconds) })
                   : labels['login.resend']}
               </button>
             )}

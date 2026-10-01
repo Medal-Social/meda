@@ -9,7 +9,7 @@ import {
   type AddChildSheetLabels,
 } from './add-child-sheet.js';
 import type { BookingFormat } from './format.js';
-import { fillLabel } from './labels.js';
+import { renderLabel } from './internal/label-parts.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { NewChild, SaveResult, WizardPerson } from './types.js';
 
@@ -169,13 +169,13 @@ const ARROW_STEPS: Record<string, number> = {
   ArrowUp: -1,
 };
 
-function choiceLabel(choice: WhoGuestChoice, labels: WhoScreenLabels): string {
+function choiceLabel(choice: WhoGuestChoice, labels: WhoScreenLabels): ReactNode {
   if (choice.label !== undefined) return choice.label;
   if (choice.people.length > 0 && choice.people.every((person) => person.adult)) {
     return labels['who.guest.adult'];
   }
   const count = choice.people.length;
-  return fillLabel(labels[count === 1 ? 'who.guest.children.one' : 'who.guest.children.other'], {
+  return renderLabel(labels[count === 1 ? 'who.guest.children.one' : 'who.guest.children.other'], {
     count,
   });
 }
@@ -301,7 +301,7 @@ export function WhoScreen({
       {heading}
       <fieldset className="space-y-4">
         <legend className="mb-2 text-sm text-muted-foreground">
-          {fillLabel(labels['who.family.legend'], { max: maxPeople })}
+          {renderLabel(labels['who.family.legend'], { max: maxPeople })}
         </legend>
         <ul className="space-y-2">
           {family.map((entry, index) => {
@@ -340,7 +340,7 @@ export function WhoScreen({
           aria-live="polite"
           className={slotClass(classNames, 'limit', 'min-h-5 text-sm text-muted-foreground')}
         >
-          {full ? fillLabel(labels['who.family.limit'], { max: maxPeople }) : ''}
+          {full ? renderLabel(labels['who.family.limit'], { max: maxPeople }) : ''}
         </p>
       </fieldset>
     </section>
