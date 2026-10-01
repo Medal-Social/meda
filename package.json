@@ -1,6 +1,6 @@
 {
   "name": "@medalsocial/meda",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Shared Meda UI shell and runtime package.",
   "license": "Apache-2.0",
   "repository": {
@@ -233,13 +233,13 @@
     }
   },
   "dependencies": {
-    "@base-ui/react": "1.8.0",
-    "class-variance-authority": "0.7.1",
-    "clsx": "2.1.1",
-    "cmdk": "1.1.1",
-    "react-resizable-panels": "4.13.1",
-    "tailwind-merge": "3.7.0",
-    "vaul": "1.1.2"
+    "@base-ui/react": "^1.7.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "react-resizable-panels": "^4.13.1",
+    "tailwind-merge": "^3.6.0",
+    "vaul": "^1.1.2"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",
