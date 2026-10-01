@@ -6,7 +6,7 @@ import { cn } from '../lib/utils.js';
 import type { BookingClock, BookingDaypart, BookingFormat } from './format.js';
 import { renderLabel } from './internal/label-parts.js';
 import { BookingButton, bookingButtonClass } from './internal/ui.js';
-import { fillLabel } from './labels.js';
+import { type BookingLabel, fillLabel, labelText } from './labels.js';
 import { LiveStatus } from './live-status.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { BookingDayDto, BookingSlotDto, PartySlot, WizardItem } from './types.js';
@@ -76,7 +76,7 @@ export const TIME_SCREEN_LABEL_KEYS = [
  *   finishes (end them with the dash); `closed` and `over` are whole sentences.
  * - `time.empty.callLink|callLinkAria` `{phone}`
  */
-export type TimeScreenLabels = Record<(typeof TIME_SCREEN_LABEL_KEYS)[number], string>;
+export type TimeScreenLabels = Record<(typeof TIME_SCREEN_LABEL_KEYS)[number], BookingLabel>;
 
 // ---------------------------------------------------------------------------
 // Slots and components
@@ -365,7 +365,7 @@ function partyChipLabel(
   });
   return fillLabel(labels['time.party.parallel'], {
     time: clock.formatTime(slot.startTs),
-    seats: seats.join(labels['time.party.seatSeparator']),
+    seats: seats.join(labelText(labels['time.party.seatSeparator'])),
   });
 }
 
@@ -734,7 +734,7 @@ export function TakenToast({ labels, takenSlotTs, className }: TakenToastProps) 
           <p className="flex-1">{labels['time.taken.message']}</p>
           <button
             type="button"
-            aria-label={labels['time.taken.close']}
+            aria-label={labelText(labels['time.taken.close'])}
             onClick={() => setShown(false)}
             className="flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-muted"
           >
@@ -786,7 +786,7 @@ export function TimeScreenSkeleton({
   return (
     <section aria-labelledby="booking-time-heading" className={cn('space-y-6', className)}>
       <TimeHeading labels={labels} />
-      <LiveStatus text={labels['time.loading']} />
+      <LiveStatus text={labelText(labels['time.loading'])} />
       <div aria-hidden="true" className="space-y-6">
         <div className="flex flex-wrap gap-2">
           {Array.from({ length: days }, (_, index) => (
@@ -883,7 +883,7 @@ function MonthCalendar({
             <BookingButton
               variant="outline"
               size="icon"
-              aria-label={labels['time.month.previous']}
+              aria-label={labelText(labels['time.month.previous'])}
               onClick={() => onMonth(clock.dayStart(firstOfMonth, -1))}
               className="rounded-full"
             >
@@ -895,7 +895,7 @@ function MonthCalendar({
             <BookingButton
               variant="outline"
               size="icon"
-              aria-label={labels['time.month.next']}
+              aria-label={labelText(labels['time.month.next'])}
               onClick={() => onMonth(clock.dayStart(firstOfMonth, daysInMonth(year, month)))}
               className="rounded-full"
             >
@@ -1029,7 +1029,7 @@ function DaypartSections({
                 startTs={slot.startTs}
                 label={label}
                 nearest={isNearest}
-                nearestLabel={labels['time.nearest']}
+                nearestLabel={labelText(labels['time.nearest'])}
                 current={current}
                 onPick={() => (partySlot && party ? party.onPick(partySlot) : onPick(slot))}
                 className={cn(

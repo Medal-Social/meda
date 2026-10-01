@@ -5,7 +5,7 @@ import { cn } from '../lib/utils.js';
 import type { BookingFormat } from './format.js';
 import { renderLabel } from './internal/label-parts.js';
 import { BookingButton } from './internal/ui.js';
-import { fillLabel } from './labels.js';
+import { type BookingLabel, fillLabel, labelText } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { BookingServiceDto } from './types.js';
 
@@ -33,7 +33,7 @@ export const SERVICE_SCREEN_LABEL_KEYS = [
   'service.party.remove',
 ] as const;
 
-export type ServiceScreenLabels = Record<(typeof SERVICE_SCREEN_LABEL_KEYS)[number], string>;
+export type ServiceScreenLabels = Record<(typeof SERVICE_SCREEN_LABEL_KEYS)[number], BookingLabel>;
 
 /**
  * - `root` — the `<section>`
@@ -178,7 +178,7 @@ function ageDividerLabel(
   name: string | null | undefined,
   possessive: (name: string) => string
 ): string {
-  if (!name) return labels['service.ageDivider.unnamed'];
+  if (!name) return labelText(labels['service.ageDivider.unnamed']);
   return fillLabel(labels['service.ageDivider.named'], {
     name,
     nameGenitive: possessive(name),

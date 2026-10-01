@@ -7,7 +7,7 @@ import { Input } from '../../primitives/input.js';
 import { Textarea } from '../../primitives/textarea.js';
 import type { BookingFormat } from '../format.js';
 import { BOOKING_INPUT_CLASS, BOOKING_TEXTAREA_CLASS, BookingButton } from '../internal/ui.js';
-import { fillLabel } from '../labels.js';
+import { type BookingLabel, fillLabel, labelText } from '../labels.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 import type { PortalFamilyMemberDto, PortalPersonNouns } from '../types.js';
 import { type PortalActionFailure, settle } from './action-result.js';
@@ -93,7 +93,10 @@ export const FAMILY_EDITOR_LABEL_KEYS = [
  * `heading` is used when no `nouns` are given. `removeNamed`, `ageConfirmed`
  * and `ageSaved` take `{name}`. The card's `ageConfirm.*` keys are included.
  */
-export type FamilyEditorLabels = Record<(typeof FAMILY_EDITOR_OWN_LABEL_KEYS)[number], string> &
+export type FamilyEditorLabels = Record<
+  (typeof FAMILY_EDITOR_OWN_LABEL_KEYS)[number],
+  BookingLabel
+> &
   AgeConfirmCardLabels;
 
 /**
@@ -408,7 +411,7 @@ export function FamilyEditor({
       onSessionExpired?.();
       return null;
     }
-    return failure.message ?? labels['familyEditor.unreachable'];
+    return failure.message ?? labelText(labels['familyEditor.unreachable']);
   }
 
   /** Never ask about this child again. */
@@ -585,7 +588,7 @@ export function FamilyEditor({
         setStatuses({
           [row.key]:
             result.fallback && gaveDetails
-              ? { kind: 'saved', note: labels['familyEditor.savedNoDetails'] }
+              ? { kind: 'saved', note: labelText(labels['familyEditor.savedNoDetails']) }
               : { kind: 'saved' },
         });
         setListStatus(isNew ? { kind: 'saved' } : null);
@@ -605,13 +608,13 @@ export function FamilyEditor({
       showSaving({
         rows: rows.filter((current) => current.key !== row.key),
         statuses,
-        listStatus: { kind: 'saved', note: labels['familyEditor.removed'] },
+        listStatus: { kind: 'saved', note: labelText(labels['familyEditor.removed']) },
       });
       const result = await settle(() => onRemovePerson(target(row)));
       if (result.ok) {
         adopt(result.family, row.key, null);
         setStatuses({});
-        setListStatus({ kind: 'saved', note: labels['familyEditor.removed'] });
+        setListStatus({ kind: 'saved', note: labelText(labels['familyEditor.removed']) });
         return;
       }
       fail(result, null);
@@ -733,7 +736,7 @@ export function DefaultFamilyMemberCard({
   // select silently showing «none» for a preference the backend still holds.
   const stylistOptions =
     row.stylist !== '' && !stylists.some((stylist) => stylist.id === row.stylist)
-      ? [...stylists, { id: row.stylist, name: labels['familyEditor.stylistFormer'] }]
+      ? [...stylists, { id: row.stylist, name: labelText(labels['familyEditor.stylistFormer']) }]
       : stylists;
 
   return (
@@ -742,7 +745,7 @@ export function DefaultFamilyMemberCard({
         event.preventDefault();
         onSave();
       }}
-      aria-label={name || labels['familyEditor.newRow']}
+      aria-label={name || labelText(labels['familyEditor.newRow'])}
       className={cn('space-y-3 rounded-lg border border-border bg-card px-5 py-4', className)}
     >
       <div className="grid grid-cols-[1fr_7rem] gap-3">
@@ -798,7 +801,7 @@ export function DefaultFamilyMemberCard({
           aria-label={
             name
               ? fillLabel(labels['familyEditor.removeNamed'], { name })
-              : labels['familyEditor.removeRow']
+              : labelText(labels['familyEditor.removeRow'])
           }
           onClick={onRemove}
         >
@@ -869,7 +872,7 @@ function DetailFields({
           id={`${id}-notes`}
           rows={2}
           maxLength={NOTES_MAX}
-          placeholder={labels['familyEditor.notesPlaceholder']}
+          placeholder={labelText(labels['familyEditor.notesPlaceholder'])}
           value={row.notes}
           onChange={(event) => onPatch({ notes: event.target.value })}
           className={BOOKING_TEXTAREA_CLASS}

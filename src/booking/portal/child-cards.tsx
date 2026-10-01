@@ -5,6 +5,7 @@ import type { ComponentType, ReactNode } from 'react';
 import { cn } from '../../lib/utils.js';
 import type { BookingFormat } from '../format.js';
 import { renderLabel } from '../internal/label-parts.js';
+import type { BookingLabel } from '../labels.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 import type { ChildSummary } from '../types.js';
 
@@ -24,7 +25,7 @@ export const CHILD_CARDS_LABEL_KEYS = [
  * `{age}` `{service}` `{date}`; `childCards.lastVisitNoService` `{age}`
  * `{date}`; `childCards.book` `{name}`.
  */
-export type ChildCardsLabels = Record<(typeof CHILD_CARDS_LABEL_KEYS)[number], string>;
+export type ChildCardsLabels = Record<(typeof CHILD_CARDS_LABEL_KEYS)[number], BookingLabel>;
 
 /**
  * - `list`: the grid. - `card`: one child. - `avatar`: the initial.

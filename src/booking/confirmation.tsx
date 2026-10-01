@@ -4,7 +4,7 @@ import type { ComponentType } from 'react';
 import type { BookingFormat } from './format.js';
 import { joinLabelParts, renderLabel } from './internal/label-parts.js';
 import { BookingButton } from './internal/ui.js';
-import { fillLabel } from './labels.js';
+import { type BookingLabel, fillLabel, labelText } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { WizardItem } from './types.js';
 
@@ -42,7 +42,7 @@ export const CONFIRMATION_LABEL_KEYS = [
   'confirmation.startOver',
 ] as const;
 
-export type ConfirmationLabels = Record<(typeof CONFIRMATION_LABEL_KEYS)[number], string>;
+export type ConfirmationLabels = Record<(typeof CONFIRMATION_LABEL_KEYS)[number], BookingLabel>;
 
 /**
  * One booked line (one person's appointment). One array rather than parallel
@@ -344,7 +344,7 @@ function PartyCard({
               key={index}
               line={line}
               text={text}
-              manageLabel={labels['confirmation.manage']}
+              manageLabel={labelText(labels['confirmation.manage'])}
               manageAriaLabel={fillLabel(labels['confirmation.manageFor'], {
                 who: line.item.bookedForName ?? line.item.service.name,
                 time,

@@ -4,6 +4,7 @@ import { useId, useState } from 'react';
 import { Field } from '../../primitives/field.js';
 import { renderLabel } from '../internal/label-parts.js';
 import { BookingButton } from '../internal/ui.js';
+import type { BookingLabel } from '../labels.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 
 export const AGE_CONFIRM_CARD_LABEL_KEYS = [
@@ -18,7 +19,10 @@ export const AGE_CONFIRM_CARD_LABEL_KEYS = [
 ] as const;
 
 /** `heading` and `legend` take `{name}`. */
-export type AgeConfirmCardLabels = Record<(typeof AGE_CONFIRM_CARD_LABEL_KEYS)[number], string>;
+export type AgeConfirmCardLabels = Record<
+  (typeof AGE_CONFIRM_CARD_LABEL_KEYS)[number],
+  BookingLabel
+>;
 
 /** `root` (the section), `heading`, `form`, `actions` (the button row). */
 export type AgeConfirmCardSlot = 'root' | 'heading' | 'form' | 'actions';

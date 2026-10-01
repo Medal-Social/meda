@@ -5,7 +5,7 @@ import { cn } from '../../lib/utils.js';
 import type { BookingFormat } from '../format.js';
 import { joinLabelParts, labelParts, renderLabel } from '../internal/label-parts.js';
 import { bookingButtonClass } from '../internal/ui.js';
-import { fillLabel } from '../labels.js';
+import { type BookingLabel, fillLabel, labelText } from '../labels.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 import type { PortalBookingDto } from '../types.js';
 
@@ -32,7 +32,10 @@ export const UPCOMING_BOOKINGS_LABEL_KEYS = [
  * `upcoming.noManageWithPhone` `{call}` (where the `upcoming.call` link goes),
  * `upcoming.call` `{phone}`.
  */
-export type UpcomingBookingsLabels = Record<(typeof UPCOMING_BOOKINGS_LABEL_KEYS)[number], string>;
+export type UpcomingBookingsLabels = Record<
+  (typeof UPCOMING_BOOKINGS_LABEL_KEYS)[number],
+  BookingLabel
+>;
 
 /**
  * - `root`: the section. - `heading`. - `empty`: the no-bookings box.
@@ -99,8 +102,8 @@ function howFarOff(
   format: BookingFormat
 ): string {
   const days = format.clock.daysBetween(now, startTs);
-  if (days <= 0) return labels['upcoming.today'];
-  if (days === 1) return labels['upcoming.tomorrow'];
+  if (days <= 0) return labelText(labels['upcoming.today']);
+  if (days === 1) return labelText(labels['upcoming.tomorrow']);
   return fillLabel(labels['upcoming.inDays'], { count: days });
 }
 

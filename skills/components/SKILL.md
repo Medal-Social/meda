@@ -156,6 +156,10 @@ same wizard / manage page / portal. Rules when editing or adding one:
 - **No copy, no clock.** Every string is a `labels` key (`'<screen>.<thing>'`, declared in
   the screen's `*_LABEL_KEYS` array and rolled up in `label-keys.ts`); every date / price
   goes through the `format: BookingFormat` prop — never `Date` getters or `Intl`.
+- **Labels render in the pack's own pieces.** A label is `string | readonly string[]`:
+  render it as children through `renderLabel` (string → one text node, array → one per
+  element) and as text (`aria-label`, messages) through `fillLabel` / `labelText`. Never
+  split a string label at its `{placeholders}`; test both forms (`childNodes`).
 - **Colours through the bridge only** (`bg-primary`, `text-muted-foreground`, …).
   `pnpm lint:tokens` rejects palette colours (`bg-white`, `text-green-600`) and arbitrary
   colour values in `src/booking`.

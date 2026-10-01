@@ -1,6 +1,7 @@
 'use client';
 
 import type { ComponentType } from 'react';
+import { type BookingLabel, labelText } from '../labels.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 import type { RebookSuggestion } from '../types.js';
 
@@ -12,7 +13,7 @@ export const REBOOK_CARDS_LABEL_KEYS = [
   'rebook.cta',
 ] as const;
 
-export type RebookCardsLabels = Record<(typeof REBOOK_CARDS_LABEL_KEYS)[number], string>;
+export type RebookCardsLabels = Record<(typeof REBOOK_CARDS_LABEL_KEYS)[number], BookingLabel>;
 
 /** - `root`: the section. - `heading`. - `empty`. - `list`. - `card`. - `link`: the book link. */
 export type RebookCardsSlot = 'root' | 'heading' | 'empty' | 'list' | 'card' | 'link';
@@ -117,9 +118,9 @@ export function DefaultRebookCard({
     >
       <p className="font-semibold">
         {[
-          suggestion.serviceName ?? labels['rebook.serviceFallback'],
+          suggestion.serviceName ?? labelText(labels['rebook.serviceFallback']),
           suggestion.bookedForName,
-          suggestion.resourceName ?? labels['rebook.anyStylist'],
+          suggestion.resourceName ?? labelText(labels['rebook.anyStylist']),
         ]
           .filter(Boolean)
           .join(SEPARATOR)}

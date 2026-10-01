@@ -498,13 +498,20 @@ describe('ServiceScreen — price slot', () => {
     expect(price).toHaveClass('text-primary');
   });
 
-  it('splits the duration around {minutes}', () => {
-    renderService();
-    const template = labels['service.duration'];
-    const node = screen.getByText(template.replace('{minutes}', String(KIDS_CUT.durationMinutes)));
-    const [before, after] = template.split('{minutes}');
-    expect(Array.from(node.childNodes).map((child) => child.textContent)).toEqual(
-      [before, String(KIDS_CUT.durationMinutes), after].filter(Boolean)
-    );
+  it('renders the duration in the form its label is written', () => {
+    const minutes = String(KIDS_CUT.durationMinutes);
+    const { unmount } = renderService();
+    const text = (labels['service.duration'] as string).replace('{minutes}', minutes);
+    for (const node of screen.getAllByText(text)) {
+      expect(Array.from(node.childNodes).map((child) => child.textContent)).toEqual([text]);
+    }
+    unmount();
+    renderService({ labels: { ...labels, 'service.duration': ['{minutes}', ' min'] } });
+    for (const node of screen.getAllByText(`${minutes} min`)) {
+      expect(Array.from(node.childNodes).map((child) => child.textContent)).toEqual([
+        minutes,
+        ' min',
+      ]);
+    }
   });
 });
