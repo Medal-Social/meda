@@ -12,6 +12,7 @@ import {
 import { cn } from '../lib/utils.js';
 import type { BookingFormat } from './format.js';
 import { renderLabel } from './internal/label-parts.js';
+import { type BookingLabel, labelText } from './labels.js';
 import { LiveStatus } from './live-status.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { BookingResourceDto, PartyMode } from './types.js';
@@ -54,7 +55,7 @@ export const STYLIST_SCREEN_LABEL_KEYS = [
   'stylist.party.parallelNote.other',
 ] as const;
 
-export type StylistScreenLabels = Record<(typeof STYLIST_SCREEN_LABEL_KEYS)[number], string>;
+export type StylistScreenLabels = Record<(typeof STYLIST_SCREEN_LABEL_KEYS)[number], BookingLabel>;
 
 /**
  * - `root` — the `<section>`
@@ -241,10 +242,10 @@ export function StylistScreen({
   const options: StylistOption[] = [
     {
       resourceId: null,
-      name: labels['stylist.firstAvailable'],
-      shortName: labels['stylist.firstAvailable'],
-      subtitle: labels['stylist.firstAvailableSubtitle'],
-      badge: labels['stylist.firstAvailableBadge'],
+      name: labelText(labels['stylist.firstAvailable']),
+      shortName: labelText(labels['stylist.firstAvailable']),
+      subtitle: labelText(labels['stylist.firstAvailableSubtitle']),
+      badge: labelText(labels['stylist.firstAvailableBadge']),
     },
     ...(loading
       ? held
@@ -329,7 +330,7 @@ export function StylistScreen({
         />
       )}
       {/* Beside the list, not in it: a status is not a list item. */}
-      <LiveStatus text={loading ? labels['stylist.loading'] : notice} />
+      <LiveStatus text={loading ? labelText(labels['stylist.loading']) : notice} />
     </section>
   );
 }
@@ -460,7 +461,7 @@ function pendingOption(
   format: BookingFormat
 ): StylistOption {
   const known = pendingName?.trim() ? pendingName.trim() : null;
-  const name = known ?? labels['stylist.pendingName'];
+  const name = known ?? labelText(labels['stylist.pendingName']);
   return {
     resourceId,
     name,

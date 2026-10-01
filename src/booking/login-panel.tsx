@@ -15,6 +15,7 @@ import { Field } from '../primitives/field.js';
 import { Input } from '../primitives/input.js';
 import { renderLabel } from './internal/label-parts.js';
 import { BOOKING_INPUT_CLASS, BookingButton } from './internal/ui.js';
+import { type BookingLabel, labelText } from './labels.js';
 import {
   OTP_SLOTS_LABEL_KEYS,
   OtpSlots,
@@ -74,7 +75,7 @@ export const LOGIN_PANEL_LABEL_KEYS = [
  * Placeholders: `login.codeHelp` `{email}`, `login.vippsSentTo` `{to}`,
  * `login.cooldownWait` `{seconds}`, `login.resendIn` `{time}` («0:30»).
  */
-export type LoginPanelLabels = Record<(typeof LOGIN_PANEL_OWN_LABEL_KEYS)[number], string> &
+export type LoginPanelLabels = Record<(typeof LOGIN_PANEL_OWN_LABEL_KEYS)[number], BookingLabel> &
   OtpSlotsLabels &
   VippsButtonLabels;
 
@@ -408,7 +409,11 @@ export function LoginPanel({
 
   return (
     <div className={slotClass(classNames, 'root', 'space-y-6')}>
-      {heading(mode === 'start' ? labels['login.heading'] : labels['login.codeHeading'])}
+      {heading(
+        mode === 'start'
+          ? labelText(labels['login.heading'])
+          : labelText(labels['login.codeHeading'])
+      )}
       {mode === 'vipps' && (
         // Text, never markup: `sentTo` may have come in on a URL.
         <p className="text-muted-foreground">

@@ -13,7 +13,7 @@ import {
   BOOKING_TEXTAREA_CLASS,
   BookingButton,
 } from './internal/ui.js';
-import { fillLabel } from './labels.js';
+import { type BookingLabel, fillLabel, labelText } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { BookingFamilyMember, WizardAction, WizardError, WizardState } from './types.js';
 
@@ -74,7 +74,7 @@ export const DETAILS_SCREEN_LABEL_KEYS = [
 ] as const;
 
 export type DetailsScreenLabelKey = (typeof DETAILS_SCREEN_LABEL_KEYS)[number];
-export type DetailsScreenLabels = Record<DetailsScreenLabelKey, string>;
+export type DetailsScreenLabels = Record<DetailsScreenLabelKey, BookingLabel>;
 
 /**
  * The label key for each failure the wizard can carry. Exported because some
@@ -306,10 +306,10 @@ function knownWho(state: WizardState, index: number, labels: DetailsScreenLabels
   const item = state.items[index];
   if (item?.adult) {
     return state.people[index]?.key === 'self'
-      ? labels['details.known.self']
-      : labels['details.known.adult'];
+      ? labelText(labels['details.known.self'])
+      : labelText(labels['details.known.adult']);
   }
-  return item?.bookedForName ?? labels['details.known.child'];
+  return item?.bookedForName ?? labelText(labels['details.known.child']);
 }
 
 /**
@@ -539,7 +539,7 @@ export function DetailsScreen({
       </Field>
 
       {state.items.some((_, index) => isKnownChair(state, index)) && (
-        <ul aria-label={labels['details.known.label']} className="space-y-1 text-sm">
+        <ul aria-label={labelText(labels['details.known.label'])} className="space-y-1 text-sm">
           {state.items.map((item, index) =>
             isKnownChair(state, index) ? (
               // biome-ignore lint/suspicious/noArrayIndexKey: two lines can share a service; the index is the identity
@@ -598,7 +598,7 @@ export function DetailsScreen({
           id={field('notes')}
           rows={3}
           className={slotClass(classNames, 'input', BOOKING_TEXTAREA_CLASS)}
-          placeholder={labels['details.notes.placeholder']}
+          placeholder={labelText(labels['details.notes.placeholder'])}
           value={state.notes}
           onChange={(event) => onChange({ type: 'setNotes', value: event.target.value })}
         />
@@ -719,7 +719,7 @@ function ChildFields({
           inputMode="numeric"
           maxLength={4}
           className={slotClass(classNames, 'input', BOOKING_INPUT_CLASS)}
-          placeholder={labels['details.child.yearPlaceholder']}
+          placeholder={labelText(labels['details.child.yearPlaceholder'])}
           value={value.birthYear}
           onChange={(event) => onChange({ birthYear: event.target.value })}
         />

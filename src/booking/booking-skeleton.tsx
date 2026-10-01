@@ -1,10 +1,14 @@
 import { Skeleton } from '../primitives/skeleton.js';
+import type { BookingLabel } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 
 export const BOOKING_SKELETON_LABEL_KEYS = ['bookingSkeleton.opening'] as const;
 
 /** Copy for the pending skeleton: the sentence a screen reader hears while it is up. */
-export type BookingSkeletonLabels = Record<(typeof BOOKING_SKELETON_LABEL_KEYS)[number], string>;
+export type BookingSkeletonLabels = Record<
+  (typeof BOOKING_SKELETON_LABEL_KEYS)[number],
+  BookingLabel
+>;
 
 /**
  * `classNames` slots: `root` the fixed overlay · `frame` the pulsing column ·

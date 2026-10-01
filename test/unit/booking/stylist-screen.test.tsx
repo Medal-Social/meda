@@ -490,7 +490,7 @@ function textNodes(element: Element): string[] {
     .map((node) => node.textContent ?? '');
 }
 
-describe('StylistScreen — text pieces', () => {
+describe('StylistScreen — text nodes', () => {
   const partyProps = { serviceIds: ['svc-kids', 'svc-kids-wash'], resources: [ADA, CLEO] };
   const party = {
     mode: 'parallel' as const,
@@ -498,7 +498,7 @@ describe('StylistScreen — text pieces', () => {
     onMode: vi.fn(),
   };
 
-  it('renders the parallel note as its template pieces, the size word its own text node', () => {
+  it('renders a string parallel note as ONE text node, the size word filled in', () => {
     renderStylist({
       ...partyProps,
       labels: {
@@ -508,13 +508,33 @@ describe('StylistScreen — text pieces', () => {
       party: { ...party, size: 2, sizeWord: 'to' },
     });
     const note = screen.getByText('Vi finner to behandlere som er ledige samtidig.');
+    expect(textNodes(note)).toEqual(['Vi finner to behandlere som er ledige samtidig.']);
+  });
+
+  it('renders an array parallel note as one text node per element', () => {
+    renderStylist({
+      ...partyProps,
+      labels: {
+        ...labels,
+        'stylist.party.parallelNote.two': [
+          'Vi finner ',
+          '{sizeWord}',
+          ' behandlere som er ledige samtidig.',
+        ],
+      },
+      party: { ...party, size: 2, sizeWord: 'to' },
+    });
+    const note = screen.getByText('Vi finner to behandlere som er ledige samtidig.');
     expect(textNodes(note)).toEqual(['Vi finner ', 'to', ' behandlere som er ledige samtidig.']);
   });
 
-  it('fills {sizeWord} with the number when no word is given, and splits {count} too', () => {
+  it('fills {sizeWord} with the number when no word is given', () => {
     renderStylist({
       ...partyProps,
-      labels: { ...labels, 'stylist.party.parallelNote.two': 'Vi finner {sizeWord} behandlere.' },
+      labels: {
+        ...labels,
+        'stylist.party.parallelNote.two': ['Vi finner ', '{sizeWord}', ' behandlere.'],
+      },
       party: { ...party, size: 2 },
     });
     expect(textNodes(screen.getByText('Vi finner 2 behandlere.'))).toEqual([
@@ -524,19 +544,28 @@ describe('StylistScreen — text pieces', () => {
     ]);
   });
 
-  it('splits the .other note around {count}', () => {
+  it('fills the .other note around {count}, in one node for a string', () => {
     renderStylist({ ...partyProps, party: { ...party, size: 4 } });
-    const text = labels['stylist.party.parallelNote.other'].replace('{count}', '4');
-    const [before, after] = labels['stylist.party.parallelNote.other'].split('{count}');
-    expect(textNodes(screen.getByText(text))).toEqual([before, '4', after]);
+    const text = (labels['stylist.party.parallelNote.other'] as string).replace('{count}', '4');
+    expect(textNodes(screen.getByText(text))).toEqual([text]);
   });
 
-  it("splits the mode cards' minutes around {minutes}", () => {
-    renderStylist({ ...partyProps, party: { ...party, size: 2 } });
-    const template = labels['stylist.party.parallelMinutes'];
-    const [before, after] = template.split('{minutes}');
-    const node = screen.getByText(template.replace('{minutes}', '30'));
-    expect(textNodes(node)).toEqual([before, '30', after].filter(Boolean));
+  it("renders the mode cards' minutes in the form their labels are written", () => {
+    const { unmount } = renderStylist({ ...partyProps, party: { ...party, size: 2 } });
+    const text = (labels['stylist.party.parallelMinutes'] as string).replace('{minutes}', '30');
+    expect(textNodes(screen.getByText(text))).toEqual([text]);
+    unmount();
+    renderStylist({
+      ...partyProps,
+      labels: {
+        ...labels,
+        'stylist.party.parallelMinutes': ['Ferdig på ', '{minutes}', ' min'],
+        'stylist.party.sequentialMinutes': ['{minutes}', ' min'],
+      },
+      party: { ...party, size: 2 },
+    });
+    expect(textNodes(screen.getByText('Ferdig på 30 min'))).toEqual(['Ferdig på ', '30', ' min']);
+    expect(textNodes(screen.getByText('60 min'))).toEqual(['60', ' min']);
   });
 });
 

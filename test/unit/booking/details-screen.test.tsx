@@ -654,3 +654,24 @@ describe('looksLikeEmail', () => {
     expect(performance.now() - started).toBeLessThan(200);
   });
 });
+
+describe('DetailsScreen — text nodes', () => {
+  const nodes = (element: Element) =>
+    Array.from(element.childNodes)
+      .filter((node) => node.nodeType === Node.TEXT_NODE)
+      .map((node) => node.textContent);
+
+  it('renders a string submit label as ONE text node', () => {
+    setup();
+    expect(nodes(submitButton())).toHaveLength(1);
+  });
+
+  it('renders an array submit label one text node per element', () => {
+    setup({ labels: { ...L, 'details.submit': ['Bestill – ', '{price}', ' betales i salongen'] } });
+    expect(nodes(submitButton())).toEqual([
+      'Bestill – ',
+      demoFormatNb.price(39_000),
+      ' betales i salongen',
+    ]);
+  });
+});

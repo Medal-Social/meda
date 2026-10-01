@@ -373,3 +373,24 @@ describe('WhoScreen — a11y', () => {
     ).toHaveNoViolations();
   });
 });
+
+describe('WhoScreen — text nodes', () => {
+  const nodes = (element: Element) =>
+    Array.from(element.childNodes)
+      .filter((node) => node.nodeType === Node.TEXT_NODE)
+      .map((node) => node.textContent);
+  const theo = () => child('Theo', 'p-theo', 0, '6–7 år');
+
+  it('renders a string legend as ONE text node', () => {
+    renderWho({ family: [theo()] });
+    expect(nodes(screen.getByText(LEGEND))).toEqual([LEGEND]);
+  });
+
+  it('renders an array legend one text node per element', () => {
+    renderWho({
+      family: [theo()],
+      labels: { ...labels, 'who.family.legend': ['Velg opptil ', '{max}'] },
+    });
+    expect(nodes(screen.getByText('Velg opptil 3'))).toEqual(['Velg opptil ', '3']);
+  });
+});

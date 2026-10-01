@@ -5,6 +5,7 @@ import { Checkbox } from '../../primitives/checkbox.js';
 import { Field } from '../../primitives/field.js';
 import { Input } from '../../primitives/input.js';
 import { BOOKING_CHECKBOX_CLASS, BOOKING_INPUT_CLASS, BookingButton } from '../internal/ui.js';
+import { type BookingLabel, labelText } from '../labels.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 import type { PortalProfileDto } from '../types.js';
 import { type PortalActionFailure, settle } from './action-result.js';
@@ -24,7 +25,7 @@ export const PROFILE_FORM_LABEL_KEYS = [
 ] as const;
 
 /** `marketing` is the consent sentence and usually names the business. */
-export type ProfileFormLabels = Record<(typeof PROFILE_FORM_LABEL_KEYS)[number], string>;
+export type ProfileFormLabels = Record<(typeof PROFILE_FORM_LABEL_KEYS)[number], BookingLabel>;
 
 /**
  * `root` (the section), `heading`, `form`, `status` (the save notice's live
@@ -193,7 +194,7 @@ export function ProfileForm({
       }
       setStatus({
         kind: 'error',
-        message: result.message ?? labels['profileForm.unreachable'],
+        message: result.message ?? labelText(labels['profileForm.unreachable']),
         field: 'field' in result && result.field === 'phone' ? 'phone' : null,
       });
     });
@@ -215,7 +216,7 @@ export function ProfileForm({
         onSessionExpired?.();
         return;
       }
-      setConsentError(labels['profileForm.unreachable']);
+      setConsentError(labelText(labels['profileForm.unreachable']));
     });
   }
 

@@ -81,12 +81,43 @@ ships no default language and no brand. Override, cheapest first:
 1. **CSS variables** — the shadcn tokens the bridge maps (`--primary`, `--card`,
    `--muted`, `--border`, `--ring`, `--radius`, …). Colours come from nowhere else.
 2. **`labels`** — a flat record (`'who.heading'`, …); `BookingLabels` is the full set
-   and `BOOKING_LABEL_KEYS` lists it. `{placeholders}` are filled by the screen.
+   and `BOOKING_LABEL_KEYS` lists it. `{placeholders}` are filled by the screen. A
+   value is a `BookingLabel`: a **string** renders as one text node once filled (like
+   a template literal), a **string array** renders one text node per element, each
+   element filled with the same values (see below).
 3. **`classNames`** — per documented slot (`root`, `card`, `cardSelected`, `chip`, …),
    merged after the defaults so an override wins.
 4. **`components`** — card renderers (`ServiceCard`, `StylistCard`, `TimeChip`,
    `DayChip`, `PersonCard`, …). The defaults are exported (`DefaultServiceCard`, …)
    so an override can wrap them.
+
+### Where a sentence breaks into text nodes
+
+A browser lays text out per DOM text node, so the same sentence split differently can
+land its later glyphs a sub-pixel apart. The pack decides; a screen never splits a
+string on its own:
+
+```ts
+const labels = {
+  // One text node: «Total 840 kr · paid at the salon».
+  'confirmation.party.total': 'Total {total} · paid at the salon',
+  // Four text nodes, the DOM of `Total {total}{' · '}paid at the salon` in JSX.
+  'confirmation.party.total': ['Total ', '{total}', ' · ', 'paid at the salon'],
+} satisfies Partial<BookingLabels>;
+```
+
+- An element that fills to `''` renders nothing; a label that fills to nothing renders
+  nothing at all.
+- Lines joined from several parts (the confirmation card's `service · stylist · when ·
+  price`, the portal's booking lines) are one text node while every part is a string,
+  and in pieces (each part and separator its own node) once one of their labels is an
+  array. `joinLabelParts(parts, separator, { pieces })` forces either.
+- Text-only targets — `aria-label`, `placeholder`, file names, error and status
+  messages, live-region announcements, a value filled into another label, and a custom
+  component's `string` prop — read the label flattened (`fillLabel`, `labelText`).
+- Helpers, for UI composed around the screens: `renderLabel(label, values)` (element
+  children), `fillLabel(label, values)` (text), `labelParts(label, { hole: <el/> })`
+  (element holes), `fillLabelPieces`, `labelText`, `joinLabelParts`.
 
 ```css
 @import 'tailwindcss';

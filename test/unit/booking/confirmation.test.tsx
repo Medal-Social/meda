@@ -291,29 +291,54 @@ function textNodes(element: Element): string[] {
     .map((node) => node.textContent ?? '');
 }
 
-describe('Confirmation — text pieces', () => {
-  it('renders the party total as its template pieces, the total its own text node', () => {
-    setup({ lines: [line(JONAS), line(EMMA, { startTs: MONDAY_15 + HALF_HOUR })] });
+describe('Confirmation — text nodes', () => {
+  const party = () => [line(JONAS), line(EMMA, { startTs: MONDAY_15 + HALF_HOUR })];
+
+  it('renders a string party total as ONE text node', () => {
+    setup({ lines: party() });
     const total = demoFormatNb.price(78_000);
-    const [before, after] = L['confirmation.party.total'].split('{total}');
-    const node = screen.getByText(`${before}${total}${after}`, { normalizer: exactly });
-    expect(textNodes(node)).toEqual([before, total, after]);
+    const text = (L['confirmation.party.total'] as string).replace('{total}', total);
+    expect(textNodes(screen.getByText(text, { normalizer: exactly }))).toEqual([text]);
   });
 
-  it('renders the party heading around its {day}', () => {
-    setup({ lines: [line(JONAS), line(EMMA, { startTs: MONDAY_15 + HALF_HOUR })] });
+  it('renders an array party total as one text node per element', () => {
+    setup({
+      lines: party(),
+      labels: { ...L, 'confirmation.party.total': ['Til sammen ', '{total}', ' · ', 'betales'] },
+    });
+    const total = demoFormatNb.price(78_000);
+    const node = screen.getByText(`Til sammen ${total} · betales`, { normalizer: exactly });
+    expect(textNodes(node)).toEqual(['Til sammen ', total, ' · ', 'betales']);
+  });
+
+  it('renders the party heading in the form its label is written', () => {
+    const { unmount } = setup({ lines: party() });
+    expect(textNodes(screen.getByText('Felles besøk · i dag'))).toEqual(['Felles besøk · i dag']);
+    unmount();
+    setup({
+      lines: party(),
+      labels: { ...L, 'confirmation.party.heading': ['Felles besøk · ', '{day}'] },
+    });
     expect(textNodes(screen.getByText('Felles besøk · i dag'))).toEqual([
       'Felles besøk · ',
       'i dag',
     ]);
   });
 
-  it('renders the single card as pieces and separators', () => {
+  it('joins the single card into ONE text node when its labels are strings', () => {
     setup();
-    const node = screen.getByText('Barneklipp for Jonas · Ada · i dag kl. 15:00 · 390 kr');
-    expect(node.textContent).toBe(
-      `Barneklipp for Jonas · Ada · i dag kl. 15:00 · ${demoFormatNb.price(39_000)}`
-    );
+    const text = `Barneklipp for Jonas · Ada · i dag kl. 15:00 · ${demoFormatNb.price(39_000)}`;
+    expect(textNodes(screen.getByText(text, { normalizer: exactly }))).toEqual([text]);
+  });
+
+  it('renders the single card in pieces once one of its labels is an array', () => {
+    setup({
+      labels: { ...L, 'confirmation.serviceFor': ['{service}', ' for ', '{name}'] },
+    });
+    const price = demoFormatNb.price(39_000);
+    const node = screen.getByText(`Barneklipp for Jonas · Ada · i dag kl. 15:00 · ${price}`, {
+      normalizer: exactly,
+    });
     expect(textNodes(node)).toEqual([
       'Barneklipp',
       ' for ',
@@ -321,11 +346,22 @@ describe('Confirmation — text pieces', () => {
       ' · ',
       'Ada',
       ' · ',
-      'i dag',
-      ' kl. ',
-      '15:00',
+      'i dag kl. 15:00',
       ' · ',
-      demoFormatNb.price(39_000),
+      price,
     ]);
+  });
+
+  it('flattens an array label wherever it is text only', () => {
+    setup({
+      lines: [line(JONAS, { manageHref: '/m/1' }), line(EMMA, { manageHref: '/m/2' })],
+      labels: {
+        ...L,
+        'confirmation.manageFor': ['Endre ', '{who}', ' kl. ', '{time}'],
+        'confirmation.party.line': ['{time} ', '{name}', ' – ', '{service}'],
+      },
+    });
+    expect(screen.getByRole('link', { name: 'Endre Jonas kl. 15:00' })).toBeInTheDocument();
+    expect(screen.getByText('15:00 Jonas – Barneklipp')).toBeInTheDocument();
   });
 });

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { BookingFormat } from '../format.js';
 import { renderLabel } from '../internal/label-parts.js';
+import type { BookingLabel } from '../labels.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 
 export const PORTAL_UNREACHABLE_LABEL_KEYS = [
@@ -13,7 +14,7 @@ export const PORTAL_UNREACHABLE_LABEL_KEYS = [
 /** `portalUnreachable.call` takes `{phone}`. */
 export type PortalUnreachableLabels = Record<
   (typeof PORTAL_UNREACHABLE_LABEL_KEYS)[number],
-  string
+  BookingLabel
 >;
 
 /** - `root`: the section. - `heading`. - `actions`: the row of links. - `link`: each link. */
