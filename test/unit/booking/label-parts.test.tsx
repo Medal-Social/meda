@@ -55,6 +55,18 @@ describe('renderLabel', () => {
 });
 
 describe('joinLabelParts', () => {
+  it('drops a label that fills to nothing, so no separator doubles', () => {
+    expect(renderLabel('{a}', { a: '' })).toBeNull();
+    const { container } = render(
+      <p>{joinLabelParts(['Cut', renderLabel('{a}', { a: '' }), [], 'Ada'], ' · ')}</p>
+    );
+    expect(textNodes(container.querySelector('p') as HTMLParagraphElement)).toEqual([
+      'Cut',
+      ' · ',
+      'Ada',
+    ]);
+  });
+
   it('joins the present parts with the separator, each its own text node', () => {
     const { container } = render(
       <p>{joinLabelParts(['Cut', null, '', 'Ada', '390 kr'], ' · ')}</p>

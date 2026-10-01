@@ -31,7 +31,8 @@ export function labelParts(
  * sentence composed in JSX.
  *
  * Text-only targets (`aria-label`, `title`, a file name) keep `fillLabel`.
- * Empty literal runs and empty values render nothing, as in JSX.
+ * Empty literal runs and empty values render nothing, as in JSX; a label
+ * that fills to nothing at all is `null`.
  */
 export function renderLabel(
   template: string,
@@ -44,7 +45,7 @@ export function renderLabel(
     const value = match && Object.hasOwn(values, match[1]) ? values[match[1]] : piece;
     if (value !== '') nodes.push(value);
   }
-  return nodes;
+  return nodes.length > 0 ? nodes : null;
 }
 
 /**
@@ -54,7 +55,14 @@ export function renderLabel(
  */
 export function joinLabelParts(parts: ReadonlyArray<ReactNode>, separator: string): ReactNode {
   return parts
-    .filter((part) => part !== null && part !== undefined && part !== false && part !== '')
+    .filter(
+      (part) =>
+        part !== null &&
+        part !== undefined &&
+        part !== false &&
+        part !== '' &&
+        !(Array.isArray(part) && part.length === 0)
+    )
     .map((part, index) => (
       // biome-ignore lint/suspicious/noArrayIndexKey: the parts of one fixed sentence never reorder
       <Fragment key={index}>
