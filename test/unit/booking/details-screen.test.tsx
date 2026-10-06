@@ -174,6 +174,31 @@ describe('DetailsScreen', () => {
     );
   });
 
+  it('keeps a blank e-mail editable even when emailReadOnly is set', () => {
+    setup({
+      emailReadOnly: true,
+      state: readyState({ contact: { phone: '40000000', name: '', email: '' } }),
+    });
+    const input = screen.getByLabelText(L['details.email.label']);
+    expect(input).not.toHaveAttribute('readonly');
+    expect(input).not.toHaveAttribute('aria-readonly');
+    expect(screen.getByText(L['details.email.help'])).toBeInTheDocument();
+    expect(screen.queryByText(L['details.email.lockedHelp'])).toBeNull();
+  });
+
+  it('keeps a malformed e-mail editable under emailReadOnly and focuses it on submit', () => {
+    const { onSubmit } = setup({
+      emailReadOnly: true,
+      state: readyState({ contact: { phone: '40000000', name: '', email: 'not-an-email' } }),
+    });
+    const input = screen.getByLabelText(L['details.email.label']);
+    expect(input).not.toHaveAttribute('readonly');
+    expect(screen.getByText(L['details.email.help'])).toBeInTheDocument();
+    fireEvent.click(submitButton());
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(input).toHaveFocus();
+  });
+
   it('sends the optional birth year on the line item, not on the contact', () => {
     const { onSubmit } = setup();
     fill(L['details.child.year'], '2017');
