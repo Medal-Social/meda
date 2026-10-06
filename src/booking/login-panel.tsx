@@ -378,7 +378,8 @@ export function LoginPanel({
   }
 
   function switchEmail() {
-    remember({ mode: 'start' });
+    // They already chose e-mail: back to the open form, not the two buttons.
+    remember({ mode: 'start', emailOpen: true });
     setCode('');
     setNotice(null);
   }

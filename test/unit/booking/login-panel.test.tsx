@@ -237,6 +237,14 @@ describe('LoginPanel, asking for a code', () => {
     expect(screen.getByLabelText(labels['login.emailLabel'])).toHaveValue(EMAIL);
     expect(screen.queryByLabelText(labels['otp.label'])).toBeNull();
   });
+
+  it('collapsed: «use e-mail instead» from a Vipps confirm opens the form, not the two buttons', async () => {
+    renderPanel({ emailCollapsed: true, vippsConfirm: { to: 'd•••@e•••.com' } });
+    fireEvent.click(await screen.findByRole('button', { name: labels['login.useEmailInstead'] }));
+
+    expect(screen.getByLabelText(labels['login.emailLabel'])).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: labels['login.continueEmail'] })).toBeNull();
+  });
 });
 
 describe('LoginPanel, the live regions', () => {
