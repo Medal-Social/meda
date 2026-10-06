@@ -103,7 +103,20 @@ describe('LoginPanel, emailCollapsed', () => {
       memory: { mode: 'start', email: '', sentTo: '', resendAt: 0, emailOpen: true },
       onMemoryChange: vi.fn(),
     });
-    expect(screen.getByLabelText(labels['login.emailLabel'])).toBeInTheDocument();
+    const input = screen.getByLabelText(labels['login.emailLabel']);
+    expect(input).toBeInTheDocument();
+    // Restored from memory, not tapped: focus is not stolen.
+    expect(input).not.toHaveFocus();
+  });
+
+  it('a closed memory shows the e-mail button again', () => {
+    renderPanel({
+      emailCollapsed: true,
+      memory: { mode: 'start', email: '', sentTo: '', resendAt: 0, emailOpen: false },
+      onMemoryChange: vi.fn(),
+    });
+    expect(screen.getByRole('button', { name: labels['login.continueEmail'] })).toBeInTheDocument();
+    expect(screen.queryByLabelText(labels['login.emailLabel'])).toBeNull();
   });
 
   it('still draws the «or» divider when not collapsed', () => {
