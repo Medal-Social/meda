@@ -202,6 +202,20 @@ describe('LoginPanel, asking for a code', () => {
     expect(screen.queryByLabelText(labels['otp.label'])).toBeNull();
   });
 
+  it('shows the throttled notice, not the address as invalid, when sending is rate-limited', async () => {
+    onStartLogin.mockResolvedValue({ ok: false, reason: 'throttled' });
+    renderPanel();
+    const input = screen.getByLabelText(labels['login.emailLabel']);
+    fireEvent.change(input, { target: { value: EMAIL } });
+    fireEvent.click(screen.getByRole('button', { name: labels['login.sendCode'] }));
+
+    expect(await screen.findByText(labels['login.notice.throttled'])).toBeInTheDocument();
+    expect(screen.queryByText(labels['login.notice.unreachable'])).toBeNull();
+    expect(screen.getByLabelText(labels['login.emailLabel'])).toBeInTheDocument();
+    expect(screen.queryByLabelText(labels['otp.label'])).toBeNull();
+    expect(input).not.toHaveAttribute('aria-invalid');
+  });
+
   it('treats a thrown start as unreachable', async () => {
     onStartLogin.mockRejectedValue(new Error('network'));
     renderPanel();

@@ -101,7 +101,9 @@ export type LoginPanelSlot =
   | 'link';
 
 /** What asking for a code answered. `invalidEmail`: the address was refused. */
-export type LoginStartResult = { ok: true } | { ok: false; reason: 'unreachable' | 'invalidEmail' };
+export type LoginStartResult =
+  | { ok: true }
+  | { ok: false; reason: 'unreachable' | 'invalidEmail' | 'throttled' };
 
 /** What checking a code answered. `conflict`: the Vipps account belongs to another profile. */
 export type LoginVerifyResult =
@@ -191,6 +193,13 @@ type Notice =
   | 'throttled'
   | 'vippsInvalid'
   | 'vippsConflict';
+
+/** Which notice each refused send shows. */
+const START_NOTICE = {
+  invalidEmail: 'badEmail',
+  throttled: 'throttled',
+  unreachable: 'unreachable',
+} as const satisfies Record<Extract<LoginStartResult, { ok: false }>['reason'], Notice>;
 
 /** The notices that describe a mistake in the field they sit under. */
 const FIELD_ERRORS: ReadonlySet<Notice> = new Set([
@@ -317,7 +326,7 @@ export function LoginPanel({
         result = { ok: false, reason: 'unreachable' };
       }
       if (!result.ok) {
-        setNotice(result.reason === 'invalidEmail' ? 'badEmail' : 'unreachable');
+        setNotice(START_NOTICE[result.reason]);
         return;
       }
       const sentAt = Date.now();
@@ -494,7 +503,8 @@ export function LoginPanel({
                     required
                     value={email}
                     aria-describedby={noticeText ? noticeId : undefined}
-                    aria-invalid={isFieldError || undefined}
+                    // A rate limit says nothing about the address typed, so it never marks it.
+                    aria-invalid={(isFieldError && notice !== 'throttled') || undefined}
                     onChange={(event) => setEmail(event.target.value)}
                     className={slotClass(classNames, 'input', BOOKING_INPUT_CLASS)}
                   />
