@@ -125,6 +125,17 @@ export const English: Story = {
   },
 };
 
+/** Logged in: the e-mail is the one they signed in with, read-only. */
+export const EmailReadOnly: Story = {
+  args: {
+    emailReadOnly: true,
+    initial: {
+      ...demoState([{ service: kids }]),
+      contact: { phone: '40000000', name: '', email: 'kari@example.com' },
+    },
+  },
+};
+
 export const SecondBrandTheme: Story = {
   name: 'Second brand',
   render: (args) => (

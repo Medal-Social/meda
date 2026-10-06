@@ -156,6 +156,24 @@ describe('DetailsScreen', () => {
     expect(screen.queryByText(L['details.phone.error'])).toBeNull();
   });
 
+  it('shows a locked e-mail and still submits it', () => {
+    const { onSubmit } = setup({
+      emailReadOnly: true,
+      state: readyState({ contact: { phone: '40000000', name: '', email: 'kari@example.com' } }),
+    });
+    const input = screen.getByLabelText(L['details.email.label']);
+    expect(input).toHaveAttribute('readonly');
+    expect(input).toHaveAttribute('aria-readonly', 'true');
+    expect(screen.getByText(L['details.email.lockedHelp'])).toBeInTheDocument();
+    expect(screen.queryByText(L['details.email.help'])).toBeNull();
+    fireEvent.click(submitButton());
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contact: expect.objectContaining({ email: 'kari@example.com' }),
+      })
+    );
+  });
+
   it('sends the optional birth year on the line item, not on the contact', () => {
     const { onSubmit } = setup();
     fill(L['details.child.year'], '2017');
