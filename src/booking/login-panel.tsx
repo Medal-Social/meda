@@ -40,6 +40,7 @@ export const LOGIN_PANEL_OWN_LABEL_KEYS = [
   'login.heading',
   'login.codeHeading',
   'login.or',
+  'login.continueEmail',
   'login.emailIntro',
   'login.emailLabel',
   'login.sendCode',
@@ -95,6 +96,7 @@ export type LoginPanelSlot =
   | 'input'
   | 'submit'
   | 'divider'
+  | 'emailButton'
   | 'links'
   | 'link';
 
@@ -124,6 +126,8 @@ export interface LoginPanelMemory {
   sentTo: string;
   /** When «send a new code» opens again (epoch ms); `0` before any code went out. */
   resendAt: number;
+  /** `emailCollapsed` only: the e-mail form has been opened. */
+  emailOpen?: boolean;
 }
 
 export const FRESH_LOGIN_MEMORY: LoginPanelMemory = {
@@ -158,6 +162,8 @@ export interface LoginPanelProps {
   onVipps?: VippsStartAction;
   /** Where a Vipps login should land. */
   vippsNext?: string | null;
+  /** Show e-mail as a second button under Vipps; the form opens on tap. Ignored without `onVipps`. */
+  emailCollapsed?: boolean;
   /** Replaces the Vipps button's label. */
   vippsLabel?: string;
   /** Start on the Vipps confirm code screen (uncontrolled memory only). */
@@ -235,6 +241,7 @@ export function LoginPanel({
   onVipps,
   vippsNext = null,
   vippsLabel,
+  emailCollapsed = false,
   vippsConfirm = null,
   memory: memoryProp,
   onMemoryChange,
@@ -248,7 +255,7 @@ export function LoginPanel({
   const id = useId();
   const [heldHere, setHeldHere] = useState<LoginPanelMemory>(() => loginMemoryFor(vippsConfirm));
   const controlled = memoryProp !== undefined && onMemoryChange !== undefined;
-  const { mode, email, sentTo, resendAt } = controlled ? memoryProp : heldHere;
+  const { mode, email, sentTo, resendAt, emailOpen = false } = controlled ? memoryProp : heldHere;
   const setMemory = controlled ? onMemoryChange : setHeldHere;
   const remember = (patch: Partial<LoginPanelMemory>) =>
     setMemory((previous) => ({ ...previous, ...patch }));
@@ -265,6 +272,10 @@ export function LoginPanel({
   const verifying = useRef(false);
   const [checking, setChecking] = useState(false);
   const codeRef = useRef<HTMLDivElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const collapsed = emailCollapsed && !!onVipps && !emailOpen;
+  /** Focus only after a tap opened the form, not when memory restores it. */
+  const focusEmail = useRef(false);
 
   const emailId = `${id}-email`;
   const codeId = `${id}-code`;
@@ -290,6 +301,12 @@ export function LoginPanel({
     setFocusCode(false);
     codeRef.current?.querySelector<HTMLInputElement>('input')?.focus();
   }, [focusCode, pending, mode]);
+
+  useEffect(() => {
+    if (!focusEmail.current || collapsed) return;
+    focusEmail.current = false;
+    emailRef.current?.focus();
+  }, [collapsed]);
 
   function requestCode(address: string, resend: boolean) {
     startTransition(async () => {
@@ -423,7 +440,7 @@ export function LoginPanel({
       {cooldownRegion}
       {mode === 'start' ? (
         <>
-          {intro}
+          {!collapsed && intro}
           {onVipps && (
             <>
               <VippsButton
@@ -433,45 +450,65 @@ export function LoginPanel({
                 labels={labels}
                 classNames={vippsClassNames}
               />
-              <div
-                className={slotClass(
-                  classNames,
-                  'divider',
-                  'flex items-center gap-4 text-sm text-muted-foreground'
-                )}
-                aria-hidden="true"
-              >
-                <span className="h-px flex-1 bg-border" />
-                {labels['login.or']}
-                <span className="h-px flex-1 bg-border" />
-              </div>
+              {!emailCollapsed && (
+                <div
+                  className={slotClass(
+                    classNames,
+                    'divider',
+                    'flex items-center gap-4 text-sm text-muted-foreground'
+                  )}
+                  aria-hidden="true"
+                >
+                  <span className="h-px flex-1 bg-border" />
+                  {labels['login.or']}
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+              )}
             </>
           )}
-          <p className="text-muted-foreground">{labels['login.emailIntro']}</p>
-          <form onSubmit={submitEmail} className={slotClass(classNames, 'form', 'space-y-6')}>
-            <Field>
-              <Field.Label htmlFor={emailId}>{labels['login.emailLabel']}</Field.Label>
-              <Input
-                id={emailId}
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                aria-describedby={noticeText ? noticeId : undefined}
-                aria-invalid={isFieldError || undefined}
-                onChange={(event) => setEmail(event.target.value)}
-                className={slotClass(classNames, 'input', BOOKING_INPUT_CLASS)}
-              />
-            </Field>
+          {collapsed ? (
             <BookingButton
-              type="submit"
+              type="button"
+              variant="outline"
               size="lg"
-              className={slotClass(classNames, 'submit', 'w-full')}
-              disabled={pending}
+              className={slotClass(classNames, 'emailButton', 'w-full')}
+              onClick={() => {
+                focusEmail.current = true;
+                remember({ emailOpen: true });
+              }}
             >
-              {labels['login.sendCode']}
+              {labels['login.continueEmail']}
             </BookingButton>
-          </form>
+          ) : (
+            <>
+              <p className="text-muted-foreground">{labels['login.emailIntro']}</p>
+              <form onSubmit={submitEmail} className={slotClass(classNames, 'form', 'space-y-6')}>
+                <Field>
+                  <Field.Label htmlFor={emailId}>{labels['login.emailLabel']}</Field.Label>
+                  <Input
+                    ref={emailRef}
+                    id={emailId}
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    aria-describedby={noticeText ? noticeId : undefined}
+                    aria-invalid={isFieldError || undefined}
+                    onChange={(event) => setEmail(event.target.value)}
+                    className={slotClass(classNames, 'input', BOOKING_INPUT_CLASS)}
+                  />
+                </Field>
+                <BookingButton
+                  type="submit"
+                  size="lg"
+                  className={slotClass(classNames, 'submit', 'w-full')}
+                  disabled={pending}
+                >
+                  {labels['login.sendCode']}
+                </BookingButton>
+              </form>
+            </>
+          )}
         </>
       ) : (
         <>

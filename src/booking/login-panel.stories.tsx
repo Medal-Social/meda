@@ -46,3 +46,8 @@ export const SecondBrandTheme: Story = {
     </SecondBrand>
   ),
 };
+
+/** Vipps and e-mail as two equal buttons; the e-mail form opens on tap. */
+export const EmailCollapsed: Story = {
+  args: { emailCollapsed: true },
+};

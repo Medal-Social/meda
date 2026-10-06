@@ -77,6 +77,41 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+describe('LoginPanel, emailCollapsed', () => {
+  it('shows Vipps first, then an e-mail button that opens and focuses the form', () => {
+    renderPanel({ emailCollapsed: true });
+    const buttons = screen.getAllByRole('button');
+    expect(buttons[0]).toHaveAccessibleName(labels['vipps.button']);
+    expect(screen.queryByLabelText(labels['login.emailLabel'])).toBeNull();
+    expect(screen.queryByText(labels['login.or'])).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: labels['login.continueEmail'] }));
+    const input = screen.getByLabelText(labels['login.emailLabel']);
+    expect(input).toHaveFocus();
+    expect(screen.queryByRole('button', { name: labels['login.continueEmail'] })).toBeNull();
+    expect(screen.queryByText(labels['login.or'])).toBeNull();
+  });
+
+  it('draws the form directly without Vipps', () => {
+    renderPanel({ emailCollapsed: true, onVipps: undefined });
+    expect(screen.getByLabelText(labels['login.emailLabel'])).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: labels['login.continueEmail'] })).toBeNull();
+  });
+
+  it('keeps the form open through memory', () => {
+    renderPanel({
+      emailCollapsed: true,
+      memory: { mode: 'start', email: '', sentTo: '', resendAt: 0, emailOpen: true },
+      onMemoryChange: vi.fn(),
+    });
+    expect(screen.getByLabelText(labels['login.emailLabel'])).toBeInTheDocument();
+  });
+
+  it('still draws the «or» divider when not collapsed', () => {
+    renderPanel();
+    expect(screen.getByText(labels['login.or'])).toBeInTheDocument();
+  });
+});
+
 describe('LoginPanel, first screen', () => {
   it('puts Vipps above the e-mail form, with an «or» between', () => {
     const { container } = renderPanel();
