@@ -182,6 +182,9 @@ describe('DetailsScreen', () => {
     const input = screen.getByLabelText(L['details.email.label']);
     expect(input).not.toHaveAttribute('readonly');
     expect(input).not.toHaveAttribute('aria-readonly');
+    fireEvent.focus(input);
+    fireEvent.blur(input);
+    fireEvent.change(input, { target: { value: 'kari@example.com' } });
     expect(screen.getByText(L['details.email.help'])).toBeInTheDocument();
     expect(screen.queryByText(L['details.email.lockedHelp'])).toBeNull();
   });
