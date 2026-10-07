@@ -13,6 +13,7 @@ import {
   BOOKING_TEXTAREA_CLASS,
   BookingButton,
 } from './internal/ui.js';
+import { visitName } from './internal/visit.js';
 import { type BookingLabel, fillLabel, labelText } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { BookingFamilyMember, WizardAction, WizardError, WizardState } from './types.js';
@@ -97,7 +98,10 @@ export const DETAILS_ERROR_LABEL_KEYS: Record<WizardError, DetailsScreenLabelKey
 
 /** One line of the submission. Optional fields are ABSENT, never blank. */
 export interface BookingSubmissionItem {
+  /** The person's first service. */
   serviceId: string;
+  /** The services after the first, in order, in the same visit. ABSENT for a one-service visit. */
+  extraServiceIds?: string[];
   resourceId?: string;
   startTs: number;
   bookedForName?: string;
@@ -427,6 +431,9 @@ export function DetailsScreen({
       const resourceId = line?.resourceId ?? null;
       return {
         serviceId: item.service.id,
+        ...(item.extraServices && item.extraServices.length > 0
+          ? { extraServiceIds: item.extraServices.map((service) => service.id) }
+          : {}),
         ...(resourceId === null ? {} : { resourceId }),
         startTs: line?.startTs ?? startTs,
         ...present(
@@ -545,7 +552,7 @@ export function DetailsScreen({
             isKnownChair(state, index) ? (
               // biome-ignore lint/suspicious/noArrayIndexKey: two lines can share a service; the index is the identity
               <li key={index}>
-                <span className="font-semibold">{item.service.name}</span>{' '}
+                <span className="font-semibold">{visitName(item)}</span>{' '}
                 {renderLabel(labels['details.known.for'], { who: knownWho(state, index, labels) })}
               </li>
             ) : null
@@ -559,7 +566,7 @@ export function DetailsScreen({
           <ChildFields
             // biome-ignore lint/suspicious/noArrayIndexKey: two lines can share a service; the index is the identity
             key={index}
-            legend={state.items.length > 1 ? item.service.name : null}
+            legend={state.items.length > 1 ? visitName(item) : null}
             nameId={field(`child-name-${index}`)}
             yearId={field(`child-year-${index}`)}
             value={childAt(index)}

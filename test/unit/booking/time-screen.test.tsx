@@ -587,6 +587,22 @@ describe('TimeScreen — a family', () => {
     ).toBeInTheDocument();
   });
 
+  it('names a multi-service visit by all its services, joined', () => {
+    const slot = parallelAt(15);
+    renderTime({
+      slots: [],
+      days: [slot.startTs],
+      party: party({
+        mode: 'parallel',
+        slots: [slot],
+        items: [{ service: KIDS, extraServices: [CUT] }, { service: CUT }],
+      }),
+    });
+    expect(
+      screen.getByRole('button', { name: '15:00 (Barneklipp + Klipp hos Ada · Klipp hos Bo)' })
+    ).toBeInTheDocument();
+  });
+
   it('offers the simultaneous alternative rather than an empty day', () => {
     const onPick = vi.fn();
     const alternative = parallelAt(15);
