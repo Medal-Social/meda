@@ -9,6 +9,7 @@ import {
   demoFormatEn,
   demoFormatNb,
   demoOpenDays,
+  demoResources,
   demoSlots,
 } from './__stories__/fixtures.js';
 import { timeLabelsEn, timeLabelsNb } from './__stories__/labels.time.js';
@@ -70,6 +71,19 @@ export const Default: Story = {
 };
 
 /** English, with a slot just taken: the two nearest are ringed. */
+/** «Ledig snart» above the days, and how full each day is on its chip. */
+export const FindFast: Story = {
+  args: {
+    soonest: {
+      resolveStylist: (id) => {
+        const resource = demoResources.find((r) => r.id === id);
+        return resource ? { name: resource.name, photoUrl: resource.photoUrl } : null;
+      },
+    },
+    dayFullness: true,
+  },
+};
+
 export const English: Story = {
   args: {
     labels: timeLabelsEn,
