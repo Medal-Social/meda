@@ -355,6 +355,11 @@ describe('TimeScreen — keyboard', () => {
     expect(later.tagName).toBe('BUTTON');
     fireEvent.click(later);
     expect(screen.getByRole('button', { name: '15:00' })).toBeInTheDocument();
+    // The week on screen follows the day that was picked, so a chip shows it.
+    expect(within(group).getByRole('button', { name: 'man. 28.' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
   });
 });
 
@@ -832,7 +837,7 @@ describe('TimeScreenSkeleton', () => {
     expect(screen.getByRole('status')).toHaveTextContent(timeLabelsNb['time.loading']);
     const chips = container.querySelectorAll('[data-testid="day-chip-skeleton"]');
     expect(chips).toHaveLength(7);
-    const { container: wide } = render(<TimeScreenSkeleton labels={timeLabelsNb} days={62} />);
+    const { container: wide } = render(<TimeScreenSkeleton labels={timeLabelsNb} days={62} monthView />);
     expect(wide.querySelectorAll('[data-testid="day-chip-skeleton"]')).toHaveLength(7);
     for (const chip of chips) expect(chip).toHaveClass('h-8');
     const slots = container.querySelectorAll('[data-testid="slot-skeleton"]');

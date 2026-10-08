@@ -507,13 +507,10 @@ export function TimeScreen({
     openDays,
     now
   );
-  // The chips are the near week. The month is handed the whole window, so a
-  // day three weeks out stays tappable without sitting in the strip.
-  const strip = offeredDays.slice(0, DAY_STRIP_LIMIT);
 
   // Read back through the offered days rather than held as a day of its own,
   // so new availability cannot leave the step pointing at a day no longer
-  // offered — including one chosen from the month, past the chip strip.
+  // offered — including one chosen from the month, past the first week.
   const [tappedDayKey, setTappedDayKey] = useState<string | null>(null);
   const [showMonth, setShowMonth] = useState(false);
   const [monthTs, setMonthTs] = useState<number | null>(null);
@@ -529,6 +526,20 @@ export function TimeScreen({
       : offeredDays.find((day) => clock.dayKey(day) === clock.dayKey(currentSlotTs))) ??
     offeredDays[0] ??
     now;
+
+  // Without a month, every offered day stays a chip — there is nowhere else
+  // to reach it. With a month, the chips are the week that contains the day
+  // on screen, never the whole window.
+  const selectedIndex = offeredDays.findIndex(
+    (day) => clock.dayKey(day) === clock.dayKey(selectedDay)
+  );
+  const stripStart =
+    !monthView || selectedIndex < DAY_STRIP_LIMIT
+      ? 0
+      : Math.min(selectedIndex, Math.max(0, offeredDays.length - DAY_STRIP_LIMIT));
+  const strip = monthView
+    ? offeredDays.slice(stripStart, stripStart + DAY_STRIP_LIMIT)
+    : offeredDays;
 
   const selectedKey = clock.dayKey(selectedDay);
   const daySlots = offered
@@ -809,7 +820,7 @@ export function TimeScreenSkeleton({
       <LiveStatus text={labelText(labels['time.loading'])} />
       <div aria-hidden="true" className="space-y-6">
         <div className="flex flex-wrap gap-2">
-          {Array.from({ length: Math.min(days, DAY_STRIP_LIMIT) }, (_, index) => (
+          {Array.from({ length: monthView ? Math.min(days, DAY_STRIP_LIMIT) : days }, (_, index) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length placeholders
             <span key={index} data-testid="day-chip-skeleton" className={dayChip}>
               {labels['time.skeleton.dayPlaceholder']}
