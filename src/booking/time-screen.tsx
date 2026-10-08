@@ -822,12 +822,15 @@ export function TimeScreenSkeleton({
       <LiveStatus text={labelText(labels['time.loading'])} />
       <div aria-hidden="true" className="space-y-6">
         <div className="flex flex-wrap gap-2">
-          {Array.from({ length: monthView ? Math.min(days, DAY_STRIP_LIMIT) : days }, (_, index) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length placeholders
-            <span key={index} data-testid="day-chip-skeleton" className={dayChip}>
-              {labels['time.skeleton.dayPlaceholder']}
-            </span>
-          ))}
+          {Array.from(
+            { length: monthView ? Math.min(days, DAY_STRIP_LIMIT) : days },
+            (_, index) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length placeholders
+              <span key={index} data-testid="day-chip-skeleton" className={dayChip}>
+                {labels['time.skeleton.dayPlaceholder']}
+              </span>
+            )
+          )}
         </div>
         {monthView && <span className="block h-8 w-36 animate-pulse rounded bg-muted" />}
         {surchargeRow && <span data-testid="surcharge-row-skeleton" className="block min-h-5" />}

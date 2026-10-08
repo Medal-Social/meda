@@ -837,7 +837,9 @@ describe('TimeScreenSkeleton', () => {
     expect(screen.getByRole('status')).toHaveTextContent(timeLabelsNb['time.loading']);
     const chips = container.querySelectorAll('[data-testid="day-chip-skeleton"]');
     expect(chips).toHaveLength(7);
-    const { container: wide } = render(<TimeScreenSkeleton labels={timeLabelsNb} days={62} monthView />);
+    const { container: wide } = render(
+      <TimeScreenSkeleton labels={timeLabelsNb} days={62} monthView />
+    );
     expect(wide.querySelectorAll('[data-testid="day-chip-skeleton"]')).toHaveLength(7);
     for (const chip of chips) expect(chip).toHaveClass('h-8');
     const slots = container.querySelectorAll('[data-testid="slot-skeleton"]');
