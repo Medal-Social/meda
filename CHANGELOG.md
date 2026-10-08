@@ -1,5 +1,17 @@
 # @medalsocial/meda
 
+## 3.5.0
+
+### Minor Changes
+
+- [#255](https://github.com/Medal-Social/meda/pull/255) [`0e466d4`](https://github.com/Medal-Social/meda/commit/0e466d441646996e0a130a611322a163ef785e5c) Thanks [@alioftech](https://github.com/alioftech)! - Booking: the service step can be multi-select (`ServiceScreen`'s new `selection` prop, which carries its own required `labels: ServiceMultiLabels`) so one person books several services as one visit, and the other screens and the submission (`extraServiceIds`) carry a visit's extra services.
+
+## 3.4.1
+
+### Patch Changes
+
+- [#256](https://github.com/Medal-Social/meda/pull/256) [`e7f118a`](https://github.com/Medal-Social/meda/commit/e7f118a87a5e9a48582438765a775da70165c814) Thanks [@alioftech](https://github.com/alioftech)! - The booking time step shows a week of day chips. Later days in the fetched window are chosen from the month, not from a strip of every open day.
+
 ## 3.4.0
 
 ### Minor Changes
