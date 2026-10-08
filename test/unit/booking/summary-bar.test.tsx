@@ -65,4 +65,40 @@ describe('SummaryBar', () => {
       await axe(container, { rules: { 'color-contrast': { enabled: false } } })
     ).toHaveNoViolations();
   });
+
+  it('puts the detail on a second line, at the same fixed height', () => {
+    const { container } = setup({
+      line: 'Barneklipp · Ada',
+      detail: 'i dag 15:00 · 390\u00A0kr',
+      step: 'when',
+    });
+    expect(container.firstElementChild).toHaveClass('h-16');
+    expect(screen.getByText('i dag 15:00 · 390\u00A0kr', { normalizer: exactly })).toHaveClass(
+      'text-xs'
+    );
+  });
+
+  it('draws no detail line before anything is chosen', () => {
+    setup({ detail: 'i dag 15:00', step: 'service' });
+    expect(screen.queryByText('i dag 15:00')).toBeNull();
+  });
+
+  it('says what to tap instead of a greyed-out button when asked to', () => {
+    setup({ step: 'when', hideNextWhenDisabled: true });
+    expect(screen.queryByRole('button', { name: L['summary.next'] })).toBeNull();
+    expect(screen.getByText(L['summary.hint.when'] as string)).toBeInTheDocument();
+  });
+
+  it('brings the button back as soon as it does something', () => {
+    setup({ step: 'when', line: 'Barneklipp', canAdvance: true, hideNextWhenDisabled: true });
+    expect(screen.getByRole('button', { name: L['summary.next'] })).toBeEnabled();
+    expect(screen.queryByText(L['summary.hint.when'] as string)).toBeNull();
+  });
+
+  it('draws nothing in the button’s place for a step with no hint', () => {
+    const labels = { ...L };
+    delete (labels as Record<string, unknown>)['summary.hint.who'];
+    setup({ step: 'who', hideNextWhenDisabled: true, labels });
+    expect(screen.queryByRole('button')).toBeNull();
+  });
 });

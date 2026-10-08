@@ -86,12 +86,18 @@ export const summaryBarLabelsNb: SummaryBarLabels = {
   'summary.placeholder.who': 'Velg hvem timen gjelder',
   'summary.placeholder.service': 'Velg en behandling',
   'summary.next': 'Videre',
+  'summary.hint.who': 'Trykk på hvem som skal klippes',
+  'summary.hint.service': 'Trykk på en behandling',
+  'summary.hint.when': 'Trykk på en tid',
 };
 
 export const summaryBarLabelsEn: SummaryBarLabels = {
   'summary.placeholder.who': 'Choose who the booking is for',
   'summary.placeholder.service': 'Choose a service',
   'summary.next': 'Continue',
+  'summary.hint.who': 'Tap who is coming',
+  'summary.hint.service': 'Tap a treatment',
+  'summary.hint.when': 'Tap a time',
 };
 
 export const confirmationLabelsNb: ConfirmationLabels = {
