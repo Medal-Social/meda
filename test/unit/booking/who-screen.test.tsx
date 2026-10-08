@@ -394,3 +394,60 @@ describe('WhoScreen — text nodes', () => {
     expect(nodes(screen.getByText('Velg opptil 3'))).toEqual(['Velg opptil ', '3']);
   });
 });
+
+describe('WhoScreen — a guest party (children and me)', () => {
+  const ADULT: WizardPerson = { key: 'adult', adult: true };
+  const guestParty = { child: guest, adult: ADULT };
+  const more = () => screen.getByRole('button', { name: labels['who.party.more'] as string });
+  const fewer = () => screen.getByRole('button', { name: labels['who.party.fewer'] as string });
+  const meToo = () => screen.getByRole('checkbox', { name: /Jeg skal også klippes/ });
+
+  it('starts at one child, so «next» is live from the first frame', () => {
+    const { onChoose } = renderWho({ guestParty });
+    expect(onChoose).toHaveBeenCalledWith([guest(1)], false);
+    // No chips in this mode.
+    expect(screen.queryByRole('radio', { name: '2 barn' })).toBeNull();
+  });
+
+  it('keeps a restored answer instead of resetting it', () => {
+    const { onChoose } = renderWho({ guestParty, people: [guest(1), guest(2)] });
+    expect(onChoose).not.toHaveBeenCalled();
+    expect(screen.getByText('2 barn', { selector: '.sr-only' })).toBeInTheDocument();
+  });
+
+  it('adds and removes children, live, never down to nobody', () => {
+    const { onChoose } = renderWho({ guestParty, people: [guest(1)] });
+    expect(fewer()).toBeDisabled();
+    fireEvent.click(more());
+    expect(onChoose).toHaveBeenLastCalledWith([guest(1), guest(2)], false);
+  });
+
+  it('books the grown-up beside the children', () => {
+    const { onChoose } = renderWho({ guestParty, people: [guest(1)] });
+    fireEvent.click(meToo());
+    expect(onChoose).toHaveBeenLastCalledWith([guest(1), ADULT], false);
+  });
+
+  it('lets the grown-up come alone once they are in, but not leave nobody', () => {
+    const { onChoose } = renderWho({ guestParty, people: [guest(1), ADULT] });
+    expect(fewer()).toBeEnabled();
+    fireEvent.click(fewer());
+    expect(onChoose).toHaveBeenLastCalledWith([ADULT], false);
+
+    renderWho({ guestParty, people: [ADULT] });
+    expect(
+      screen.getAllByRole('checkbox', { name: /Jeg skal også klippes/ }).at(-1)
+    ).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('stops at the limit, and says why', () => {
+    renderWho({ guestParty, people: [guest(1), guest(2), ADULT] });
+    expect(more()).toBeDisabled();
+    expect(screen.getByText(LIMIT)).toBeInTheDocument();
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = renderWho({ guestParty, people: [guest(1)] });
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});

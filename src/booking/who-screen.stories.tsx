@@ -81,6 +81,20 @@ export const Default: Story = {
   ),
 };
 
+/** A guest with `guestParty`: how many children, and «me too», in one booking. */
+export const GuestParty: Story = {
+  render: () => (
+    <BookingColumn>
+      <Stateful
+        {...base}
+        family={null}
+        initial={[]}
+        guestParty={{ child: guest, adult: { key: 'adult', adult: true } }}
+      />
+    </BookingColumn>
+  ),
+};
+
 /** A logged-in parent, in English: tick up to three. */
 export const LoggedIn: Story = {
   render: () => (
