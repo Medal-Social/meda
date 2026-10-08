@@ -1,5 +1,11 @@
 # @medalsocial/meda
 
+## 3.5.0
+
+### Minor Changes
+
+- [#255](https://github.com/Medal-Social/meda/pull/255) [`0e466d4`](https://github.com/Medal-Social/meda/commit/0e466d441646996e0a130a611322a163ef785e5c) Thanks [@alioftech](https://github.com/alioftech)! - Booking: the service step can be multi-select (`ServiceScreen`'s new `selection` prop, which carries its own required `labels: ServiceMultiLabels`) so one person books several services as one visit, and the other screens and the submission (`extraServiceIds`) carry a visit's extra services.
+
 ## 3.4.1
 
 ### Patch Changes
