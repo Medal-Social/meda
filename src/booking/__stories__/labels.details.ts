@@ -2,6 +2,7 @@
  * Neutral nb / en label packs for the details step, the summary bar and the
  * confirmation, written for the invented «Salong Demo». Stories and tests only.
  */
+import type { BookingRecapLabels } from '../booking-recap.js';
 import type { ConfirmationLabels } from '../confirmation.js';
 import type { DetailsScreenLabels } from '../details-screen.js';
 import type { SummaryBarLabels } from '../summary-bar.js';
@@ -121,4 +122,30 @@ export const confirmationLabelsEn: ConfirmationLabels = {
   'confirmation.manageFor': 'Change or cancel {who} at {time}',
   'confirmation.portal': 'See all your bookings',
   'confirmation.startOver': 'Book another appointment',
+};
+
+export const bookingRecapLabelsNb: BookingRecapLabels = {
+  'recap.label': 'Timen du bestiller',
+  'recap.time': 'Kl. {start}–{end}',
+  'recap.line': '{services} hos {stylist}',
+  'recap.lineFor': '{who}: {services} hos {stylist}',
+  'recap.anyStylist': 'første ledige frisør',
+  'recap.total': '{price} · betales i salongen',
+  'recap.edit': 'Endre',
+  'recap.editLabel': 'Endre dag og tid',
+  'recap.alsoFree': 'Også ledig kl. {time}:',
+  'recap.swapTo': 'Bestill hos {name} i stedet',
+};
+
+export const bookingRecapLabelsEn: BookingRecapLabels = {
+  'recap.label': 'The appointment you are booking',
+  'recap.time': '{start}–{end}',
+  'recap.line': '{services} with {stylist}',
+  'recap.lineFor': '{who}: {services} with {stylist}',
+  'recap.anyStylist': 'the first free stylist',
+  'recap.total': '{price}, paid at the salon',
+  'recap.edit': 'Change',
+  'recap.editLabel': 'Change day and time',
+  'recap.alsoFree': 'Also free at {time}:',
+  'recap.swapTo': 'Book with {name} instead',
 };
