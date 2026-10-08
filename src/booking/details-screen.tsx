@@ -71,7 +71,10 @@ export const DETAILS_SCREEN_LABEL_KEYS = [
   'details.call.link',
   /** The rescue sentence when there is no phone number to link. */
   'details.call.none',
-  /** `{price}` — the total, already formatted. */
+  /**
+   * `{price}` — the total, already formatted; `{day}` (`clock.dayLabel`) and
+   * `{time}` — when the visit starts, so the button can name what it books.
+   */
   'details.submit',
 ] as const;
 
@@ -683,7 +686,11 @@ export function DetailsScreen({
         aria-busy={submitting || undefined}
         onClick={handleSubmit}
       >
-        {renderLabel(labels['details.submit'], { price })}
+        {renderLabel(labels['details.submit'], {
+          price,
+          day: state.startTs === null ? '' : format.clock.dayLabel(state.startTs),
+          time: state.startTs === null ? '' : format.clock.formatTime(state.startTs),
+        })}
       </BookingButton>
     </section>
   );
