@@ -79,6 +79,15 @@ export const WHO_SCREEN_PARTY_LABEL_KEYS = [
   'who.party.count',
 ] as const;
 
+/** The `who.party.*` keys `guestParty` cannot draw without; the two notes are extras. */
+const PARTY_REQUIRED_LABEL_KEYS = [
+  'who.party.children',
+  'who.party.adult',
+  'who.party.fewer',
+  'who.party.more',
+  'who.party.count',
+] as const;
+
 export type WhoScreenLabels = Record<(typeof WHO_SCREEN_LABEL_KEYS)[number], BookingLabel> &
   Partial<Record<(typeof WHO_SCREEN_PARTY_LABEL_KEYS)[number], BookingLabel>> &
   AddChildSheetLabels;
@@ -173,11 +182,14 @@ export interface WhoScreenProps {
    * chips: a stepper (1 child to begin with) and a «me too» row, up to
    * `maxPeople` in all. Each change is a live answer (`advance: false`); the
    * caller's «next» moves on. `child(seat)` is the 1-based child seat the chips
-   * use; `adult` the grown-up's seat. Needs the `who.party.*` labels.
+   * use; `adult` the grown-up's seat. Named children from the add-child
+   * sheet keep their seats. Needs the `who.party.*` labels: without
+   * `children`, `adult`, `fewer`, `more` and `count` the chips are drawn
+   * instead, rather than unnamed controls.
    */
   guestParty?: {
     child: (seat: number) => WizardPerson;
-    adult: WizardPerson;
+    adult: WizardPerson & { adult: true };
   };
   /** Shown under the heading for a guest — e.g. an offer to log in. */
   loginRow?: ReactNode;
@@ -268,22 +280,8 @@ export function WhoScreen({
     selectedClassName: classNames?.cardSelected,
   };
 
-  if (family === null && guestParty) {
-    return (
-      <section aria-labelledby={HEADING_ID} className={slotClass(classNames, 'root', 'space-y-6')}>
-        {heading}
-        {loginRow}
-        <GuestParty
-          party={guestParty}
-          people={people}
-          maxPeople={maxPeople}
-          labels={labels}
-          classNames={classNames}
-          onChoose={onChoose}
-        />
-      </section>
-    );
-  }
+  const partyReady =
+    guestParty !== undefined && PARTY_REQUIRED_LABEL_KEYS.every((key) => labels[key] !== undefined);
 
   if (family === null) {
     return (
@@ -291,13 +289,24 @@ export function WhoScreen({
         {heading}
         {loginRow}
         <div className="space-y-4">
-          <GuestChips
-            choices={guestChoices}
-            people={people}
-            labels={labels}
-            classNames={classNames}
-            onChoose={onChoose}
-          />
+          {partyReady && guestParty ? (
+            <GuestParty
+              party={guestParty}
+              people={people}
+              maxPeople={maxPeople}
+              labels={labels}
+              classNames={classNames}
+              onChoose={onChoose}
+            />
+          ) : (
+            <GuestChips
+              choices={guestChoices}
+              people={people}
+              labels={labels}
+              classNames={classNames}
+              onChoose={onChoose}
+            />
+          )}
           {addedChildren.length > 0 && (
             <ul aria-label={labelText(labels['who.guest.addedList'])} className="space-y-2">
               {addedChildren.map((entry, index) => (
@@ -320,7 +329,10 @@ export function WhoScreen({
               ))}
             </ul>
           )}
-          {sheet(addedChildren.length >= maxPeople, false)}
+          {sheet(
+            partyReady ? people.length >= maxPeople : addedChildren.length >= maxPeople,
+            false
+          )}
         </div>
       </section>
     );
@@ -420,25 +432,38 @@ function GuestParty({
   onChoose: WhoScreenProps['onChoose'];
 }) {
   const adultOn = people.some((person) => person.key === party.adult.key);
-  const children = people.filter((person) => !person.adult).length;
+  // The grown-up's seat is never a child, flag or no flag.
+  const childSeats = people.filter((person) => !person.adult && person.key !== party.adult.key);
+  const children = childSeats.length;
   const full = children + (adultOn ? 1 : 0) >= maxPeople;
 
-  const answer = (count: number, withAdult: boolean) =>
-    onChoose(
-      [
-        ...Array.from({ length: count }, (_, index) => party.child(index + 1)),
-        ...(withAdult ? [party.adult] : []),
-      ],
-      false
-    );
+  // Named children (from the add-child sheet) keep their seats, first; the
+  // stepper adds and removes the unnamed ones after them.
+  const generatedKeys = new Set(
+    Array.from({ length: maxPeople }, (_, index) => party.child(index + 1).key)
+  );
+  const named = childSeats.filter((person) => !generatedKeys.has(person.key));
 
-  // One child to begin with: an empty answer would leave «next» dead on the
-  // most common visit. Only ever from nothing, so a restored answer stands.
-  const started = useRef(false);
+  const answer = (count: number, withAdult: boolean) => {
+    const kept = named.slice(0, count);
+    const used = new Set(kept.map((person) => person.key));
+    const fill: WizardPerson[] = [];
+    for (let seat = 1; kept.length + fill.length < count && seat <= maxPeople; seat += 1) {
+      const next = party.child(seat);
+      if (!used.has(next.key)) fill.push(next);
+    }
+    onChoose([...kept, ...fill, ...(withAdult ? [party.adult] : [])], false);
+  };
+
+  // One child whenever the answer becomes empty (first frame or cleared
+  // later): an empty answer would leave «next» dead on the most common visit.
+  // Once per emptying, so a parent that ignores the answer is not flooded,
+  // and a restored answer is never replaced.
+  const wasEmpty = useRef(false);
   useEffect(() => {
-    if (started.current) return;
-    started.current = true;
-    if (people.length === 0) answer(1, false);
+    const empty = people.length === 0;
+    if (empty && !wasEmpty.current) answer(1, false);
+    wasEmpty.current = empty;
   });
 
   const text = (key: (typeof WHO_SCREEN_PARTY_LABEL_KEYS)[number], values = {}) => {
