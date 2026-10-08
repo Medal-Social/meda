@@ -6,6 +6,7 @@ import { cn } from '../lib/utils.js';
 import type { BookingClock, BookingDaypart, BookingFormat } from './format.js';
 import { renderLabel } from './internal/label-parts.js';
 import { BookingButton, bookingButtonClass } from './internal/ui.js';
+import { visitName } from './internal/visit.js';
 import { type BookingLabel, fillLabel, labelText } from './labels.js';
 import { LiveStatus } from './live-status.js';
 import { type SlotClassNames, slotClass } from './slots.js';
@@ -365,7 +366,8 @@ function partyChipLabel(
     });
   }
   const seats = slot.seats.map((seat, index) => {
-    const who = party.items[index]?.bookedForName ?? party.items[index]?.service.name ?? '';
+    const item = party.items[index];
+    const who = item?.bookedForName ?? (item ? visitName(item) : '');
     const stylist = party.resolveStylistName(seat.resourceId);
     // No «with», rather than «with null»: a stylist the catalogue cannot name
     // is a reload of the resource list, not a reason to hide the slot.

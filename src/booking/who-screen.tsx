@@ -427,7 +427,7 @@ function CheckCircle({ checked }: { checked: boolean }) {
       aria-hidden="true"
       className={cn(
         'flex size-6 shrink-0 items-center justify-center rounded-full border',
-        checked ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
+        checked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground'
       )}
     >
       {checked && <Check className="size-4" />}

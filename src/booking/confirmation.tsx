@@ -4,6 +4,7 @@ import type { ComponentType } from 'react';
 import type { BookingFormat } from './format.js';
 import { joinLabelParts, renderLabel } from './internal/label-parts.js';
 import { BookingButton } from './internal/ui.js';
+import { visitName } from './internal/visit.js';
 import { type BookingLabel, fillLabel, labelText } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { WizardItem } from './types.js';
@@ -191,10 +192,10 @@ export function Confirmation({
         [
           first.item.bookedForName
             ? renderLabel(labels['confirmation.serviceFor'], {
-                service: first.item.service.name,
+                service: visitName(first.item),
                 name: first.item.bookedForName,
               })
-            : first.item.service.name,
+            : visitName(first.item),
           first.stylistName,
           renderLabel(labels['confirmation.when'], {
             day: clock.dayLabel(startTs, now),
@@ -328,7 +329,7 @@ function PartyCard({
           const text = fillLabel(labels['confirmation.party.line'], {
             time,
             name: line.item.bookedForName ?? '',
-            service: line.item.service.name,
+            service: visitName(line.item),
             stylist: line.stylistName
               ? fillLabel(labels['confirmation.party.stylist'], { name: line.stylistName })
               : '',
@@ -346,7 +347,7 @@ function PartyCard({
               text={text}
               manageLabel={labelText(labels['confirmation.manage'])}
               manageAriaLabel={fillLabel(labels['confirmation.manageFor'], {
-                who: line.item.bookedForName ?? line.item.service.name,
+                who: line.item.bookedForName ?? visitName(line.item),
                 time,
               })}
               linkClassName={slotClass(

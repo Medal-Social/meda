@@ -86,9 +86,15 @@ export interface WizardPerson {
   birthMonth?: number;
 }
 
-/** One line of the basket. */
+/** One line of the basket: one person's visit. */
 export interface WizardItem {
+  /** The person's FIRST service (the only one, when `extraServices` is absent). */
   service: WizardService;
+  /**
+   * The services after the first, in order, done back to back in the same
+   * visit with the same stylist. ABSENT for a one-service visit — never `[]`.
+   */
+  extraServices?: WizardService[];
   bookedForName?: string;
   bookedForBirthYear?: number;
   bookedForPersonId?: string;
@@ -110,7 +116,14 @@ export type PartyMode = 'sequential' | 'parallel';
 export interface WizardState {
   step: WizardStep;
   people: WizardPerson[];
+  /** Each person's FIRST service so far, `null` for none yet. */
   choices: Array<WizardService | null>;
+  /**
+   * Each person's services after the first, parallel to `people` (`extras[i]`
+   * is `people[i]`'s). Absent on a machine without multi-service visits: every
+   * person then has one service.
+   */
+  extras?: WizardService[][];
   items: WizardItem[];
   resourceId: string | null;
   stylistAnswered: boolean;
