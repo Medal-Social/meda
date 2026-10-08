@@ -6,10 +6,19 @@ import { cn } from '../lib/utils.js';
 import type { BookingClock, BookingDaypart, BookingFormat } from './format.js';
 import { renderLabel } from './internal/label-parts.js';
 import { BookingButton, bookingButtonClass } from './internal/ui.js';
+import { visitName } from './internal/visit.js';
 import { type BookingLabel, fillLabel, labelText } from './labels.js';
 import { LiveStatus } from './live-status.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { BookingDayDto, BookingSlotDto, PartySlot, WizardItem } from './types.js';
+
+/**
+ * How many day chips sit under the heading.
+ *
+ * A thumb can scan about a week. The rest of the fetched window is picked
+ * from the month, not from a wrap of every open day.
+ */
+const DAY_STRIP_LIMIT = 7;
 
 /**
  * The time step — «when suits you?».
@@ -357,7 +366,8 @@ function partyChipLabel(
     });
   }
   const seats = slot.seats.map((seat, index) => {
-    const who = party.items[index]?.bookedForName ?? party.items[index]?.service.name ?? '';
+    const item = party.items[index];
+    const who = item?.bookedForName ?? (item ? visitName(item) : '');
     const stylist = party.resolveStylistName(seat.resourceId);
     // No «with», rather than «with null»: a stylist the catalogue cannot name
     // is a reload of the resource list, not a reason to hide the slot.
@@ -490,25 +500,50 @@ export function TimeScreen({
       : bookable;
   const partyByStart = new Map(party?.slots.map((slot) => [slot.startTs, slot]) ?? []);
 
-  const strip = buildDayStrip(clock, offered, days, takenSlotTs, currentSlotTs, openDays, now);
+  const offeredDays = buildDayStrip(
+    clock,
+    offered,
+    days,
+    takenSlotTs,
+    currentSlotTs,
+    openDays,
+    now
+  );
 
-  // Read back through the strip rather than held as a day of its own, so new
-  // availability cannot leave the step pointing at a day no longer offered.
+  // Read back through the offered days rather than held as a day of its own,
+  // so new availability cannot leave the step pointing at a day no longer
+  // offered — including one chosen from the month, past the first week.
   const [tappedDayKey, setTappedDayKey] = useState<string | null>(null);
   const [showMonth, setShowMonth] = useState(false);
   const [monthTs, setMonthTs] = useState<number | null>(null);
   const selectedDay =
-    strip.find((day) => clock.dayKey(day) === tappedDayKey) ??
+    offeredDays.find((day) => clock.dayKey(day) === tappedDayKey) ??
     // A stolen slot lands the visitor back on the day they just lost.
     (takenSlotTs === null
       ? undefined
-      : strip.find((day) => clock.dayKey(day) === clock.dayKey(takenSlotTs))) ??
+      : offeredDays.find((day) => clock.dayKey(day) === clock.dayKey(takenSlotTs))) ??
     // Moving an appointment opens on the day it is on.
     (currentSlotTs === null
       ? undefined
-      : strip.find((day) => clock.dayKey(day) === clock.dayKey(currentSlotTs))) ??
-    strip[0] ??
+      : offeredDays.find((day) => clock.dayKey(day) === clock.dayKey(currentSlotTs))) ??
+    offeredDays[0] ??
     now;
+
+  // Without a month, every offered day stays a chip — there is nowhere else
+  // to reach it. With a month, the chips are the week that contains the day
+  // on screen, never the whole window.
+  const selectedIndex = offeredDays.findIndex(
+    (day) => clock.dayKey(day) === clock.dayKey(selectedDay)
+  );
+  // Fixed weeks of seven, counted from the first offered day. Starting the
+  // slice at the selected day would drop the previous chip on every tap.
+  const stripStart =
+    !monthView || selectedIndex < 0
+      ? 0
+      : Math.floor(selectedIndex / DAY_STRIP_LIMIT) * DAY_STRIP_LIMIT;
+  const strip = monthView
+    ? offeredDays.slice(stripStart, stripStart + DAY_STRIP_LIMIT)
+    : offeredDays;
 
   const selectedKey = clock.dayKey(selectedDay);
   const daySlots = offered
@@ -582,7 +617,7 @@ export function TimeScreen({
           onToggle={() => setShowMonth((shown) => !shown)}
           monthTs={monthTs ?? selectedDay}
           onMonth={setMonthTs}
-          strip={strip}
+          strip={offeredDays}
           selectedDay={selectedDay}
           now={now}
           onPickDay={(day) => setTappedDayKey(clock.dayKey(day))}
@@ -789,12 +824,15 @@ export function TimeScreenSkeleton({
       <LiveStatus text={labelText(labels['time.loading'])} />
       <div aria-hidden="true" className="space-y-6">
         <div className="flex flex-wrap gap-2">
-          {Array.from({ length: days }, (_, index) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length placeholders
-            <span key={index} data-testid="day-chip-skeleton" className={dayChip}>
-              {labels['time.skeleton.dayPlaceholder']}
-            </span>
-          ))}
+          {Array.from(
+            { length: monthView ? Math.min(days, DAY_STRIP_LIMIT) : days },
+            (_, index) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length placeholders
+              <span key={index} data-testid="day-chip-skeleton" className={dayChip}>
+                {labels['time.skeleton.dayPlaceholder']}
+              </span>
+            )
+          )}
         </div>
         {monthView && <span className="block h-8 w-36 animate-pulse rounded bg-muted" />}
         {surchargeRow && <span data-testid="surcharge-row-skeleton" className="block min-h-5" />}
@@ -819,10 +857,11 @@ export function TimeScreenSkeleton({
 // ---------------------------------------------------------------------------
 
 /**
- * «Show the whole month» — the strip's days laid out as the month they sit in.
- * Only those days are tappable; every other cell is inert, because a calendar
- * that let a visitor tap an unasked-about date and then said «full» would be
- * inventing a fact. Collapsed by default; navigable both ways, never disabled.
+ * «Show the whole month» — the fetched window laid out as the month it sits in.
+ * Only days the caller asked about are tappable; every other cell is inert,
+ * because a calendar that let a visitor tap an unasked-about date and then
+ * said «full» would be inventing a fact. Collapsed by default; navigable both
+ * ways, never disabled.
  */
 function MonthCalendar({
   labels,

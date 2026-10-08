@@ -252,6 +252,25 @@ describe('DetailsScreen', () => {
     expect('notes' in submission).toBe(false);
   });
 
+  it('sends the services after the first as extraServiceIds, in order', () => {
+    const { onSubmit } = setup({
+      state: readyState({
+        items: [{ service: KIDS, extraServices: [WASH, { ...WASH, id: 'svc-x' }] }],
+      }),
+    });
+    fireEvent.click(submitButton());
+    expect(onSubmit.mock.calls[0]?.[0].items[0]).toMatchObject({
+      serviceId: 'svc-kids',
+      extraServiceIds: ['svc-wash', 'svc-x'],
+    });
+  });
+
+  it('sends no extraServiceIds for a one-service visit', () => {
+    const { onSubmit } = setup();
+    fireEvent.click(submitButton());
+    expect(onSubmit.mock.calls[0]?.[0].items[0]).not.toHaveProperty('extraServiceIds');
+  });
+
   it('submits the phone through normalisePhone', () => {
     const { onSubmit } = setup({
       state: readyState({ contact: { phone: '+47 400 00 000', name: '', email: '' } }),
@@ -580,6 +599,19 @@ describe('DetailsScreen', () => {
         bookedForBirthYear: 2018,
         bookedForPersonId: 'p-jonas',
       });
+    });
+
+    it('names a known person’s visit by all its services', () => {
+      const state = jonasState();
+      setup({
+        state: {
+          ...state,
+          items: [{ ...(state.items[0] as WizardState['items'][number]), extraServices: [WASH] }],
+        },
+      });
+      expect(screen.getByRole('list', { name: L['details.known.label'] })).toHaveTextContent(
+        'Barneklipp + Barneklipp med vask til Jonas'
+      );
     });
 
     it('names a guardian booking for themselves, and a guest adult', () => {

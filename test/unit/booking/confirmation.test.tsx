@@ -87,6 +87,22 @@ describe('Confirmation', () => {
     ).toBeInTheDocument();
   });
 
+  it('reads a multi-service visit back by all its services', () => {
+    setup({ lines: [line({ ...JONAS, extraServices: [WASH] })] });
+    expect(
+      screen.getByText(
+        'Barneklipp + Barneklipp med vask for Jonas · Ada · i dag kl. 15:00 · 390 kr'
+      )
+    ).toBeInTheDocument();
+  });
+
+  it('names every service on a family line too', () => {
+    setup({ lines: [line({ ...JONAS, extraServices: [WASH] }), line(EMMA)] });
+    expect(
+      screen.getByText('15:00 Jonas – Barneklipp + Barneklipp med vask hos Ada – 390 kr')
+    ).toBeInTheDocument();
+  });
+
   it('cleans a stylist name it was handed raw', () => {
     setup({
       lines: [line(JONAS, { stylistName: 'bo (Demo)' }), line(EMMA, { stylistName: 'cleo' })],
