@@ -156,6 +156,52 @@ describe('DetailsScreen', () => {
     expect(screen.queryByText(L['details.phone.error'])).toBeNull();
   });
 
+  it('shows a locked e-mail and still submits it', () => {
+    const { onSubmit } = setup({
+      emailReadOnly: true,
+      state: readyState({ contact: { phone: '40000000', name: '', email: 'kari@example.com' } }),
+    });
+    const input = screen.getByLabelText(L['details.email.label']);
+    expect(input).toHaveAttribute('readonly');
+    expect(input).toHaveAttribute('aria-readonly', 'true');
+    expect(screen.getByText(L['details.email.lockedHelp'])).toBeInTheDocument();
+    expect(screen.queryByText(L['details.email.help'])).toBeNull();
+    fireEvent.click(submitButton());
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contact: expect.objectContaining({ email: 'kari@example.com' }),
+      })
+    );
+  });
+
+  it('keeps a blank e-mail editable even when emailReadOnly is set', () => {
+    setup({
+      emailReadOnly: true,
+      state: readyState({ contact: { phone: '40000000', name: '', email: '' } }),
+    });
+    const input = screen.getByLabelText(L['details.email.label']);
+    expect(input).not.toHaveAttribute('readonly');
+    expect(input).not.toHaveAttribute('aria-readonly');
+    fireEvent.focus(input);
+    fireEvent.blur(input);
+    fireEvent.change(input, { target: { value: 'kari@example.com' } });
+    expect(screen.getByText(L['details.email.help'])).toBeInTheDocument();
+    expect(screen.queryByText(L['details.email.lockedHelp'])).toBeNull();
+  });
+
+  it('keeps a malformed e-mail editable under emailReadOnly and focuses it on submit', () => {
+    const { onSubmit } = setup({
+      emailReadOnly: true,
+      state: readyState({ contact: { phone: '40000000', name: '', email: 'not-an-email' } }),
+    });
+    const input = screen.getByLabelText(L['details.email.label']);
+    expect(input).not.toHaveAttribute('readonly');
+    expect(screen.getByText(L['details.email.help'])).toBeInTheDocument();
+    fireEvent.click(submitButton());
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(input).toHaveFocus();
+  });
+
   it('sends the optional birth year on the line item, not on the contact', () => {
     const { onSubmit } = setup();
     fill(L['details.child.year'], '2017');
