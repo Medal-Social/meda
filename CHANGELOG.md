@@ -1,5 +1,11 @@
 # @medalsocial/meda
 
+## 3.6.1
+
+### Patch Changes
+
+- [#263](https://github.com/Medal-Social/meda/pull/263) [`1076129`](https://github.com/Medal-Social/meda/commit/1076129b8ab6856cd0cab3651f0d738e57ae0753) Thanks [@alioftech](https://github.com/alioftech)! - Booking: in a family, a child's service menu also offers the groups meant for anyone (`ServiceScreenCategory.audience: 'any'`, e.g. an ear piercing) besides `childCategory`, never a grown-ups' group. Categories without `audience` behave as before. A finished person's tab is named «Theo · 7 år, ferdig» through `aria-label`, so Chrome no longer reads a space before the comma.
+
 ## 3.6.0
 
 ### Minor Changes
