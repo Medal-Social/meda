@@ -589,3 +589,42 @@ describe('StylistScreen — nextAvailable slot', () => {
     expect(row?.className).not.toContain('text-foreground');
   });
 });
+
+describe('StylistScreen — «first available» as faces', () => {
+  const withPhoto = (resource: BookingResourceDto, photoUrl: string): BookingResourceDto => ({
+    ...resource,
+    photoUrl,
+  });
+  const ADA_P = withPhoto(ADA, '/p/ada');
+  const BO_P = withPhoto(BO, '/p/bo');
+  const CLEO_P = withPhoto(CLEO, '/p/cleo');
+  const firstOption = () => screen.getByRole('radio', { name: FIRST as string });
+  const facesIn = (element: HTMLElement) =>
+    [...element.querySelectorAll('[data-testid="stylist-faces"] img')].map((img) =>
+      img.getAttribute('src')
+    );
+
+  it('draws the faces of the stylists who can take the basket, in the salon’s order', () => {
+    renderStylist({ resources: [BO_P, CLEO_P, ADA_P], firstAvailableFaces: true });
+    // Cleo does not do the children's cut, so she is not one of «these».
+    expect(facesIn(firstOption())).toEqual(['/p/ada', '/p/bo']);
+    expect(firstOption().textContent).not.toContain(labels['stylist.firstAvailableBadge']);
+  });
+
+  it('keeps the badge with fewer than two photos, and without the prop', () => {
+    const { unmount } = renderStylist({ resources: [ADA_P, BO], firstAvailableFaces: true });
+    expect(facesIn(firstOption())).toEqual([]);
+    unmount();
+
+    renderStylist({ resources: [ADA_P, BO_P] });
+    expect(facesIn(firstOption())).toEqual([]);
+  });
+
+  it('fades the phone row’s edge only when asked', () => {
+    const { unmount } = renderStylist({ edgeFade: true });
+    expect(screen.getByTestId('stylist-options').className).toContain('mask-image');
+    unmount();
+    renderStylist();
+    expect(screen.getByTestId('stylist-options').className).not.toContain('mask-image');
+  });
+});
