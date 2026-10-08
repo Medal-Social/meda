@@ -1,5 +1,13 @@
 # @medalsocial/meda
 
+## 3.6.0
+
+### Minor Changes
+
+- [#254](https://github.com/Medal-Social/meda/pull/254) [`52d99cd`](https://github.com/Medal-Social/meda/commit/52d99cd7cdc0c5d2c4d740276218f04f549bbb68) Thanks [@alioftech](https://github.com/alioftech)! - LoginPanel `emailCollapsed` (Vipps and e-mail as two equal choices) and DetailsScreen `emailReadOnly`.
+  
+  New label keys, which typed label maps must now provide: `login.continueEmail` (LoginPanel) and `details.email.lockedHelp` (DetailsScreen).
+
 ## 3.5.0
 
 ### Minor Changes
