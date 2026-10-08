@@ -4,6 +4,7 @@ import { DEMO_PHONE, demoFormatEn, demoFormatNb, demoServices } from './__storie
 import {
   demoCategoriesEn,
   demoCategoriesNb,
+  serviceMultiLabelsNb,
   serviceScreenLabelsEn,
   serviceScreenLabelsNb,
 } from './__stories__/labels.steps.js';
@@ -104,6 +105,7 @@ function WithSelection({
                 priceOre: ticked.reduce((sum, service) => sum + service.priceOre, 0),
               },
         canContinue: lists.every((list) => list.length > 0),
+        labels: serviceMultiLabelsNb,
       }}
     />
   );

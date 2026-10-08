@@ -1,13 +1,18 @@
 'use client';
 
-import { Check } from 'lucide-react';
-import { type ComponentType, type KeyboardEvent, type ReactNode, useState } from 'react';
+import { type ComponentType, type ReactNode, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import type { BookingFormat } from './format.js';
 import { renderLabel } from './internal/label-parts.js';
+import {
+  MultiServiceCard,
+  PersonTabs,
+  serviceTabId,
+  serviceTabPanelId,
+  TotalBar,
+} from './internal/service-multi.js';
 import { BookingButton } from './internal/ui.js';
 import { type BookingLabel, fillLabel, labelText } from './labels.js';
-import { LiveStatus } from './live-status.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { BookingServiceDto } from './types.js';
 
@@ -42,22 +47,36 @@ export const SERVICE_SCREEN_LABEL_KEYS = [
 /**
  * The keys only the multi-select step reads (`ServiceScreenProps.selection`).
  * Optional in `ServiceScreenLabels`, so a pack written before they existed
- * still type-checks; a screen given a `selection` needs all four.
+ * still type-checks; a `selection` carries them all, required, in
+ * `ServiceSelection.labels` — a multi-select step cannot compile without them.
  *
  * - `service.multiHint` — under the heading: you may tick more than one;
  * - `service.total` — the sticky bar's running total, `{minutes}` and `{price}`;
  * - `service.chooseFirst` — the sticky bar's line while someone has nothing ticked;
- * - `service.continue` — the sticky bar's button.
+ * - `service.continue` — the sticky bar's button;
+ * - `service.party.nothingBookable` — a family member with nothing on their
+ *   menu, `{label}`: the business takes nothing for them online (the party's
+ *   size is no longer the reason, as `service.party.nothingFits` says);
+ * - `service.tabDone` — read after a family member's tab name once they have
+ *   something ticked (the visible tick, in words): «Theo, ferdig».
  */
 export const SERVICE_SCREEN_MULTI_LABEL_KEYS = [
   'service.multiHint',
   'service.total',
   'service.chooseFirst',
   'service.continue',
+  'service.party.nothingBookable',
+  'service.tabDone',
 ] as const;
 
+/** The multi-select step's labels, every one required (`ServiceSelection.labels`). */
+export type ServiceMultiLabels = Record<
+  (typeof SERVICE_SCREEN_MULTI_LABEL_KEYS)[number],
+  BookingLabel
+>;
+
 export type ServiceScreenLabels = Record<(typeof SERVICE_SCREEN_LABEL_KEYS)[number], BookingLabel> &
-  Partial<Record<(typeof SERVICE_SCREEN_MULTI_LABEL_KEYS)[number], BookingLabel>>;
+  Partial<ServiceMultiLabels>;
 
 /**
  * - `root` — the `<section>`
@@ -155,6 +174,12 @@ export interface ServiceSelection {
   canContinue: boolean;
   /** A refusal to say politely (e.g. too many services), announced as a live region. */
   notice?: string | null;
+  /**
+   * The multi-select step's labels (`SERVICE_SCREEN_MULTI_LABEL_KEYS`), all
+   * required: a pack written before multi-select cannot reach this step and
+   * draw an unnamed «Next». A pack that defines them can be passed whole.
+   */
+  labels: ServiceMultiLabels;
 }
 
 export interface ServiceScreenComponents {
@@ -225,8 +250,8 @@ export interface ServiceScreenProps {
    * Switches the step to multi-select (see `ServiceSelection`): bookable cards
    * become checkboxes, a family gets one tab per person, and a sticky bar
    * shows the total and «Next». `onPick` / `party.onPickFor` then serve only
-   * the one-tap «same as last time». Needs the `SERVICE_SCREEN_MULTI_LABEL_KEYS`
-   * labels. Absent: the one-tap step, unchanged.
+   * the one-tap «same as last time». Its labels come in `selection.labels`.
+   * Absent: the one-tap step, unchanged.
    */
   selection?: ServiceSelection;
 }
@@ -305,7 +330,14 @@ export function ServiceScreen(props: ServiceScreenProps) {
   return <SingleServiceScreen {...props} shared={shared} />;
 }
 
-function Heading({ shared, multi = false }: { shared: Shared; multi?: boolean }) {
+function Heading({
+  shared,
+  multiLabels = null,
+}: {
+  shared: Shared;
+  /** The multi-select step's labels; `null` on the one-tap step. */
+  multiLabels?: ServiceMultiLabels | null;
+}) {
   const heading = (
     <h2
       id={HEADING_ID}
@@ -319,14 +351,14 @@ function Heading({ shared, multi = false }: { shared: Shared; multi?: boolean })
       {shared.labels['service.heading']}
     </h2>
   );
-  if (!multi) return heading;
+  if (!multiLabels) return heading;
   // «Choose one or more» — said once, under the question, so the first tick
   // is not a surprise when it does not move the step on.
   return (
     <div className="space-y-1">
       {heading}
       <p id={HINT_ID} className="text-sm text-muted-foreground">
-        {renderLabel(shared.labels['service.multiHint'] ?? '')}
+        {renderLabel(multiLabels['service.multiHint'])}
       </p>
     </div>
   );
@@ -432,7 +464,7 @@ function SingleServiceScreen({
 
   return (
     <section aria-labelledby={HEADING_ID} className={slotClass(classNames, 'root', 'space-y-6')}>
-      <Heading shared={shared} multi={selection !== undefined} />
+      <Heading shared={shared} multiLabels={selection?.labels} />
 
       {suggestion && (
         <div className="space-y-2">
@@ -497,7 +529,7 @@ function SingleServiceScreen({
           >
             {category.label}
           </h3>
-          <ul className="space-y-2">
+          <ul aria-describedby={selection ? HINT_ID : undefined} className="space-y-2">
             {items.map((service) => (
               <li key={service.id}>
                 <Card
@@ -525,7 +557,9 @@ function SingleServiceScreen({
         )}
       </UnlikelyForAge>
 
-      {selection && <TotalBar selection={selection} shared={shared} />}
+      {selection && (
+        <TotalBar selection={selection} format={shared.format} classNames={classNames} />
+      )}
     </section>
   );
 }
@@ -632,7 +666,7 @@ function PartyServiceScreen({
         <NothingInThisParty
           person={person}
           labels={labels}
-          multi={selection !== undefined}
+          multiLabels={selection?.labels ?? null}
           onRemove={party.onRemove ? () => party.onRemove?.(index) : undefined}
         />
       );
@@ -652,27 +686,36 @@ function PartyServiceScreen({
   }
 
   if (selection) {
+    // A tab that left the party falls back to the last one still in it.
     const current = Math.min(active, size - 1);
-    const person = party.people[current] as ServicePartyPerson;
     return (
       <section aria-labelledby={HEADING_ID} className={slotClass(classNames, 'root', 'space-y-6')}>
-        <Heading shared={shared} multi />
+        <Heading shared={shared} multiLabels={selection.labels} />
         <PersonTabs
           people={party.people}
           active={current}
           done={(index) => (selection.lists[index]?.length ?? 0) > 0}
           onSelect={setActive}
+          labels={selection.labels}
+          labelledBy={HEADING_ID}
+          describedBy={HINT_ID}
           classNames={classNames}
         />
-        <section
-          role="tabpanel"
-          id={tabPanelId(current)}
-          aria-labelledby={tabId(current)}
-          className="space-y-3"
-        >
-          {personBody(person, current)}
-        </section>
-        <TotalBar selection={selection} shared={shared} />
+        {/* One panel, the open person's: no index lookup to go wrong. */}
+        {party.people.map((person, index) =>
+          index === current ? (
+            <section
+              key={person.key}
+              role="tabpanel"
+              id={serviceTabPanelId(index)}
+              aria-labelledby={serviceTabId(index)}
+              className="space-y-3"
+            >
+              {personBody(person, index)}
+            </section>
+          ) : null
+        )}
+        <TotalBar selection={selection} format={shared.format} classNames={classNames} />
       </section>
     );
   }
@@ -698,166 +741,37 @@ function PartyServiceScreen({
   );
 }
 
-const tabId = (index: number) => `booking-service-tab-${index}`;
-const tabPanelId = (index: number) => `booking-service-panel-${index}`;
-
 /**
- * One tab per person on the multi-select step, a tick on everyone who has
- * something. The WAI-ARIA tabs pattern: one tab stop, arrows move between
- * people, Home / End jump to the ends; moving selects (one short panel, no
- * cost to showing it).
- */
-function PersonTabs({
-  people,
-  active,
-  done,
-  onSelect,
-  classNames,
-}: {
-  people: ReadonlyArray<ServicePartyPerson>;
-  active: number;
-  done: (index: number) => boolean;
-  onSelect: (index: number) => void;
-  classNames: SlotClassNames<ServiceScreenSlot> | undefined;
-}) {
-  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    const last = people.length - 1;
-    const moves: Record<string, number> = {
-      ArrowRight: active === last ? 0 : active + 1,
-      ArrowLeft: active === 0 ? last : active - 1,
-      Home: 0,
-      End: last,
-    };
-    const next = Object.hasOwn(moves, event.key) ? (moves[event.key] as number) : null;
-    if (next === null) return;
-    event.preventDefault();
-    onSelect(next);
-    document.getElementById(tabId(next))?.focus();
-  }
-  return (
-    <div
-      role="tablist"
-      aria-labelledby={HEADING_ID}
-      onKeyDown={onKeyDown}
-      className="-mx-1 flex gap-2 overflow-x-auto px-1 py-1"
-    >
-      {people.map((person, index) => {
-        const selected = index === active;
-        const finished = done(index);
-        return (
-          <button
-            key={person.key}
-            type="button"
-            role="tab"
-            id={tabId(index)}
-            aria-selected={selected}
-            aria-controls={tabPanelId(index)}
-            tabIndex={selected ? 0 : -1}
-            onClick={() => onSelect(index)}
-            // Weight and ring carry the open tab alongside the colour, as the
-            // category pills do.
-            className={cn(
-              'inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border-[1.5px] px-4 text-sm whitespace-nowrap transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
-              selected
-                ? 'border-primary bg-primary/10 font-bold text-foreground ring-2 ring-primary'
-                : 'border-primary/35 font-normal text-primary hover:border-primary hover:bg-primary/5',
-              classNames?.tab,
-              selected && classNames?.tabSelected
-            )}
-          >
-            {finished && <Check aria-hidden="true" className="size-4 shrink-0" />}
-            {person.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-/**
- * The multi-select step's sticky bar: the running total (or what is still
- * missing) and «Next». The same bar as `SummaryBar`, so the step reads as
- * one flow; a caller that also renders `SummaryBar` hides it on this step.
+ * Nothing can be booked for this person.
  *
- * «Next» is never disabled. A disabled button explains nothing and is skipped
- * by a screen reader's tab order; this one stays, the line says what is
- * missing, and the caller decides what pressing it does.
- */
-function TotalBar({ selection, shared }: { selection: ServiceSelection; shared: Shared }) {
-  const { labels, format, classNames } = shared;
-  const { total, canContinue } = selection;
-  const showTotal = canContinue && total !== null;
-  let line: ReactNode = null;
-  if (showTotal) {
-    line = renderLabel(labels['service.total'] ?? '', {
-      minutes: total.minutes,
-      price: format.price(total.priceOre),
-    });
-  } else if (!canContinue) {
-    line = renderLabel(labels['service.chooseFirst'] ?? '');
-  }
-  return (
-    <div
-      className={slotClass(
-        classNames,
-        'bar',
-        'sticky bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-md'
-      )}
-    >
-      <LiveStatus
-        text={selection.notice ?? null}
-        className="px-5 text-sm font-medium text-foreground [&:not(:empty)]:pt-3"
-      />
-      <div className="flex h-16 items-center justify-between gap-4 px-5">
-        {/* Polite and atomic: each tick is answered with the new total. */}
-        <p
-          aria-live="polite"
-          aria-atomic="true"
-          className={cn(
-            'min-w-0 truncate text-sm tabular-nums',
-            showTotal ? 'font-semibold' : 'text-muted-foreground'
-          )}
-        >
-          {line}
-        </p>
-        <BookingButton size="lg" onClick={selection.onContinue}>
-          {renderLabel(labels['service.continue'] ?? '')}
-        </BookingButton>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Nothing can be booked for this person IN A PARTY THIS SIZE.
- *
- * The engine's rule: one request holds at most as many people as the
- * STRICTEST `maxPerBooking` among its services allows, so a one-per-booking
- * adult service cannot ride along with the children's. The step says so in
- * one line (the caller keeps «next» shut) and offers the one way on: take them
- * out, and book them as their own time.
+ * On the one-tap step that is IN A PARTY THIS SIZE — the engine's rule: one
+ * request holds at most as many people as the STRICTEST `maxPerBooking` among
+ * its services allows, so a one-per-booking adult service cannot ride along
+ * with the children's. On the multi-select step the size narrows nothing, so
+ * the reason is plainer: nothing on their menu is taken online. Either way the
+ * step says so in one line (the caller keeps «next» shut) and offers the one
+ * way on: take them out, and book them as their own time.
  */
 function NothingInThisParty({
   person,
   labels,
-  multi,
+  multiLabels,
   onRemove,
 }: {
   person: ServicePartyPerson;
   labels: ServiceScreenLabels;
-  /** Multi-select: a grown-up rides along with the children, so «book them on their own» is not the reason. */
-  multi: boolean;
+  /** The multi-select step's labels; `null` on the one-tap step. */
+  multiLabels: ServiceMultiLabels | null;
   onRemove: (() => void) | undefined;
 }) {
   const values = { label: person.label };
+  let reason: BookingLabel;
+  if (multiLabels) reason = multiLabels['service.party.nothingBookable'];
+  else if (person.adult) reason = labels['service.party.adultAlone'];
+  else reason = labels['service.party.nothingFits'];
   return (
     <div className="space-y-2 rounded-lg border border-dashed border-border px-5 py-4 text-sm">
-      <p>
-        {renderLabel(
-          labels[person.adult && !multi ? 'service.party.adultAlone' : 'service.party.nothingFits'],
-          values
-        )}
-      </p>
+      <p>{renderLabel(reason, values)}</p>
       {onRemove && (
         <button
           type="button"
@@ -1062,47 +976,16 @@ export function DefaultServiceCard({
   }
 
   if (kind === 'choice' && multiple) {
-    // A real checkbox inside its label: Space (and Enter) toggles it, the label's whole
-    // box is the target, and a screen reader hears «checkbox, checked».
     return (
-      <label
-        className={cn(
-          'flex min-h-14 w-full cursor-pointer items-center gap-4 rounded-lg border px-5 py-4 text-left transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary',
-          selected ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-primary',
-          className,
-          selected && selectedClassName
-        )}
-      >
-        <input
-          type="checkbox"
-          className="sr-only"
-          checked={selected}
-          onChange={onPick}
-          // Enter as well as Space: on a phone-sized list the card reads as a
-          // button, and a keyboard visitor presses it like one.
-          onKeyDown={(event) => {
-            if (event.key !== 'Enter') return;
-            event.preventDefault();
-            onPick();
-          }}
-        />
-        <span
-          aria-hidden="true"
-          className={cn(
-            'flex size-6 shrink-0 items-center justify-center rounded-[4px] border-[1.5px] transition-colors',
-            selected ? 'border-primary bg-primary text-primary-foreground' : 'border-input'
-          )}
-        >
-          {selected && <Check className="size-4" />}
-        </span>
-        <span className="flex min-w-0 flex-1 items-baseline justify-between gap-4">
-          <span className="font-medium">{service.name}</span>
-          <span className="flex items-baseline gap-4 text-right">
-            <span className="text-sm text-muted-foreground tabular-nums">{duration}</span>
-            {price}
-          </span>
-        </span>
-      </label>
+      <MultiServiceCard
+        name={service.name}
+        selected={selected}
+        onPick={onPick}
+        duration={duration}
+        price={price}
+        className={className}
+        selectedClassName={selectedClassName}
+      />
     );
   }
 

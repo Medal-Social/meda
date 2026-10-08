@@ -20,8 +20,3 @@ export function visitName(item: VisitLike): string {
     .map((service) => service.name)
     .join(' + ');
 }
-
-/** The visit's treatment time: the services' durations summed (buffers excluded). */
-export function visitMinutes(item: VisitLike): number {
-  return visitServices(item).reduce((sum, service) => sum + service.durationMinutes, 0);
-}

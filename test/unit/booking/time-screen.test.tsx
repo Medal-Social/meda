@@ -603,6 +603,18 @@ describe('TimeScreen — a family', () => {
     ).toBeInTheDocument();
   });
 
+  it('leaves a seat the basket does not cover unnamed rather than «undefined»', () => {
+    const slot = parallelAt(15);
+    renderTime({
+      slots: [],
+      days: [slot.startTs],
+      party: party({ mode: 'parallel', slots: [slot], items: [{ service: KIDS }] }),
+    });
+    const chip = screen.getByRole('button', { name: /^15:00 \(Barneklipp hos Ada/ });
+    expect(chip.textContent).not.toMatch(/undefined/);
+    expect(chip).toHaveAccessibleName(/hos Bo\)$/);
+  });
+
   it('offers the simultaneous alternative rather than an empty day', () => {
     const onPick = vi.fn();
     const alternative = parallelAt(15);

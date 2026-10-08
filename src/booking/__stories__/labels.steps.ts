@@ -4,7 +4,7 @@
  * fixtures only.
  */
 import type { AddChildSheetLabels } from '../add-child-sheet.js';
-import type { ServiceScreenLabels } from '../service-screen.js';
+import type { ServiceMultiLabels, ServiceScreenLabels } from '../service-screen.js';
 import type { StylistScreenLabels } from '../stylist-screen.js';
 import type { WhoScreenLabels } from '../who-screen.js';
 
@@ -66,6 +66,25 @@ export const whoScreenLabelsEn: WhoScreenLabels = {
   'who.family.limit': 'One booking can include up to {max} people.',
 };
 
+/** The multi-select step's labels (`ServiceSelection.labels`). */
+export const serviceMultiLabelsNb: ServiceMultiLabels = {
+  'service.multiHint': 'Velg én eller flere',
+  'service.total': '{minutes} min · {price}',
+  'service.chooseFirst': 'Velg minst én tjeneste',
+  'service.continue': 'Neste',
+  'service.party.nothingBookable': 'Ingen tjenester kan bestilles på nett for {label}.',
+  'service.tabDone': 'ferdig',
+};
+
+export const serviceMultiLabelsEn: ServiceMultiLabels = {
+  'service.multiHint': 'Choose one or more',
+  'service.total': '{minutes} min · {price}',
+  'service.chooseFirst': 'Choose at least one service',
+  'service.continue': 'Next',
+  'service.party.nothingBookable': 'Nothing can be booked online for {label}.',
+  'service.tabDone': 'done',
+};
+
 export const serviceScreenLabelsNb: ServiceScreenLabels = {
   'service.heading': 'Hva vil du bestille?',
   'service.categoriesLegend': 'Kategorier',
@@ -80,10 +99,7 @@ export const serviceScreenLabelsNb: ServiceScreenLabels = {
   'service.party.adultAlone': '{label} må bestilles som en egen time.',
   'service.party.nothingFits': 'Ingen tjenester kan bestilles for {label} i en så stor gruppe.',
   'service.party.remove': 'Fjern {label} fra denne timen',
-  'service.multiHint': 'Velg én eller flere',
-  'service.total': '{minutes} min · {price}',
-  'service.chooseFirst': 'Velg minst én tjeneste',
-  'service.continue': 'Neste',
+  ...serviceMultiLabelsNb,
 };
 
 export const serviceScreenLabelsEn: ServiceScreenLabels = {
@@ -100,10 +116,7 @@ export const serviceScreenLabelsEn: ServiceScreenLabels = {
   'service.party.adultAlone': '{label} needs a separate appointment.',
   'service.party.nothingFits': 'Nothing can be booked for {label} in a group this size.',
   'service.party.remove': 'Remove {label} from this appointment',
-  'service.multiHint': 'Choose one or more',
-  'service.total': '{minutes} min · {price}',
-  'service.chooseFirst': 'Choose at least one service',
-  'service.continue': 'Next',
+  ...serviceMultiLabelsEn,
 };
 
 export const stylistScreenLabelsNb: StylistScreenLabels = {

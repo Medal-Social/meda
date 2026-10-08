@@ -5,6 +5,7 @@ import { demoFormatNb } from '../../../src/booking/__stories__/fixtures.js';
 import {
   demoCategoriesNb as categories,
   serviceScreenLabelsNb as labels,
+  serviceMultiLabelsNb as multi,
 } from '../../../src/booking/__stories__/labels.steps.js';
 import {
   DefaultServiceCard,
@@ -308,6 +309,43 @@ describe('ServiceScreen', () => {
     });
   });
 
+  describe('a family member’s «same as last time» on the one-tap step', () => {
+    const PEOPLE = [
+      { key: 'p:theo', label: 'Theo · 7 år', adult: false, suggestion: { service: KIDS_WASH } },
+      { key: 'guest:2', label: 'Barn 2', adult: false },
+    ];
+
+    it('opens the menu by itself when the answer is something else already', () => {
+      renderService({
+        services: [KIDS_CUT, KIDS_WASH],
+        party: { people: PEOPLE, choices: [KIDS_CUT, null], onPickFor: vi.fn() },
+      });
+      expect(screen.getByRole('button', { name: labels['service.chooseOther'] })).toHaveAttribute(
+        'aria-expanded',
+        'true'
+      );
+      expect(screen.getByRole('button', { name: /Samme som sist/ })).toHaveAttribute(
+        'aria-pressed',
+        'false'
+      );
+    });
+
+    it('keeps it shut when the answer is the suggestion', () => {
+      renderService({
+        services: [KIDS_CUT, KIDS_WASH],
+        party: { people: PEOPLE, choices: [KIDS_WASH, null], onPickFor: vi.fn() },
+      });
+      expect(screen.getByRole('button', { name: labels['service.chooseOther'] })).toHaveAttribute(
+        'aria-expanded',
+        'false'
+      );
+      expect(screen.getByRole('button', { name: /Samme som sist/ })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      );
+    });
+  });
+
   describe('«same as last time»', () => {
     it('offers a party of one their last service first, and keeps the whole catalogue below', () => {
       const { onPick } = renderService({
@@ -525,6 +563,7 @@ describe('ServiceScreen — multi-select (`selection`)', () => {
       onContinue: vi.fn(),
       total: null,
       canContinue: false,
+      labels: multi,
       ...overrides,
     };
   }
@@ -564,7 +603,7 @@ describe('ServiceScreen — multi-select (`selection`)', () => {
 
   it('says more than one is fine, under the heading', () => {
     renderService({ selection: selection() });
-    expect(screen.getByText(labels['service.multiHint'] as string)).toBeInTheDocument();
+    expect(screen.getByText(multi['service.multiHint'])).toBeInTheDocument();
   });
 
   it('shows the running total and «Next», which continues', () => {
@@ -575,16 +614,16 @@ describe('ServiceScreen — multi-select (`selection`)', () => {
     });
     renderService({ selection: sel });
     expect(screen.getByText('45 min · 960 kr')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: labels['service.continue'] as string }));
+    fireEvent.click(screen.getByRole('button', { name: multi['service.continue'] }));
     expect(sel.onContinue).toHaveBeenCalledTimes(1);
   });
 
-  it('says what is missing instead of a total, and «Next» stays enabled', () => {
+  it('runs the total and says what is missing under it, and «Next» stays enabled', () => {
     const sel = selection({ total: { minutes: 30, priceOre: 49_000 }, canContinue: false });
     renderService({ selection: sel });
-    expect(screen.getByText(labels['service.chooseFirst'] as string)).toBeInTheDocument();
-    expect(screen.queryByText(/30 min · /)).toBeNull();
-    const next = screen.getByRole('button', { name: labels['service.continue'] as string });
+    expect(screen.getByText(multi['service.chooseFirst'])).toBeInTheDocument();
+    expect(screen.getByText('30 min · 490 kr')).toBeInTheDocument();
+    const next = screen.getByRole('button', { name: multi['service.continue'] });
     expect(next).toBeEnabled();
     fireEvent.click(next);
     expect(sel.onContinue).toHaveBeenCalledTimes(1);
@@ -609,6 +648,157 @@ describe('ServiceScreen — multi-select (`selection`)', () => {
     expect(sel.onToggle).not.toHaveBeenCalled();
   });
 
+  it('toggles once for a tap anywhere on the card', () => {
+    const sel = selection();
+    renderService({ services: [KIDS_CUT], selection: sel });
+    const card = screen.getByRole('checkbox', { name: /Barneklipp/ }).closest('label');
+    fireEvent.click(card as HTMLLabelElement);
+    expect(sel.onToggle).toHaveBeenCalledTimes(1);
+    expect(sel.onToggle).toHaveBeenCalledWith(0, KIDS_CUT);
+  });
+
+  it('says «choose one or more» about each list of checkboxes', () => {
+    renderService({ services: [KIDS_CUT], selection: selection() });
+    expect(screen.getByRole('list')).toHaveAccessibleDescription(multi['service.multiHint']);
+  });
+
+  it('has no axe violations for one person', async () => {
+    const { container } = renderService({
+      services: [KIDS_CUT, KIDS_WASH, ADULT_CUT, PIERCING, TODDLER_CUT],
+      phone: '22 00 00 00',
+      serviceFits: (service) => service.ageMaxYears === undefined,
+      suggestion: { service: KIDS_CUT },
+      selection: selection({
+        lists: [[{ id: 'svc-kids' }]],
+        total: { minutes: 30, priceOre: 49_000 },
+        canContinue: true,
+        notice: 'Maks tre tjenester per person.',
+      }),
+    });
+    expect(
+      await axe(container, { rules: { 'color-contrast': { enabled: false } } })
+    ).toHaveNoViolations();
+  });
+
+  it('reads a person with no list yet as nothing ticked', () => {
+    renderService({ services: [KIDS_CUT], selection: selection({ lists: [] }) });
+    expect(screen.getByRole('checkbox', { name: /Barneklipp/ })).not.toBeChecked();
+  });
+
+  it('hands a phone-only card’s tap to onPick, never to onToggle', () => {
+    function TapAnything(props: ServiceCardProps) {
+      return (
+        <button type="button" onClick={props.onPick}>
+          {props.kind}:{props.service.name}
+        </button>
+      );
+    }
+    const sel = selection();
+    const { onPick } = renderService({
+      services: [KIDS_CUT, PIERCING],
+      selection: sel,
+      components: { ServiceCard: TapAnything },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'phone:Hull i ørene' }));
+    expect(onPick).toHaveBeenCalledWith(PIERCING);
+    expect(sel.onToggle).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'choice:Barneklipp' }));
+    expect(sel.onToggle).toHaveBeenCalledWith(0, KIDS_CUT);
+  });
+
+  it('toggles on Enter only: another key leaves the box alone', () => {
+    const sel = selection();
+    renderService({ services: [KIDS_CUT], selection: sel });
+    const box = screen.getByRole('checkbox', { name: /Barneklipp/ });
+    fireEvent.keyDown(box, { key: 'a' });
+    expect(sel.onToggle).not.toHaveBeenCalled();
+    fireEvent.keyDown(box, { key: 'Enter' });
+    expect(sel.onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('draws a ticked card with its tick and the selected slot class', () => {
+    renderService({
+      services: [KIDS_CUT, KIDS_WASH],
+      selection: selection({ lists: [[{ id: 'svc-kids' }]] }),
+      classNames: { card: 'my-card', cardSelected: 'my-card-on' },
+    });
+    const on = screen.getByRole('checkbox', { name: /Barneklipp/ }).closest('label');
+    const off = screen.getByRole('checkbox', { name: /Klipp og vask/ }).closest('label');
+    expect(on).toHaveClass('my-card', 'my-card-on');
+    expect(on?.querySelector('svg')).not.toBeNull();
+    expect(off).toHaveClass('my-card');
+    expect(off).not.toHaveClass('my-card-on');
+    expect(off?.querySelector('svg')).toBeNull();
+  });
+
+  it('ticks an unlikely-for-age service below the divider too', () => {
+    const sel = selection();
+    renderService({
+      services: [KIDS_CUT, TODDLER_CUT],
+      serviceFits: (service) => service.ageMaxYears === undefined,
+      childName: 'Theo',
+      selection: sel,
+    });
+    const below = screen.getByRole('list', {
+      name: fill(labels['service.ageDivider.named'], { name: 'Theo' }),
+    });
+    fireEvent.click(within(below).getByRole('checkbox', { name: /Småbarnsklipp/ }));
+    expect(sel.onToggle).toHaveBeenCalledWith(0, TODDLER_CUT);
+  });
+
+  it('keeps a phone-only card as a number to call, beside the checkboxes', () => {
+    const sel = selection();
+    const { onPick } = renderService({
+      services: [KIDS_CUT, PIERCING],
+      phone: '22 33 44 55',
+      selection: sel,
+    });
+    expect(
+      screen.getByRole('link', {
+        name: fill(labels['service.phoneOnlyLinkLabel'], { phone: '22 33 44 55' }),
+      })
+    ).toHaveAttribute('href', 'tel:22334455');
+    expect(screen.queryByRole('checkbox', { name: /Hull i ørene/ })).toBeNull();
+    expect(onPick).not.toHaveBeenCalled();
+    expect(sel.onToggle).not.toHaveBeenCalled();
+  });
+
+  it('shows neither a total nor what is missing when everyone is done but nothing is priced yet', () => {
+    renderService({ selection: selection({ canContinue: true, total: null }) });
+    expect(screen.queryByText(multi['service.chooseFirst'])).toBeNull();
+    expect(screen.queryByText(/ min · /)).toBeNull();
+    expect(screen.getByRole('button', { name: multi['service.continue'] })).toBeEnabled();
+  });
+
+  it('keeps the live region empty without a notice', () => {
+    renderService({ selection: selection() });
+    expect(screen.queryByText('Maks tre tjenester per person.')).toBeNull();
+    expect(screen.queryByRole('status')?.textContent ?? '').toBe('');
+  });
+
+  it('takes the sticky bar slot class', () => {
+    renderService({
+      selection: selection(),
+      classNames: { bar: 'my-bar' },
+    });
+    expect(
+      screen.getByRole('button', { name: multi['service.continue'] }).closest('.my-bar')
+    ).not.toBeNull();
+  });
+
+  it('draws «same as last time» unpressed while it is not ticked', () => {
+    renderService({
+      services: [KIDS_CUT, KIDS_WASH],
+      suggestion: { service: KIDS_CUT },
+      selection: selection({ lists: [[{ id: 'svc-kids-wash' }]] }),
+    });
+    expect(screen.getByRole('button', { name: /Samme som sist/ })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
+    expect(screen.getByRole('checkbox', { name: /Klipp og vask/ })).toBeChecked();
+  });
+
   describe('for a family', () => {
     const PEOPLE = [
       { key: 'p:theo', label: 'Theo · 7 år', adult: false },
@@ -624,15 +814,20 @@ describe('ServiceScreen — multi-select (`selection`)', () => {
         selection: selection({ lists: [[], [{ id: 'svc-kids' }], []] }),
       });
       const tabs = screen.getAllByRole('tab');
-      expect(tabs.map((tab) => tab.textContent)).toEqual([
-        'Theo · 7 år',
-        'Emma · 5 år',
-        'Meg selv',
-      ]);
+      expect(tabs[0]).toHaveAccessibleName('Theo · 7 år');
+      // The tick is said too, not only drawn.
+      expect(tabs[1]).toHaveAccessibleName(`Emma · 5 år, ${multi['service.tabDone']}`);
+      expect(tabs[2]).toHaveAccessibleName('Meg selv');
       expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
       expect(tabs[1]?.querySelector('svg')).not.toBeNull();
       expect(tabs[0]?.querySelector('svg')).toBeNull();
       expect(screen.getByRole('tabpanel')).toHaveAccessibleName('Theo · 7 år');
+      // Only the open tab points at a panel: the others' are not on the page.
+      expect(tabs[0]).toHaveAttribute('aria-controls', screen.getByRole('tabpanel').id);
+      expect(tabs[1]).not.toHaveAttribute('aria-controls');
+      expect(tabs[2]).not.toHaveAttribute('aria-controls');
+      // «Choose one or more» describes the tabs.
+      expect(screen.getByRole('tablist')).toHaveAccessibleDescription(multi['service.multiHint']);
     });
 
     it('ticks for the person whose tab is open', () => {
@@ -678,6 +873,190 @@ describe('ServiceScreen — multi-select (`selection`)', () => {
       expect(
         screen.getAllByRole('checkbox').map((box) => (box as HTMLInputElement).checked)
       ).toEqual([true, true]);
+    });
+
+    it('moves right, wraps from the last tab to the first, and jumps with Home / End', () => {
+      renderService({ services: [KIDS_CUT], party, selection: selection({ lists: [[], [], []] }) });
+      const tab = (name: string) => screen.getByRole('tab', { name });
+      const open = () =>
+        screen.getAllByRole('tab').find((t) => t.getAttribute('aria-selected') === 'true');
+
+      fireEvent.keyDown(tab('Theo · 7 år'), { key: 'ArrowRight' });
+      expect(open()).toBe(tab('Emma · 5 år'));
+      expect(tab('Emma · 5 år')).toHaveFocus();
+      expect(tab('Emma · 5 år')).toHaveAttribute('tabindex', '0');
+      expect(tab('Theo · 7 år')).toHaveAttribute('tabindex', '-1');
+
+      fireEvent.keyDown(tab('Emma · 5 år'), { key: 'ArrowLeft' });
+      expect(open()).toBe(tab('Theo · 7 år'));
+
+      fireEvent.keyDown(tab('Theo · 7 år'), { key: 'End' });
+      expect(open()).toBe(tab('Meg selv'));
+
+      fireEvent.keyDown(tab('Meg selv'), { key: 'ArrowRight' });
+      expect(open()).toBe(tab('Theo · 7 år'));
+
+      fireEvent.keyDown(tab('Theo · 7 år'), { key: 'ArrowRight' });
+      fireEvent.keyDown(tab('Emma · 5 år'), { key: 'Home' });
+      expect(open()).toBe(tab('Theo · 7 år'));
+    });
+
+    it('offers everyone the whole menu without a children’s category', () => {
+      renderService({
+        services: [KIDS_CUT, ADULT_CUT],
+        childCategory: undefined,
+        party,
+        // Shorter than the party: whoever has no list has nothing ticked.
+        selection: selection({ lists: [[{ id: 'svc-kids' }]] }),
+      });
+      expect(screen.getAllByRole('checkbox')).toHaveLength(2);
+      expect(screen.getByRole('tab', { name: 'Emma · 5 år' })).toHaveAccessibleName('Emma · 5 år');
+      fireEvent.click(screen.getByRole('tab', { name: 'Meg selv' }));
+      expect(screen.getByRole('checkbox', { name: /Barneklipp/ })).not.toBeChecked();
+      expect(screen.getByRole('checkbox', { name: /Voksenklipp/ })).toBeInTheDocument();
+    });
+
+    it('ignores every other key on the tabs', () => {
+      renderService({ services: [KIDS_CUT], party, selection: selection({ lists: [[], [], []] }) });
+      const theo = screen.getByRole('tab', { name: 'Theo · 7 år' });
+      expect(fireEvent.keyDown(theo, { key: 'ArrowDown' })).toBe(true);
+      expect(fireEvent.keyDown(theo, { key: 'a' })).toBe(true);
+      expect(theo).toHaveAttribute('aria-selected', 'true');
+      // A handled key is the tablist's: the page does not scroll as well.
+      expect(fireEvent.keyDown(theo, { key: 'End' })).toBe(false);
+    });
+
+    it('takes the tab slot classes, the open tab’s only on it', () => {
+      renderService({
+        services: [KIDS_CUT],
+        party,
+        selection: selection({ lists: [[], [], []] }),
+        classNames: { tab: 'my-tab', tabSelected: 'my-tab-on' },
+      });
+      expect(screen.getByRole('tab', { name: 'Theo · 7 år' })).toHaveClass('my-tab', 'my-tab-on');
+      expect(screen.getByRole('tab', { name: 'Emma · 5 år' })).toHaveClass('my-tab');
+      expect(screen.getByRole('tab', { name: 'Emma · 5 år' })).not.toHaveClass('my-tab-on');
+    });
+
+    it('falls back to the last tab when the open one leaves the party', () => {
+      const sel = selection({ lists: [[], [], []] });
+      const { rerender } = renderService({ services: [KIDS_CUT], party, selection: sel });
+      fireEvent.click(screen.getByRole('tab', { name: 'Meg selv' }));
+      rerender(
+        <ServiceScreen
+          labels={labels}
+          format={demoFormatNb}
+          services={[KIDS_CUT]}
+          categories={categories}
+          childCategory="kids"
+          onPick={vi.fn()}
+          party={{ ...party, people: PEOPLE.slice(0, 2), choices: [null, null] }}
+          selection={{ ...sel, lists: [[], []] }}
+        />
+      );
+      expect(screen.getByRole('tab', { name: 'Emma · 5 år' })).toHaveAttribute(
+        'aria-selected',
+        'true'
+      );
+      expect(screen.getByRole('tabpanel')).toHaveAccessibleName('Emma · 5 år');
+    });
+
+    it('says nothing is bookable online — not the group’s size — when a menu is empty', () => {
+      const onRemove = vi.fn();
+      renderService({
+        // The children's menu only: the grown-up's is empty.
+        services: [KIDS_CUT],
+        party: { ...party, onRemove },
+        selection: selection({ lists: [[], [], []] }),
+      });
+      fireEvent.click(screen.getByRole('tab', { name: 'Meg selv' }));
+      expect(
+        screen.getByText(fill(multi['service.party.nothingBookable'], { label: 'Meg selv' }))
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText(fill(labels['service.party.nothingFits'], { label: 'Meg selv' }))
+      ).toBeNull();
+      expect(
+        screen.queryByText(fill(labels['service.party.adultAlone'], { label: 'Meg selv' }))
+      ).toBeNull();
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: fill(labels['service.party.remove'], { label: 'Meg selv' }),
+        })
+      );
+      expect(onRemove).toHaveBeenCalledWith(2);
+    });
+
+    it('says the same for a child with an empty menu', () => {
+      renderService({
+        services: [ADULT_CUT],
+        party,
+        selection: selection({ lists: [[], [], []] }),
+      });
+      expect(
+        screen.getByText(fill(multi['service.party.nothingBookable'], { label: 'Theo · 7 år' }))
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText(fill(labels['service.party.nothingFits'], { label: 'Theo · 7 år' }))
+      ).toBeNull();
+      // No remove offer without `onRemove`.
+      expect(
+        screen.queryByRole('button', {
+          name: fill(labels['service.party.remove'], { label: 'Theo · 7 år' }),
+        })
+      ).toBeNull();
+    });
+
+    it('offers a ticked «same as last time» one tap through onPickFor, the rest open beside it', () => {
+      const onPickFor = vi.fn();
+      const sel = selection({ lists: [[{ id: 'svc-kids' }, { id: 'svc-kids-wash' }], [], []] });
+      renderService({
+        services: [KIDS_CUT, KIDS_WASH],
+        party: {
+          ...party,
+          people: [
+            { ...(PEOPLE[0] as (typeof PEOPLE)[number]), suggestion: { service: KIDS_CUT } },
+            ...PEOPLE.slice(1),
+          ],
+          onPickFor,
+        },
+        selection: sel,
+      });
+      const same = screen.getByRole('button', { name: /Samme som sist/ });
+      expect(same).toHaveAttribute('aria-pressed', 'true');
+      // Something else is ticked, so the menu is open — with the suggestion in
+      // it, to untick there.
+      const other = screen.getByRole('button', { name: labels['service.chooseOther'] });
+      expect(other).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('checkbox', { name: /Barneklipp/ })).toBeChecked();
+      expect(screen.getByRole('checkbox', { name: /Klipp og vask/ })).toBeChecked();
+      fireEvent.click(same);
+      expect(onPickFor).toHaveBeenCalledWith(0, KIDS_CUT);
+      expect(sel.onToggle).not.toHaveBeenCalled();
+    });
+
+    it('keeps the menu shut behind «same as last time» while only it is ticked', () => {
+      renderService({
+        services: [KIDS_CUT, KIDS_WASH],
+        party: {
+          ...party,
+          people: [
+            { ...(PEOPLE[0] as (typeof PEOPLE)[number]), suggestion: { service: KIDS_CUT } },
+            ...PEOPLE.slice(1),
+          ],
+        },
+        selection: selection({ lists: [[], [], []] }),
+      });
+      expect(screen.getByRole('button', { name: /Samme som sist/ })).toHaveAttribute(
+        'aria-pressed',
+        'false'
+      );
+      const other = screen.getByRole('button', { name: labels['service.chooseOther'] });
+      expect(other).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.queryByRole('checkbox')).toBeNull();
+      fireEvent.click(other);
+      // The suggestion is in the open menu too.
+      expect(screen.getAllByRole('checkbox')).toHaveLength(2);
     });
 
     it('has no axe violations', async () => {
