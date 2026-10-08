@@ -337,6 +337,30 @@ describe('TimeScreen — keyboard', () => {
     expect(tomorrow).toHaveAttribute('type', 'button');
     expect(tomorrow).toHaveAttribute('aria-pressed', 'false');
   });
+
+  it('shows a week of chips and keeps the rest of the window in the month', () => {
+    const days = Array.from({ length: 12 }, (_, index) => 17 + index);
+    renderTime({
+      slots: [...days.slice(0, 11).map((day) => at(9, 0, day)), at(15, 0, 28)],
+      days: days.map((day) => osloTs(9, 0, day)),
+      monthView: true,
+      now: osloTs(9),
+    });
+    const group = screen.getByRole('group', { name: timeLabelsNb['time.dayStrip.legend'] });
+    expect(within(group).getAllByRole('button')).toHaveLength(7);
+    expect(screen.queryByRole('button', { name: '15:00' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: timeLabelsNb['time.month.show'] }));
+    const later = screen.getByText('28');
+    expect(later.tagName).toBe('BUTTON');
+    fireEvent.click(later);
+    expect(screen.getByRole('button', { name: '15:00' })).toBeInTheDocument();
+    // The week on screen follows the day that was picked, so a chip shows it.
+    expect(within(group).getByRole('button', { name: 'man. 28.' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+  });
 });
 
 describe('TimeScreen — open, shut, or done for the day', () => {
@@ -813,6 +837,10 @@ describe('TimeScreenSkeleton', () => {
     expect(screen.getByRole('status')).toHaveTextContent(timeLabelsNb['time.loading']);
     const chips = container.querySelectorAll('[data-testid="day-chip-skeleton"]');
     expect(chips).toHaveLength(7);
+    const { container: wide } = render(
+      <TimeScreenSkeleton labels={timeLabelsNb} days={62} monthView />
+    );
+    expect(wide.querySelectorAll('[data-testid="day-chip-skeleton"]')).toHaveLength(7);
     for (const chip of chips) expect(chip).toHaveClass('h-8');
     const slots = container.querySelectorAll('[data-testid="slot-skeleton"]');
     expect(slots.length).toBeGreaterThan(0);
