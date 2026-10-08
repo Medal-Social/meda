@@ -628,3 +628,43 @@ describe('StylistScreen — «first available» as faces', () => {
     expect(screen.getByTestId('stylist-options').className).not.toContain('mask-image');
   });
 });
+
+describe('StylistScreen — faces and the fade, at the edges', () => {
+  it('draws one face for two stylists who share a photo', () => {
+    render(
+      <StylistScreen
+        labels={labels}
+        format={demoFormatNb}
+        now={NOW}
+        serviceIds={['svc-kids']}
+        resources={[
+          { ...ADA, photoUrl: '/p/same' },
+          { ...BO, photoUrl: '/p/same' },
+          { ...ADA, id: 'res-dag', name: 'Dag Demo', photoUrl: '/p/dag', sortOrder: 3 },
+        ]}
+        firstAvailableFaces
+        onPick={vi.fn()}
+      />
+    );
+    const faces = screen
+      .getByRole('radio', { name: labels['stylist.firstAvailable'] as string })
+      .querySelectorAll('[data-testid="stylist-faces"] img');
+    expect([...faces].map((img) => img.getAttribute('src'))).toEqual(['/p/same', '/p/dag']);
+  });
+
+  it('leaves room past the last card for the fade, on a phone only', () => {
+    render(
+      <StylistScreen
+        labels={labels}
+        format={demoFormatNb}
+        now={NOW}
+        serviceIds={['svc-kids']}
+        resources={[ADA, BO]}
+        edgeFade
+        onPick={vi.fn()}
+      />
+    );
+    const row = screen.getByTestId('stylist-options');
+    expect(row.className.split(' ')).toEqual(expect.arrayContaining(['pr-10', 'md:p-0']));
+  });
+});

@@ -278,9 +278,12 @@ export function StylistScreen({
       badge: labelText(labels['stylist.firstAvailableBadge']),
       ...(firstAvailableFaces && !loading
         ? {
-            faces: qualified
-              .flatMap((resource) => (resource.photoUrl ? [resource.photoUrl] : []))
-              .slice(0, FACE_COUNT),
+            // Distinct photos: two stylists sharing one picture is one face.
+            faces: [
+              ...new Set(
+                qualified.flatMap((resource) => (resource.photoUrl ? [resource.photoUrl] : []))
+              ),
+            ].slice(0, FACE_COUNT),
           }
         : {}),
     },
@@ -466,8 +469,9 @@ function StylistRadioGroup({
         'group',
         'relative -mx-1 flex h-36 snap-x snap-mandatory scroll-px-1 gap-1 overflow-x-auto overscroll-x-contain px-1 py-2',
         // The last few pixels fade, so the cut-off card reads as «more this way».
+        // The trailing room lets the last card scroll wholly clear of the fade.
         edgeFade &&
-          '[mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)] md:[mask-image:none]',
+          'pr-10 [mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)] md:[mask-image:none]',
         'md:mx-0 md:h-auto md:snap-none md:flex-col md:gap-2 md:overflow-visible md:p-0'
       )}
     >
