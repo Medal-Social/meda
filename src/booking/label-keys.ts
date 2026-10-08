@@ -21,7 +21,7 @@ import { SERVICE_SCREEN_LABEL_KEYS, SERVICE_SCREEN_MULTI_LABEL_KEYS } from './se
 import { STYLIST_SCREEN_LABEL_KEYS } from './stylist-screen.js';
 import { SUMMARY_BAR_HINT_LABEL_KEYS, SUMMARY_BAR_LABEL_KEYS } from './summary-bar.js';
 import { TIME_SCREEN_FINDER_LABEL_KEYS, TIME_SCREEN_LABEL_KEYS } from './time-screen.js';
-import { WHO_SCREEN_LABEL_KEYS } from './who-screen.js';
+import { WHO_SCREEN_LABEL_KEYS, WHO_SCREEN_PARTY_LABEL_KEYS } from './who-screen.js';
 
 /**
  * Every label key any booking screen reads, once. A complete pack for a
@@ -34,6 +34,7 @@ import { WHO_SCREEN_LABEL_KEYS } from './who-screen.js';
 export const BOOKING_LABEL_KEYS = [
   ...new Set([
     ...WHO_SCREEN_LABEL_KEYS,
+    ...WHO_SCREEN_PARTY_LABEL_KEYS,
     ...ADD_CHILD_SHEET_LABEL_KEYS,
     ...SERVICE_SCREEN_LABEL_KEYS,
     ...SERVICE_SCREEN_MULTI_LABEL_KEYS,
@@ -72,7 +73,8 @@ export type BookingOptionalLabelKey =
   | (typeof SERVICE_SCREEN_MULTI_LABEL_KEYS)[number]
   | (typeof BOOKING_RECAP_LABEL_KEYS)[number]
   | (typeof TIME_SCREEN_FINDER_LABEL_KEYS)[number]
-  | (typeof SUMMARY_BAR_HINT_LABEL_KEYS)[number];
+  | (typeof SUMMARY_BAR_HINT_LABEL_KEYS)[number]
+  | (typeof WHO_SCREEN_PARTY_LABEL_KEYS)[number];
 
 /** Keys every complete pack defines. */
 export type BookingRequiredLabelKey =
