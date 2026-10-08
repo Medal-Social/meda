@@ -1031,6 +1031,38 @@ describe('TimeScreen — finding a time fast', () => {
     expect(chipWith('fullt')).toBeUndefined();
   });
 
+  it('does not claim «fullt» on a family’s day, where the other mode may still seat them', () => {
+    const kids: WizardService = {
+      id: 'svc-kids',
+      name: 'Barneklipp',
+      category: 'kids',
+      durationMinutes: 30,
+      bufferBeforeMinutes: 0,
+      bufferAfterMinutes: 0,
+      priceOre: 39_000,
+      maxPerBooking: 3,
+      weekendSurchargePct: 0,
+    };
+    const party: TimeScreenParty = {
+      items: [{ service: kids }, { service: kids }] as WizardItem[],
+      mode: 'sequential',
+      slots: [],
+      chipEndTs: (party) => party.startTs,
+      alternativeFor: () => null,
+      resolveStylistName: () => null,
+      onPick: vi.fn(),
+    };
+    renderTime({
+      slots: [],
+      days: [osloTs(12, 0, 17), osloTs(12, 0, 16)],
+      openDays: [openDay(16), openDay(17)],
+      now: osloTs(8, 0, 15),
+      dayFullness: true,
+      party,
+    });
+    expect(chipWith('fullt')).toBeUndefined();
+  });
+
   it('shows a weekend card’s surcharge on the card, since the card books without the notice', () => {
     renderTime({
       slots: [slot('res-ada', 10, 0, 19), slot('res-ada', 11, 0, 21)],

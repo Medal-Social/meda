@@ -444,8 +444,11 @@ function GuestParty({
   );
   const named = childSeats.filter((person) => !generatedKeys.has(person.key));
 
+  // The stepper never takes a named child away: their own card does that.
+  const floor = Math.max(named.length, adultOn ? 0 : 1);
+
   const answer = (count: number, withAdult: boolean) => {
-    const kept = named.slice(0, count);
+    const kept = named;
     const used = new Set(kept.map((person) => person.key));
     const fill: WizardPerson[] = [];
     for (let seat = 1; kept.length + fill.length < count && seat <= maxPeople; seat += 1) {
@@ -493,7 +496,7 @@ function GuestParty({
           <button
             type="button"
             aria-label={text('who.party.fewer')}
-            disabled={children === 0 || (children === 1 && !adultOn)}
+            disabled={children <= floor}
             onClick={() => answer(children - 1, adultOn)}
             className={stepButton}
           >

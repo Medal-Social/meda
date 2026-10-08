@@ -734,8 +734,11 @@ export function TimeScreen({
                       freeByDay.get(clock.dayKey(day)) ?? 0,
                       // «Full» only when it is true of the business: an open
                       // day, asked for everyone — not hours that could not be
-                      // read, nor a day one named stylist does not work.
-                      stylistName === null && dayStanding(clock, day, openDays, now) === 'open'
+                      // read, nor a day one named stylist does not work, nor a
+                      // family's day (the other mode may still seat them).
+                      !party &&
+                        stylistName === null &&
+                        dayStanding(clock, day, openDays, now) === 'open'
                     )
                   : {})}
                 className={cn(

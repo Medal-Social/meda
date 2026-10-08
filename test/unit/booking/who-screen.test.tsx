@@ -460,6 +460,27 @@ describe('WhoScreen — a guest party (children and me)', () => {
     expect(onChoose).toHaveBeenLastCalledWith([mia, guest(1)], false);
   });
 
+  it('never takes a named child away with the stepper', () => {
+    const mia: WizardPerson = { key: 'new:mia', name: 'Mia', birthYear: 2019 };
+    const leo: WizardPerson = { key: 'new:leo', name: 'Leo', birthYear: 2021 };
+    const named = [
+      { person: mia, line: '7 år' },
+      { person: leo, line: '5 år' },
+    ];
+    const { unmount } = renderWho({ guestParty, people: [mia, leo], addedChildren: named });
+    expect(fewer()).toBeDisabled();
+    unmount();
+
+    const { onChoose } = renderWho({
+      guestParty,
+      people: [mia, guest(1), ADULT],
+      addedChildren: [named[0] as (typeof named)[number]],
+    });
+    fireEvent.click(fewer());
+    expect(onChoose).toHaveBeenLastCalledWith([mia, ADULT], false);
+    expect(fewer()).toBeEnabled();
+  });
+
   it('chooses one child again when the answer is cleared later', () => {
     const view = renderWho({ guestParty, people: [guest(1), guest(2)] });
     expect(view.onChoose).not.toHaveBeenCalled();
