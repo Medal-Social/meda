@@ -600,9 +600,12 @@ function PartyServiceScreen({
 }: ServiceScreenProps & { party: NonNullable<ServiceScreenProps['party']>; shared: Shared }) {
   const { Card, labels, classNames } = shared;
   const fileUnder = categoryOf ?? defaultCategoryOf(categories);
-  const forAnyone = new Set(
-    categories.filter((category) => category.audience === 'any').map((category) => category.key)
-  );
+  const keysFor = (audience: ServiceScreenCategory['audience']) =>
+    new Set(categories.filter((group) => group.audience === audience).map((group) => group.key));
+  // Children's groups: the configured one plus any group marked 'child'.
+  const forChildren = keysFor('child');
+  if (childCategory !== undefined) forChildren.add(childCategory);
+  const forAnyone = keysFor('any');
   const size = party.people.length;
   const [active, setActive] = useState(0);
   // Multi-select: the engine books a grown-up's visit alongside the
@@ -622,8 +625,12 @@ function PartyServiceScreen({
         ? fits
         : fits.filter((service) => {
             const key = fileUnder(service);
-            if (key === childCategory) return !person.adult;
-            return person.adult || forAnyone.has(key);
+            if (forChildren.has(key)) return !person.adult;
+            // A child gets an «anyone» group only when the service's OWN
+            // category is that group — never through the display fallback,
+            // which files an unlisted (possibly grown-up) category under the
+            // last group.
+            return person.adult || forAnyone.has(service.category);
           }),
       (service) => serviceFits(service, index)
     );

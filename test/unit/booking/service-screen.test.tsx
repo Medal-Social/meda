@@ -823,6 +823,49 @@ describe('ServiceScreen — multi-select (`selection`)', () => {
       expect(screen.queryByRole('checkbox', { name: /Voksenklipp/ })).toBeNull();
     });
 
+    it('never hands a child an unlisted category through the «anyone» fallback group', () => {
+      const STREAKS = {
+        ...ADULT_CUT,
+        id: 'svc-streaks',
+        name: 'Striper',
+        category: 'unlisted',
+        maxPerBooking: 3,
+      };
+      renderService({
+        services: [KIDS_CUT, STREAKS],
+        // The last group is «anyone», and the display files unlisted categories under it.
+        categories: categories.map((category) =>
+          category.key === 'other' ? { ...category, audience: 'any' as const } : category
+        ),
+        party,
+        selection: selection({ lists: [[], [], []] }),
+      });
+      expect(screen.getByRole('checkbox', { name: /Barneklipp/ })).toBeInTheDocument();
+      expect(screen.queryByRole('checkbox', { name: /Striper/ })).toBeNull();
+    });
+
+    it('keeps every children’s group off a grown-up’s menu', () => {
+      // A second children's group besides `childCategory`.
+      const TODDLERS = {
+        ...KIDS_CUT,
+        id: 'svc-toddler',
+        name: 'Småbarnsklipp',
+        category: 'colour',
+      };
+      renderService({
+        services: [TODDLERS, ADULT_CUT],
+        categories: categories.map((category) =>
+          category.key === 'colour' ? { ...category, audience: 'child' as const } : category
+        ),
+        party,
+        selection: selection({ lists: [[], [], []] }),
+      });
+      // The grown-up's tab (third person).
+      fireEvent.click(screen.getAllByRole('tab')[2] as HTMLElement);
+      expect(screen.getByRole('checkbox', { name: /Voksenklipp/ })).toBeInTheDocument();
+      expect(screen.queryByRole('checkbox', { name: /Småbarnsklipp/ })).toBeNull();
+    });
+
     it('keeps a child to the children’s services when no category says «anyone»', () => {
       renderService({
         services: [KIDS_CUT, { ...PIERCING, bookableOnline: true }],
