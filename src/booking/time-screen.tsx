@@ -533,10 +533,12 @@ export function TimeScreen({
   const selectedIndex = offeredDays.findIndex(
     (day) => clock.dayKey(day) === clock.dayKey(selectedDay)
   );
+  // Fixed weeks of seven, counted from the first offered day. Starting the
+  // slice at the selected day would drop the previous chip on every tap.
   const stripStart =
-    !monthView || selectedIndex < DAY_STRIP_LIMIT
+    !monthView || selectedIndex < 0
       ? 0
-      : Math.min(selectedIndex, Math.max(0, offeredDays.length - DAY_STRIP_LIMIT));
+      : Math.floor(selectedIndex / DAY_STRIP_LIMIT) * DAY_STRIP_LIMIT;
   const strip = monthView
     ? offeredDays.slice(stripStart, stripStart + DAY_STRIP_LIMIT)
     : offeredDays;
