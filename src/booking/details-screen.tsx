@@ -52,6 +52,7 @@ export const DETAILS_SCREEN_LABEL_KEYS = [
   'details.child.yearPlaceholder',
   'details.email.label',
   'details.email.help',
+  'details.email.lockedHelp',
   'details.email.error',
   'details.notes.label',
   'details.notes.placeholder',
@@ -218,6 +219,8 @@ export interface DetailsScreenProps {
   guardianPhone?: string | null;
   /** When set, a link to the full terms is drawn after the terms sentence. */
   termsHref?: string | null;
+  /** The e-mail is the address the guardian logged in with: shown, not editable. */
+  emailReadOnly?: boolean;
   /** Draw the (optional, unticked) marketing opt-in. */
   marketingConsent?: boolean;
   format: BookingFormat;
@@ -343,6 +346,7 @@ export function DetailsScreen({
   family,
   guardianPhone = null,
   termsHref = null,
+  emailReadOnly = false,
   marketingConsent = false,
   format,
   labels,
@@ -379,6 +383,9 @@ export function DetailsScreen({
   const phoneTyped = state.contact.phone.trim().length > 0;
   const phoneValid = phoneLooksValid(state.contact.phone);
   const emailValid = looksLikeEmail(state.contact.email);
+  // Only lock an address that is present and well-formed; a blank or malformed
+  // one stays editable so the parent is never stuck with an unfixable field.
+  const emailLocked = emailReadOnly && state.contact.email.trim().length > 0 && emailValid;
   const showPhoneError = !phoneValid && (attempted || (phoneTyped && focused !== 'phone'));
   const showEmailError = !emailValid && (attempted || focused !== 'email');
   const showTermsError = attempted && !state.consentTerms;
@@ -588,6 +595,8 @@ export function DetailsScreen({
           autoComplete="email"
           className={inputClass()}
           value={state.contact.email}
+          readOnly={emailLocked || undefined}
+          aria-readonly={emailLocked || undefined}
           aria-describedby={field('email-help')}
           aria-invalid={showEmailError || undefined}
           onFocus={() => setFocused('email')}
@@ -595,7 +604,7 @@ export function DetailsScreen({
           onChange={(event) => setContact('email', event.target.value)}
         />
         <Field.Description id={field('email-help')}>
-          {labels['details.email.help']}
+          {emailLocked ? labels['details.email.lockedHelp'] : labels['details.email.help']}
         </Field.Description>
         {showEmailError && <Field.Error>{labels['details.email.error']}</Field.Error>}
       </Field>

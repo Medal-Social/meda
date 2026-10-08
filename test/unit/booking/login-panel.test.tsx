@@ -77,6 +77,54 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+describe('LoginPanel, emailCollapsed', () => {
+  it('shows Vipps first, then an e-mail button that opens and focuses the form', () => {
+    renderPanel({ emailCollapsed: true });
+    const buttons = screen.getAllByRole('button');
+    expect(buttons[0]).toHaveAccessibleName(labels['vipps.button']);
+    expect(screen.queryByLabelText(labels['login.emailLabel'])).toBeNull();
+    expect(screen.queryByText(labels['login.or'])).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: labels['login.continueEmail'] }));
+    const input = screen.getByLabelText(labels['login.emailLabel']);
+    expect(input).toHaveFocus();
+    expect(screen.queryByRole('button', { name: labels['login.continueEmail'] })).toBeNull();
+    expect(screen.queryByText(labels['login.or'])).toBeNull();
+  });
+
+  it('draws the form directly without Vipps', () => {
+    renderPanel({ emailCollapsed: true, onVipps: undefined });
+    expect(screen.getByLabelText(labels['login.emailLabel'])).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: labels['login.continueEmail'] })).toBeNull();
+  });
+
+  it('keeps the form open through memory', () => {
+    renderPanel({
+      emailCollapsed: true,
+      memory: { mode: 'start', email: '', sentTo: '', resendAt: 0, emailOpen: true },
+      onMemoryChange: vi.fn(),
+    });
+    const input = screen.getByLabelText(labels['login.emailLabel']);
+    expect(input).toBeInTheDocument();
+    // Restored from memory, not tapped: focus is not stolen.
+    expect(input).not.toHaveFocus();
+  });
+
+  it('a closed memory shows the e-mail button again', () => {
+    renderPanel({
+      emailCollapsed: true,
+      memory: { mode: 'start', email: '', sentTo: '', resendAt: 0, emailOpen: false },
+      onMemoryChange: vi.fn(),
+    });
+    expect(screen.getByRole('button', { name: labels['login.continueEmail'] })).toBeInTheDocument();
+    expect(screen.queryByLabelText(labels['login.emailLabel'])).toBeNull();
+  });
+
+  it('still draws the «or» divider when not collapsed', () => {
+    renderPanel();
+    expect(screen.getByText(labels['login.or'])).toBeInTheDocument();
+  });
+});
+
 describe('LoginPanel, first screen', () => {
   it('puts Vipps above the e-mail form, with an «or» between', () => {
     const { container } = renderPanel();
@@ -154,6 +202,20 @@ describe('LoginPanel, asking for a code', () => {
     expect(screen.queryByLabelText(labels['otp.label'])).toBeNull();
   });
 
+  it('shows the throttled notice, not the address as invalid, when sending is rate-limited', async () => {
+    onStartLogin.mockResolvedValue({ ok: false, reason: 'throttled' });
+    renderPanel();
+    const input = screen.getByLabelText(labels['login.emailLabel']);
+    fireEvent.change(input, { target: { value: EMAIL } });
+    fireEvent.click(screen.getByRole('button', { name: labels['login.sendCode'] }));
+
+    expect(await screen.findByText(labels['login.notice.throttled'])).toBeInTheDocument();
+    expect(screen.queryByText(labels['login.notice.unreachable'])).toBeNull();
+    expect(screen.getByLabelText(labels['login.emailLabel'])).toBeInTheDocument();
+    expect(screen.queryByLabelText(labels['otp.label'])).toBeNull();
+    expect(input).not.toHaveAttribute('aria-invalid');
+  });
+
   it('treats a thrown start as unreachable', async () => {
     onStartLogin.mockRejectedValue(new Error('network'));
     renderPanel();
@@ -188,6 +250,14 @@ describe('LoginPanel, asking for a code', () => {
 
     expect(screen.getByLabelText(labels['login.emailLabel'])).toHaveValue(EMAIL);
     expect(screen.queryByLabelText(labels['otp.label'])).toBeNull();
+  });
+
+  it('collapsed: «use e-mail instead» from a Vipps confirm opens the form, not the two buttons', async () => {
+    renderPanel({ emailCollapsed: true, vippsConfirm: { to: 'd•••@e•••.com' } });
+    fireEvent.click(await screen.findByRole('button', { name: labels['login.useEmailInstead'] }));
+
+    expect(screen.getByLabelText(labels['login.emailLabel'])).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: labels['login.continueEmail'] })).toBeNull();
   });
 });
 
