@@ -1,5 +1,11 @@
 # @medalsocial/meda
 
+## 3.4.1
+
+### Patch Changes
+
+- [#256](https://github.com/Medal-Social/meda/pull/256) [`e7f118a`](https://github.com/Medal-Social/meda/commit/e7f118a87a5e9a48582438765a775da70165c814) Thanks [@alioftech](https://github.com/alioftech)! - The booking time step shows a week of day chips. Later days in the fetched window are chosen from the month, not from a strip of every open day.
+
 ## 3.4.0
 
 ### Minor Changes
