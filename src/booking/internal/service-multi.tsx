@@ -4,6 +4,7 @@ import { Check } from 'lucide-react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { cn } from '../../lib/utils.js';
 import type { BookingFormat } from '../format.js';
+import { labelText } from '../labels.js';
 import { LiveStatus } from '../live-status.js';
 import type {
   ServiceMultiLabels,
@@ -81,6 +82,12 @@ export function PersonTabs({
             role="tab"
             id={serviceTabId(index)}
             aria-selected={selected}
+            // The tick, in words: «Theo · 7 år, ferdig». A name rather than a
+            // visually hidden span — Chrome reads an absolutely positioned
+            // span as a block and puts a space before the comma.
+            aria-label={
+              finished ? `${person.label}, ${labelText(labels['service.tabDone'])}` : undefined
+            }
             // Only the open tab's panel is on the page.
             aria-controls={selected ? serviceTabPanelId(index) : undefined}
             tabIndex={selected ? 0 : -1}
@@ -99,13 +106,6 @@ export function PersonTabs({
           >
             {finished && <Check aria-hidden="true" className="size-4 shrink-0" />}
             {person.label}
-            {/* The tick, in words: «Theo · 7 år, ferdig». */}
-            {finished && (
-              <span className="sr-only">
-                {', '}
-                {renderLabel(labels['service.tabDone'])}
-              </span>
-            )}
           </button>
         );
       })}

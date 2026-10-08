@@ -106,6 +106,12 @@ export interface ServiceScreenCategory {
   key: string;
   /** The pill's and the section heading's text. */
   label: string;
+  /**
+   * Who the group is for. In a family, a child's menu is `childCategory` plus
+   * every group marked `'any'` (an ear piercing, say) — never a grown-ups'
+   * group. Absent: the group is a grown-ups' one, as before.
+   */
+  audience?: 'child' | 'adult' | 'any';
 }
 
 /** A person's «same as last time», and the one-line note when it was swapped (e.g. for age). */
@@ -578,8 +584,9 @@ function defaultCategoryOf(
  * What a person in a party can have is what the business takes online and —
  * like the booking engine — nothing whose `maxPerBooking` is below the party's
  * size: the strictest service in a request sets the limit for all of it. With
- * a `childCategory`, a child gets that menu and an adult everything else,
- * which is often nothing, and is told so.
+ * a `childCategory`, a child gets that menu plus the groups meant for anyone
+ * (`audience: 'any'`), and an adult everything but the children's — which is
+ * often nothing, and they are told so.
  */
 function PartyServiceScreen({
   services,
@@ -593,6 +600,9 @@ function PartyServiceScreen({
 }: ServiceScreenProps & { party: NonNullable<ServiceScreenProps['party']>; shared: Shared }) {
   const { Card, labels, classNames } = shared;
   const fileUnder = categoryOf ?? defaultCategoryOf(categories);
+  const forAnyone = new Set(
+    categories.filter((category) => category.audience === 'any').map((category) => category.key)
+  );
   const size = party.people.length;
   const [active, setActive] = useState(0);
   // Multi-select: the engine books a grown-up's visit alongside the
@@ -610,7 +620,11 @@ function PartyServiceScreen({
       // note below that books the wrong thing.
       childCategory === undefined
         ? fits
-        : fits.filter((service) => (fileUnder(service) === childCategory) === !person.adult),
+        : fits.filter((service) => {
+            const key = fileUnder(service);
+            if (key === childCategory) return !person.adult;
+            return person.adult || forAnyone.has(key);
+          }),
       (service) => serviceFits(service, index)
     );
     const ticked = selection ? tickedBy(selection, index) : null;
