@@ -807,6 +807,89 @@ describe('ServiceScreen — multi-select (`selection`)', () => {
     ];
     const party = { people: PEOPLE, choices: [null, null, null], onPickFor: vi.fn() };
 
+    it('offers a child the services meant for anyone, not only the children’s', () => {
+      const EARS = { ...PIERCING, bookableOnline: true };
+      renderService({
+        services: [KIDS_CUT, EARS, ADULT_CUT],
+        categories: categories.map((category) =>
+          category.key === 'other' ? { ...category, audience: 'any' as const } : category
+        ),
+        party,
+        selection: selection({ lists: [[], [], []] }),
+      });
+      // Theo's tab: the kids' cut and the ear piercing — never the adult cut.
+      expect(screen.getByRole('checkbox', { name: /Barneklipp/ })).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: /Hull i ørene/ })).toBeInTheDocument();
+      expect(screen.queryByRole('checkbox', { name: /Voksenklipp/ })).toBeNull();
+    });
+
+    it('never hands a child an unlisted category through the «anyone» fallback group', () => {
+      const STREAKS = {
+        ...ADULT_CUT,
+        id: 'svc-streaks',
+        name: 'Striper',
+        category: 'unlisted',
+        maxPerBooking: 3,
+      };
+      renderService({
+        services: [KIDS_CUT, STREAKS],
+        // The last group is «anyone», and the display files unlisted categories under it.
+        categories: categories.map((category) =>
+          category.key === 'other' ? { ...category, audience: 'any' as const } : category
+        ),
+        party,
+        selection: selection({ lists: [[], [], []] }),
+      });
+      expect(screen.getByRole('checkbox', { name: /Barneklipp/ })).toBeInTheDocument();
+      expect(screen.queryByRole('checkbox', { name: /Striper/ })).toBeNull();
+    });
+
+    it('honours a caller’s own categoryOf when it files a service under an «anyone» group', () => {
+      const EARS = { ...PIERCING, bookableOnline: true, category: 'ear-piercing' };
+      renderService({
+        services: [KIDS_CUT, EARS],
+        categories: categories.map((category) =>
+          category.key === 'other' ? { ...category, audience: 'any' as const } : category
+        ),
+        categoryOf: (service) => (service.category === 'ear-piercing' ? 'other' : service.category),
+        party,
+        selection: selection({ lists: [[], [], []] }),
+      });
+      expect(screen.getByRole('checkbox', { name: /Hull i ørene/ })).toBeInTheDocument();
+    });
+
+    it('keeps every children’s group off a grown-up’s menu', () => {
+      // A second children's group besides `childCategory`.
+      const TODDLERS = {
+        ...KIDS_CUT,
+        id: 'svc-toddler',
+        name: 'Småbarnsklipp',
+        category: 'colour',
+      };
+      renderService({
+        services: [TODDLERS, ADULT_CUT],
+        categories: categories.map((category) =>
+          category.key === 'colour' ? { ...category, audience: 'child' as const } : category
+        ),
+        party,
+        selection: selection({ lists: [[], [], []] }),
+      });
+      // The grown-up's tab (third person).
+      fireEvent.click(screen.getAllByRole('tab')[2] as HTMLElement);
+      expect(screen.getByRole('checkbox', { name: /Voksenklipp/ })).toBeInTheDocument();
+      expect(screen.queryByRole('checkbox', { name: /Småbarnsklipp/ })).toBeNull();
+    });
+
+    it('keeps a child to the children’s services when no category says «anyone»', () => {
+      renderService({
+        services: [KIDS_CUT, { ...PIERCING, bookableOnline: true }],
+        party,
+        selection: selection({ lists: [[], [], []] }),
+      });
+      expect(screen.getByRole('checkbox', { name: /Barneklipp/ })).toBeInTheDocument();
+      expect(screen.queryByRole('checkbox', { name: /Hull i ørene/ })).toBeNull();
+    });
+
     it('gives each person a tab, the first open, with a tick on whoever has something', () => {
       renderService({
         services: [KIDS_CUT, KIDS_WASH, ADULT_CUT],
