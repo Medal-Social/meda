@@ -978,25 +978,72 @@ describe('TimeScreen — finding a time fast', () => {
     expect(screen.queryByRole('region', { name: 'Ledig snart' })).toBeNull();
   });
 
-  it('marks how much room each day has, and says «fullt» on a day with none', () => {
+  const openDay = (day: number): BookingDayDto => ({
+    dayKey: `2026-09-${pad(day)}`,
+    opensTs: osloTs(9, 0, day),
+    closesTs: osloTs(17, 0, day),
+    lastStartTs: osloTs(16, 30, day),
+  });
+  const dayChips = () =>
+    within(
+      screen.getByRole('group', { name: timeLabelsNb['time.dayStrip.legend'] as string })
+    ).getAllByRole('button');
+  const chipWith = (text: string) => dayChips().find((chip) => chip.textContent?.includes(text));
+
+  it('marks how much room each day has, «1 ledig» in the singular, as 44 px chips', () => {
     const many = Array.from({ length: 8 }, (_, index) => slot('res-ada', 9, index * 5, 17));
     renderTime({
       slots: [...many, slot('res-ada', 10, 0, 18)],
-      days: [osloTs(12, 0, 17), osloTs(12, 0, 18), osloTs(12, 0, 16)],
-      openDays: null,
+      days: [osloTs(12, 0, 17), osloTs(12, 0, 18)],
+      openDays: [openDay(17), openDay(18)],
       dayFullness: true,
     });
 
-    const strip = screen.getByRole('group', {
-      name: timeLabelsNb['time.dayStrip.legend'] as string,
-    });
-    const chips = within(strip).getAllByRole('button');
-    const byText = (text: string) => chips.find((chip) => chip.textContent?.includes(text));
+    expect(chipWith('8 ledige')?.querySelectorAll('[data-filled]')).toHaveLength(3);
+    expect(chipWith('1 ledig')?.querySelectorAll('[data-filled]')).toHaveLength(1);
+    expect(chipWith('1 ledige')).toBeUndefined();
+    for (const chip of dayChips()) expect(chip.className).toContain('min-h-11');
+  });
 
-    expect(byText('8 ledige')?.querySelectorAll('[data-filled]')).toHaveLength(3);
-    expect(byText('1 ledige')?.querySelectorAll('[data-filled]')).toHaveLength(1);
-    expect(byText('fullt')).toBeDefined();
-    for (const chip of chips) expect(chip.className).toContain('min-h-11');
+  it('says «fullt» only for an open day, asked for everyone', () => {
+    renderTime({
+      slots: [slot('res-ada', 10, 0, 17)],
+      days: [osloTs(12, 0, 17), osloTs(12, 0, 16)],
+      openDays: [openDay(16), openDay(17)],
+      now: osloTs(8, 0, 15),
+      dayFullness: true,
+    });
+    expect(chipWith('fullt')).toBeDefined();
+  });
+
+  it('does not claim «fullt» when the hours are unknown or one stylist was asked for', () => {
+    const props = {
+      slots: [slot('res-ada', 10, 0, 17)],
+      days: [osloTs(12, 0, 17), osloTs(12, 0, 16)],
+      now: osloTs(8, 0, 15),
+      dayFullness: true,
+    };
+    const unknown = renderTime({ ...props, openDays: null });
+    expect(chipWith('fullt')).toBeUndefined();
+    unknown.unmount();
+
+    renderTime({ ...props, openDays: [openDay(16), openDay(17)], stylistName: 'Ada Demo' });
+    expect(chipWith('fullt')).toBeUndefined();
+  });
+
+  it('shows a weekend card’s surcharge on the card, since the card books without the notice', () => {
+    renderTime({
+      slots: [slot('res-ada', 10, 0, 19), slot('res-ada', 11, 0, 21)],
+      soonest: { resolveStylist },
+      weekendNote,
+    });
+    const cards = within(screen.getByRole('region', { name: 'Ledig snart' })).getAllByRole(
+      'button'
+    );
+    expect(within(cards[0] as HTMLElement).getByTestId('soonest-surcharge')).toHaveTextContent(
+      /helgetillegg/
+    );
+    expect(within(cards[1] as HTMLElement).queryByTestId('soonest-surcharge')).toBeNull();
   });
 
   it('keeps the plain chip without dayFullness', () => {

@@ -70,7 +70,6 @@ export const Default: Story = {
   },
 };
 
-/** English, with a slot just taken: the two nearest are ringed. */
 /** «Ledig snart» above the days, and how full each day is on its chip. */
 export const FindFast: Story = {
   args: {
@@ -84,6 +83,7 @@ export const FindFast: Story = {
   },
 };
 
+/** English, with a slot just taken: the two nearest are ringed. */
 export const English: Story = {
   args: {
     labels: timeLabelsEn,

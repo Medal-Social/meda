@@ -99,6 +99,8 @@ export const TIME_SCREEN_FINDER_LABEL_KEYS = [
   'time.soonest.with',
   /** Screen-reader text of a day chip with openings: `{count}`, e.g. «{count} free». */
   'time.dayChip.free',
+  /** The same for exactly one opening, where the language needs it (nb «1 ledig»). Falls back to `free`. */
+  'time.dayChip.freeOne',
   /** A day chip with none, shown and read, e.g. «full». */
   'time.dayChip.full',
 ] as const;
@@ -206,7 +208,7 @@ export function DefaultDayChip({
       )}
     >
       <span>{label}</span>
-      {free === 0 ? (
+      {free === 0 && freeLabel ? (
         <span className="text-[11px] font-medium leading-none">{freeLabel}</span>
       ) : (
         <>
@@ -708,6 +710,7 @@ export function TimeScreen({
           slots={soonestSlots}
           now={now}
           resolveStylist={soonest?.resolveStylist}
+          weekendNote={weekendNote}
           onPick={onPick}
           className={classNames?.soonest}
         />
@@ -726,7 +729,14 @@ export function TimeScreen({
                 selected={selected}
                 onSelect={() => setTappedDayKey(clock.dayKey(day))}
                 {...(dayFullness
-                  ? dayFreeProps(labels, freeByDay.get(clock.dayKey(day)) ?? 0)
+                  ? dayFreeProps(
+                      labels,
+                      freeByDay.get(clock.dayKey(day)) ?? 0,
+                      // «Full» only when it is true of the business: an open
+                      // day, asked for everyone — not hours that could not be
+                      // read, nor a day one named stylist does not work.
+                      stylistName === null && dayStanding(clock, day, openDays, now) === 'open'
+                    )
                   : {})}
                 className={cn(
                   'rounded-full',
@@ -833,9 +843,28 @@ export function TimeScreen({
   );
 }
 
+/** The weekend note as one plain sentence, for a card that books without the notice on screen. */
+function weekendSentenceText(
+  labels: TimeScreenLabels,
+  format: BookingFormat,
+  note: WeekendNote
+): string {
+  const price = format.price(note.priceOre);
+  return note.pct === null
+    ? fillLabel(labels['time.weekend.mixed'], { price })
+    : fillLabel(labels['time.weekend.pct'], { pct: note.pct, price });
+}
+
 /** A day chip's `free` and `freeLabel`. */
-function dayFreeProps(labels: TimeScreenLabels, free: number): { free: number; freeLabel: string } {
-  const label = free === 0 ? labels['time.dayChip.full'] : labels['time.dayChip.free'];
+function dayFreeProps(
+  labels: TimeScreenLabels,
+  free: number,
+  canClaimFull: boolean
+): { free: number; freeLabel: string } {
+  let label: BookingLabel | undefined;
+  if (free === 0) label = canClaimFull ? labels['time.dayChip.full'] : undefined;
+  else if (free === 1) label = labels['time.dayChip.freeOne'] ?? labels['time.dayChip.free'];
+  else label = labels['time.dayChip.free'];
   return { free, freeLabel: label ? fillLabel(label, { count: free }) : '' };
 }
 
@@ -852,6 +881,7 @@ function SoonestRow({
   slots,
   now,
   resolveStylist,
+  weekendNote,
   onPick,
   className,
 }: {
@@ -860,6 +890,7 @@ function SoonestRow({
   slots: BookingSlotDto[];
   now: number;
   resolveStylist?: ResolveStylist;
+  weekendNote?: (dayTs: number) => WeekendNote | null;
   onPick: (slot: BookingSlotDto) => void;
   className?: string;
 }) {
@@ -884,9 +915,14 @@ function SoonestRow({
           const day = clock.dayChip(slot.startTs, now);
           const time = clock.formatTime(slot.startTs);
           const name = stylist ? format.stylistName(stylist.name) : null;
+          // A weekend card says its surcharge itself: the notice under the
+          // days only speaks for the day on screen, and a card books without it.
+          const note = clock.isWeekend(slot.startTs) ? (weekendNote?.(slot.startTs) ?? null) : null;
+          const surcharge = note ? weekendSentenceText(labels, format, note) : null;
           const ariaLabel = [
             pick ? fillLabel(pick, { day, time }) : `${day} ${time}`,
             name && withWho ? fillLabel(withWho, { stylist: name }) : null,
+            surcharge,
           ]
             .filter(Boolean)
             .join(' ');
@@ -920,6 +956,14 @@ function SoonestRow({
                       />
                     )}
                     <span className="truncate">{name}</span>
+                  </span>
+                )}
+                {surcharge && (
+                  <span
+                    data-testid="soonest-surcharge"
+                    className="max-w-full text-[11px] leading-tight text-muted-foreground"
+                  >
+                    {surcharge}
                   </span>
                 )}
               </button>

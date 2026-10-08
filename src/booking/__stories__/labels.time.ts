@@ -49,6 +49,7 @@ export const timeLabelsNb: TimeScreenLabels = {
   'time.soonest.pick': '{day} kl. {time}',
   'time.soonest.with': 'hos {stylist}',
   'time.dayChip.free': '{count} ledige',
+  'time.dayChip.freeOne': '{count} ledig',
   'time.dayChip.full': 'fullt',
 };
 
@@ -93,6 +94,7 @@ export const timeLabelsEn: TimeScreenLabels = {
   'time.soonest.pick': '{day} at {time}',
   'time.soonest.with': 'with {stylist}',
   'time.dayChip.free': '{count} free',
+  'time.dayChip.freeOne': '{count} free',
   'time.dayChip.full': 'full',
 };
 
