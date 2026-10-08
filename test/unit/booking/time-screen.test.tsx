@@ -914,3 +914,150 @@ describe('TakenToast', () => {
     expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 });
+
+describe('TimeScreen — finding a time fast', () => {
+  const stylists: Record<string, { name: string; photoUrl?: string | null }> = {
+    'res-ada': { name: 'Ada Demo', photoUrl: '/avatar/ada' },
+    'res-bo': { name: 'Bo Eksempel' },
+  };
+  const resolveStylist = (id: string) => stylists[id] ?? null;
+  const slot = (resourceId: string, hour: number, minute = 0, day = 17): BookingSlotDto => ({
+    startTs: osloTs(hour, minute, day),
+    resourceId,
+  });
+
+  it('puts the three earliest starts across the window first, with who each is with', () => {
+    renderTime({
+      slots: [
+        slot('res-bo', 14, 0, 18),
+        slot('res-ada', 10),
+        slot('res-bo', 9, 30),
+        slot('res-ada', 11, 0, 21),
+      ],
+      soonest: { resolveStylist },
+    });
+
+    const row = screen.getByRole('region', { name: 'Ledig snart' });
+    const cards = within(row).getAllByRole('button');
+    expect(cards).toHaveLength(3);
+    expect(cards[0]).toHaveAccessibleName(
+      `${demoFormatNb.clock.dayChip(osloTs(9, 30), DEMO_NOW)} kl. 09:30 hos Bo Eksempel`
+    );
+    expect(cards[1]).toHaveTextContent('10:00');
+    expect(cards[1]).toHaveTextContent('Ada Demo');
+    expect(cards[2]).toHaveTextContent('14:00');
+  });
+
+  it('books exactly the slot the card shows', () => {
+    const onPick = vi.fn();
+    const first = slot('res-bo', 9, 30);
+    renderTime({ slots: [first, slot('res-ada', 10)], soonest: { resolveStylist }, onPick });
+
+    fireEvent.click(
+      within(screen.getByRole('region', { name: 'Ledig snart' })).getAllByRole(
+        'button'
+      )[0] as HTMLElement
+    );
+    expect(onPick).toHaveBeenCalledWith(first);
+  });
+
+  it('draws no soonest row without the prop, for a move, or with nothing free', () => {
+    const { unmount } = renderTime({ slots: [slot('res-ada', 10)] });
+    expect(screen.queryByRole('region', { name: 'Ledig snart' })).toBeNull();
+    unmount();
+
+    const moved = renderTime({
+      slots: [slot('res-ada', 10)],
+      soonest: {},
+      currentSlotTs: osloTs(15),
+    });
+    expect(screen.queryByRole('region', { name: 'Ledig snart' })).toBeNull();
+    moved.unmount();
+
+    renderTime({ slots: [], soonest: {} });
+    expect(screen.queryByRole('region', { name: 'Ledig snart' })).toBeNull();
+  });
+
+  const openDay = (day: number): BookingDayDto => ({
+    dayKey: `2026-09-${pad(day)}`,
+    opensTs: osloTs(9, 0, day),
+    closesTs: osloTs(17, 0, day),
+    lastStartTs: osloTs(16, 30, day),
+  });
+  const dayChips = () =>
+    within(
+      screen.getByRole('group', { name: timeLabelsNb['time.dayStrip.legend'] as string })
+    ).getAllByRole('button');
+  const chipWith = (text: string) => dayChips().find((chip) => chip.textContent?.includes(text));
+
+  it('marks how much room each day has, «1 ledig» in the singular, as 44 px chips', () => {
+    const many = Array.from({ length: 8 }, (_, index) => slot('res-ada', 9, index * 5, 17));
+    renderTime({
+      slots: [...many, slot('res-ada', 10, 0, 18)],
+      days: [osloTs(12, 0, 17), osloTs(12, 0, 18)],
+      openDays: [openDay(17), openDay(18)],
+      dayFullness: true,
+    });
+
+    expect(chipWith('8 ledige')?.querySelectorAll('[data-filled]')).toHaveLength(3);
+    expect(chipWith('1 ledig')?.querySelectorAll('[data-filled]')).toHaveLength(1);
+    expect(chipWith('1 ledige')).toBeUndefined();
+    for (const chip of dayChips()) expect(chip.className).toContain('min-h-11');
+  });
+
+  it('says «fullt» only for an open day, asked for everyone', () => {
+    renderTime({
+      slots: [slot('res-ada', 10, 0, 17)],
+      days: [osloTs(12, 0, 17), osloTs(12, 0, 16)],
+      openDays: [openDay(16), openDay(17)],
+      now: osloTs(8, 0, 15),
+      dayFullness: true,
+    });
+    expect(chipWith('fullt')).toBeDefined();
+  });
+
+  it('does not claim «fullt» when the hours are unknown or one stylist was asked for', () => {
+    const props = {
+      slots: [slot('res-ada', 10, 0, 17)],
+      days: [osloTs(12, 0, 17), osloTs(12, 0, 16)],
+      now: osloTs(8, 0, 15),
+      dayFullness: true,
+    };
+    const unknown = renderTime({ ...props, openDays: null });
+    expect(chipWith('fullt')).toBeUndefined();
+    unknown.unmount();
+
+    renderTime({ ...props, openDays: [openDay(16), openDay(17)], stylistName: 'Ada Demo' });
+    expect(chipWith('fullt')).toBeUndefined();
+  });
+
+  it('shows a weekend card’s surcharge on the card, since the card books without the notice', () => {
+    renderTime({
+      slots: [slot('res-ada', 10, 0, 19), slot('res-ada', 11, 0, 21)],
+      soonest: { resolveStylist },
+      weekendNote,
+    });
+    const cards = within(screen.getByRole('region', { name: 'Ledig snart' })).getAllByRole(
+      'button'
+    );
+    expect(within(cards[0] as HTMLElement).getByTestId('soonest-surcharge')).toHaveTextContent(
+      /helgetillegg/
+    );
+    expect(within(cards[1] as HTMLElement).queryByTestId('soonest-surcharge')).toBeNull();
+  });
+
+  it('keeps the plain chip without dayFullness', () => {
+    renderTime({ slots: [slot('res-ada', 10)], days: [osloTs(12, 0, 17), osloTs(12, 0, 18)] });
+    expect(screen.queryByTestId('day-free-marks')).toBeNull();
+  });
+
+  it('has no axe violations with both on', async () => {
+    const { container } = renderTime({
+      slots: [slot('res-bo', 9, 30), slot('res-ada', 10), slot('res-ada', 10, 0, 18)],
+      days: [osloTs(12, 0, 17), osloTs(12, 0, 18)],
+      soonest: { resolveStylist },
+      dayFullness: true,
+    });
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});

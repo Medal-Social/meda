@@ -45,6 +45,12 @@ export const timeLabelsNb: TimeScreenLabels = {
   'time.skeleton.dayPlaceholder': 'man. 00.',
   'time.taken.message': 'Den tiden ble akkurat tatt – her er de nærmeste',
   'time.taken.close': 'Lukk',
+  'time.soonest.heading': 'Ledig snart',
+  'time.soonest.pick': '{day} kl. {time}',
+  'time.soonest.with': 'hos {stylist}',
+  'time.dayChip.free': '{count} ledige',
+  'time.dayChip.freeOne': '{count} ledig',
+  'time.dayChip.full': 'fullt',
 };
 
 export const timeLabelsEn: TimeScreenLabels = {
@@ -84,6 +90,12 @@ export const timeLabelsEn: TimeScreenLabels = {
   'time.skeleton.dayPlaceholder': 'Mon 00',
   'time.taken.message': 'That time was just taken – here are the nearest ones',
   'time.taken.close': 'Close',
+  'time.soonest.heading': 'Free soon',
+  'time.soonest.pick': '{day} at {time}',
+  'time.soonest.with': 'with {stylist}',
+  'time.dayChip.free': '{count} free',
+  'time.dayChip.freeOne': '{count} free',
+  'time.dayChip.full': 'full',
 };
 
 export const manageLabelsNb: ManageScreenLabels = {
