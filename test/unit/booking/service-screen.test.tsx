@@ -844,6 +844,20 @@ describe('ServiceScreen — multi-select (`selection`)', () => {
       expect(screen.queryByRole('checkbox', { name: /Striper/ })).toBeNull();
     });
 
+    it('honours a caller’s own categoryOf when it files a service under an «anyone» group', () => {
+      const EARS = { ...PIERCING, bookableOnline: true, category: 'ear-piercing' };
+      renderService({
+        services: [KIDS_CUT, EARS],
+        categories: categories.map((category) =>
+          category.key === 'other' ? { ...category, audience: 'any' as const } : category
+        ),
+        categoryOf: (service) => (service.category === 'ear-piercing' ? 'other' : service.category),
+        party,
+        selection: selection({ lists: [[], [], []] }),
+      });
+      expect(screen.getByRole('checkbox', { name: /Hull i ørene/ })).toBeInTheDocument();
+    });
+
     it('keeps every children’s group off a grown-up’s menu', () => {
       // A second children's group besides `childCategory`.
       const TODDLERS = {

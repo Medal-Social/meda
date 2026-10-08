@@ -626,11 +626,12 @@ function PartyServiceScreen({
         : fits.filter((service) => {
             const key = fileUnder(service);
             if (forChildren.has(key)) return !person.adult;
-            // A child gets an «anyone» group only when the service's OWN
-            // category is that group — never through the display fallback,
-            // which files an unlisted (possibly grown-up) category under the
-            // last group.
-            return person.adult || forAnyone.has(service.category);
+            // A child gets an «anyone» group only through an EXPLICIT mapping:
+            // the caller's own `categoryOf` when it passes one (its mapping is
+            // its decision), else the service's own category — never the
+            // built-in display fallback, which files an unlisted (possibly
+            // grown-up) category under the last group.
+            return person.adult || forAnyone.has(categoryOf ? key : service.category);
           }),
       (service) => serviceFits(service, index)
     );
