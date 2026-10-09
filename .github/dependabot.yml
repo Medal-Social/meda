@@ -48,7 +48,6 @@ updates:
     # version has time to be caught upstream before it lands here.
     cooldown:
       default-days: 5
-      semver-major-days: 14
     commit-message:
       prefix: ci(actions)
     groups:
