@@ -51,6 +51,13 @@ export const whoScreenLabelsNb: WhoScreenLabels = {
   'who.family.legend': 'Velg opptil {max}',
   'who.family.self': 'Meg selv (voksen)',
   'who.family.limit': 'En bestilling kan gjelde opptil {max} personer.',
+  'who.party.children': 'Barn',
+  'who.party.childrenNote': '0–12 år',
+  'who.party.adult': 'Jeg skal også klippes',
+  'who.party.adultNote': 'Samtidig, i stolen ved siden av',
+  'who.party.fewer': 'Ett barn færre',
+  'who.party.more': 'Ett barn til',
+  'who.party.count': '{count} barn',
 };
 
 export const whoScreenLabelsEn: WhoScreenLabels = {
@@ -64,6 +71,13 @@ export const whoScreenLabelsEn: WhoScreenLabels = {
   'who.family.legend': 'Choose up to {max}',
   'who.family.self': 'Myself (adult)',
   'who.family.limit': 'One booking can include up to {max} people.',
+  'who.party.children': 'Children',
+  'who.party.childrenNote': 'Ages 0–12',
+  'who.party.adult': 'I’m getting a cut too',
+  'who.party.adultNote': 'At the same time, in the next chair',
+  'who.party.fewer': 'One child fewer',
+  'who.party.more': 'One more child',
+  'who.party.count': '{count} children',
 };
 
 /** The multi-select step's labels (`ServiceSelection.labels`). */

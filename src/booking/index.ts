@@ -8,6 +8,7 @@
 // `@medalsocial/meda/primitives/styles.css` after the bridge.
 
 export * from './add-child-sheet.js';
+export * from './booking-recap.js';
 export * from './booking-skeleton.js';
 export * from './confirmation.js';
 export * from './details-screen.js';

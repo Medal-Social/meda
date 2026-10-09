@@ -86,6 +86,12 @@ export interface StylistOption {
   /** The avatar's fallback: initials, or a symbol for «first available». */
   badge: string;
   photoUrl?: string | null;
+  /**
+   * For «first available» with `firstAvailableFaces`: the photos of the
+   * stylists it can be. Two or more draw a small group in the avatar instead
+   * of the badge.
+   */
+  faces?: readonly string[];
   /** The formatted next opening, when there is one. */
   availability?: string | null;
   availabilityLoading?: boolean;
@@ -146,6 +152,18 @@ export interface StylistScreenProps {
   notice?: string | null;
   onPick: (resourceId: string | null) => void;
   /**
+   * Draw «first available» as the faces of the first three qualified stylists
+   * with a photo (in the salon's order) instead of its badge: it means «any of
+   * these», so it shows them, and only ones who can do the whole basket.
+   * Falls back to the badge with fewer than two photos.
+   */
+  firstAvailableFaces?: boolean;
+  /**
+   * On a phone, fade the right edge of the sideways row so a cut-off card reads
+   * as «there is more», not as a layout bug.
+   */
+  edgeFade?: boolean;
+  /**
    * Present only for a family. One child gets no picker: «one after the
    * other» is not a choice when there is nobody to be after.
    */
@@ -177,6 +195,16 @@ export interface StylistScreenProps {
 const OPTION_HEIGHT = 'h-32 md:h-24';
 
 const DEFAULT_SKELETON_COUNT = 5;
+
+/** How many faces «first available» draws with `firstAvailableFaces`. */
+const FACE_COUNT = 3;
+
+/** One on top, two below, overlapping like people standing together. */
+const FACE_POSITIONS = [
+  'left-1/2 top-[3px] -translate-x-1/2',
+  'bottom-[3px] left-[3px]',
+  'bottom-[3px] right-[3px]',
+] as const;
 
 const HEADING_ID = 'booking-stylist-heading';
 
@@ -216,6 +244,8 @@ export function StylistScreen({
   pendingName = null,
   notice = null,
   onPick,
+  firstAvailableFaces = false,
+  edgeFade = false,
   party,
   classNames,
   components,
@@ -246,6 +276,16 @@ export function StylistScreen({
       shortName: labelText(labels['stylist.firstAvailable']),
       subtitle: labelText(labels['stylist.firstAvailableSubtitle']),
       badge: labelText(labels['stylist.firstAvailableBadge']),
+      ...(firstAvailableFaces && !loading
+        ? {
+            // Distinct photos: two stylists sharing one picture is one face.
+            faces: [
+              ...new Set(
+                qualified.flatMap((resource) => (resource.photoUrl ? [resource.photoUrl] : []))
+              ),
+            ].slice(0, FACE_COUNT),
+          }
+        : {}),
     },
     ...(loading
       ? held
@@ -326,6 +366,7 @@ export function StylistScreen({
           onPick={onPick}
           labels={labels}
           classNames={classNames}
+          edgeFade={edgeFade}
           Card={components?.StylistCard ?? DefaultStylistCard}
         />
       )}
@@ -350,6 +391,7 @@ function StylistRadioGroup({
   onPick,
   labels,
   classNames,
+  edgeFade,
   Card,
 }: {
   options: StylistOption[];
@@ -359,6 +401,7 @@ function StylistRadioGroup({
   onPick: (resourceId: string | null) => void;
   labels: StylistScreenLabels;
   classNames: SlotClassNames<StylistScreenSlot> | undefined;
+  edgeFade: boolean;
   Card: ComponentType<StylistCardProps>;
 }) {
   const groupRef = useRef<HTMLDivElement>(null);
@@ -425,6 +468,10 @@ function StylistRadioGroup({
         classNames,
         'group',
         'relative -mx-1 flex h-36 snap-x snap-mandatory scroll-px-1 gap-1 overflow-x-auto overscroll-x-contain px-1 py-2',
+        // The last few pixels fade, so the cut-off card reads as «more this way».
+        // The trailing room lets the last card scroll wholly clear of the fade.
+        edgeFade &&
+          'pr-10 [mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)] md:[mask-image:none]',
         'md:mx-0 md:h-auto md:snap-none md:flex-col md:gap-2 md:overflow-visible md:p-0'
       )}
     >
@@ -534,6 +581,7 @@ export function DefaultStylistCard({
     subtitle,
     badge,
     photoUrl,
+    faces,
     availability,
     availabilityLoading,
     reserveAvailability,
@@ -577,19 +625,7 @@ export function DefaultStylistCard({
             : 'ring-1 ring-border md:ring-0'
         )}
       >
-        {photoUrl ? (
-          <img
-            src={photoUrl}
-            alt=""
-            className="size-full object-cover"
-            width={56}
-            height={56}
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          badge
-        )}
+        <StylistAvatarContent photoUrl={photoUrl} faces={faces} badge={badge} />
       </span>
       <span className="flex w-full min-w-0 flex-col md:w-auto">
         <span aria-hidden="true" className="h-5 truncate text-sm font-medium md:hidden">
@@ -631,6 +667,52 @@ export function DefaultStylistCard({
       </span>
     </button>
   );
+}
+
+/**
+ * What fills the avatar circle: the stylist's photo, a small group of faces
+ * for «first available» (`firstAvailableFaces`), or the badge.
+ */
+function StylistAvatarContent({
+  photoUrl,
+  faces,
+  badge,
+}: Pick<StylistOption, 'photoUrl' | 'faces' | 'badge'>) {
+  if (photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt=""
+        className="size-full object-cover"
+        width={56}
+        height={56}
+        loading="lazy"
+        decoding="async"
+      />
+    );
+  }
+  if (faces && faces.length >= 2) {
+    // A small group, for «any of these»: the faces of who it can be.
+    return (
+      <span data-testid="stylist-faces" className="relative size-full">
+        {faces.slice(0, FACE_POSITIONS.length).map((src, index) => (
+          <img
+            key={src}
+            src={src}
+            alt=""
+            width={30}
+            height={30}
+            decoding="async"
+            className={cn(
+              'absolute size-[30px] rounded-full object-cover ring-2 ring-background md:size-[26px]',
+              FACE_POSITIONS[index]
+            )}
+          />
+        ))}
+      </span>
+    );
+  }
+  return badge;
 }
 
 /** A stylist option before there is a stylist: the same box, the same circle, at both widths. */

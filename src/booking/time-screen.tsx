@@ -85,7 +85,28 @@ export const TIME_SCREEN_LABEL_KEYS = [
  *   finishes (end them with the dash); `closed` and `over` are whole sentences.
  * - `time.empty.callLink|callLinkAria` `{phone}`
  */
-export type TimeScreenLabels = Record<(typeof TIME_SCREEN_LABEL_KEYS)[number], BookingLabel>;
+/**
+ * Opt-in keys, for the `soonest` row and `dayFullness`. Placeholders:
+ * `time.soonest.pick` `{day}` `{time}`; `time.soonest.with` `{stylist}`;
+ * `time.dayChip.free` `{count}`.
+ */
+export const TIME_SCREEN_FINDER_LABEL_KEYS = [
+  /** Heading of the soonest-times row, e.g. «Free soon». */
+  'time.soonest.heading',
+  /** Accessible name of a soonest card: `{day}` `{time}`, e.g. «{day} at {time}». */
+  'time.soonest.pick',
+  /** Appended to it when the card names a stylist: `{stylist}`, e.g. «with {stylist}». */
+  'time.soonest.with',
+  /** Screen-reader text of a day chip with openings: `{count}`, e.g. «{count} free». */
+  'time.dayChip.free',
+  /** The same for exactly one opening, where the language needs it (nb «1 ledig»). Falls back to `free`. */
+  'time.dayChip.freeOne',
+  /** A day chip with none, shown and read, e.g. «full». */
+  'time.dayChip.full',
+] as const;
+
+export type TimeScreenLabels = Record<(typeof TIME_SCREEN_LABEL_KEYS)[number], BookingLabel> &
+  Partial<Record<(typeof TIME_SCREEN_FINDER_LABEL_KEYS)[number], BookingLabel>>;
 
 // ---------------------------------------------------------------------------
 // Slots and components
@@ -120,7 +141,8 @@ export type TimeScreenSlot =
   | 'parallel'
   | 'empty'
   | 'nextFree'
-  | 'shortNotice';
+  | 'shortNotice'
+  | 'soonest';
 
 export interface DayChipProps {
   /** An instant inside the day. */
@@ -131,19 +153,80 @@ export interface DayChipProps {
   /** The resolved classes (base + selected + slot overrides). */
   className: string;
   onSelect: () => void;
+  /**
+   * With `dayFullness`: how many starts the day has free (0 = full). Absent
+   * otherwise, and the chip is the plain one-line chip.
+   */
+  free?: number;
+  /** With `free`: what the marks say, read out (e.g. «4 free», «full»). */
+  freeLabel?: string;
+}
+
+/** How full a day looks, as filled marks out of three: 1–3 free, 4–7, 8 and more. */
+export function dayFreeMarks(free: number): 0 | 1 | 2 | 3 {
+  if (free <= 0) return 0;
+  if (free <= 3) return 1;
+  if (free <= 7) return 2;
+  return 3;
 }
 
 /** One chip of the day strip: an `aria-pressed` outline button. */
-export function DefaultDayChip({ label, selected, className, onSelect }: DayChipProps) {
+export function DefaultDayChip({
+  label,
+  selected,
+  className,
+  onSelect,
+  free,
+  freeLabel,
+}: DayChipProps) {
+  if (free === undefined) {
+    return (
+      <BookingButton
+        variant="outline"
+        size="sm"
+        aria-pressed={selected}
+        onClick={onSelect}
+        className={className}
+      >
+        {label}
+      </BookingButton>
+    );
+  }
+  const marks = dayFreeMarks(free);
+  // Two lines and a 44 px target: the day, and under it how much room it has,
+  // so a full day is seen before it is tapped rather than after.
   return (
     <BookingButton
       variant="outline"
       size="sm"
       aria-pressed={selected}
       onClick={onSelect}
-      className={className}
+      className={cn(
+        'h-auto min-h-11 flex-col gap-1 py-1.5',
+        free === 0 && !selected && 'text-muted-foreground',
+        className
+      )}
     >
-      {label}
+      <span>{label}</span>
+      {free === 0 && freeLabel ? (
+        <span className="text-[11px] font-medium leading-none">{freeLabel}</span>
+      ) : (
+        <>
+          <span aria-hidden="true" data-testid="day-free-marks" className="flex gap-0.5">
+            {[1, 2, 3].map((mark) => (
+              <span
+                key={mark}
+                data-filled={mark <= marks ? '' : undefined}
+                className={cn(
+                  'block h-[3px] w-2 rounded-full bg-current',
+                  mark > marks && 'opacity-25'
+                )}
+              />
+            ))}
+          </span>
+          {freeLabel && <span className="sr-only">{freeLabel}</span>}
+        </>
+      )}
     </BookingButton>
   );
 }
@@ -276,6 +359,22 @@ export interface TimeScreenProps {
   onPick: (slot: BookingSlotDto) => void;
   /** A family. Present, its slots replace `slots` entirely. */
   party?: TimeScreenParty;
+  /**
+   * A «free soon» row above the days: the `count` (default 3) earliest starts
+   * across the whole window, one tap each, so «when is the first time?» is
+   * answered before any day is chosen. `resolveStylist` names who each would
+   * be with (the stylist `onPick` books). Not drawn for a family or a move.
+   * Needs the `time.soonest.*` labels.
+   */
+  soonest?: {
+    count?: number;
+    resolveStylist?: (resourceId: string) => { name: string; photoUrl?: string | null } | null;
+  };
+  /**
+   * Draw each day chip with how many starts it has free (marks, or «full»),
+   * as a 44 px target. Needs the `time.dayChip.*` labels.
+   */
+  dayFullness?: boolean;
   /** «Now», for today / tomorrow and whether today is over. Defaults to `Date.now()`. */
   now?: number;
   classNames?: SlotClassNames<TimeScreenSlot>;
@@ -481,6 +580,8 @@ export function TimeScreen({
   monthView = false,
   onPick,
   party,
+  soonest,
+  dayFullness = false,
   now: nowProp,
   classNames,
   components,
@@ -498,6 +599,23 @@ export function TimeScreen({
     currentSlotTs !== null && !bookable.some((slot) => slot.startTs === currentSlotTs)
       ? [...bookable, { startTs: currentSlotTs, resourceId: null }]
       : bookable;
+
+  // Free starts per day, for the fullness marks (the current-hour marker is not free).
+  const freeByDay = new Map<string, number>();
+  if (dayFullness) {
+    for (const slot of bookable) {
+      if (slot.startTs === currentSlotTs) continue;
+      const key = clock.dayKey(slot.startTs);
+      freeByDay.set(key, (freeByDay.get(key) ?? 0) + 1);
+    }
+  }
+  const soonestSlots =
+    soonest && !party && currentSlotTs === null
+      ? [...bookable]
+          .filter((slot) => slot.startTs >= now)
+          .sort((a, b) => a.startTs - b.startTs)
+          .slice(0, soonest.count ?? 3)
+      : [];
   const partyByStart = new Map(party?.slots.map((slot) => [slot.startTs, slot]) ?? []);
 
   const offeredDays = buildDayStrip(
@@ -585,6 +703,19 @@ export function TimeScreen({
     >
       <TimeHeading labels={labels} className={classNames?.heading} />
 
+      {soonestSlots.length > 0 && (
+        <SoonestRow
+          labels={labels}
+          format={format}
+          slots={soonestSlots}
+          now={now}
+          resolveStylist={soonest?.resolveStylist}
+          weekendNote={weekendNote}
+          onPick={onPick}
+          className={classNames?.soonest}
+        />
+      )}
+
       {strip.length > 1 && (
         <fieldset className={slotClass(classNames, 'dayStrip', 'flex flex-wrap gap-2')}>
           <legend className="sr-only">{labels['time.dayStrip.legend']}</legend>
@@ -597,6 +728,19 @@ export function TimeScreen({
                 label={clock.dayChip(day, now)}
                 selected={selected}
                 onSelect={() => setTappedDayKey(clock.dayKey(day))}
+                {...(dayFullness
+                  ? dayFreeProps(
+                      labels,
+                      freeByDay.get(clock.dayKey(day)) ?? 0,
+                      // «Full» only when it is true of the business: an open
+                      // day, asked for everyone — not hours that could not be
+                      // read, nor a day one named stylist does not work, nor a
+                      // family's day (the other mode may still seat them).
+                      !party &&
+                        stylistName === null &&
+                        dayStanding(clock, day, openDays, now) === 'open'
+                    )
+                  : {})}
                 className={cn(
                   'rounded-full',
                   selected ? 'border-primary bg-primary/10 font-bold ring-2 ring-primary' : '',
@@ -698,6 +842,138 @@ export function TimeScreen({
           className={classNames?.shortNotice}
         />
       )}
+    </section>
+  );
+}
+
+/** The weekend note as one plain sentence, for a card that books without the notice on screen. */
+function weekendSentenceText(
+  labels: TimeScreenLabels,
+  format: BookingFormat,
+  note: WeekendNote
+): string {
+  const price = format.price(note.priceOre);
+  return note.pct === null
+    ? fillLabel(labels['time.weekend.mixed'], { price })
+    : fillLabel(labels['time.weekend.pct'], { pct: note.pct, price });
+}
+
+/** A day chip's `free` and `freeLabel`. */
+function dayFreeProps(
+  labels: TimeScreenLabels,
+  free: number,
+  canClaimFull: boolean
+): { free: number; freeLabel: string } {
+  let label: BookingLabel | undefined;
+  if (free === 0) label = canClaimFull ? labels['time.dayChip.full'] : undefined;
+  else if (free === 1) label = labels['time.dayChip.freeOne'] ?? labels['time.dayChip.free'];
+  else label = labels['time.dayChip.free'];
+  return { free, freeLabel: label ? fillLabel(label, { count: free }) : '' };
+}
+
+type ResolveStylist = (resourceId: string) => { name: string; photoUrl?: string | null } | null;
+
+/**
+ * «Free soon»: the earliest starts across the window as cards (the day, the
+ * time, and who it would be with), each booking exactly what `onPick` books
+ * for that start.
+ */
+function SoonestRow({
+  labels,
+  format,
+  slots,
+  now,
+  resolveStylist,
+  weekendNote,
+  onPick,
+  className,
+}: {
+  labels: TimeScreenLabels;
+  format: BookingFormat;
+  slots: BookingSlotDto[];
+  now: number;
+  resolveStylist?: ResolveStylist;
+  weekendNote?: (dayTs: number) => WeekendNote | null;
+  onPick: (slot: BookingSlotDto) => void;
+  className?: string;
+}) {
+  const { clock } = format;
+  const heading = labels['time.soonest.heading'];
+  const pick = labels['time.soonest.pick'];
+  const withWho = labels['time.soonest.with'];
+  return (
+    <section
+      aria-label={heading ? fillLabel(heading, {}) : undefined}
+      className={cn('space-y-2', className)}
+    >
+      {heading && (
+        <p aria-hidden="true" className="text-sm font-semibold text-muted-foreground">
+          {renderLabel(heading)}
+        </p>
+      )}
+      <ul className="grid grid-cols-3 gap-2">
+        {slots.map((slot) => {
+          const stylist =
+            slot.resourceId !== null && resolveStylist ? resolveStylist(slot.resourceId) : null;
+          const day = clock.dayChip(slot.startTs, now);
+          const time = clock.formatTime(slot.startTs);
+          const name = stylist ? format.stylistName(stylist.name) : null;
+          // A weekend card says its surcharge itself: the notice under the
+          // days only speaks for the day on screen, and a card books without it.
+          const note = clock.isWeekend(slot.startTs) ? (weekendNote?.(slot.startTs) ?? null) : null;
+          const surcharge = note ? weekendSentenceText(labels, format, note) : null;
+          const ariaLabel = [
+            pick ? fillLabel(pick, { day, time }) : `${day} ${time}`,
+            name && withWho ? fillLabel(withWho, { stylist: name }) : null,
+            surcharge,
+          ]
+            .filter(Boolean)
+            .join(' ');
+          return (
+            <li key={slot.startTs} className="min-w-0">
+              <button
+                type="button"
+                aria-label={ariaLabel}
+                onClick={() => onPick(slot)}
+                className={cn(
+                  'flex min-h-11 w-full flex-col items-start gap-0.5 rounded-lg border border-border bg-card px-3 py-2.5 text-left',
+                  'transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'
+                )}
+              >
+                <span className="max-w-full truncate text-xs font-medium text-muted-foreground">
+                  {day}
+                </span>
+                <span className="font-sans text-xl font-bold leading-tight text-primary tabular-nums">
+                  {time}
+                </span>
+                {name && (
+                  <span className="flex min-w-0 max-w-full items-center gap-1.5 text-xs">
+                    {stylist?.photoUrl && (
+                      <img
+                        src={stylist.photoUrl}
+                        alt=""
+                        width={20}
+                        height={20}
+                        decoding="async"
+                        className="size-5 shrink-0 rounded-full object-cover"
+                      />
+                    )}
+                    <span className="truncate">{name}</span>
+                  </span>
+                )}
+                {surcharge && (
+                  <span
+                    data-testid="soonest-surcharge"
+                    className="max-w-full text-[11px] leading-tight text-muted-foreground"
+                  >
+                    {surcharge}
+                  </span>
+                )}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }
