@@ -1,4 +1,5 @@
 import { ADD_CHILD_SHEET_LABEL_KEYS } from './add-child-sheet.js';
+import { BOOKING_RECAP_LABEL_KEYS } from './booking-recap.js';
 import { BOOKING_SKELETON_LABEL_KEYS } from './booking-skeleton.js';
 import { CONFIRMATION_LABEL_KEYS } from './confirmation.js';
 import { DETAILS_SCREEN_LABEL_KEYS } from './details-screen.js';
@@ -18,9 +19,9 @@ import { VIPPS_LINK_ROW_LABEL_KEYS } from './portal/vipps-link-row.js';
 import { VISIT_HISTORY_LABEL_KEYS } from './portal/visit-history.js';
 import { SERVICE_SCREEN_LABEL_KEYS, SERVICE_SCREEN_MULTI_LABEL_KEYS } from './service-screen.js';
 import { STYLIST_SCREEN_LABEL_KEYS } from './stylist-screen.js';
-import { SUMMARY_BAR_LABEL_KEYS } from './summary-bar.js';
-import { TIME_SCREEN_LABEL_KEYS } from './time-screen.js';
-import { WHO_SCREEN_LABEL_KEYS } from './who-screen.js';
+import { SUMMARY_BAR_HINT_LABEL_KEYS, SUMMARY_BAR_LABEL_KEYS } from './summary-bar.js';
+import { TIME_SCREEN_FINDER_LABEL_KEYS, TIME_SCREEN_LABEL_KEYS } from './time-screen.js';
+import { WHO_SCREEN_LABEL_KEYS, WHO_SCREEN_PARTY_LABEL_KEYS } from './who-screen.js';
 
 /**
  * Every label key any booking screen reads, once. A complete pack for a
@@ -33,14 +34,18 @@ import { WHO_SCREEN_LABEL_KEYS } from './who-screen.js';
 export const BOOKING_LABEL_KEYS = [
   ...new Set([
     ...WHO_SCREEN_LABEL_KEYS,
+    ...WHO_SCREEN_PARTY_LABEL_KEYS,
     ...ADD_CHILD_SHEET_LABEL_KEYS,
     ...SERVICE_SCREEN_LABEL_KEYS,
     ...SERVICE_SCREEN_MULTI_LABEL_KEYS,
     ...STYLIST_SCREEN_LABEL_KEYS,
     ...TIME_SCREEN_LABEL_KEYS,
+    ...TIME_SCREEN_FINDER_LABEL_KEYS,
     ...MANAGE_SCREEN_LABEL_KEYS,
+    ...BOOKING_RECAP_LABEL_KEYS,
     ...DETAILS_SCREEN_LABEL_KEYS,
     ...SUMMARY_BAR_LABEL_KEYS,
+    ...SUMMARY_BAR_HINT_LABEL_KEYS,
     ...CONFIRMATION_LABEL_KEYS,
     ...BOOKING_SKELETON_LABEL_KEYS,
     ...LOGIN_SHEET_LABEL_KEYS,
@@ -64,7 +69,12 @@ export type BookingLabelKey = BookingRequiredLabelKey | BookingOptionalLabelKey;
  * Keys added after a screen first shipped, for a feature a caller opts into.
  * A pack may leave them out; a screen using the feature needs them.
  */
-export type BookingOptionalLabelKey = (typeof SERVICE_SCREEN_MULTI_LABEL_KEYS)[number];
+export type BookingOptionalLabelKey =
+  | (typeof SERVICE_SCREEN_MULTI_LABEL_KEYS)[number]
+  | (typeof BOOKING_RECAP_LABEL_KEYS)[number]
+  | (typeof TIME_SCREEN_FINDER_LABEL_KEYS)[number]
+  | (typeof SUMMARY_BAR_HINT_LABEL_KEYS)[number]
+  | (typeof WHO_SCREEN_PARTY_LABEL_KEYS)[number];
 
 /** Keys every complete pack defines. */
 export type BookingRequiredLabelKey =

@@ -394,3 +394,132 @@ describe('WhoScreen — text nodes', () => {
     expect(nodes(screen.getByText('Velg opptil 3'))).toEqual(['Velg opptil ', '3']);
   });
 });
+
+describe('WhoScreen — a guest party (children and me)', () => {
+  const ADULT = { key: 'adult', adult: true } as const;
+  const guestParty = { child: guest, adult: ADULT };
+  const more = () => screen.getByRole('button', { name: labels['who.party.more'] as string });
+  const fewer = () => screen.getByRole('button', { name: labels['who.party.fewer'] as string });
+  const meToo = () => screen.getByRole('checkbox', { name: /Jeg skal også klippes/ });
+
+  it('starts at one child, so «next» is live from the first frame', () => {
+    const { onChoose } = renderWho({ guestParty });
+    expect(onChoose).toHaveBeenCalledWith([guest(1)], false);
+    // No chips in this mode.
+    expect(screen.queryByRole('radio', { name: '2 barn' })).toBeNull();
+  });
+
+  it('keeps a restored answer instead of resetting it', () => {
+    const { onChoose } = renderWho({ guestParty, people: [guest(1), guest(2)] });
+    expect(onChoose).not.toHaveBeenCalled();
+    expect(screen.getByText('2 barn', { selector: '.sr-only' })).toBeInTheDocument();
+  });
+
+  it('adds and removes children, live, never down to nobody', () => {
+    const { onChoose } = renderWho({ guestParty, people: [guest(1)] });
+    expect(fewer()).toBeDisabled();
+    fireEvent.click(more());
+    expect(onChoose).toHaveBeenLastCalledWith([guest(1), guest(2)], false);
+  });
+
+  it('books the grown-up beside the children', () => {
+    const { onChoose } = renderWho({ guestParty, people: [guest(1)] });
+    fireEvent.click(meToo());
+    expect(onChoose).toHaveBeenLastCalledWith([guest(1), ADULT], false);
+  });
+
+  it('lets the grown-up come alone once they are in, but not leave nobody', () => {
+    const { onChoose } = renderWho({ guestParty, people: [guest(1), ADULT] });
+    expect(fewer()).toBeEnabled();
+    fireEvent.click(fewer());
+    expect(onChoose).toHaveBeenLastCalledWith([ADULT], false);
+
+    renderWho({ guestParty, people: [ADULT] });
+    expect(
+      screen.getAllByRole('checkbox', { name: /Jeg skal også klippes/ }).at(-1)
+    ).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('stops at the limit, and says why', () => {
+    renderWho({ guestParty, people: [guest(1), guest(2), ADULT] });
+    expect(more()).toBeDisabled();
+    expect(screen.getByText(LIMIT)).toBeInTheDocument();
+  });
+
+  it('keeps a named child’s seat when the count changes, and the sheet stays', () => {
+    const mia: WizardPerson = { key: 'new:mia', name: 'Mia', birthYear: 2019 };
+    const { onChoose } = renderWho({
+      guestParty,
+      people: [mia],
+      addedChildren: [{ person: mia, line: '7 år' }],
+    });
+    expect(screen.getByText('Mia')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Legg til barn/ })).toBeInTheDocument();
+
+    fireEvent.click(more());
+    expect(onChoose).toHaveBeenLastCalledWith([mia, guest(1)], false);
+  });
+
+  it('never takes a named child away with the stepper', () => {
+    const mia: WizardPerson = { key: 'new:mia', name: 'Mia', birthYear: 2019 };
+    const leo: WizardPerson = { key: 'new:leo', name: 'Leo', birthYear: 2021 };
+    const named = [
+      { person: mia, line: '7 år' },
+      { person: leo, line: '5 år' },
+    ];
+    const { unmount } = renderWho({ guestParty, people: [mia, leo], addedChildren: named });
+    expect(fewer()).toBeDisabled();
+    unmount();
+
+    const { onChoose } = renderWho({
+      guestParty,
+      people: [mia, guest(1), ADULT],
+      addedChildren: [named[0] as (typeof named)[number]],
+    });
+    fireEvent.click(fewer());
+    expect(onChoose).toHaveBeenLastCalledWith([mia, ADULT], false);
+    expect(fewer()).toBeEnabled();
+  });
+
+  it('chooses one child again when the answer is cleared later', () => {
+    const view = renderWho({ guestParty, people: [guest(1), guest(2)] });
+    expect(view.onChoose).not.toHaveBeenCalled();
+    view.rerender(
+      <WhoScreen
+        labels={labels}
+        format={demoFormatNb}
+        people={[]}
+        family={null}
+        guestChoices={GUEST_CHOICES}
+        maxPeople={3}
+        selfKey={SELF}
+        isGuestSeat={isGuestSeat}
+        guestParty={guestParty}
+        onChoose={view.onChoose}
+        onAddChild={vi.fn(async (): Promise<SaveResult> => ({ ok: true }))}
+        currentYear={2026}
+      />
+    );
+    expect(view.onChoose).toHaveBeenCalledWith([guest(1)], false);
+  });
+
+  it('never counts the grown-up’s seat as a child', () => {
+    renderWho({ guestParty, people: [guest(1), ADULT] });
+    expect(screen.getByText('1 barn', { selector: '.sr-only' })).toBeInTheDocument();
+  });
+
+  it('draws the chips instead of unnamed controls when the party labels are missing', () => {
+    const bare = { ...labels };
+    for (const key of Object.keys(bare)) {
+      if (key.startsWith('who.party.')) delete (bare as Record<string, unknown>)[key];
+    }
+    renderWho({ guestParty, labels: bare });
+    expect(screen.getByRole('radio', { name: '1 barn' })).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /Jeg skal også klippes/ })).toBeNull();
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = renderWho({ guestParty, people: [guest(1)] });
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
