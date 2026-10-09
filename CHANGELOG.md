@@ -1,5 +1,19 @@
 # @medalsocial/meda
 
+## 3.7.0
+
+### Minor Changes
+
+- [#271](https://github.com/Medal-Social/meda/pull/271) [`79f8ce3`](https://github.com/Medal-Social/meda/commit/79f8ce340e7724bd82267d688e2430a7d8e4115b) Thanks [@adaadev](https://github.com/adaadev)! - `WhoScreen` takes `guestParty`: a guest picks how many children (a stepper, starting at one, so «next» is live from the first frame) and whether they come too (a «me too» row), up to `maxPeople` — «a child and me» in one booking without an account. Each change is a live answer (`advance: false`); the caller's «next» moves on. New opt-in label keys `who.party.children`, `who.party.childrenNote`, `who.party.adult`, `who.party.adultNote`, `who.party.fewer`, `who.party.more`, `who.party.count`. Without the prop the chips are unchanged.
+
+- [#271](https://github.com/Medal-Social/meda/pull/271) [`a58f423`](https://github.com/Medal-Social/meda/commit/a58f4237251a7a36c6888073946c8b6051e17d02) Thanks [@adaadev](https://github.com/adaadev)! - `BookingRecap` (`@medalsocial/meda/booking`): what is about to be booked, for the top of the details step — a calendar leaf for the day, the hours, each person's services and stylist, the total, an «edit» back to the time step, and, when «first available» resolved to one stylist while others are free at the same minute, a one-tap swap. New opt-in label keys (`BookingOptionalLabelKey`): `recap.label`, `recap.time`, `recap.line`, `recap.lineFor`, `recap.anyStylist`, `recap.total`, `recap.edit`, `recap.editLabel`, `recap.alsoFree`, `recap.swapTo`. `details.submit` also fills `{day}` and `{time}`, so the button can name what it books.
+
+- [#271](https://github.com/Medal-Social/meda/pull/271) [`ba23699`](https://github.com/Medal-Social/meda/commit/ba236991fba7ed37f29e5fb6134a4d65fcf69876) Thanks [@adaadev](https://github.com/adaadev)! - `StylistScreen` takes `firstAvailableFaces`: «first available» is drawn as the faces of the first three stylists with a photo who can do the whole basket, instead of its badge, falling back to the badge with fewer than two photos. `edgeFade` fades the right edge of the phone's sideways row, so a cut-off card reads as «more this way». `StylistOption` has an optional `faces`. Both are off unless passed.
+
+- [#271](https://github.com/Medal-Social/meda/pull/271) [`9dd73ae`](https://github.com/Medal-Social/meda/commit/9dd73aedcaf3662ad30338d7e8c62a22b59feee8) Thanks [@adaadev](https://github.com/adaadev)! - `SummaryBar` takes an optional `detail`, a second, smaller line under the summary (e.g. the time and the price), so the part a parent checks is not the part an ellipsis eats on a phone; the bar keeps its fixed height. `hideNextWhenDisabled` draws «next» only while it does something and puts the step's hint in its place (opt-in keys `summary.hint.who`, `summary.hint.service`, `summary.hint.when`), for steps that move on by themselves once answered. New class-name slots `detail` and `hint`.
+
+- [#271](https://github.com/Medal-Social/meda/pull/271) [`268c12a`](https://github.com/Medal-Social/meda/commit/268c12a856954b84732ddf569aa0752d166a21a4) Thanks [@adaadev](https://github.com/adaadev)! - `TimeScreen` can answer «when is the first time?» before a day is picked. `soonest` draws a «free soon» row above the days: the earliest starts across the window as one-tap cards with the day, the time and (through `resolveStylist`) who each is with, booking exactly the slot `onPick` would. `dayFullness` gives each day chip marks for how many starts it has free, or «full» (only for an open day asked for everyone), as a 44 px target; a weekend card shows its surcharge. `DefaultDayChip` takes the new optional `free` / `freeLabel`, and `dayFreeMarks` is exported. New opt-in label keys: `time.soonest.heading`, `time.soonest.pick`, `time.soonest.with`, `time.dayChip.free`, `time.dayChip.freeOne`, `time.dayChip.full`. Both are off unless passed.
+
 ## 3.6.1
 
 ### Patch Changes
