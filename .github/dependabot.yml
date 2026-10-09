@@ -44,11 +44,19 @@ updates:
       timezone: Europe/Oslo
     target-branch: dev
     open-pull-requests-limit: 5
+    # Hold brand-new releases for a few days so a compromised or yanked
+    # version has time to be caught upstream before it lands here.
+    cooldown:
+      default-days: 5
+      semver-major-days: 14
     commit-message:
       prefix: ci(actions)
     groups:
       # One PR a week for the whole workflow fleet rather than one per action.
       github-actions:
+        patterns: ['*']
+      github-actions-security:
+        applies-to: security-updates
         patterns: ['*']
 
   # ---------------------------------------------------------------------------
@@ -66,6 +74,11 @@ updates:
       timezone: Europe/Oslo
     target-branch: dev
     open-pull-requests-limit: 10
+    # Hold brand-new releases for a few days so a compromised or yanked
+    # version has time to be caught upstream before it lands here.
+    cooldown:
+      default-days: 5
+      semver-major-days: 14
     commit-message:
       prefix: chore(deps)
       prefix-development: chore(deps-dev)
@@ -75,6 +88,11 @@ updates:
         patterns: ['*']
       development-dependencies:
         dependency-type: development
+        patterns: ['*']
+      # Security updates are grouped into one PR so an advisory sweep does
+      # not arrive as a dozen single-package PRs.
+      security-updates:
+        applies-to: security-updates
         patterns: ['*']
     ignore:
       # Held deliberately — see the PR that introduced this file and
@@ -143,6 +161,9 @@ updates:
       timezone: Europe/Oslo
     target-branch: dev
     open-pull-requests-limit: 2
+    cooldown:
+      default-days: 5
+      semver-major-days: 14
     commit-message:
       prefix: chore(test-fixture)
     groups:
