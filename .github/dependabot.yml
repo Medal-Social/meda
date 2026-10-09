@@ -169,6 +169,9 @@ updates:
     groups:
       nextjs-consumer-fixture:
         patterns: ['*']
+      nextjs-consumer-fixture-security:
+        applies-to: security-updates
+        patterns: ['*']
     ignore:
       # The fixture resolves meda through `file:../../..` on purpose — that is
       # the whole point of the fixture. Dependabot must never rewrite it.
