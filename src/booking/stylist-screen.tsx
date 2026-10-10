@@ -110,6 +110,8 @@ export interface StylistCardProps {
   selectedClassName?: string;
   /** Merged onto the next-opening line (the `nextAvailable` slot). */
   nextAvailableClassName?: string;
+  /** `StylistScreen`'s `row`: draw the phone's avatar tile at every width. */
+  row?: boolean;
 }
 
 export interface StylistScreenComponents {
@@ -163,6 +165,13 @@ export interface StylistScreenProps {
    * as «there is more», not as a layout bug.
    */
   edgeFade?: boolean;
+  /**
+   * Keep the phone's one row of avatars at every width instead of the column
+   * of cards from `md`, so a wide screen reaches the times without scrolling
+   * past every stylist. The chosen stylist's bio, which a tile has no room
+   * for, is shown under the row.
+   */
+  row?: boolean;
   /**
    * Present only for a family. One child gets no picker: «one after the
    * other» is not a choice when there is nobody to be after.
@@ -246,6 +255,7 @@ export function StylistScreen({
   onPick,
   firstAvailableFaces = false,
   edgeFade = false,
+  row = false,
   party,
   classNames,
   components,
@@ -367,8 +377,12 @@ export function StylistScreen({
           labels={labels}
           classNames={classNames}
           edgeFade={edgeFade}
+          row={row}
           Card={components?.StylistCard ?? DefaultStylistCard}
         />
+      )}
+      {row && party?.mode !== 'parallel' && (
+        <ChosenBio options={options} selectedResourceId={selectedResourceId} />
       )}
       {/* Beside the list, not in it: a status is not a list item. */}
       <LiveStatus text={loading ? labelText(labels['stylist.loading']) : notice} />
@@ -392,6 +406,7 @@ function StylistRadioGroup({
   labels,
   classNames,
   edgeFade,
+  row,
   Card,
 }: {
   options: StylistOption[];
@@ -402,6 +417,7 @@ function StylistRadioGroup({
   labels: StylistScreenLabels;
   classNames: SlotClassNames<StylistScreenSlot> | undefined;
   edgeFade: boolean;
+  row: boolean;
   Card: ComponentType<StylistCardProps>;
 }) {
   const groupRef = useRef<HTMLDivElement>(null);
@@ -471,8 +487,11 @@ function StylistRadioGroup({
         // The last few pixels fade, so the cut-off card reads as «more this way».
         // The trailing room lets the last card scroll wholly clear of the fade.
         edgeFade &&
-          'pr-10 [mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)] md:[mask-image:none]',
-        'md:mx-0 md:h-auto md:snap-none md:flex-col md:gap-2 md:overflow-visible md:p-0'
+          cn(
+            'pr-10 [mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)]',
+            !row && 'md:[mask-image:none]'
+          ),
+        !row && 'md:mx-0 md:h-auto md:snap-none md:flex-col md:gap-2 md:overflow-visible md:p-0'
       )}
     >
       {options.map((option, index) => (
@@ -489,11 +508,12 @@ function StylistRadioGroup({
           className={classNames?.card}
           selectedClassName={classNames?.cardSelected}
           nextAvailableClassName={classNames?.nextAvailable}
+          row={row}
         />
       ))}
       {Array.from({ length: skeletons }, (_, index) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: placeholders have no identity
-        <SkeletonCard key={index} />
+        <SkeletonCard key={index} row={row} />
       ))}
     </div>
   );
@@ -571,8 +591,11 @@ export function DefaultStylistCard({
   className,
   selectedClassName,
   nextAvailableClassName,
+  row = false,
 }: StylistCardProps) {
   const id = useId();
+  // From `md` the tile becomes a card, unless the screen keeps the row.
+  const md = (classes: string) => (row ? '' : classes);
   const nameId = `${id}-name`;
   const nextId = `${id}-next`;
   const bioId = `${id}-bio`;
@@ -606,11 +629,11 @@ export function DefaultStylistCard({
       // avatar; from `md` it is on the card.
       className={cn(
         'group flex w-24 shrink-0 snap-start flex-col items-center gap-1 rounded-lg px-1 pt-1 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-        'md:w-full md:shrink md:flex-row md:gap-4 md:border md:px-5 md:py-4 md:text-left',
-        OPTION_HEIGHT,
+        md('md:w-full md:shrink md:flex-row md:gap-4 md:border md:px-5 md:py-4 md:text-left'),
+        row ? 'h-32' : OPTION_HEIGHT,
         selected
-          ? 'font-semibold md:border-primary md:bg-primary/10 md:ring-2 md:ring-primary'
-          : 'md:border-border md:bg-card md:hover:border-primary',
+          ? cn('font-semibold', md('md:border-primary md:bg-primary/10 md:ring-2 md:ring-primary'))
+          : md('md:border-border md:bg-card md:hover:border-primary'),
         className,
         selected && selectedClassName
       )}
@@ -619,23 +642,33 @@ export function DefaultStylistCard({
         aria-hidden="true"
         data-testid="stylist-avatar"
         className={cn(
-          'flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary/30 font-semibold md:size-12',
+          'flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary/30 font-semibold',
+          md('md:size-12'),
           selected
-            ? 'ring-2 ring-primary ring-offset-2 ring-offset-background md:ring-0 md:ring-offset-0'
-            : 'ring-1 ring-border md:ring-0'
+            ? cn(
+                'ring-2 ring-primary ring-offset-2 ring-offset-background',
+                md('md:ring-0 md:ring-offset-0')
+              )
+            : cn('ring-1 ring-border', md('md:ring-0'))
         )}
       >
-        <StylistAvatarContent photoUrl={photoUrl} faces={faces} badge={badge} />
+        <StylistAvatarContent photoUrl={photoUrl} faces={faces} badge={badge} row={row} />
       </span>
-      <span className="flex w-full min-w-0 flex-col md:w-auto">
-        <span aria-hidden="true" className="h-5 truncate text-sm font-medium md:hidden">
+      <span className={cn('flex w-full min-w-0 flex-col', md('md:w-auto'))}>
+        <span
+          aria-hidden="true"
+          className={cn('h-5 truncate text-sm font-medium', md('md:hidden'))}
+        >
           {option.shortName}
         </span>
-        <span id={nameId} className="hidden truncate font-medium md:block">
+        <span id={nameId} className={cn('hidden truncate font-medium', md('md:block'))}>
           {name}
         </span>
         {subtitle && (
-          <span id={bioId} className="hidden truncate text-sm text-muted-foreground md:block">
+          <span
+            id={bioId}
+            className={cn('hidden truncate text-sm text-muted-foreground', md('md:block'))}
+          >
             {subtitle}
           </span>
         )}
@@ -644,11 +677,14 @@ export function DefaultStylistCard({
             id={nextId}
             data-testid="next-available-row"
             className={cn(
-              'line-clamp-2 h-8 text-xs leading-4 text-foreground tabular-nums md:line-clamp-1 md:h-5 md:text-sm md:leading-5',
+              'line-clamp-2 h-8 text-xs leading-4 text-foreground tabular-nums',
+              md('md:line-clamp-1 md:h-5 md:text-sm md:leading-5'),
               nextAvailableClassName
             )}
           >
-            <span className="sr-only md:not-sr-only">{labels['stylist.nextAvailable']}</span>{' '}
+            <span className={cn('sr-only', md('md:not-sr-only'))}>
+              {labels['stylist.nextAvailable']}
+            </span>{' '}
             {availability}
           </span>
         ) : (
@@ -656,10 +692,12 @@ export function DefaultStylistCard({
             <span
               data-testid="next-available-row"
               aria-hidden="true"
-              className="flex h-8 justify-center pt-1 md:block md:h-5 md:py-1"
+              className={cn('flex h-8 justify-center pt-1', md('md:block md:h-5 md:py-1'))}
             >
               {availabilityLoading && (
-                <span className="block h-3 w-16 animate-pulse rounded bg-muted md:w-36" />
+                <span
+                  className={cn('block h-3 w-16 animate-pulse rounded bg-muted', md('md:w-36'))}
+                />
               )}
             </span>
           )
@@ -677,7 +715,8 @@ function StylistAvatarContent({
   photoUrl,
   faces,
   badge,
-}: Pick<StylistOption, 'photoUrl' | 'faces' | 'badge'>) {
+  row,
+}: Pick<StylistOption, 'photoUrl' | 'faces' | 'badge'> & { row: boolean }) {
   if (photoUrl) {
     return (
       <img
@@ -704,7 +743,8 @@ function StylistAvatarContent({
             height={30}
             decoding="async"
             className={cn(
-              'absolute size-[30px] rounded-full object-cover ring-2 ring-background md:size-[26px]',
+              'absolute size-[30px] rounded-full object-cover ring-2 ring-background',
+              !row && 'md:size-[26px]',
               FACE_POSITIONS[index]
             )}
           />
@@ -716,22 +756,53 @@ function StylistAvatarContent({
 }
 
 /** A stylist option before there is a stylist: the same box, the same circle, at both widths. */
-function SkeletonCard() {
+function SkeletonCard({ row }: { row: boolean }) {
+  const md = (classes: string) => (row ? '' : classes);
   return (
     <div
       aria-hidden="true"
       data-testid="stylist-skeleton"
       className={cn(
         'flex w-24 shrink-0 flex-col items-center gap-1 px-1 pt-1',
-        'md:w-full md:flex-row md:gap-4 md:rounded-lg md:border md:border-border md:bg-card md:px-5 md:py-4',
-        OPTION_HEIGHT
+        md(
+          'md:w-full md:flex-row md:gap-4 md:rounded-lg md:border md:border-border md:bg-card md:px-5 md:py-4'
+        ),
+        row ? 'h-32' : OPTION_HEIGHT
       )}
     >
-      <span className="size-14 shrink-0 animate-pulse rounded-full bg-muted md:size-12" />
-      <span className="flex w-full min-w-0 flex-col items-center gap-2 md:w-auto md:flex-1 md:items-start">
-        <span className="h-4 w-14 animate-pulse rounded bg-muted md:w-28" />
-        <span className="h-3 w-16 animate-pulse rounded bg-muted md:w-40" />
+      <span
+        className={cn('size-14 shrink-0 animate-pulse rounded-full bg-muted', md('md:size-12'))}
+      />
+      <span
+        className={cn(
+          'flex w-full min-w-0 flex-col items-center gap-2',
+          md('md:w-auto md:flex-1 md:items-start')
+        )}
+      >
+        <span className={cn('h-4 w-14 animate-pulse rounded bg-muted', md('md:w-28'))} />
+        <span className={cn('h-3 w-16 animate-pulse rounded bg-muted', md('md:w-40'))} />
       </span>
     </div>
+  );
+}
+
+/**
+ * Under a `row`: the chosen stylist's bio, which a tile has no room for —
+ * «tar oftest de minste», read where the choice is made. Nothing for «first
+ * available», or a stylist without one.
+ */
+function ChosenBio({
+  options,
+  selectedResourceId,
+}: {
+  options: StylistOption[];
+  selectedResourceId: string | null;
+}) {
+  const chosen = options.find((option) => option.resourceId === selectedResourceId);
+  if (!chosen || chosen.resourceId === null || !chosen.subtitle) return null;
+  return (
+    <p data-testid="stylist-bio" className="-mt-3 text-sm text-muted-foreground">
+      <span className="font-medium text-foreground">{chosen.name}</span> · {chosen.subtitle}
+    </p>
   );
 }

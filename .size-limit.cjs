@@ -102,7 +102,10 @@ module.exports = [
     name: 'booking',
     path: 'dist/booking/index.js',
     // Measured 37.62 kB brotli on first build; ~14% headroom.
-    limit: '43 kB',
+    // Raised 43 kB → 48 kB (bestill phase 2 + 3: the recap, the guest party,
+    // «Ledig snart», the adaptive time layout with its week grid, and the
+    // stylist row). Measured 43.17 kB; ~11% headroom.
+    limit: '48 kB',
   },
   {
     name: 'chat',

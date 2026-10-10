@@ -668,3 +668,73 @@ describe('StylistScreen — faces and the fade, at the edges', () => {
     expect(row.className.split(' ')).toEqual(expect.arrayContaining(['pr-10', 'md:p-0']));
   });
 });
+
+describe('StylistScreen — row', () => {
+  it('keeps the phone row at every width: no md column of cards', () => {
+    renderStylist({ row: true });
+    const group = screen.getByTestId('stylist-options');
+    expect(group.className).not.toMatch(/md:flex-col/);
+    for (const option of screen.getAllByRole('radio')) {
+      expect(option.className).not.toMatch(/md:/);
+    }
+  });
+
+  it('keeps the edge fade on wide screens too', () => {
+    renderStylist({ row: true, edgeFade: true });
+    expect(screen.getByTestId('stylist-options').className).not.toMatch(/md:\[mask-image:none\]/);
+  });
+
+  it('shows the chosen stylist’s bio under the row, and none for first available', () => {
+    const { rerender } = renderStylist({ row: true, selectedResourceId: ADA.id });
+    expect(screen.getByTestId('stylist-bio')).toHaveTextContent('Ada Demo · Barneklipp og krøller');
+    rerender(
+      <StylistScreen
+        labels={labels}
+        format={demoFormatNb}
+        now={NOW}
+        serviceIds={['svc-kids']}
+        resources={[ADA, BO]}
+        onPick={vi.fn()}
+        row
+        selectedResourceId={null}
+      />
+    );
+    expect(screen.queryByTestId('stylist-bio')).toBeNull();
+  });
+
+  it('says nothing for a stylist without a bio, and draws no bio line without row', () => {
+    renderStylist({ row: true, resources: [{ ...ADA, bio: null }], selectedResourceId: ADA.id });
+    expect(screen.queryByTestId('stylist-bio')).toBeNull();
+  });
+
+  it('draws no bio line without row', () => {
+    renderStylist({ selectedResourceId: ADA.id });
+    expect(screen.queryByTestId('stylist-bio')).toBeNull();
+  });
+
+  it('holds row-sized placeholders while the list loads', () => {
+    renderStylist({ row: true, loading: true });
+    for (const skeleton of screen.getAllByTestId('stylist-skeleton')) {
+      expect(skeleton.className).not.toMatch(/md:/);
+    }
+  });
+
+  it('keeps the faces of «first available» at the tile size', () => {
+    renderStylist({
+      row: true,
+      firstAvailableFaces: true,
+      resources: [
+        { ...ADA, photoUrl: '/a.webp' },
+        { ...BO, photoUrl: '/b.webp' },
+      ],
+    });
+    for (const face of screen.getByTestId('stylist-faces').querySelectorAll('img')) {
+      expect(face.className).not.toMatch(/md:/);
+    }
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = renderStylist({ row: true, selectedResourceId: ADA.id });
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
