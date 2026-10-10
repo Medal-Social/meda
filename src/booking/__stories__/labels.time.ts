@@ -51,6 +51,8 @@ export const timeLabelsNb: TimeScreenLabels = {
   'time.dayChip.free': '{count} ledige',
   'time.dayChip.freeOne': '{count} ledig',
   'time.dayChip.full': 'fullt',
+  'time.week.none': 'Ingen ledige',
+  'time.week.more': '{count} til',
 };
 
 export const timeLabelsEn: TimeScreenLabels = {
@@ -96,6 +98,8 @@ export const timeLabelsEn: TimeScreenLabels = {
   'time.dayChip.free': '{count} free',
   'time.dayChip.freeOne': '{count} free',
   'time.dayChip.full': 'full',
+  'time.week.none': 'Nothing free',
+  'time.week.more': '{count} more',
 };
 
 export const manageLabelsNb: ManageScreenLabels = {
