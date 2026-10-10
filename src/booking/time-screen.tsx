@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, X } from 'lucide-react';
-import { type ComponentType, type ReactNode, useEffect, useId, useState } from 'react';
+import { type ComponentType, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import type { BookingClock, BookingDaypart, BookingFormat } from './format.js';
 import { renderLabel } from './internal/label-parts.js';
@@ -923,6 +923,30 @@ export function TimeScreen({
               now={now}
               classNames={classNames}
               TimeChip={TimeChip}
+              empty={
+                <NothingFreeCard
+                  labels={labels}
+                  format={format}
+                  day={selectedDay}
+                  now={now}
+                  phone={phone}
+                  standing={dayStanding(clock, selectedDay, openDays, now)}
+                  stylistName={stylistName}
+                  className={classNames?.empty}
+                />
+              }
+              next={
+                elsewhere &&
+                !strip.some((day) => clock.dayKey(day) === clock.dayKey(elsewhere.startTs)) && (
+                  <BookingButton
+                    variant="link"
+                    onClick={() => setTappedDayKey(clock.dayKey(elsewhere.startTs))}
+                    className={classNames?.nextFree}
+                  >
+                    {labels['time.nextFree']}
+                  </BookingButton>
+                )
+              }
               className="hidden lg:block"
             />
           )}
@@ -967,6 +991,8 @@ function WeekGrid({
   now,
   classNames,
   TimeChip,
+  empty,
+  next,
   className,
 }: {
   labels: TimeScreenLabels;
@@ -989,17 +1015,24 @@ function WeekGrid({
   now: number;
   classNames: SlotClassNames<TimeScreenSlot> | undefined;
   TimeChip: ComponentType<TimeChipProps>;
+  /** The day view's nothing-free card, shown when no day of the week has a time. */
+  empty: ReactNode;
+  /** The «next free time» link, when the first opening is past this week. */
+  next: ReactNode;
   className?: string;
 }) {
   const { clock } = format;
   const id = useId();
   const [unfolded, setUnfolded] = useState<string | null>(null);
-  // The week says its surcharge once, under the grid: the first weekend day that pays one.
-  const weekendDay = days.find(
-    (day) => clock.isWeekend(day) && (weekendNote?.(day) ?? null) !== null
-  );
-  const weekend = weekendDay === undefined ? null : (weekendNote?.(weekendDay) ?? null);
+  // Unfolding unmounts the button that held focus: hand it to the first time
+  // it revealed, so a keyboard user carries on where they were.
+  const lists = useRef(new Map<string, HTMLUListElement | null>());
+  useEffect(() => {
+    if (unfolded === null) return;
+    lists.current.get(unfolded)?.querySelectorAll('button')[WEEK_CAP]?.focus();
+  }, [unfolded]);
   let todayOpen = false;
+  let anyBookable = false;
 
   const columns = days.map((day, column) => {
     const key = clock.dayKey(day);
@@ -1008,11 +1041,16 @@ function WeekGrid({
       .sort((a, b) => a.startTs - b.startTs);
     const bookable = daySlots.filter((slot) => slot.startTs !== currentSlotTs).length;
     if (bookable > 0 && clock.daysBetween(now, day) === 0) todayOpen = true;
+    if (bookable > 0) anyBookable = true;
+    // Each weekend day says its own surcharge: the price is the basket priced
+    // on that date, and Saturday's need not be Sunday's.
+    const note = clock.isWeekend(day) ? (weekendNote?.(day) ?? null) : null;
     const shown = unfolded === key ? daySlots : daySlots.slice(0, WEEK_CAP);
     const more = daySlots.length - shown.length;
     const headId = `${id}-day-${column}`;
     const alternative =
       bookable === 0 && party?.mode === 'sequential' ? (party.alternativeFor?.(day) ?? null) : null;
+    if (alternative) anyBookable = true;
     const free =
       freeByDay === null
         ? null
@@ -1034,8 +1072,26 @@ function WeekGrid({
             <span className="max-w-full truncate text-xs text-muted-foreground">{free}</span>
           ) : null}
         </p>
+        {note !== null && (
+          <p
+            data-testid="week-surcharge"
+            className={slotClass(
+              classNames,
+              'surcharge',
+              'px-1 text-center text-xs leading-tight text-muted-foreground'
+            )}
+          >
+            {weekendSentence(labels, format, note)}
+          </p>
+        )}
         {shown.length > 0 && (
-          <ul aria-labelledby={headId} className="flex flex-col gap-1.5">
+          <ul
+            ref={(node) => {
+              lists.current.set(key, node);
+            }}
+            aria-labelledby={headId}
+            className="flex flex-col gap-1.5"
+          >
             {shown.map((slot) => {
               const partySlot = partyByStart.get(slot.startTs);
               const current = slot.startTs === currentSlotTs;
@@ -1095,14 +1151,10 @@ function WeekGrid({
   return (
     <div data-testid="time-week" className={cn('space-y-4', className)}>
       <ol className="grid grid-cols-7 gap-2">{columns}</ol>
-      {weekend !== null && (
-        <p
-          data-testid="week-surcharge"
-          className={slotClass(classNames, 'surcharge', 'text-sm text-muted-foreground')}
-        >
-          {weekendSentence(labels, format, weekend)}
-        </p>
-      )}
+      {/* A week with nothing to tap still says why and what to do: the same
+          card and «next free» link the day view gives an empty day. */}
+      {!anyBookable && empty}
+      {next}
       {todayOpen && (
         <ShortNoticeLine
           labels={labels}

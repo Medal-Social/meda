@@ -109,13 +109,52 @@ describe('TimeScreen — layout="adaptive"', () => {
     expect(within(columns()[3] as HTMLElement).getByText('2 ledige')).toBeInTheDocument();
   });
 
-  it('says the weekend surcharge once, under the grid', () => {
+  it('says each weekend day’s own surcharge in its column', () => {
     renderTime({
-      slots: [at(10, 0, 19)],
-      weekendNote: (dayTs) =>
-        demoFormatNb.clock.isWeekend(dayTs) ? { pct: 10, priceOre: 53_900 } : null,
+      slots: [at(10, 0, 19), at(10, 0, 20)],
+      // Saturday and Sunday priced differently.
+      weekendNote: (dayTs) => {
+        if (!demoFormatNb.clock.isWeekend(dayTs)) return null;
+        const sunday =
+          demoFormatNb.clock.dayKey(dayTs) === demoFormatNb.clock.dayKey(osloTs(12, 0, 20));
+        return { pct: sunday ? 20 : 10, priceOre: sunday ? 58_800 : 53_900 };
+      },
     });
-    expect(within(week()).getByTestId('week-surcharge')).toHaveTextContent(/Helg: \+10/);
+    const [saturday, sunday] = [columns()[5] as HTMLElement, columns()[6] as HTMLElement];
+    expect(within(saturday).getByTestId('week-surcharge')).toHaveTextContent(/\+10/);
+    expect(within(sunday).getByTestId('week-surcharge')).toHaveTextContent(/\+20/);
+    expect(within(columns()[3] as HTMLElement).queryByTestId('week-surcharge')).toBeNull();
+  });
+
+  it('says why and what to do when no day of the week has a time', () => {
+    renderTime({ slots: [], phone: '22334455', openDays: null });
+    expect(within(week()).getByRole('link', { name: /22 33 44 55|22334455/ })).toBeInTheDocument();
+  });
+
+  it('points past the week to the first opening, when it is after it', () => {
+    const later = osloTs(10, 0, 23);
+    const days = [...WEEK, ...[21, 22, 23].map((day) => osloTs(12, 0, day))];
+    renderTime({ slots: [{ startTs: later, resourceId: 'res-ada' }], days, monthView: true });
+    const link = within(week()).getByRole('button', { name: 'Første ledige time' });
+    fireEvent.click(link);
+    // The week turns to the one with the opening.
+    expect(within(week()).getByRole('button', { name: '10:00' })).toBeInTheDocument();
+  });
+
+  it('keeps no «next free» link when the opening is in the week on screen', () => {
+    renderTime({ slots: [at(9, 0, 18)] });
+    expect(within(week()).queryByRole('button', { name: 'Første ledige time' })).toBeNull();
+  });
+
+  it('moves focus to the first revealed time when a day unfolds', () => {
+    const slots = Array.from({ length: 10 }, (_, index) => ({
+      startTs: at(9).startTs + index * 30 * MINUTE,
+      resourceId: 'res-ada',
+    }));
+    renderTime({ slots });
+    const thursday = columns()[3] as HTMLElement;
+    fireEvent.click(within(thursday).getByRole('button', { name: '2 til' }));
+    expect(document.activeElement).toHaveTextContent('13:00');
   });
 
   it('keeps the short-notice line for today when today has times', () => {
