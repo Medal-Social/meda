@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, X } from 'lucide-react';
-import { type ComponentType, type ReactNode, useEffect, useState } from 'react';
+import { type ComponentType, type ReactNode, useEffect, useId, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import type { BookingClock, BookingDaypart, BookingFormat } from './format.js';
 import { renderLabel } from './internal/label-parts.js';
@@ -86,9 +86,10 @@ export const TIME_SCREEN_LABEL_KEYS = [
  * - `time.empty.callLink|callLinkAria` `{phone}`
  */
 /**
- * Opt-in keys, for the `soonest` row and `dayFullness`. Placeholders:
- * `time.soonest.pick` `{day}` `{time}`; `time.soonest.with` `{stylist}`;
- * `time.dayChip.free` `{count}`.
+ * Opt-in keys, for the `soonest` row, `dayFullness` and the `adaptive` week
+ * grid. Placeholders: `time.soonest.pick` `{day}` `{time}`;
+ * `time.soonest.with` `{stylist}`; `time.dayChip.free` `{count}`;
+ * `time.week.more` `{count}`.
  */
 export const TIME_SCREEN_FINDER_LABEL_KEYS = [
   /** Heading of the soonest-times row, e.g. «Free soon». */
@@ -103,6 +104,10 @@ export const TIME_SCREEN_FINDER_LABEL_KEYS = [
   'time.dayChip.freeOne',
   /** A day chip with none, shown and read, e.g. «full». */
   'time.dayChip.full',
+  /** A week-grid day with nothing free, e.g. «Nothing free». */
+  'time.week.none',
+  /** A week-grid day's button for the rest of its times: `{count}`, e.g. «{count} more». */
+  'time.week.more',
 ] as const;
 
 export type TimeScreenLabels = Record<(typeof TIME_SCREEN_LABEL_KEYS)[number], BookingLabel> &
@@ -377,6 +382,15 @@ export interface TimeScreenProps {
   dayFullness?: boolean;
   /** «Now», for today / tomorrow and whether today is over. Defaults to `Date.now()`. */
   now?: number;
+  /**
+   * `stack` (default): the days above the chosen day's times at every width.
+   * `adaptive`: the same on a phone, with the days, the month and the weekend
+   * note kept together; from `md` the days are a column beside the chosen
+   * day's times; from `lg` the whole week is a grid of times, seven columns,
+   * nothing to tap first. The grid needs the `time.week.*` labels and a strip
+   * of at most seven days (with `monthView`, the week on screen).
+   */
+  layout?: 'stack' | 'adaptive';
   classNames?: SlotClassNames<TimeScreenSlot>;
   components?: TimeScreenComponents;
 }
@@ -583,6 +597,7 @@ export function TimeScreen({
   soonest,
   dayFullness = false,
   now: nowProp,
+  layout = 'stack',
   classNames,
   components,
 }: TimeScreenProps) {
@@ -696,91 +711,95 @@ export function TimeScreen({
       ? (party.alternativeFor?.(selectedDay) ?? null)
       : null;
 
-  return (
-    <section
-      aria-labelledby="booking-time-heading"
-      className={slotClass(classNames, 'root', 'space-y-6')}
+  const adaptive = layout === 'adaptive';
+  // The week grid shows the strip whole, so it needs one week of it, and its words.
+  const weekNone = labels['time.week.none'];
+  const weekMore = labels['time.week.more'];
+  const week =
+    adaptive &&
+    strip.length > 1 &&
+    strip.length <= DAY_STRIP_LIMIT &&
+    weekNone !== undefined &&
+    weekMore !== undefined
+      ? { none: weekNone, more: weekMore }
+      : null;
+  const TimeChip = components?.TimeChip ?? DefaultTimeChip;
+
+  const dayStrip = strip.length > 1 && (
+    <fieldset
+      className={slotClass(
+        classNames,
+        'dayStrip',
+        cn('flex flex-wrap gap-2', adaptive && 'md:flex-col md:flex-nowrap')
+      )}
     >
-      <TimeHeading labels={labels} className={classNames?.heading} />
+      <legend className="sr-only">{labels['time.dayStrip.legend']}</legend>
+      {strip.map((day) => {
+        const selected = clock.dayKey(day) === selectedKey;
+        return (
+          <DayChip
+            key={clock.dayKey(day)}
+            dayTs={day}
+            label={clock.dayChip(day, now)}
+            selected={selected}
+            onSelect={() => setTappedDayKey(clock.dayKey(day))}
+            {...(dayFullness
+              ? dayFreeProps(
+                  labels,
+                  freeByDay.get(clock.dayKey(day)) ?? 0,
+                  // «Full» only when it is true of the business: an open
+                  // day, asked for everyone — not hours that could not be
+                  // read, nor a day one named stylist does not work, nor a
+                  // family's day (the other mode may still seat them).
+                  !party &&
+                    stylistName === null &&
+                    dayStanding(clock, day, openDays, now) === 'open'
+                )
+              : {})}
+            className={cn(
+              'rounded-full',
+              // A column of days: full-width rows, not pills.
+              adaptive && 'md:w-full md:rounded-lg',
+              selected ? 'border-primary bg-primary/10 font-bold ring-2 ring-primary' : '',
+              classNames?.dayChip,
+              selected ? classNames?.dayChipSelected : undefined
+            )}
+          />
+        );
+      })}
+    </fieldset>
+  );
 
-      {soonestSlots.length > 0 && (
-        <SoonestRow
-          labels={labels}
-          format={format}
-          slots={soonestSlots}
-          now={now}
-          resolveStylist={soonest?.resolveStylist}
-          weekendNote={weekendNote}
-          onPick={onPick}
-          className={classNames?.soonest}
-        />
-      )}
+  const month = monthView && (
+    <MonthCalendar
+      labels={labels}
+      clock={clock}
+      open={showMonth}
+      onToggle={() => setShowMonth((shown) => !shown)}
+      monthTs={monthTs ?? selectedDay}
+      onMonth={setMonthTs}
+      strip={offeredDays}
+      selectedDay={selectedDay}
+      now={now}
+      onPickDay={(day) => setTappedDayKey(clock.dayKey(day))}
+      classNames={classNames}
+    />
+  );
 
-      {strip.length > 1 && (
-        <fieldset className={slotClass(classNames, 'dayStrip', 'flex flex-wrap gap-2')}>
-          <legend className="sr-only">{labels['time.dayStrip.legend']}</legend>
-          {strip.map((day) => {
-            const selected = clock.dayKey(day) === selectedKey;
-            return (
-              <DayChip
-                key={clock.dayKey(day)}
-                dayTs={day}
-                label={clock.dayChip(day, now)}
-                selected={selected}
-                onSelect={() => setTappedDayKey(clock.dayKey(day))}
-                {...(dayFullness
-                  ? dayFreeProps(
-                      labels,
-                      freeByDay.get(clock.dayKey(day)) ?? 0,
-                      // «Full» only when it is true of the business: an open
-                      // day, asked for everyone — not hours that could not be
-                      // read, nor a day one named stylist does not work, nor a
-                      // family's day (the other mode may still seat them).
-                      !party &&
-                        stylistName === null &&
-                        dayStanding(clock, day, openDays, now) === 'open'
-                    )
-                  : {})}
-                className={cn(
-                  'rounded-full',
-                  selected ? 'border-primary bg-primary/10 font-bold ring-2 ring-primary' : '',
-                  classNames?.dayChip,
-                  selected ? classNames?.dayChipSelected : undefined
-                )}
-              />
-            );
-          })}
-        </fieldset>
-      )}
+  const surchargeRow = surcharge !== null && (
+    // The label's own pieces rather than JSX whitespace: the non-breaking
+    // spaces in the label are load-bearing, and JSX whitespace between
+    // children is not the place to rely on which kind of space survived.
+    <p
+      data-testid="surcharge-row"
+      className={slotClass(classNames, 'surcharge', 'min-h-5 text-sm text-muted-foreground')}
+    >
+      {clock.isWeekend(selectedDay) ? weekendSentence(labels, format, surcharge) : null}
+    </p>
+  );
 
-      {monthView && (
-        <MonthCalendar
-          labels={labels}
-          clock={clock}
-          open={showMonth}
-          onToggle={() => setShowMonth((shown) => !shown)}
-          monthTs={monthTs ?? selectedDay}
-          onMonth={setMonthTs}
-          strip={offeredDays}
-          selectedDay={selectedDay}
-          now={now}
-          onPickDay={(day) => setTappedDayKey(clock.dayKey(day))}
-          classNames={classNames}
-        />
-      )}
-
-      {surcharge !== null && (
-        // The label's own pieces rather than JSX whitespace: the non-breaking
-        // spaces in the label are load-bearing, and JSX whitespace between
-        // children is not the place to rely on which kind of space survived.
-        <p
-          data-testid="surcharge-row"
-          className={slotClass(classNames, 'surcharge', 'min-h-5 text-sm text-muted-foreground')}
-        >
-          {clock.isWeekend(selectedDay) ? weekendSentence(labels, format, surcharge) : null}
-        </p>
-      )}
-
+  const dayTimes = (
+    <>
       {/* A family whose chosen day has no back-to-back opening is offered the
           simultaneous one rather than the telephone — never beside slots that
           already exist, because it is only asked when the day is empty. */}
@@ -820,7 +839,7 @@ export function TimeScreen({
           partyByStart={partyByStart}
           onPick={onPick}
           classNames={classNames}
-          TimeChip={components?.TimeChip ?? DefaultTimeChip}
+          TimeChip={TimeChip}
         />
       )}
 
@@ -842,8 +861,273 @@ export function TimeScreen({
           className={classNames?.shortNotice}
         />
       )}
+    </>
+  );
+
+  return (
+    <section
+      aria-labelledby="booking-time-heading"
+      className={slotClass(classNames, 'root', 'space-y-6')}
+    >
+      <TimeHeading labels={labels} className={classNames?.heading} />
+
+      {soonestSlots.length > 0 && (
+        <SoonestRow
+          labels={labels}
+          format={format}
+          slots={soonestSlots}
+          now={now}
+          resolveStylist={soonest?.resolveStylist}
+          weekendNote={weekendNote}
+          onPick={onPick}
+          className={classNames?.soonest}
+        />
+      )}
+
+      {adaptive ? (
+        <>
+          {/* Above both arrangements: the week grid turns pages with it too. */}
+          {month}
+          <div
+            data-testid="time-columns"
+            className={cn(
+              'space-y-6 md:grid md:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] md:items-start md:gap-8 md:space-y-0',
+              week && 'lg:hidden'
+            )}
+          >
+            {/* One group: the days and what they cost sit together, without a
+                band of empty space between them and the first time. */}
+            <div className="space-y-2">
+              {dayStrip}
+              {surchargeRow}
+            </div>
+            <div className="min-w-0 space-y-6">{dayTimes}</div>
+          </div>
+          {week && (
+            <WeekGrid
+              labels={labels}
+              words={week}
+              format={format}
+              days={strip}
+              offered={offered}
+              currentSlotTs={currentSlotTs}
+              nearest={nearest}
+              party={party}
+              partyByStart={partyByStart}
+              onPick={onPick}
+              freeByDay={dayFullness ? freeByDay : null}
+              openDays={openDays}
+              stylistName={stylistName}
+              weekendNote={weekendNote}
+              phone={phone}
+              now={now}
+              classNames={classNames}
+              TimeChip={TimeChip}
+              className="hidden lg:block"
+            />
+          )}
+        </>
+      ) : (
+        <>
+          {dayStrip}
+          {month}
+          {surchargeRow}
+          {dayTimes}
+        </>
+      )}
     </section>
   );
+}
+
+/** How many times a week-grid day shows before «{count} more». */
+const WEEK_CAP = 8;
+
+/**
+ * `layout="adaptive"` from `lg`: the week as seven columns of times, so a
+ * wide screen books in one tap. Each day heads its column with how full it is;
+ * a long day folds after `WEEK_CAP`; an empty one says so, or offers a
+ * family's simultaneous time. The chips are the strip's own `TimeChip`s.
+ */
+function WeekGrid({
+  labels,
+  words,
+  format,
+  days,
+  offered,
+  currentSlotTs,
+  nearest,
+  party,
+  partyByStart,
+  onPick,
+  freeByDay,
+  openDays,
+  stylistName,
+  weekendNote,
+  phone,
+  now,
+  classNames,
+  TimeChip,
+  className,
+}: {
+  labels: TimeScreenLabels;
+  /** The grid's own words, there because `layout="adaptive"` checked for them. */
+  words: { none: BookingLabel; more: BookingLabel };
+  format: BookingFormat;
+  days: number[];
+  offered: BookingSlotDto[];
+  currentSlotTs: number | null;
+  nearest: Set<number>;
+  party: TimeScreenParty | undefined;
+  partyByStart: Map<number, PartySlot>;
+  onPick: (slot: BookingSlotDto) => void;
+  /** Free starts per day, with `dayFullness`. */
+  freeByDay: Map<string, number> | null;
+  openDays: readonly BookingDayDto[] | null;
+  stylistName: string | null;
+  weekendNote?: (dayTs: number) => WeekendNote | null;
+  phone: string | null;
+  now: number;
+  classNames: SlotClassNames<TimeScreenSlot> | undefined;
+  TimeChip: ComponentType<TimeChipProps>;
+  className?: string;
+}) {
+  const { clock } = format;
+  const id = useId();
+  const [unfolded, setUnfolded] = useState<string | null>(null);
+  // The week says its surcharge once, under the grid: the first weekend day that pays one.
+  const weekendDay = days.find(
+    (day) => clock.isWeekend(day) && (weekendNote?.(day) ?? null) !== null
+  );
+  const weekend = weekendDay === undefined ? null : (weekendNote?.(weekendDay) ?? null);
+  let todayOpen = false;
+
+  const columns = days.map((day, column) => {
+    const key = clock.dayKey(day);
+    const daySlots = offered
+      .filter((slot) => clock.dayKey(slot.startTs) === key)
+      .sort((a, b) => a.startTs - b.startTs);
+    const bookable = daySlots.filter((slot) => slot.startTs !== currentSlotTs).length;
+    if (bookable > 0 && clock.daysBetween(now, day) === 0) todayOpen = true;
+    const shown = unfolded === key ? daySlots : daySlots.slice(0, WEEK_CAP);
+    const more = daySlots.length - shown.length;
+    const headId = `${id}-day-${column}`;
+    const alternative =
+      bookable === 0 && party?.mode === 'sequential' ? (party.alternativeFor?.(day) ?? null) : null;
+    const free =
+      freeByDay === null
+        ? null
+        : dayFreeProps(
+            labels,
+            freeByDay.get(key) ?? 0,
+            !party && stylistName === null && dayStanding(clock, day, openDays, now) === 'open'
+          ).freeLabel;
+    return (
+      <li key={key} className="min-w-0 space-y-2">
+        <p
+          id={headId}
+          className="flex flex-col items-center gap-0.5 rounded-lg bg-muted/50 px-1 py-2 text-center"
+        >
+          <span className="max-w-full truncate text-sm font-semibold">
+            {clock.dayChip(day, now)}
+          </span>
+          {free ? (
+            <span className="max-w-full truncate text-xs text-muted-foreground">{free}</span>
+          ) : null}
+        </p>
+        {shown.length > 0 && (
+          <ul aria-labelledby={headId} className="flex flex-col gap-1.5">
+            {shown.map((slot) => {
+              const partySlot = partyByStart.get(slot.startTs);
+              const current = slot.startTs === currentSlotTs;
+              const isNearest = !current && nearest.has(slot.startTs);
+              return (
+                <li key={slot.startTs}>
+                  <TimeChip
+                    startTs={slot.startTs}
+                    label={chipLabel(labels, clock, slot, current, partySlot, party)}
+                    nearest={isNearest}
+                    nearestLabel={labelText(labels['time.nearest'])}
+                    current={current}
+                    onPick={() => (partySlot && party ? party.onPick(partySlot) : onPick(slot))}
+                    className={cn(
+                      'h-auto min-h-11 w-full min-w-0 whitespace-normal px-1 tabular-nums',
+                      isNearest ? 'border-primary ring-2 ring-primary' : '',
+                      classNames?.chip,
+                      isNearest ? classNames?.chipNearest : undefined,
+                      current ? classNames?.chipCurrent : undefined
+                    )}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {more > 0 && (
+          <BookingButton
+            variant="link"
+            size="sm"
+            onClick={() => setUnfolded(key)}
+            className="w-full"
+          >
+            {renderLabel(words.more, { count: more })}
+          </BookingButton>
+        )}
+        {bookable === 0 &&
+          (alternative && party ? (
+            <BookingButton
+              size="sm"
+              onClick={() => party.onPick(alternative)}
+              className="h-auto min-h-11 w-full whitespace-normal tabular-nums"
+            >
+              {renderLabel(labels['time.parallel.accept'], {
+                time: clock.formatTime(alternative.startTs),
+              })}
+            </BookingButton>
+          ) : (
+            <p className="px-1 text-center text-xs text-muted-foreground">
+              {renderLabel(words.none)}
+            </p>
+          ))}
+      </li>
+    );
+  });
+
+  return (
+    <div data-testid="time-week" className={cn('space-y-4', className)}>
+      <ol className="grid grid-cols-7 gap-2">{columns}</ol>
+      {weekend !== null && (
+        <p
+          data-testid="week-surcharge"
+          className={slotClass(classNames, 'surcharge', 'text-sm text-muted-foreground')}
+        >
+          {weekendSentence(labels, format, weekend)}
+        </p>
+      )}
+      {todayOpen && (
+        <ShortNoticeLine
+          labels={labels}
+          format={format}
+          phone={phone}
+          className={classNames?.shortNotice}
+        />
+      )}
+    </div>
+  );
+}
+
+/** A time chip's words: the hour, the held hour marked, or a family's whole visit. */
+function chipLabel(
+  labels: TimeScreenLabels,
+  clock: BookingClock,
+  slot: BookingSlotDto,
+  current: boolean,
+  partySlot: PartySlot | undefined,
+  party: TimeScreenParty | undefined
+): string {
+  const time = clock.formatTime(slot.startTs);
+  if (current) return fillLabel(labels['time.current'], { time });
+  if (partySlot && party) return partyChipLabel(labels, clock, partySlot, party);
+  return time;
 }
 
 /** The weekend note as one plain sentence, for a card that books without the notice on screen. */
@@ -1332,17 +1616,11 @@ function DaypartSections({
             const partySlot = partyByStart.get(slot.startTs);
             const current = slot.startTs === currentSlotTs;
             const isNearest = !current && nearest.has(slot.startTs);
-            let label = clock.formatTime(slot.startTs);
-            if (current) {
-              label = fillLabel(labels['time.current'], { time: label });
-            } else if (partySlot && party) {
-              label = partyChipLabel(labels, clock, partySlot, party);
-            }
             return (
               <TimeChip
                 key={slot.startTs}
                 startTs={slot.startTs}
-                label={label}
+                label={chipLabel(labels, clock, slot, current, partySlot, party)}
                 nearest={isNearest}
                 nearestLabel={labelText(labels['time.nearest'])}
                 current={current}
