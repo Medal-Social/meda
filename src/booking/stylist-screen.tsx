@@ -406,6 +406,7 @@ export function StylistScreen({
                 heading={labels['stylist.party.seatsHeading']}
                 seatLabel={labels['stylist.party.seat']}
                 anyone={labelText(labels['stylist.firstAvailable'])}
+                pending={labelText(labels['stylist.pendingName'])}
                 format={format}
               />
             )}
@@ -867,6 +868,7 @@ function SeatChoices({
   heading,
   seatLabel,
   anyone,
+  pending,
   format,
 }: {
   seats: NonNullable<NonNullable<StylistScreenProps['party']>['seats']>;
@@ -875,6 +877,8 @@ function SeatChoices({
   heading: BookingLabel;
   seatLabel: BookingLabel;
   anyone: string;
+  /** The name for a saved stylist the list does not hold (`stylist.pendingName`). */
+  pending: string;
   format: BookingFormat;
 }) {
   const id = useId();
@@ -894,6 +898,14 @@ function SeatChoices({
             !takenElsewhere.has(resource.id)
         );
         const selectId = `${id}-seat-${index}`;
+        // A saved choice the list cannot show (still loading, gone, or no longer
+        // able to do the visit) stays the selected option, by name where known:
+        // shown as «first available» it would read as an answer never given.
+        const held =
+          seat.resourceId !== null && !options.some((resource) => resource.id === seat.resourceId)
+            ? seat.resourceId
+            : null;
+        const heldResource = held === null ? undefined : resources.find((r) => r.id === held);
         return (
           <div key={selectId} className="space-y-1">
             <label htmlFor={selectId} className="block text-sm font-medium">
@@ -908,6 +920,11 @@ function SeatChoices({
               className={BOOKING_SELECT_CLASS}
             >
               <option value="">{anyone}</option>
+              {held !== null && (
+                <option value={held}>
+                  {heldResource ? format.stylistName(heldResource.name) : pending}
+                </option>
+              )}
               {options.map((resource) => (
                 <option key={resource.id} value={resource.id}>
                   {format.stylistName(resource.name)}

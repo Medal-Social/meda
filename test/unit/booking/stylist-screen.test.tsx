@@ -803,3 +803,31 @@ describe('StylistScreen — a stylist per person when seen at once', () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 });
+
+describe('StylistScreen — a saved seat stylist the list cannot show', () => {
+  const party = (resourceId: string) => ({
+    mode: 'parallel' as const,
+    size: 2,
+    minutes: { sequential: 60, parallel: 30 },
+    onMode: vi.fn(),
+    seats: [
+      { who: 'Barn 1', serviceIds: ['svc-kids'], resourceId },
+      { who: 'Deg', serviceIds: ['svc-kids'], resourceId: null },
+    ],
+    onSeat: vi.fn(),
+  });
+
+  it('keeps an unqualified stylist selected by name, not as first available', () => {
+    renderStylist({ resources: [ADA, BO, CLEO], party: party(CLEO.id) });
+    const select = screen.getByRole('combobox', { name: 'Frisør for Barn 1' });
+    expect(select).toHaveValue(CLEO.id);
+    expect(select).toHaveDisplayValue('Cleo Prøve');
+  });
+
+  it('keeps a stylist the list does not know selected under the pending name', () => {
+    renderStylist({ resources: [], party: party('res-gone') });
+    const select = screen.getByRole('combobox', { name: 'Frisør for Barn 1' });
+    expect(select).toHaveValue('res-gone');
+    expect(select).toHaveDisplayValue(labels['stylist.pendingName'] as string);
+  });
+});
