@@ -738,3 +738,96 @@ describe('StylistScreen — row', () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 });
+
+describe('StylistScreen — a stylist per person when seen at once', () => {
+  const party = (
+    seats: Array<{ who: string; serviceIds: string[]; resourceId: string | null }>
+  ) => ({
+    mode: 'parallel' as const,
+    size: seats.length,
+    minutes: { sequential: 60, parallel: 30 },
+    onMode: vi.fn(),
+    seats,
+    onSeat: vi.fn(),
+  });
+
+  it('asks who cuts whom, one choice per person, first available by default', () => {
+    const p = party([
+      { who: 'Barn 1', serviceIds: ['svc-kids'], resourceId: null },
+      { who: 'Deg', serviceIds: ['svc-kids'], resourceId: null },
+    ]);
+    renderStylist({ party: p });
+    const first = screen.getByRole('combobox', { name: 'Frisør for Barn 1' });
+    expect(first).toHaveValue('');
+    expect(screen.getByRole('combobox', { name: 'Frisør for Deg' })).toBeInTheDocument();
+    fireEvent.change(first, { target: { value: ADA.id } });
+    expect(p.onSeat).toHaveBeenCalledWith(0, ADA.id);
+    fireEvent.change(first, { target: { value: '' } });
+    expect(p.onSeat).toHaveBeenLastCalledWith(0, null);
+  });
+
+  it('offers each person only stylists who do their whole visit, and not one taken by another', () => {
+    renderStylist({
+      resources: [ADA, BO, CLEO],
+      party: party([
+        { who: 'Barn 1', serviceIds: ['svc-kids'], resourceId: ADA.id },
+        { who: 'Deg', serviceIds: ['svc-kids'], resourceId: null },
+      ]),
+    });
+    const mine = screen.getByRole('combobox', { name: 'Frisør for Barn 1' });
+    const yours = screen.getByRole('combobox', { name: 'Frisør for Deg' });
+    const names = (select: HTMLElement) =>
+      [...select.querySelectorAll('option')].map((option) => option.textContent);
+    // Cleo does not do the children's cut; Ada is already Barn 1's.
+    expect(names(mine)).toEqual([FIRST, 'Ada Demo', 'Bo Eksempel']);
+    expect(names(yours)).toEqual([FIRST, 'Bo Eksempel']);
+  });
+
+  it('keeps the note alone without seats, or without the seat words', () => {
+    expect(screen.queryByRole('combobox')).toBeNull();
+    const { 'stylist.party.seat': _seat, ...withoutSeat } = labels;
+    renderStylist({
+      labels: withoutSeat,
+      party: party([{ who: 'Barn 1', serviceIds: ['svc-kids'], resourceId: null }]),
+    });
+    expect(screen.queryByRole('combobox')).toBeNull();
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = renderStylist({
+      party: party([
+        { who: 'Barn 1', serviceIds: ['svc-kids'], resourceId: null },
+        { who: 'Deg', serviceIds: ['svc-kids'], resourceId: null },
+      ]),
+    });
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe('StylistScreen — a saved seat stylist the list cannot show', () => {
+  const party = (resourceId: string) => ({
+    mode: 'parallel' as const,
+    size: 2,
+    minutes: { sequential: 60, parallel: 30 },
+    onMode: vi.fn(),
+    seats: [
+      { who: 'Barn 1', serviceIds: ['svc-kids'], resourceId },
+      { who: 'Deg', serviceIds: ['svc-kids'], resourceId: null },
+    ],
+    onSeat: vi.fn(),
+  });
+
+  it('keeps an unqualified stylist selected by name, not as first available', () => {
+    renderStylist({ resources: [ADA, BO, CLEO], party: party(CLEO.id) });
+    const select = screen.getByRole('combobox', { name: 'Frisør for Barn 1' });
+    expect(select).toHaveValue(CLEO.id);
+    expect(select).toHaveDisplayValue('Cleo Prøve');
+  });
+
+  it('keeps a stylist the list does not know selected under the pending name', () => {
+    renderStylist({ resources: [], party: party('res-gone') });
+    const select = screen.getByRole('combobox', { name: 'Frisør for Barn 1' });
+    expect(select).toHaveValue('res-gone');
+    expect(select).toHaveDisplayValue(labels['stylist.pendingName'] as string);
+  });
+});

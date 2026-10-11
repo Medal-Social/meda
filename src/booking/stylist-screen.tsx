@@ -12,6 +12,7 @@ import {
 import { cn } from '../lib/utils.js';
 import type { BookingFormat } from './format.js';
 import { renderLabel } from './internal/label-parts.js';
+import { BOOKING_SELECT_CLASS } from './internal/ui.js';
 import { type BookingLabel, labelText } from './labels.js';
 import { LiveStatus } from './live-status.js';
 import { type SlotClassNames, slotClass } from './slots.js';
@@ -55,7 +56,19 @@ export const STYLIST_SCREEN_LABEL_KEYS = [
   'stylist.party.parallelNote.other',
 ] as const;
 
-export type StylistScreenLabels = Record<(typeof STYLIST_SCREEN_LABEL_KEYS)[number], BookingLabel>;
+/**
+ * Opt-in keys, for `party.seats` (a stylist per person when seen at once).
+ * Placeholders: `stylist.party.seat` `{who}`.
+ */
+export const STYLIST_SCREEN_SEAT_LABEL_KEYS = [
+  /** The heading over the per-person choices, e.g. «Who cuts whom? (optional)». */
+  'stylist.party.seatsHeading',
+  /** One person's label: `{who}`, e.g. «Stylist for {who}». */
+  'stylist.party.seat',
+] as const;
+
+export type StylistScreenLabels = Record<(typeof STYLIST_SCREEN_LABEL_KEYS)[number], BookingLabel> &
+  Partial<Record<(typeof STYLIST_SCREEN_SEAT_LABEL_KEYS)[number], BookingLabel>>;
 
 /**
  * - `root` — the `<section>`
@@ -191,6 +204,22 @@ export interface StylistScreenProps {
     /** How long the visit is in each mode. */
     minutes: { sequential: number; parallel: number };
     onMode: (mode: PartyMode) => void;
+    /**
+     * Seen at once: one optional stylist per person, in basket order. Each
+     * offers «first available» and the stylists who can do that person's whole
+     * visit; the search seats the rest with anyone free at that minute. Needs
+     * the `stylist.party.seat*` labels; without `seats` the mode note stands
+     * alone, as before.
+     */
+    seats?: Array<{
+      /** Who sits there, e.g. «Barn 1», «Deg», a child's name. */
+      who: string;
+      /** Every service of this person's visit. */
+      serviceIds: string[];
+      /** Their stylist, `null` for first available. */
+      resourceId: string | null;
+    }>;
+    onSeat?: (index: number, resourceId: string | null) => void;
   };
   classNames?: SlotClassNames<StylistScreenSlot>;
   components?: StylistScreenComponents;
@@ -362,9 +391,26 @@ export function StylistScreen({
         // be true — and the machine drops the preference when the mode is
         // chosen. A list left on screen would show a stylist the search is
         // quietly ignoring, which is the worse of the two ways to be wrong.
-        <p className="rounded-lg border border-border bg-card px-5 py-4 text-sm">
-          {bySize(labels, 'stylist.party.parallelNote', party.size, party.sizeWord)}
-        </p>
+        <div className="space-y-4">
+          <p className="rounded-lg border border-border bg-card px-5 py-4 text-sm">
+            {bySize(labels, 'stylist.party.parallelNote', party.size, party.sizeWord)}
+          </p>
+          {party.seats &&
+            party.onSeat &&
+            labels['stylist.party.seatsHeading'] &&
+            labels['stylist.party.seat'] && (
+              <SeatChoices
+                seats={party.seats}
+                onSeat={party.onSeat}
+                resources={resources}
+                heading={labels['stylist.party.seatsHeading']}
+                seatLabel={labels['stylist.party.seat']}
+                anyone={labelText(labels['stylist.firstAvailable'])}
+                pending={labelText(labels['stylist.pendingName'])}
+                format={format}
+              />
+            )}
+        </div>
       ) : (
         <StylistRadioGroup
           options={options}
@@ -804,5 +850,90 @@ function ChosenBio({
     <p data-testid="stylist-bio" className="-mt-3 text-sm text-muted-foreground">
       <span className="font-medium text-foreground">{chosen.name}</span> · {chosen.subtitle}
     </p>
+  );
+}
+
+/**
+ * Seen at once: «who cuts whom», one native select per person. A select, not a
+ * second row of avatar tiles: a family of three would be three radiogroups of
+ * the same faces, and the question is optional — most leave it on «first
+ * available». Each lists only the stylists who can do that person's whole visit,
+ * in the salon's order; one already chosen for another person is left out, as
+ * one stylist cannot cut two people at once.
+ */
+function SeatChoices({
+  seats,
+  onSeat,
+  resources,
+  heading,
+  seatLabel,
+  anyone,
+  pending,
+  format,
+}: {
+  seats: NonNullable<NonNullable<StylistScreenProps['party']>['seats']>;
+  onSeat: (index: number, resourceId: string | null) => void;
+  resources: BookingResourceDto[];
+  heading: BookingLabel;
+  seatLabel: BookingLabel;
+  anyone: string;
+  /** The name for a saved stylist the list does not hold (`stylist.pendingName`). */
+  pending: string;
+  format: BookingFormat;
+}) {
+  const id = useId();
+  const ordered = [...resources].sort((a, b) => a.sortOrder - b.sortOrder);
+  return (
+    <fieldset className="space-y-3">
+      <legend className="mb-1 font-sans text-base font-semibold">{renderLabel(heading)}</legend>
+      {seats.map((seat, index) => {
+        const takenElsewhere = new Set(
+          seats.flatMap((other, at) =>
+            at !== index && other.resourceId !== null ? [other.resourceId] : []
+          )
+        );
+        const options = ordered.filter(
+          (resource) =>
+            seat.serviceIds.every((serviceId) => resource.serviceIds.includes(serviceId)) &&
+            !takenElsewhere.has(resource.id)
+        );
+        const selectId = `${id}-seat-${index}`;
+        // A saved choice the list cannot show (still loading, gone, or no longer
+        // able to do the visit) stays the selected option, by name where known:
+        // shown as «first available» it would read as an answer never given.
+        const held =
+          seat.resourceId !== null && !options.some((resource) => resource.id === seat.resourceId)
+            ? seat.resourceId
+            : null;
+        const heldResource = held === null ? undefined : resources.find((r) => r.id === held);
+        return (
+          <div key={selectId} className="space-y-1">
+            <label htmlFor={selectId} className="block text-sm font-medium">
+              {renderLabel(seatLabel, { who: seat.who })}
+            </label>
+            <select
+              id={selectId}
+              value={seat.resourceId ?? ''}
+              onChange={(event) =>
+                onSeat(index, event.target.value === '' ? null : event.target.value)
+              }
+              className={BOOKING_SELECT_CLASS}
+            >
+              <option value="">{anyone}</option>
+              {held !== null && (
+                <option value={held}>
+                  {heldResource ? format.stylistName(heldResource.name) : pending}
+                </option>
+              )}
+              {options.map((resource) => (
+                <option key={resource.id} value={resource.id}>
+                  {format.stylistName(resource.name)}
+                </option>
+              ))}
+            </select>
+          </div>
+        );
+      })}
+    </fieldset>
   );
 }
