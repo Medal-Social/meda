@@ -18,7 +18,7 @@ import { UPCOMING_BOOKINGS_LABEL_KEYS } from './portal/upcoming-bookings.js';
 import { VIPPS_LINK_ROW_LABEL_KEYS } from './portal/vipps-link-row.js';
 import { VISIT_HISTORY_LABEL_KEYS } from './portal/visit-history.js';
 import { SERVICE_SCREEN_LABEL_KEYS, SERVICE_SCREEN_MULTI_LABEL_KEYS } from './service-screen.js';
-import { STYLIST_SCREEN_LABEL_KEYS } from './stylist-screen.js';
+import { STYLIST_SCREEN_LABEL_KEYS, STYLIST_SCREEN_SEAT_LABEL_KEYS } from './stylist-screen.js';
 import { SUMMARY_BAR_HINT_LABEL_KEYS, SUMMARY_BAR_LABEL_KEYS } from './summary-bar.js';
 import { TIME_SCREEN_FINDER_LABEL_KEYS, TIME_SCREEN_LABEL_KEYS } from './time-screen.js';
 import { WHO_SCREEN_LABEL_KEYS, WHO_SCREEN_PARTY_LABEL_KEYS } from './who-screen.js';
@@ -39,6 +39,7 @@ export const BOOKING_LABEL_KEYS = [
     ...SERVICE_SCREEN_LABEL_KEYS,
     ...SERVICE_SCREEN_MULTI_LABEL_KEYS,
     ...STYLIST_SCREEN_LABEL_KEYS,
+    ...STYLIST_SCREEN_SEAT_LABEL_KEYS,
     ...TIME_SCREEN_LABEL_KEYS,
     ...TIME_SCREEN_FINDER_LABEL_KEYS,
     ...MANAGE_SCREEN_LABEL_KEYS,
@@ -73,6 +74,7 @@ export type BookingOptionalLabelKey =
   | (typeof SERVICE_SCREEN_MULTI_LABEL_KEYS)[number]
   | (typeof BOOKING_RECAP_LABEL_KEYS)[number]
   | (typeof TIME_SCREEN_FINDER_LABEL_KEYS)[number]
+  | (typeof STYLIST_SCREEN_SEAT_LABEL_KEYS)[number]
   | (typeof SUMMARY_BAR_HINT_LABEL_KEYS)[number]
   | (typeof WHO_SCREEN_PARTY_LABEL_KEYS)[number];
 
