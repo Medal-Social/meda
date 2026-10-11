@@ -151,6 +151,8 @@ export const stylistScreenLabelsNb: StylistScreenLabels = {
   'stylist.party.parallelNote.two': 'Vi finner to behandlere som er ledige samtidig.',
   'stylist.party.parallelNote.three': 'Vi finner tre behandlere som er ledige samtidig.',
   'stylist.party.parallelNote.other': 'Vi finner {count} behandlere som er ledige samtidig.',
+  'stylist.party.seatsHeading': 'Hvem skal klippe hvem? (valgfritt)',
+  'stylist.party.seat': 'Frisør for {who}',
 };
 
 export const stylistScreenLabelsEn: StylistScreenLabels = {
@@ -171,6 +173,8 @@ export const stylistScreenLabelsEn: StylistScreenLabels = {
   'stylist.party.parallelNote.two': 'We find two stylists who are free at the same time.',
   'stylist.party.parallelNote.three': 'We find three stylists who are free at the same time.',
   'stylist.party.parallelNote.other': 'We find {count} stylists who are free at the same time.',
+  'stylist.party.seatsHeading': 'Who cuts whom? (optional)',
+  'stylist.party.seat': 'Stylist for {who}',
 };
 
 /** The demo categories, in display order. */
