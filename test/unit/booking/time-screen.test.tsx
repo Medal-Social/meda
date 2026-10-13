@@ -600,9 +600,39 @@ describe('TimeScreen — a family', () => {
       party: party({ mode: 'parallel', slots: [slot] }),
     });
     const chip = screen.getByRole('button', { name: '15:00 (Barneklipp hos Ada · Klipp hos Bo)' });
-    expect(chip.firstChild?.textContent).toBe('15:00');
-    expect(within(chip).getByText('Barneklipp hos Ada · Klipp hos Bo')).toBeInTheDocument();
+    expect(chip).toHaveTextContent('15:00 (Barneklipp hos Ada · Klipp hos Bo)');
+    expect(within(chip).getByText('Barneklipp hos Ada · Klipp hos Bo').tagName).toBe('SPAN');
     expect(chip.className).toMatch(/whitespace-normal/);
+  });
+
+  it('keeps the pack’s own order and words around the seating', () => {
+    const slot = parallelAt(15);
+    renderTime({
+      slots: [],
+      days: [slot.startTs],
+      labels: { ...timeLabelsNb, 'time.party.parallel': '{seats}, kl. {time}' },
+      party: party({ mode: 'parallel', slots: [slot] }),
+    });
+    expect(
+      screen.getByRole('button', { name: 'Barneklipp hos Ada · Klipp hos Bo, kl. 15:00' })
+    ).toHaveTextContent('Barneklipp hos Ada · Klipp hos Bo, kl. 15:00');
+  });
+
+  it('gives a custom chip the whole sentence as its label', () => {
+    const slot = parallelAt(15);
+    const seen: string[] = [];
+    renderTime({
+      slots: [],
+      days: [slot.startTs],
+      party: party({ mode: 'parallel', slots: [slot] }),
+      components: {
+        TimeChip: ({ label }) => {
+          seen.push(label);
+          return <span>{label}</span>;
+        },
+      },
+    });
+    expect(seen).toContain('15:00 (Barneklipp hos Ada · Klipp hos Bo)');
   });
 
   it('uses the people’s names once they have been given', () => {

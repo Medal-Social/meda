@@ -2,4 +2,4 @@
 '@medalsocial/meda': patch
 ---
 
-TimeScreen: a simultaneous family time now shows the hour on the chip with the seating («Mia hos Ada · Leo hos Bo») as a wrapping second line, instead of one long row that pushed the page sideways on a phone. The week grid's narrow columns show only the hour, with the seating in the tooltip. The chip's accessible name is unchanged (`time.party.parallel`). `TimeChipProps` gains optional `detail`, `accessibleName` and `compact`.
+TimeScreen: a simultaneous family time («15:00 (Mia hos Ada · Leo hos Bo)») now wraps inside its chip instead of running past a phone screen, with the seating drawn in muted text in the label pack's own order, and the week grid's narrow columns show only the hour (the whole sentence stays the chip's accessible name and tooltip). `TimeChipProps.label` is unchanged — still the whole sentence — and gains optional `richLabel` and `compactLabel` for a custom chip to opt into.
