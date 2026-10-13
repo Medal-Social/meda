@@ -592,6 +592,19 @@ describe('TimeScreen — a family', () => {
     ).toBeInTheDocument();
   });
 
+  it('draws the seating as a wrapping line under the hour, not one long row', () => {
+    const slot = parallelAt(15);
+    renderTime({
+      slots: [],
+      days: [slot.startTs],
+      party: party({ mode: 'parallel', slots: [slot] }),
+    });
+    const chip = screen.getByRole('button', { name: '15:00 (Barneklipp hos Ada · Klipp hos Bo)' });
+    expect(chip.firstChild?.textContent).toBe('15:00');
+    expect(within(chip).getByText('Barneklipp hos Ada · Klipp hos Bo')).toBeInTheDocument();
+    expect(chip.className).toMatch(/whitespace-normal/);
+  });
+
   it('uses the people’s names once they have been given', () => {
     const slot = parallelAt(15);
     renderTime({

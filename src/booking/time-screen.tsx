@@ -240,6 +240,18 @@ export interface TimeChipProps {
   startTs: number;
   /** «14:30», a party's «15:00 → 16:00», or the current hour's «15:00 · Current time». */
   label: string;
+  /**
+   * A simultaneous party's seating, «Mia with Ada · Leo with Bo», drawn as a
+   * second line under the hour so a long one wraps instead of widening the chip.
+   */
+  detail?: string;
+  /** The chip's whole name when `detail` is given: the hour and the seating in one sentence. */
+  accessibleName?: string;
+  /**
+   * A week-grid column: too narrow for `detail`, so it is left to the
+   * accessible name and the tooltip.
+   */
+  compact?: boolean;
   /** One of the nearest alternatives to a slot that was just taken. */
   nearest: boolean;
   /** The screen-reader text that says so. */
@@ -254,6 +266,9 @@ export interface TimeChipProps {
 /** One time chip. */
 export function DefaultTimeChip({
   label,
+  detail,
+  accessibleName,
+  compact = false,
   nearest,
   nearestLabel,
   current,
@@ -267,14 +282,29 @@ export function DefaultTimeChip({
       </BookingButton>
     );
   }
+  const named = detail !== undefined && accessibleName !== undefined;
+  // The ring says «nearest» to everyone who can see it; the name says it to
+  // everyone who cannot.
+  const name = nearest ? `${accessibleName} ${nearestLabel}` : accessibleName;
   return (
-    <BookingButton variant="outline" size="lg" onClick={onPick} className={className}>
-      {label}
-      {nearest && (
-        // The ring says «nearest» to everyone who can see it; this says it to
-        // everyone who cannot.
-        <span className="sr-only"> {nearestLabel}</span>
+    <BookingButton
+      variant="outline"
+      size="lg"
+      onClick={onPick}
+      aria-label={named ? name : undefined}
+      title={named && compact ? accessibleName : undefined}
+      className={cn(
+        named && !compact && 'h-auto max-w-full flex-col gap-0.5 py-2 whitespace-normal',
+        className
       )}
+    >
+      {label}
+      {named && !compact && (
+        <span className="block text-xs font-normal leading-snug text-muted-foreground">
+          {detail}
+        </span>
+      )}
+      {nearest && !named && <span className="sr-only"> {nearestLabel}</span>}
     </BookingButton>
   );
 }
@@ -461,22 +491,32 @@ function buildDayStrip(
   return [...byKey.values()].sort((a, b) => a - b);
 }
 
+/** What a time chip says: its hour line, and a simultaneous party's seating under it. */
+interface ChipText {
+  label: string;
+  detail?: string;
+  accessibleName?: string;
+}
+
 /**
- * The one chip a family taps: `15:00 → 16:00`, or the parallel form
- * `15:00 (Name with Stylist · Name with Stylist)`. The parallel chip names the
- * people where the visitor has given a name and the service otherwise.
+ * The one chip a family taps: `15:00 → 16:00`, or the parallel form — `15:00`
+ * over `Name with Stylist · Name with Stylist`, named as one sentence
+ * (`time.party.parallel`). The seating names the people where the visitor has
+ * given a name and the service otherwise.
  */
-function partyChipLabel(
+function partyChipText(
   labels: TimeScreenLabels,
   clock: BookingClock,
   slot: PartySlot,
   party: TimeScreenParty
-): string {
+): ChipText {
   if (slot.mode === 'sequential') {
-    return fillLabel(labels['time.party.sequential'], {
-      start: clock.formatTime(slot.startTs),
-      end: clock.formatTime(party.chipEndTs(slot)),
-    });
+    return {
+      label: fillLabel(labels['time.party.sequential'], {
+        start: clock.formatTime(slot.startTs),
+        end: clock.formatTime(party.chipEndTs(slot)),
+      }),
+    };
   }
   const seats = slot.seats.map((seat, index) => {
     const item = party.items[index];
@@ -486,10 +526,13 @@ function partyChipLabel(
     // is a reload of the resource list, not a reason to hide the slot.
     return stylist === null ? who : fillLabel(labels['time.party.seat'], { who, stylist });
   });
-  return fillLabel(labels['time.party.parallel'], {
-    time: clock.formatTime(slot.startTs),
-    seats: seats.join(labelText(labels['time.party.seatSeparator'])),
-  });
+  const time = clock.formatTime(slot.startTs);
+  const detail = seats.join(labelText(labels['time.party.seatSeparator']));
+  return {
+    label: time,
+    detail,
+    accessibleName: fillLabel(labels['time.party.parallel'], { time, seats: detail }),
+  };
 }
 
 /**
@@ -1100,7 +1143,8 @@ function WeekGrid({
                 <li key={slot.startTs}>
                   <TimeChip
                     startTs={slot.startTs}
-                    label={chipLabel(labels, clock, slot, current, partySlot, party)}
+                    {...chipText(labels, clock, slot, current, partySlot, party)}
+                    compact
                     nearest={isNearest}
                     nearestLabel={labelText(labels['time.nearest'])}
                     current={current}
@@ -1168,18 +1212,18 @@ function WeekGrid({
 }
 
 /** A time chip's words: the hour, the held hour marked, or a family's whole visit. */
-function chipLabel(
+function chipText(
   labels: TimeScreenLabels,
   clock: BookingClock,
   slot: BookingSlotDto,
   current: boolean,
   partySlot: PartySlot | undefined,
   party: TimeScreenParty | undefined
-): string {
+): ChipText {
   const time = clock.formatTime(slot.startTs);
-  if (current) return fillLabel(labels['time.current'], { time });
-  if (partySlot && party) return partyChipLabel(labels, clock, partySlot, party);
-  return time;
+  if (current) return { label: fillLabel(labels['time.current'], { time }) };
+  if (partySlot && party) return partyChipText(labels, clock, partySlot, party);
+  return { label: time };
 }
 
 /** The weekend note as one plain sentence, for a card that books without the notice on screen. */
@@ -1672,7 +1716,7 @@ function DaypartSections({
               <TimeChip
                 key={slot.startTs}
                 startTs={slot.startTs}
-                label={chipLabel(labels, clock, slot, current, partySlot, party)}
+                {...chipText(labels, clock, slot, current, partySlot, party)}
                 nearest={isNearest}
                 nearestLabel={labelText(labels['time.nearest'])}
                 current={current}
