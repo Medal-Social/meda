@@ -1,5 +1,11 @@
 # @medalsocial/meda
 
+## 3.9.1
+
+### Patch Changes
+
+- [#283](https://github.com/Medal-Social/meda/pull/283) [`54f3462`](https://github.com/Medal-Social/meda/commit/54f3462aa8428ae559d7debf5da90172a52d7019) Thanks [@adaadev](https://github.com/adaadev)! - TimeScreen: a simultaneous family time («15:00 (Mia hos Ada · Leo hos Bo)») now wraps inside its chip instead of running past a phone screen, with the seating drawn in muted text in the label pack's own order, and the week grid's narrow columns show only the hour (the whole sentence stays the chip's accessible name and tooltip). `TimeChipProps.label` is unchanged — still the whole sentence — and gains optional `richLabel` and `compactLabel` for a custom chip to opt into.
+
 ## 3.9.0
 
 ### Minor Changes
