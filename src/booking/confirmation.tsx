@@ -163,10 +163,32 @@ export interface ConfirmationProps {
   /** The visit's total in minor units. */
   totalOre: number;
   address?: string | null;
-  /** The calendar file (e.g. a `data:text/calendar` URL). `null` draws no link. */
+  /**
+   * The calendar link: a calendar file the site serves (`text/calendar`, which
+   * iOS and macOS open straight into «Add to Calendar»), a calendar's own
+   * add-event page (Google Calendar), or a `data:text/calendar` URL. `null`
+   * draws no link.
+   */
   calendarHref?: string | null;
-  /** `download` filename for the calendar link. Required for a `data:` URL to work. */
+  /**
+   * `download` filename for the calendar link. Only a `data:` or `blob:` URL
+   * gets it: browsers refuse to navigate to one, so the attribute is what makes
+   * it do anything. On a real URL it would force a download, and an iPhone
+   * would save the file to Files instead of opening Calendar.
+   */
   calendarFileName?: string;
+  /**
+   * The calendar link is another site's page (Google Calendar's add-event
+   * form): it opens in a new tab. A calendar file — relative or absolute —
+   * opens in place, which is what lets iOS show «Add to Calendar».
+   */
+  calendarNewTab?: boolean;
+  /**
+   * A second way into a calendar, drawn as a small link: Google Calendar beside
+   * a calendar file, or the file beside Google Calendar. `newTab` as for
+   * `calendarNewTab`. `null` draws none.
+   */
+  calendarAlt?: { href: string; label: string; newTab?: boolean } | null;
   /** Where all of the visitor's bookings are listed. `null` draws no link. */
   portalHref?: string | null;
   /** A way back to an empty wizard. Absent, the button is not drawn. */
@@ -192,6 +214,20 @@ export interface ConfirmationProps {
 
 const SEPARATOR = ' · ';
 
+/** `download` only where it is needed (see `calendarFileName`). */
+function downloadFor(href: string, fileName: string): string | undefined {
+  return /^(data|blob):/i.test(href) ? fileName : undefined;
+}
+
+/** A calendar link: the file in place, another calendar's page in a new tab. */
+function calendarLinkProps(href: string, fileName: string, newTab = false) {
+  return {
+    href,
+    download: downloadFor(href, fileName),
+    ...(newTab ? { target: '_blank', rel: 'noopener' } : {}),
+  };
+}
+
 export function Confirmation({
   lines: rawLines,
   startTs,
@@ -199,6 +235,8 @@ export function Confirmation({
   address = null,
   calendarHref = null,
   calendarFileName = 'booking.ics',
+  calendarAlt = null,
+  calendarNewTab = false,
   portalHref = null,
   onStartOver,
   now = Date.now(),
@@ -220,6 +258,8 @@ export function Confirmation({
         address={address}
         calendarHref={calendarHref}
         calendarFileName={calendarFileName}
+        calendarAlt={calendarAlt}
+        calendarNewTab={calendarNewTab}
         portalHref={portalHref}
         onStartOver={onStartOver}
         now={now}
@@ -315,8 +355,19 @@ export function Confirmation({
         {/* `download` is not decoration: browsers refuse a top-level navigation
             to a `data:` URL, so it is what makes the link do anything. */}
         {calendarHref && (
-          <a href={calendarHref} download={calendarFileName} className={linkClass}>
+          <a
+            {...calendarLinkProps(calendarHref, calendarFileName, calendarNewTab)}
+            className={linkClass}
+          >
             {labels['confirmation.calendar']}
+          </a>
+        )}
+        {calendarAlt && (
+          <a
+            {...calendarLinkProps(calendarAlt.href, calendarFileName, calendarAlt.newTab)}
+            className={linkClass}
+          >
+            {calendarAlt.label}
           </a>
         )}
         {/* One line, one link, here beside the calendar. A family gets one per
@@ -451,6 +502,8 @@ function HeroConfirmation({
   address,
   calendarHref,
   calendarFileName,
+  calendarAlt,
+  calendarNewTab,
   portalHref,
   onStartOver,
   now,
@@ -470,6 +523,8 @@ function HeroConfirmation({
     ConfirmationProps,
     | 'address'
     | 'calendarHref'
+    | 'calendarAlt'
+    | 'calendarNewTab'
     | 'portalHref'
     | 'onStartOver'
     | 'directionsHref'
@@ -651,8 +706,7 @@ function HeroConfirmation({
         <div className="grid grid-cols-2 gap-2">
           {calendarHref && (
             <a
-              href={calendarHref}
-              download={calendarFileName}
+              {...calendarLinkProps(calendarHref, calendarFileName, calendarNewTab)}
               className={bookingButtonClass({ size: 'lg', className: 'gap-2' })}
             >
               <CalendarPlus aria-hidden="true" className="size-4" />
@@ -675,6 +729,17 @@ function HeroConfirmation({
             </a>
           )}
         </div>
+      )}
+
+      {calendarAlt && (
+        <p className="-mt-2 text-center text-sm">
+          <a
+            {...calendarLinkProps(calendarAlt.href, calendarFileName, calendarAlt.newTab)}
+            className={linkClass}
+          >
+            {calendarAlt.label}
+          </a>
+        </p>
       )}
 
       {label('confirmation.tip.heading') && label('confirmation.tip.body') && (
