@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 import { demoFormatNb } from '../../../src/booking/__stories__/fixtures.js';
@@ -516,6 +516,43 @@ describe('WhoScreen — a guest party (children and me)', () => {
     renderWho({ guestParty, labels: bare });
     expect(screen.getByRole('radio', { name: '1 barn' })).toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: /Jeg skal også klippes/ })).toBeNull();
+  });
+
+  it('says «in the next chair» only while there is a child to sit beside', () => {
+    renderWho({ guestParty, people: [guest(1), ADULT] });
+    expect(screen.getByText('Samtidig, i stolen ved siden av')).toBeInTheDocument();
+    cleanup();
+    renderWho({ guestParty, people: [ADULT] });
+    expect(screen.queryByText('Samtidig, i stolen ved siden av')).toBeNull();
+  });
+
+  describe('startEmpty', () => {
+    const emptyParty = { ...guestParty, startEmpty: true };
+
+    it('starts with nobody, rather than a child', () => {
+      const { onChoose } = renderWho({ guestParty: emptyParty });
+      expect(onChoose).not.toHaveBeenCalled();
+      expect(screen.getByText('0 barn', { selector: '.sr-only' })).toBeInTheDocument();
+      expect(fewer()).toBeDisabled();
+      expect(meToo()).not.toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('books the grown-up alone in one tap', () => {
+      const { onChoose } = renderWho({ guestParty: emptyParty });
+      fireEvent.click(meToo());
+      expect(onChoose).toHaveBeenLastCalledWith([ADULT], false);
+    });
+
+    it('takes a child down to none, and lets the grown-up leave too', () => {
+      const { onChoose } = renderWho({ guestParty: emptyParty, people: [guest(1)] });
+      expect(fewer()).toBeEnabled();
+      fireEvent.click(fewer());
+      expect(onChoose).toHaveBeenLastCalledWith([], false);
+
+      renderWho({ guestParty: emptyParty, people: [ADULT] });
+      const alone = screen.getAllByRole('checkbox', { name: /Jeg skal også klippes/ }).at(-1);
+      expect(alone).not.toHaveAttribute('aria-disabled', 'true');
+    });
   });
 
   it('has no axe violations', async () => {
