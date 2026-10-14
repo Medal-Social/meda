@@ -63,6 +63,11 @@ describe('BookingPanel', () => {
     expect(onContinue).toHaveBeenCalledTimes(1);
   });
 
+  it('draws no stylist row for a family seen at once', () => {
+    setup({ stylist: undefined });
+    expect(screen.queryByText('Frisør')).toBeNull();
+  });
+
   it('draws no button for a step with its own', () => {
     setup();
     expect(screen.queryByRole('button', { name: 'Fortsett' })).toBeNull();

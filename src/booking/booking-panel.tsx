@@ -82,7 +82,11 @@ export interface BookingPanelProps {
   services: string | null;
   /** The chosen start; `null` before a time is picked. */
   startTs: number | null;
-  stylist: BookingPanelStylist | null;
+  /**
+   * `null` before one is chosen; `undefined` draws no row at all (a family
+   * seen at once has a stylist per person, which the time chips already name).
+   */
+  stylist?: BookingPanelStylist | null;
   /** Others free at the same start. Drawn with `onSwap`; at most two. */
   alternatives?: readonly BookingPanelAlternative[];
   onSwap?: (resourceId: string) => void;
@@ -139,7 +143,9 @@ export function BookingPanel({
       value: startTs === null ? notChosen : format.clock.dateTime(startTs),
       strong: startTs !== null,
     },
-    {
+  ];
+  if (stylist !== undefined) {
+    rows.push({
       name: labels['panel.stylist'],
       value: stylist ? (
         <span className="inline-flex flex-wrap items-center gap-1.5">
@@ -154,8 +160,8 @@ export function BookingPanel({
       ) : (
         notChosen
       ),
-    },
-  ];
+    });
+  }
 
   return (
     <aside
