@@ -190,6 +190,13 @@ export interface WhoScreenProps {
   guestParty?: {
     child: (seat: number) => WizardPerson;
     adult: WizardPerson & { adult: true };
+    /**
+     * Start with nobody, rather than one child: for a salon where a grown-up
+     * booking for themselves is as common as a child. Children go down to 0
+     * and the grown-up's row is a free choice either way; «next» waits for an
+     * answer. Default `false`.
+     */
+    startEmpty?: boolean;
   };
   /** Shown under the heading for a guest — e.g. an offer to log in. */
   loginRow?: ReactNode;
@@ -414,7 +421,8 @@ export function WhoScreen({
  * A guest's party: how many children (a stepper) and whether the grown-up
  * comes too (a check row), so «a child and me» is one booking without an
  * account. Starts at one child, which is the common answer, so «next» is live
- * from the first frame.
+ * from the first frame — or, with `startEmpty`, at nobody, so a grown-up
+ * booking for themselves is one tap like anyone else.
  */
 function GuestParty({
   party,
@@ -444,8 +452,10 @@ function GuestParty({
   );
   const named = childSeats.filter((person) => !generatedKeys.has(person.key));
 
+  const startEmpty = party.startEmpty === true;
   // The stepper never takes a named child away: their own card does that.
-  const floor = Math.max(named.length, adultOn ? 0 : 1);
+  // Without `startEmpty` it never empties the booking either.
+  const floor = Math.max(named.length, adultOn || startEmpty ? 0 : 1);
 
   const answer = (count: number, withAdult: boolean) => {
     const kept = named;
@@ -465,8 +475,10 @@ function GuestParty({
   const wasEmpty = useRef(false);
   useEffect(() => {
     const empty = people.length === 0;
-    if (empty && !wasEmpty.current) answer(1, false);
-    wasEmpty.current = empty;
+    if (empty && !wasEmpty.current && !startEmpty) answer(1, false);
+    // An empty answer `startEmpty` left alone is not one already seen: if the
+    // flag goes, the child is still filled in.
+    wasEmpty.current = empty && !startEmpty;
   });
 
   const text = (key: (typeof WHO_SCREEN_PARTY_LABEL_KEYS)[number], values = {}) => {
@@ -524,8 +536,9 @@ function GuestParty({
       </div>
       <CheckRow
         checked={adultOn}
-        // Never down to nobody: the last person in the booking stays.
-        disabled={(!adultOn && full) || (adultOn && children === 0)}
+        // Never down to nobody: the last person in the booking stays — unless
+        // the booking may start (and so stand) empty.
+        disabled={(!adultOn && full) || (adultOn && children === 0 && !startEmpty)}
         describedBy={!adultOn && full ? LIMIT_ID : undefined}
         onToggle={() => answer(children, !adultOn)}
         className={cn('min-h-14 justify-between px-5 py-3 text-sm', classNames?.card)}
@@ -533,7 +546,8 @@ function GuestParty({
       >
         <span className="flex min-w-0 flex-col text-left">
           <span className="font-medium">{text('who.party.adult')}</span>
-          {labels['who.party.adultNote'] && (
+          {/* «At the same time, in the next chair» is about the children: alone, it is noise. */}
+          {labels['who.party.adultNote'] && children > 0 && (
             <span className="text-muted-foreground">
               {renderLabel(labels['who.party.adultNote'])}
             </span>
