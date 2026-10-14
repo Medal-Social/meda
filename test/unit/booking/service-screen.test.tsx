@@ -1155,3 +1155,56 @@ describe('ServiceScreen — multi-select (`selection`)', () => {
     });
   });
 });
+
+describe('ServiceScreen — search (`searchFor`)', () => {
+  const BEARD: BookingServiceDto = { ...ADULT_CUT, id: 'svc-beard', name: 'Skjegg' };
+  const COLOUR: BookingServiceDto = { ...ADULT_CUT, id: 'svc-colour', name: 'Farge dame' };
+  const box = () => screen.getByRole('searchbox', { name: 'Søk i behandlingene' });
+
+  it('draws no field unless asked for that person', () => {
+    renderService({ services: [ADULT_CUT, BEARD] });
+    expect(screen.queryByRole('searchbox')).toBeNull();
+  });
+
+  it('narrows a grown-up’s list as they type, accents and case aside', () => {
+    renderService({ services: [ADULT_CUT, BEARD, COLOUR], searchFor: () => true });
+    fireEvent.change(box(), { target: { value: 'SKJEGG' } });
+    expect(screen.getByText('Skjegg')).toBeInTheDocument();
+    expect(screen.queryByText('Voksenklipp')).toBeNull();
+    fireEvent.change(box(), { target: { value: 'farge' } });
+    expect(screen.getByText('Farge dame')).toBeInTheDocument();
+    expect(screen.queryByText('Skjegg')).toBeNull();
+  });
+
+  it('says so when nothing matches, and brings the list back when cleared', () => {
+    renderService({ services: [ADULT_CUT, BEARD], searchFor: () => true });
+    fireEvent.change(box(), { target: { value: 'permanent' } });
+    expect(screen.getByText('Ingen behandling heter «permanent».')).toBeInTheDocument();
+    fireEvent.change(box(), { target: { value: '' } });
+    expect(screen.getByText('Voksenklipp')).toBeInTheDocument();
+  });
+
+  it('searches only the grown-up’s list in a family', () => {
+    const people = [
+      { key: 'guest:1', label: 'Barn 1', adult: false },
+      { key: 'adult', label: 'Voksen', adult: true },
+    ];
+    const roomy = (service: BookingServiceDto) => ({ ...service, maxPerBooking: 3 });
+    renderService({
+      services: [KIDS_CUT, roomy(ADULT_CUT), roomy(BEARD)],
+      party: { people, choices: [null, null], onPickFor: vi.fn() },
+      searchFor: (index) => people[index]?.adult === true,
+    });
+    // The child's list (first) has no field.
+    const lists = screen.getAllByRole('searchbox');
+    expect(lists).toHaveLength(1);
+    fireEvent.change(lists[0] as HTMLElement, { target: { value: 'skjegg' } });
+    expect(screen.queryByText('Voksenklipp')).toBeNull();
+    expect(screen.getByText('Barneklipp')).toBeInTheDocument();
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = renderService({ services: [ADULT_CUT, BEARD], searchFor: () => true });
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});

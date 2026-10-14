@@ -86,6 +86,8 @@ export function SummaryBar({
   // bottom of a phone is the outcome to avoid.
   if (step === 'details') return null;
 
+  const placeholder =
+    step === 'who' ? labels['summary.placeholder.who'] : labels['summary.placeholder.service'];
   const hintKey = HINT_KEYS[step];
   const hint = hideNextWhenDisabled && !canAdvance && hintKey ? labels[hintKey] : undefined;
 
@@ -108,10 +110,9 @@ export function SummaryBar({
             !line && 'text-muted-foreground'
           )}
         >
-          {line ||
-            (step === 'who'
-              ? labels['summary.placeholder.who']
-              : labels['summary.placeholder.service'])}
+          {/* With nothing chosen and the hint in the button's place, the hint
+              says it: a placeholder beside it would say it twice. */}
+          {line || (hint ? null : placeholder)}
         </p>
         {line && detail && (
           <p

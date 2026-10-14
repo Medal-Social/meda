@@ -526,6 +526,72 @@ describe('WhoScreen — a guest party (children and me)', () => {
     expect(screen.queryByText('Samtidig, i stolen ved siden av')).toBeNull();
   });
 
+  describe('adults (a «Voksen» stepper)', () => {
+    const adultSeat = (seat: number) =>
+      (seat === 1 ? ADULT : { key: `adult:${seat}`, adult: true }) as typeof ADULT;
+    const stepperParty = { ...guestParty, adults: adultSeat, startEmpty: true };
+    const moreAdults = () =>
+      screen.getByRole('button', { name: labels['who.party.adultMore'] as string });
+    const fewerAdults = () =>
+      screen.getByRole('button', { name: labels['who.party.adultFewer'] as string });
+
+    it('draws «Voksen» as a stepper instead of the check row', () => {
+      renderWho({ guestParty: stepperParty });
+      expect(screen.queryByRole('checkbox', { name: /Jeg skal også klippes/ })).toBeNull();
+      expect(screen.getByText('0 voksne', { selector: '.sr-only' })).toBeInTheDocument();
+      expect(fewerAdults()).toBeDisabled();
+      expect(screen.getByText('Opptil tre i samme bestilling.')).toBeInTheDocument();
+    });
+
+    it('seats two grown-ups, the first on the `adult` seat', () => {
+      const { onChoose } = renderWho({ guestParty: stepperParty, people: [ADULT] });
+      fireEvent.click(moreAdults());
+      expect(onChoose).toHaveBeenLastCalledWith([ADULT, adultSeat(2)], false);
+    });
+
+    it('keeps the children ahead of the grown-ups and counts both towards the limit', () => {
+      const { onChoose } = renderWho({
+        guestParty: stepperParty,
+        people: [guest(1), ADULT, adultSeat(2)],
+      });
+      expect(screen.getByText('2 voksne', { selector: '.sr-only' })).toBeInTheDocument();
+      expect(screen.getByText('1 barn', { selector: '.sr-only' })).toBeInTheDocument();
+      expect(more()).toBeDisabled();
+      expect(moreAdults()).toBeDisabled();
+      fireEvent.click(fewerAdults());
+      expect(onChoose).toHaveBeenLastCalledWith([guest(1), ADULT], false);
+    });
+
+    it('offers «come along» only while there are children and no grown-up', () => {
+      renderWho({ guestParty: stepperParty, people: [guest(1)] });
+      expect(screen.getByText(/Kommer du med barnet\?/)).toBeInTheDocument();
+      cleanup();
+      renderWho({ guestParty: stepperParty, people: [guest(1), ADULT] });
+      expect(screen.queryByText(/Kommer du med barnet\?/)).toBeNull();
+    });
+
+    it('keeps the check row when the stepper labels are missing', () => {
+      const {
+        'who.party.adultFewer': _f,
+        'who.party.adultMore': _m,
+        'who.party.adultCount': _c,
+        ...bare
+      } = labels;
+      renderWho({ guestParty: stepperParty, labels: bare });
+      expect(meToo()).toBeInTheDocument();
+    });
+
+    it('never lets the last grown-up go without startEmpty and no children', () => {
+      renderWho({ guestParty: { ...guestParty, adults: adultSeat }, people: [ADULT] });
+      expect(fewerAdults()).toBeDisabled();
+    });
+
+    it('has no axe violations', async () => {
+      const { container } = renderWho({ guestParty: stepperParty, people: [guest(1), ADULT] });
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
   describe('startEmpty', () => {
     const emptyParty = { ...guestParty, startEmpty: true };
 
