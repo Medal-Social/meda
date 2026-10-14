@@ -555,6 +555,29 @@ describe('WhoScreen — a guest party (children and me)', () => {
     });
   });
 
+  it('fills the one child in when startEmpty goes while the answer is empty', () => {
+    const onChoose = vi.fn();
+    const props = {
+      labels,
+      format: demoFormatNb,
+      people: [],
+      family: null,
+      guestChoices: GUEST_CHOICES,
+      maxPeople: 3,
+      selfKey: SELF,
+      isGuestSeat,
+      onChoose,
+      onAddChild: vi.fn(async (): Promise<SaveResult> => ({ ok: true })),
+      currentYear: 2026,
+    };
+    const { rerender } = render(
+      <WhoScreen {...props} guestParty={{ ...guestParty, startEmpty: true }} />
+    );
+    expect(onChoose).not.toHaveBeenCalled();
+    rerender(<WhoScreen {...props} guestParty={guestParty} />);
+    expect(onChoose).toHaveBeenCalledWith([guest(1)], false);
+  });
+
   it('has no axe violations', async () => {
     const { container } = renderWho({ guestParty, people: [guest(1)] });
     expect(await axe(container)).toHaveNoViolations();

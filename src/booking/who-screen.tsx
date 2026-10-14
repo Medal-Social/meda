@@ -476,7 +476,9 @@ function GuestParty({
   useEffect(() => {
     const empty = people.length === 0;
     if (empty && !wasEmpty.current && !startEmpty) answer(1, false);
-    wasEmpty.current = empty;
+    // An empty answer `startEmpty` left alone is not one already seen: if the
+    // flag goes, the child is still filled in.
+    wasEmpty.current = empty && !startEmpty;
   });
 
   const text = (key: (typeof WHO_SCREEN_PARTY_LABEL_KEYS)[number], values = {}) => {
