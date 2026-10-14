@@ -1,5 +1,6 @@
 'use client';
 
+import { Search } from 'lucide-react';
 import { type ComponentType, type ReactNode, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import type { BookingFormat } from './format.js';
@@ -75,8 +76,21 @@ export type ServiceMultiLabels = Record<
   BookingLabel
 >;
 
+/**
+ * Opt-in keys for the search field (`ServiceScreenProps.searchFor`):
+ * `service.search` is its placeholder («Search: beard, fringe, colour …»),
+ * `service.searchLabel` its accessible name, and `service.searchEmpty`
+ * `{query}` what shows when nothing matches. Without all three, no field.
+ */
+export const SERVICE_SCREEN_SEARCH_LABEL_KEYS = [
+  'service.search',
+  'service.searchLabel',
+  'service.searchEmpty',
+] as const;
+
 export type ServiceScreenLabels = Record<(typeof SERVICE_SCREEN_LABEL_KEYS)[number], BookingLabel> &
-  Partial<ServiceMultiLabels>;
+  Partial<ServiceMultiLabels> &
+  Partial<Record<(typeof SERVICE_SCREEN_SEARCH_LABEL_KEYS)[number], BookingLabel>>;
 
 /**
  * - `root` — the `<section>`
@@ -260,6 +274,12 @@ export interface ServiceScreenProps {
    * Absent: the one-tap step, unchanged.
    */
   selection?: ServiceSelection;
+  /**
+   * Whose list gets a search field, by person (0 for a party of one): a
+   * grown-up's catalogue is long, a child's is short. Needs the
+   * `service.search*` labels. Default: nobody.
+   */
+  searchFor?: (personIndex: number) => boolean;
 }
 
 const HEADING_ID = 'booking-service-heading';
@@ -320,6 +340,70 @@ function cardProps(shared: Shared) {
 /** The ids `personIndex` has ticked so far. */
 function tickedBy(selection: ServiceSelection, personIndex: number): Set<string> {
   return new Set((selection.lists[personIndex] ?? []).map((service) => service.id));
+}
+
+/** Lower case, accents gone: «Fargé» finds «farge», «ø» stays «ø». */
+function fold(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+/** Every word of the query is somewhere in the service's name or group. */
+function matchesQuery(service: BookingServiceDto, query: string, groupLabel: string): boolean {
+  const haystack = fold(`${service.name} ${groupLabel}`);
+  return fold(query)
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((word) => haystack.includes(word));
+}
+
+function searchReady(labels: ServiceScreenLabels): boolean {
+  return SERVICE_SCREEN_SEARCH_LABEL_KEYS.every((key) => labels[key] !== undefined);
+}
+
+/** The search field, and the sentence for an empty result under it. */
+function ServiceSearch({
+  id,
+  query,
+  onQuery,
+  empty,
+  labels,
+}: {
+  id: string;
+  query: string;
+  onQuery: (query: string) => void;
+  empty: boolean;
+  labels: ServiceScreenLabels;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="relative">
+        <Search
+          aria-hidden="true"
+          className="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+        />
+        <input
+          id={id}
+          type="search"
+          value={query}
+          onChange={(event) => onQuery(event.target.value)}
+          aria-label={labelText(labels['service.searchLabel'] as BookingLabel)}
+          placeholder={labelText(labels['service.search'] as BookingLabel)}
+          autoComplete="off"
+          enterKeyHint="search"
+          // 16 px: a smaller field makes iOS zoom the page on focus.
+          className="h-12 w-full rounded-lg border border-border bg-card ps-11 pe-4 text-base outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
+        />
+      </div>
+      <p aria-live="polite" className="text-sm text-muted-foreground empty:hidden">
+        {empty && query.trim() !== ''
+          ? fillLabel(labels['service.searchEmpty'] as BookingLabel, { query: query.trim() })
+          : ''}
+      </p>
+    </div>
+  );
 }
 
 export function ServiceScreen(props: ServiceScreenProps) {
@@ -419,9 +503,12 @@ function SingleServiceScreen({
   chosenId = null,
   childName = null,
   selection,
+  searchFor,
   shared,
 }: ServiceScreenProps & { shared: Shared }) {
   const { Card, labels, classNames } = shared;
+  const searchable = searchFor?.(0) === true && searchReady(labels);
+  const [query, setQuery] = useState('');
   const ticked = selection ? tickedBy(selection, 0) : null;
   // One person: a tap either answers the step or, multi-select, ticks.
   const bookable = (service: BookingServiceDto) =>
@@ -436,7 +523,13 @@ function SingleServiceScreen({
   const fileUnder = categoryOf ?? defaultCategoryOf(categories);
   // What certainly does not suit this person moves below a divider, still
   // bookable. Telephone-only cards stay where they are: the list stays whole.
-  const { fitting: offered, unlikely } = byFit(services, (service) => serviceFits(service, 0));
+  const labelOf = (service: BookingServiceDto) =>
+    categories.find((category) => category.key === fileUnder(service))?.label ?? '';
+  const found =
+    searchable && query.trim() !== ''
+      ? services.filter((service) => matchesQuery(service, query, labelOf(service)))
+      : services;
+  const { fitting: offered, unlikely } = byFit(found, (service) => serviceFits(service, 0));
   const groups = categories
     .map((category) => ({
       category,
@@ -486,6 +579,16 @@ function SingleServiceScreen({
             {labels['service.chooseOther']}
           </p>
         </div>
+      )}
+
+      {searchable && (
+        <ServiceSearch
+          id="booking-service-search"
+          query={query}
+          onQuery={setQuery}
+          empty={offered.length === 0 && unlikely.length === 0}
+          labels={labels}
+        />
       )}
 
       {groups.length > 1 && (
@@ -596,9 +699,11 @@ function PartyServiceScreen({
   serviceFits = allFit,
   party,
   selection,
+  searchFor,
   shared,
 }: ServiceScreenProps & { party: NonNullable<ServiceScreenProps['party']>; shared: Shared }) {
   const { Card, labels, classNames } = shared;
+  const [queries, setQueries] = useState<Record<number, string>>({});
   const fileUnder = categoryOf ?? defaultCategoryOf(categories);
   const keysFor = (audience: ServiceScreenCategory['audience']) =>
     new Set(categories.filter((group) => group.audience === audience).map((group) => group.key));
@@ -617,11 +722,15 @@ function PartyServiceScreen({
   );
 
   function personBody(person: ServicePartyPerson, index: number): ReactNode {
+    const searchable = searchFor?.(index) === true && searchReady(labels);
+    const query = searchable ? (queries[index] ?? '') : '';
+    const labelOf = (service: BookingServiceDto) =>
+      categories.find((category) => category.key === fileUnder(service))?.label ?? '';
     const { fitting: menu, unlikely } = byFit(
       // A grown-up gets the grown-ups' menu and a child the children's —
       // a kids' cut for «myself» is not an answer, it is a way round the
       // note below that books the wrong thing.
-      childCategory === undefined
+      (childCategory === undefined
         ? fits
         : fits.filter((service) => {
             const key = fileUnder(service);
@@ -632,8 +741,18 @@ function PartyServiceScreen({
             // built-in display fallback, which files an unlisted (possibly
             // grown-up) category under the last group.
             return person.adult || forAnyone.has(categoryOf ? key : service.category);
-          }),
+          })
+      ).filter((service) => query.trim() === '' || matchesQuery(service, query, labelOf(service))),
       (service) => serviceFits(service, index)
+    );
+    const search = searchable && (
+      <ServiceSearch
+        id={`booking-service-search-${index}`}
+        query={query}
+        onQuery={(next) => setQueries((all) => ({ ...all, [index]: next }))}
+        empty={menu.length === 0 && unlikely.length === 0}
+        labels={labels}
+      />
     );
     const ticked = selection ? tickedBy(selection, index) : null;
     const chosen = party.choices[index]?.id ?? null;
@@ -667,23 +786,27 @@ function PartyServiceScreen({
     const listLabel = fillLabel(labels['service.party.listLabel'], { label: person.label });
     if (suggestion && menu.some((service) => service.id === suggestion.service.id)) {
       return (
-        <PersonWithSuggestion
-          // A fresh disclosure per person: the tabs share one panel.
-          key={person.key}
-          listLabel={listLabel}
-          suggestion={suggestion}
-          menu={menu}
-          ticked={ticked}
-          chosen={chosen}
-          onPick={pick}
-          choiceCard={choiceCard}
-          unlikely={unlikelyList}
-          hasUnlikely={unlikely.length > 0}
-          shared={shared}
-        />
+        <>
+          {search}
+          <PersonWithSuggestion
+            // A fresh disclosure per person: the tabs share one panel.
+            key={person.key}
+            listLabel={listLabel}
+            suggestion={suggestion}
+            menu={menu}
+            ticked={ticked}
+            chosen={chosen}
+            onPick={pick}
+            choiceCard={choiceCard}
+            unlikely={unlikelyList}
+            hasUnlikely={unlikely.length > 0}
+            shared={shared}
+          />
+        </>
       );
     }
-    if (menu.length === 0 && unlikely.length === 0) {
+    // Nothing matching a search is the search's to say, not «nothing fits».
+    if (menu.length === 0 && unlikely.length === 0 && query.trim() === '') {
       return (
         <NothingInThisParty
           person={person}
@@ -695,6 +818,7 @@ function PartyServiceScreen({
     }
     return (
       <>
+        {search}
         {menu.length > 0 && (
           <ul aria-label={listLabel} className="space-y-2">
             {menu.map((service) => (
