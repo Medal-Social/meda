@@ -478,15 +478,28 @@ describe('Confirmation — calendar links', () => {
     expect(calendar()).not.toHaveAttribute('target');
   });
 
-  it('opens another calendar’s page in a new tab', () => {
-    setup({ calendarHref: 'https://calendar.google.com/calendar/render?action=TEMPLATE' });
+  it('opens an absolute calendar file in place too: only a marked page gets a new tab', () => {
+    setup({ calendarHref: 'https://salong.example/api/booking/calendar/tok_1' });
+    expect(calendar()).not.toHaveAttribute('target');
+  });
+
+  it('opens another calendar’s page in a new tab when marked so', () => {
+    setup({
+      calendarHref: 'https://calendar.google.com/calendar/render?action=TEMPLATE',
+      calendarNewTab: true,
+    });
     expect(calendar()).toHaveAttribute('target', '_blank');
     expect(calendar()).not.toHaveAttribute('download');
   });
 
   it('draws the second way in beside it, in both layouts', () => {
-    const calendarAlt = { href: 'https://calendar.google.com/x', label: 'Google Kalender' };
-    setup({ calendarAlt });
+    setup({
+      calendarAlt: {
+        href: 'https://calendar.google.com/x',
+        label: 'Google Kalender',
+        newTab: true,
+      },
+    });
     expect(screen.getByRole('link', { name: 'Google Kalender' })).toHaveAttribute(
       'target',
       '_blank'
@@ -494,8 +507,13 @@ describe('Confirmation — calendar links', () => {
     cleanup();
     setup({
       layout: 'hero',
+      calendarHref: 'https://calendar.google.com/x',
+      calendarNewTab: true,
       calendarAlt: { href: '/api/booking/calendar/tok_1', label: 'Kalenderfil' },
     });
-    expect(screen.getByRole('link', { name: 'Kalenderfil' })).not.toHaveAttribute('download');
+    const file = screen.getByRole('link', { name: 'Kalenderfil' });
+    expect(file).not.toHaveAttribute('download');
+    expect(file).not.toHaveAttribute('target');
+    expect(calendar()).toHaveAttribute('target', '_blank');
   });
 });
