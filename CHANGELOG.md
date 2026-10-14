@@ -1,5 +1,11 @@
 # @medalsocial/meda
 
+## 3.12.0
+
+### Minor Changes
+
+- [#292](https://github.com/Medal-Social/meda/pull/292) [`4aff65d`](https://github.com/Medal-Social/meda/commit/4aff65d680ceaaf2ef071c911dc87567616b5055) Thanks [@adaadev](https://github.com/adaadev)! - Confirmation: the calendar link only forces a download for a `data:` or `blob:` URL. A calendar file the site serves now opens in place (iOS and macOS go straight to «Add to Calendar» instead of saving it to Files), and a link marked `calendarNewTab` (another calendar's page, such as Google Calendar) opens in a new tab. New optional `calendarAlt` draws a second way into a calendar beside the first, with its own `newTab`.
+
 ## 3.11.0
 
 ### Minor Changes
