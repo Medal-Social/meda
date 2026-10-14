@@ -408,7 +408,7 @@ describe('Confirmation — layout="hero"', () => {
   it('names service, stylist and place in a details card', () => {
     hero();
     expect(screen.getByText('Klipp').nextSibling).toHaveTextContent(
-      'Barneklipp for Jonas · 30 min'
+      /^Barneklipp for Jonas · 30 min · 390\skr$/
     );
     expect(screen.getByText('Frisør').nextSibling).toHaveTextContent('Ada');
     expect(screen.getByText('Hvor').nextSibling).toHaveTextContent('Schous plass 6, 0552 Oslo');
@@ -438,6 +438,18 @@ describe('Confirmation — layout="hero"', () => {
     const { 'confirmation.tip.body': _body, ...noBody } = L;
     hero({ labels: noBody });
     expect(screen.getAllByText('Før dere kommer')).toHaveLength(1);
+  });
+
+  it('says when in words beside the decorative leaf', () => {
+    hero();
+    const when = [...document.querySelectorAll('.sr-only')].map((node) => node.textContent);
+    expect(when.some((text) => /15:00/.test(text ?? ''))).toBe(true);
+  });
+
+  it('falls back to the card line when the pack has no hero row names', () => {
+    const { 'confirmation.detail.service': _service, ...bare } = L;
+    hero({ labels: bare });
+    expect(screen.getByText(/Barneklipp for Jonas · Ada · .* · 390\skr/)).toBeInTheDocument();
   });
 
   it('keeps the family card for a party', () => {

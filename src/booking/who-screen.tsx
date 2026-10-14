@@ -71,7 +71,12 @@ export const WHO_SCREEN_PARTY_LABEL_KEYS = [
   'who.party.childrenNote',
   /** The grown-up's row, e.g. «I'm getting a cut too». */
   'who.party.adult',
-  /** Under it, e.g. «Side by side, at the same time». */
+  /**
+   * Under it. Check row: about sitting beside a child («Side by side, at the
+   * same time»), so shown only while there is one. Stepper
+   * (`guestParty.adults`): it describes the grown-ups' row the way
+   * `childrenNote` does the children's («Cut, beard, colour»), so always.
+   */
   'who.party.adultNote',
   'who.party.fewer',
   'who.party.more',

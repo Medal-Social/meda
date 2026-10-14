@@ -491,7 +491,38 @@ function HeroConfirmation({
   );
   const label = (key: (typeof CONFIRMATION_HERO_LABEL_KEYS)[number]) => labels[key];
 
+  const when = renderLabel(labels['confirmation.when'], {
+    day: clock.dayLabel(startTs, now),
+    time: clock.formatTime(startTs),
+  });
   const rows: { name: BookingLabel; value: ReactNode }[] = [];
+  // A pack without the hero's row names still says what was booked: the card
+  // layout's one line, rather than a confirmation with no service on it.
+  const plainLine =
+    first && lines.length === 1 && !label('confirmation.detail.service') ? (
+      <p
+        className={slotClass(
+          classNames,
+          'card',
+          'rounded-lg border border-border bg-card px-5 py-4 font-medium'
+        )}
+      >
+        {joinLabelParts(
+          [
+            first.item.bookedForName
+              ? renderLabel(labels['confirmation.serviceFor'], {
+                  service: visitName(first.item),
+                  name: first.item.bookedForName,
+                })
+              : visitName(first.item),
+            first.stylistName,
+            when,
+            format.price(first.priceOre),
+          ],
+          SEPARATOR
+        )}
+      </p>
+    ) : null;
   if (first && lines.length === 1) {
     const service = first.item.bookedForName
       ? renderLabel(labels['confirmation.serviceFor'], {
@@ -503,12 +534,15 @@ function HeroConfirmation({
     if (label('confirmation.detail.service')) {
       rows.push({
         name: label('confirmation.detail.service') as BookingLabel,
-        value: duration
-          ? joinLabelParts(
-              [service, renderLabel(duration, { minutes: visitMinutes(first.item) })],
-              SEPARATOR
-            )
-          : service,
+        // The price stays with what was booked, as on the card layout.
+        value: joinLabelParts(
+          [
+            service,
+            duration ? renderLabel(duration, { minutes: visitMinutes(first.item) }) : null,
+            format.price(first.priceOre),
+          ],
+          SEPARATOR
+        ),
       });
     }
     if (first.stylistName && label('confirmation.detail.stylist')) {
@@ -575,12 +609,15 @@ function HeroConfirmation({
         >
           {labels['confirmation.heading']}
         </h2>
+        {/* The leaf is decoration: the day and time, in words, for a screen reader. */}
+        <p className="sr-only">{when}</p>
         {label('confirmation.sent') && (
           <p className="text-sm text-muted-foreground">
             {renderLabel(label('confirmation.sent') as BookingLabel)}
           </p>
         )}
       </div>
+      {plainLine}
 
       {lines.length > 1 && (
         <PartyCard

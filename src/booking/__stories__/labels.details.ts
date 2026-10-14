@@ -188,7 +188,7 @@ export const bookingPanelLabelsNb: BookingPanelLabels = {
   'panel.firstAvailable': 'første ledige',
   'panel.alsoFree': 'Også ledig da:',
   'panel.swap': 'Bytt',
-  'panel.swapTo': 'Bestill hos {name} i stedet',
+  'panel.swapTo': 'til {name}',
   'panel.total': 'Totalt, betales i salongen',
   'panel.continue': 'Fortsett',
 };
@@ -203,7 +203,7 @@ export const bookingPanelLabelsEn: BookingPanelLabels = {
   'panel.firstAvailable': 'first available',
   'panel.alsoFree': 'Also free then:',
   'panel.swap': 'Switch',
-  'panel.swapTo': 'Book with {name} instead',
+  'panel.swapTo': 'to {name}',
   'panel.total': 'Total, paid at the salon',
   'panel.continue': 'Continue',
 };

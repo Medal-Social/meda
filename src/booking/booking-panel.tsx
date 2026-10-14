@@ -36,7 +36,10 @@ export const BOOKING_PANEL_LABEL_KEYS = [
   'panel.alsoFree',
   /** The swap button's words, «Switch». */
   'panel.swap',
-  /** `{name}` — its accessible name, «Book with {name} instead». */
+  /**
+   * `{name}` — read after `panel.swap` by a screen reader, «to {name}», so
+   * the button's name starts with the word on it (speech control matches it).
+   */
   'panel.swapTo',
   /** The total's words, «Total, paid at the salon». */
   'panel.total',
@@ -151,6 +154,9 @@ export function BookingPanel({
         <span className="inline-flex flex-wrap items-center gap-1.5">
           <Face photoUrl={stylist.photoUrl} />
           {format.stylistName(stylist.name)}
+          {/* A real space: the gap is only visual, and a screen reader would
+              otherwise read «Gabrielførste ledige» as one word. */}
+          {stylist.firstAvailable && ' '}
           {stylist.firstAvailable && (
             <span className="text-xs text-muted-foreground">
               {renderLabel(labels['panel.firstAvailable'])}
@@ -198,13 +204,15 @@ export function BookingPanel({
               {format.stylistName(alternative.name)}
               <button
                 type="button"
-                aria-label={fillLabel(labels['panel.swapTo'], {
-                  name: format.stylistName(alternative.name),
-                })}
                 onClick={() => onSwap?.(alternative.resourceId)}
                 className="font-semibold text-primary underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none"
               >
-                {renderLabel(labels['panel.swap'])}
+                {renderLabel(labels['panel.swap'])}{' '}
+                <span className="sr-only">
+                  {fillLabel(labels['panel.swapTo'], {
+                    name: format.stylistName(alternative.name),
+                  })}
+                </span>
               </button>
             </span>
           ))}
@@ -234,10 +242,11 @@ export function BookingPanel({
       )}
       {notes.length > 0 && (
         <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-          {notes.map((note) => {
+          {notes.map((note, index) => {
             const Icon = NOTE_ICONS[note.kind];
             return (
-              <li key={note.kind} className="flex items-center gap-2">
+              // biome-ignore lint/suspicious/noArrayIndexKey: notes are positional and never reorder while shown; two of a kind are allowed.
+              <li key={`${note.kind}-${index}`} className="flex items-center gap-2">
                 <Icon aria-hidden="true" className="size-4 shrink-0" />
                 <span>{note.text}</span>
               </li>

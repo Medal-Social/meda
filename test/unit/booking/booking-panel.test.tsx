@@ -32,7 +32,7 @@ describe('BookingPanel', () => {
     expect(row('Hvem')).toHaveTextContent('1 barn');
     expect(row('Klipp')).toHaveTextContent('Gutteklipp · 30 min');
     expect(row('Tid')).toHaveTextContent('kl. 10:30');
-    expect(row('Frisør')).toHaveTextContent('Gabrielførste ledige');
+    expect(row('Frisør')).toHaveTextContent('Gabriel første ledige');
   });
 
   it('keeps its shape before anything is chosen', () => {
@@ -77,8 +77,18 @@ describe('BookingPanel', () => {
     const onSwap = vi.fn();
     setup({ alternatives: [{ resourceId: 'res-sam', name: 'Sam' }], onSwap });
     expect(screen.getByText('Også ledig da:')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Bestill hos Sam i stedet' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Bytt til Sam' }));
     expect(onSwap).toHaveBeenCalledWith('res-sam');
+  });
+
+  it('takes two notes of one kind', () => {
+    setup({
+      notes: [
+        { kind: 'place', text: 'Torget 1' },
+        { kind: 'place', text: 'Inngang fra gården' },
+      ],
+    });
+    expect(screen.getByText('Inngang fra gården')).toBeInTheDocument();
   });
 
   it('lists the notes with their icons hidden', () => {
