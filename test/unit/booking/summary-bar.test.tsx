@@ -89,6 +89,14 @@ describe('SummaryBar', () => {
     expect(screen.getByText(L['summary.hint.when'] as string)).toBeInTheDocument();
   });
 
+  it('says «who» once: the hint, without the placeholder beside it', () => {
+    setup({ step: 'who', hideNextWhenDisabled: true });
+    expect(screen.getAllByText(L['summary.hint.who'] as string)).toHaveLength(1);
+    if (L['summary.placeholder.who'] !== L['summary.hint.who']) {
+      expect(screen.queryByText(L['summary.placeholder.who'] as string)).toBeNull();
+    }
+  });
+
   it('brings the button back as soon as it does something', () => {
     setup({ step: 'when', line: 'Barneklipp', canAdvance: true, hideNextWhenDisabled: true });
     expect(screen.getByRole('button', { name: L['summary.next'] })).toBeEnabled();

@@ -71,12 +71,26 @@ export const WHO_SCREEN_PARTY_LABEL_KEYS = [
   'who.party.childrenNote',
   /** The grown-up's row, e.g. «I'm getting a cut too». */
   'who.party.adult',
-  /** Under it, e.g. «Side by side, at the same time». */
+  /**
+   * Under it. Check row: about sitting beside a child («Side by side, at the
+   * same time»), so shown only while there is one. Stepper
+   * (`guestParty.adults`): it describes the grown-ups' row the way
+   * `childrenNote` does the children's («Cut, beard, colour»), so always.
+   */
   'who.party.adultNote',
   'who.party.fewer',
   'who.party.more',
   /** `{count}` — the children's number, read out, e.g. «{count} children». */
   'who.party.count',
+  /** With `guestParty.adults`: the grown-ups' stepper buttons and their number read out. */
+  'who.party.adultFewer',
+  'who.party.adultMore',
+  /** `{count}` — e.g. «{count} grown-ups». */
+  'who.party.adultCount',
+  /** Under the heading, e.g. «Up to three in one booking». */
+  'who.party.lead',
+  /** Under the steppers while there are children and no grown-up. */
+  'who.party.togetherHint',
 ] as const;
 
 /** The `who.party.*` keys `guestParty` cannot draw without; the two notes are extras. */
@@ -197,6 +211,13 @@ export interface WhoScreenProps {
      * answer. Default `false`.
      */
     startEmpty?: boolean;
+    /**
+     * The grown-ups' seats, 1-based, when «Voksen» is a number (a stepper)
+     * rather than one check row: two parents, or a parent and a grandparent,
+     * in one booking. Seat 1 must be `adult`. Needs the `who.party.adultFewer`,
+     * `adultMore` and `adultCount` labels; without them the check row stays.
+     */
+    adults?: (seat: number) => WizardPerson & { adult: true };
   };
   /** Shown under the heading for a guest — e.g. an offer to log in. */
   loginRow?: ReactNode;
@@ -439,11 +460,23 @@ function GuestParty({
   classNames: SlotClassNames<WhoScreenSlot> | undefined;
   onChoose: WhoScreenProps['onChoose'];
 }) {
-  const adultOn = people.some((person) => person.key === party.adult.key);
-  // The grown-up's seat is never a child, flag or no flag.
-  const childSeats = people.filter((person) => !person.adult && person.key !== party.adult.key);
+  const adultStepper =
+    party.adults !== undefined &&
+    labels['who.party.adultFewer'] !== undefined &&
+    labels['who.party.adultMore'] !== undefined &&
+    labels['who.party.adultCount'] !== undefined;
+  const adultSeat = (seat: number) =>
+    seat === 1 || !party.adults ? party.adult : party.adults(seat);
+  const adultKeys = new Set(
+    Array.from({ length: maxPeople }, (_, index) => adultSeat(index + 1).key)
+  );
+  const isAdultSeat = (person: WizardPerson) => adultKeys.has(person.key);
+  const adults = people.filter(isAdultSeat).length;
+  const adultOn = adults > 0;
+  // A grown-up's seat is never a child, flag or no flag.
+  const childSeats = people.filter((person) => !person.adult && !isAdultSeat(person));
   const children = childSeats.length;
-  const full = children + (adultOn ? 1 : 0) >= maxPeople;
+  const full = children + adults >= maxPeople;
 
   // Named children (from the add-child sheet) keep their seats, first; the
   // stepper adds and removes the unnamed ones after them.
@@ -456,8 +489,9 @@ function GuestParty({
   // The stepper never takes a named child away: their own card does that.
   // Without `startEmpty` it never empties the booking either.
   const floor = Math.max(named.length, adultOn || startEmpty ? 0 : 1);
+  const adultFloor = children === 0 && !startEmpty ? 1 : 0;
 
-  const answer = (count: number, withAdult: boolean) => {
+  const answer = (count: number, grownUps: number) => {
     const kept = named;
     const used = new Set(kept.map((person) => person.key));
     const fill: WizardPerson[] = [];
@@ -465,7 +499,8 @@ function GuestParty({
       const next = party.child(seat);
       if (!used.has(next.key)) fill.push(next);
     }
-    onChoose([...kept, ...fill, ...(withAdult ? [party.adult] : [])], false);
+    const seated = Array.from({ length: grownUps }, (_, index) => adultSeat(index + 1));
+    onChoose([...kept, ...fill, ...seated], false);
   };
 
   // One child whenever the answer becomes empty (first frame or cleared
@@ -475,7 +510,7 @@ function GuestParty({
   const wasEmpty = useRef(false);
   useEffect(() => {
     const empty = people.length === 0;
-    if (empty && !wasEmpty.current && !startEmpty) answer(1, false);
+    if (empty && !wasEmpty.current && !startEmpty) answer(1, 0);
     // An empty answer `startEmpty` left alone is not one already seen: if the
     // flag goes, the child is still filled in.
     wasEmpty.current = empty && !startEmpty;
@@ -485,76 +520,75 @@ function GuestParty({
     const label = labels[key];
     return label ? fillLabel(label, values) : '';
   };
-  const stepButton =
-    'flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-background text-foreground transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-40';
+  const childrenNote = labels['who.party.childrenNote'];
+  const adultNote = labels['who.party.adultNote'];
 
   return (
     <div className="space-y-3">
+      {labels['who.party.lead'] && (
+        <p className="text-sm text-muted-foreground">{renderLabel(labels['who.party.lead'])}</p>
+      )}
       <div
         className={cn(
-          'flex items-center gap-4 rounded-lg border border-border bg-card px-5 py-4',
+          'divide-y divide-border rounded-lg border border-border bg-card',
           classNames?.card
         )}
       >
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold">{text('who.party.children')}</p>
-          {labels['who.party.childrenNote'] && (
-            <p className="text-sm text-muted-foreground">
-              {renderLabel(labels['who.party.childrenNote'])}
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label={text('who.party.fewer')}
-            disabled={children <= floor}
-            onClick={() => answer(children - 1, adultOn)}
-            className={stepButton}
-          >
-            <Minus aria-hidden="true" className="size-4" />
-          </button>
-          <span
-            aria-live="polite"
-            aria-atomic="true"
-            className="w-6 text-center text-lg font-bold tabular-nums"
-          >
-            <span aria-hidden="true">{children}</span>
-            <span className="sr-only">{text('who.party.count', { count: children })}</span>
-          </span>
-          <button
-            type="button"
-            aria-label={text('who.party.more')}
-            aria-describedby={full ? LIMIT_ID : undefined}
-            disabled={full}
-            onClick={() => answer(children + 1, adultOn)}
-            className={stepButton}
-          >
-            <Plus aria-hidden="true" className="size-4" />
-          </button>
-        </div>
+        <StepperRow
+          title={text('who.party.children')}
+          note={childrenNote ? renderLabel(childrenNote) : null}
+          value={children}
+          countLabel={text('who.party.count', { count: children })}
+          fewerLabel={text('who.party.fewer')}
+          moreLabel={text('who.party.more')}
+          canFewer={children > floor}
+          canMore={!full}
+          limitId={full ? LIMIT_ID : undefined}
+          onFewer={() => answer(children - 1, adults)}
+          onMore={() => answer(children + 1, adults)}
+        />
+        {adultStepper && (
+          <StepperRow
+            title={text('who.party.adult')}
+            note={adultNote ? renderLabel(adultNote) : null}
+            value={adults}
+            countLabel={text('who.party.adultCount', { count: adults })}
+            fewerLabel={text('who.party.adultFewer')}
+            moreLabel={text('who.party.adultMore')}
+            canFewer={adults > adultFloor}
+            canMore={!full}
+            limitId={full ? LIMIT_ID : undefined}
+            onFewer={() => answer(children, adults - 1)}
+            onMore={() => answer(children, adults + 1)}
+          />
+        )}
       </div>
-      <CheckRow
-        checked={adultOn}
-        // Never down to nobody: the last person in the booking stays — unless
-        // the booking may start (and so stand) empty.
-        disabled={(!adultOn && full) || (adultOn && children === 0 && !startEmpty)}
-        describedBy={!adultOn && full ? LIMIT_ID : undefined}
-        onToggle={() => answer(children, !adultOn)}
-        className={cn('min-h-14 justify-between px-5 py-3 text-sm', classNames?.card)}
-        selectedClassName={classNames?.cardSelected}
-      >
-        <span className="flex min-w-0 flex-col text-left">
-          <span className="font-medium">{text('who.party.adult')}</span>
-          {/* «At the same time, in the next chair» is about the children: alone, it is noise. */}
-          {labels['who.party.adultNote'] && children > 0 && (
-            <span className="text-muted-foreground">
-              {renderLabel(labels['who.party.adultNote'])}
-            </span>
-          )}
-        </span>
-        <CheckCircle checked={adultOn} />
-      </CheckRow>
+      {!adultStepper && (
+        <CheckRow
+          checked={adultOn}
+          // Never down to nobody: the last person in the booking stays — unless
+          // the booking may start (and so stand) empty.
+          disabled={(!adultOn && full) || (adultOn && children === 0 && !startEmpty)}
+          describedBy={!adultOn && full ? LIMIT_ID : undefined}
+          onToggle={() => answer(children, adultOn ? 0 : 1)}
+          className={cn('min-h-14 justify-between px-5 py-3 text-sm', classNames?.card)}
+          selectedClassName={classNames?.cardSelected}
+        >
+          <span className="flex min-w-0 flex-col text-left">
+            <span className="font-medium">{text('who.party.adult')}</span>
+            {/* «At the same time, in the next chair» is about the children: alone, it is noise. */}
+            {adultNote && children > 0 && (
+              <span className="text-muted-foreground">{renderLabel(adultNote)}</span>
+            )}
+          </span>
+          <CheckCircle checked={adultOn} />
+        </CheckRow>
+      )}
+      {labels['who.party.togetherHint'] && children > 0 && !adultOn && !full && (
+        <p className="text-sm text-muted-foreground">
+          {renderLabel(labels['who.party.togetherHint'])}
+        </p>
+      )}
       <p
         id={LIMIT_ID}
         aria-live="polite"
@@ -562,6 +596,74 @@ function GuestParty({
       >
         {full ? renderLabel(labels['who.family.limit'], { max: maxPeople }) : ''}
       </p>
+    </div>
+  );
+}
+
+const STEP_BUTTON =
+  'flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-background text-foreground transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-40';
+
+/** One «name, note, − n +» row of a guest party. */
+function StepperRow({
+  title,
+  note,
+  value,
+  countLabel,
+  fewerLabel,
+  moreLabel,
+  canFewer,
+  canMore,
+  limitId,
+  onFewer,
+  onMore,
+}: {
+  title: string;
+  note: ReactNode;
+  value: number;
+  countLabel: string;
+  fewerLabel: string;
+  moreLabel: string;
+  canFewer: boolean;
+  canMore: boolean;
+  limitId: string | undefined;
+  onFewer: () => void;
+  onMore: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-4 px-5 py-4">
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold">{title}</p>
+        {note !== null && <p className="text-sm text-muted-foreground">{note}</p>}
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          aria-label={fewerLabel}
+          disabled={!canFewer}
+          onClick={onFewer}
+          className={STEP_BUTTON}
+        >
+          <Minus aria-hidden="true" className="size-4" />
+        </button>
+        <span
+          aria-live="polite"
+          aria-atomic="true"
+          className="w-6 text-center text-lg font-bold tabular-nums"
+        >
+          <span aria-hidden="true">{value}</span>
+          <span className="sr-only">{countLabel}</span>
+        </span>
+        <button
+          type="button"
+          aria-label={moreLabel}
+          aria-describedby={limitId}
+          disabled={!canMore}
+          onClick={onMore}
+          className={STEP_BUTTON}
+        >
+          <Plus aria-hidden="true" className="size-4" />
+        </button>
+      </div>
     </div>
   );
 }
