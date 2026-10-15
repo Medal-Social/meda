@@ -91,6 +91,19 @@ export const WHO_SCREEN_PARTY_LABEL_KEYS = [
   'who.party.lead',
   /** Under the steppers while there are children and no grown-up. */
   'who.party.togetherHint',
+  /**
+   * A logged-in parent's grown-ups row, e.g. «Grown-ups», when
+   * `guestParty.adults` makes it a stepper: «myself» is seat 1, the rest are
+   * the guest's seats 2, 3. Without it the «myself» check row stays.
+   */
+  'who.family.adults',
+] as const;
+
+/** The labels a «Voksen» stepper cannot draw without. */
+const ADULT_STEPPER_LABEL_KEYS = [
+  'who.party.adultFewer',
+  'who.party.adultMore',
+  'who.party.adultCount',
 ] as const;
 
 /** The `who.party.*` keys `guestParty` cannot draw without; the two notes are extras. */
@@ -216,6 +229,11 @@ export interface WhoScreenProps {
      * rather than one check row: two parents, or a parent and a grandparent,
      * in one booking. Seat 1 must be `adult`. Needs the `who.party.adultFewer`,
      * `adultMore` and `adultCount` labels; without them the check row stays.
+     *
+     * The one part of `guestParty` a logged-in parent's list reads too: with
+     * `who.family.adults` as well, its «myself» row is the same stepper, seat 1
+     * being `selfKey` and seats 2, 3 these — so a second grown-up survives a
+     * login. `isGuestSeat` must then not claim seats 2 and up.
      */
     adults?: (seat: number) => WizardPerson & { adult: true };
   };
@@ -375,6 +393,33 @@ export function WhoScreen({
   const self: WizardPerson = { key: selfKey, adult: true };
   const selfChecked = chosen.has(selfKey);
 
+  // «Voksne» as a number under a family too: «myself» first, then the guest's
+  // seats 2, 3 — a second grown-up has no profile card to tick.
+  const moreAdults =
+    guestParty?.adults !== undefined &&
+    labels['who.family.adults'] !== undefined &&
+    ADULT_STEPPER_LABEL_KEYS.every((key) => labels[key] !== undefined)
+      ? guestParty.adults
+      : undefined;
+  const otherAdultKeys = new Set(
+    moreAdults ? Array.from({ length: maxPeople - 1 }, (_, index) => moreAdults(index + 2).key) : []
+  );
+  const isGrownUp = (person: WizardPerson) =>
+    person.key === selfKey || otherAdultKeys.has(person.key);
+  const grownUps = seated.filter(isGrownUp).length;
+  const setGrownUps = (count: number) => {
+    if (!moreAdults) return;
+    const seats = Array.from({ length: count }, (_, index) =>
+      index === 0 ? self : moreAdults(index + 1)
+    );
+    onChoose([...seated.filter((person) => !isGrownUp(person)), ...seats], false);
+  };
+  const partyText = (key: (typeof WHO_SCREEN_PARTY_LABEL_KEYS)[number], values = {}) => {
+    const label = labels[key];
+    return label ? fillLabel(label, values) : '';
+  };
+  const adultNote = labels['who.party.adultNote'];
+
   function toggle(person: WizardPerson) {
     if (chosen.has(person.key)) {
       onChoose(
@@ -414,17 +459,35 @@ export function WhoScreen({
           })}
           <li>{sheet(full, true)}</li>
         </ul>
-        <CheckRow
-          checked={selfChecked}
-          disabled={!selfChecked && full}
-          describedBy={!selfChecked && full ? LIMIT_ID : undefined}
-          onToggle={() => toggle(self)}
-          className={cn('h-14 justify-between px-5 text-sm', classNames?.card)}
-          selectedClassName={classNames?.cardSelected}
-        >
-          <span className="font-medium">{labels['who.family.self']}</span>
-          <CheckCircle checked={selfChecked} />
-        </CheckRow>
+        {moreAdults ? (
+          <div className={cn('rounded-lg border border-border bg-card', classNames?.card)}>
+            <StepperRow
+              title={partyText('who.family.adults')}
+              note={adultNote ? renderLabel(adultNote) : null}
+              value={grownUps}
+              countLabel={partyText('who.party.adultCount', { count: grownUps })}
+              fewerLabel={partyText('who.party.adultFewer')}
+              moreLabel={partyText('who.party.adultMore')}
+              canFewer={grownUps > 0}
+              canMore={!full}
+              limitId={full ? LIMIT_ID : undefined}
+              onFewer={() => setGrownUps(grownUps - 1)}
+              onMore={() => setGrownUps(grownUps + 1)}
+            />
+          </div>
+        ) : (
+          <CheckRow
+            checked={selfChecked}
+            disabled={!selfChecked && full}
+            describedBy={!selfChecked && full ? LIMIT_ID : undefined}
+            onToggle={() => toggle(self)}
+            className={cn('h-14 justify-between px-5 text-sm', classNames?.card)}
+            selectedClassName={classNames?.cardSelected}
+          >
+            <span className="font-medium">{labels['who.family.self']}</span>
+            <CheckCircle checked={selfChecked} />
+          </CheckRow>
+        )}
         {/* Always mounted, so reaching the limit moves nothing. */}
         <p
           id={LIMIT_ID}
@@ -462,9 +525,7 @@ function GuestParty({
 }) {
   const adultStepper =
     party.adults !== undefined &&
-    labels['who.party.adultFewer'] !== undefined &&
-    labels['who.party.adultMore'] !== undefined &&
-    labels['who.party.adultCount'] !== undefined;
+    ADULT_STEPPER_LABEL_KEYS.every((key) => labels[key] !== undefined);
   const adultSeat = (seat: number) =>
     seat === 1 || !party.adults ? party.adult : party.adults(seat);
   const adultKeys = new Set(
