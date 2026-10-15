@@ -110,6 +110,33 @@ export const LoggedIn: Story = {
   ),
 };
 
+/**
+ * A logged-in parent at a salon whose guests count their grown-ups: «Meg selv»
+ * is the first of a «Voksne» stepper, so a second grown-up has a place here too.
+ */
+export const FamilyWithAdults: Story = {
+  name: 'Family, grown-ups as a number',
+  render: () => (
+    <BookingColumn>
+      <Stateful
+        {...base}
+        family={FAMILY_NB}
+        guestParty={{
+          child: guest,
+          adult: { key: 'adult', adult: true },
+          adults: (seat) =>
+            seat === 1 ? { key: 'adult', adult: true } : { key: `adult:${seat}`, adult: true },
+        }}
+        initial={[
+          FAMILY_NB?.[0]?.person as WizardPerson,
+          { key: 'self', adult: true },
+          { key: 'adult:2', adult: true },
+        ]}
+      />
+    </BookingColumn>
+  ),
+};
+
 export const SecondBrandTheme: Story = {
   name: 'Second brand',
   render: () => (
