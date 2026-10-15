@@ -63,6 +63,7 @@ export const whoScreenLabelsNb: WhoScreenLabels = {
   'who.party.adultCount': '{count} voksne',
   'who.party.lead': 'Opptil tre i samme bestilling.',
   'who.party.togetherHint': 'Kommer du med barnet? Legg til deg selv, så klipper vi dere samtidig.',
+  'who.family.adults': 'Voksne',
 };
 
 export const whoScreenLabelsEn: WhoScreenLabels = {
@@ -88,6 +89,7 @@ export const whoScreenLabelsEn: WhoScreenLabels = {
   'who.party.adultCount': '{count} adults',
   'who.party.lead': 'Up to three in one booking.',
   'who.party.togetherHint': 'Coming with your child? Add yourself and we cut you side by side.',
+  'who.family.adults': 'Grown-ups',
 };
 
 /** The multi-select step's labels (`ServiceSelection.labels`). */
