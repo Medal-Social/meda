@@ -1,6 +1,6 @@
 {
   "name": "@medalsocial/meda",
-  "version": "3.11.0",
+  "version": "3.13.0",
   "description": "Shared Meda UI shell and runtime package.",
   "license": "Apache-2.0",
   "repository": {
@@ -305,8 +305,10 @@
       "esbuild@>=0.27.3 <0.28.1": "^0.28.1",
       "fflate@<0.8.3": "^0.8.3",
       "postcss@<8.5.23": "^8.5.23",
-      "sharp@<0.35.4": "^0.35.4",
-      "undici@>=7.0.0 <7.29.0": "^7.29.0",
+      "sharp@<0.35.5": "^0.35.5",
+      "shell-quote@<1.11.0": "^1.11.0",
+      "source-map-js@<1.2.2": "^1.2.2",
+      "undici@>=7.0.0 <7.29.1": "^7.29.1",
       "ws@>=8.0.0 <8.21.0": "^8.21.0"
     }
   }

@@ -1,5 +1,17 @@
 # @medalsocial/meda
 
+## 3.13.0
+
+### Minor Changes
+
+- [#295](https://github.com/Medal-Social/meda/pull/295) [`ccf57f1`](https://github.com/Medal-Social/meda/commit/ccf57f1238e32242890948fa3dd482b85ad0577f) Thanks [@adaadev](https://github.com/adaadev)! - `WhoScreen`: a logged-in parent's list can count its grown-ups too. With `guestParty.adults` and the new optional `who.family.adults` label, the «myself» check row becomes the «Voksne» stepper — «myself» on seat 1, the guest's seats 2 and 3 after it — so a second grown-up a guest picked survives a login, and a parent can bring one. Without the label the check row stays.
+
+## 3.12.0
+
+### Minor Changes
+
+- [#292](https://github.com/Medal-Social/meda/pull/292) [`4aff65d`](https://github.com/Medal-Social/meda/commit/4aff65d680ceaaf2ef071c911dc87567616b5055) Thanks [@adaadev](https://github.com/adaadev)! - Confirmation: the calendar link only forces a download for a `data:` or `blob:` URL. A calendar file the site serves now opens in place (iOS and macOS go straight to «Add to Calendar» instead of saving it to Files), and a link marked `calendarNewTab` (another calendar's page, such as Google Calendar) opens in a new tab. New optional `calendarAlt` draws a second way into a calendar beside the first, with its own `newTab`.
+
 ## 3.11.0
 
 ### Minor Changes

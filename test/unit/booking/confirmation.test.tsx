@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 import { DEMO_NOW, demoFormatNb } from '../../../src/booking/__stories__/fixtures.js';
@@ -461,5 +461,59 @@ describe('Confirmation — layout="hero"', () => {
   it('has no axe violations', async () => {
     const { container } = hero();
     expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe('Confirmation — calendar links', () => {
+  const calendar = () => screen.getByRole('link', { name: L['confirmation.calendar'] as string });
+
+  it('downloads a data: calendar, as before', () => {
+    setup();
+    expect(calendar()).toHaveAttribute('download', 'salong-demo.ics');
+  });
+
+  it('opens a served calendar file in place: no forced download, no new tab', () => {
+    setup({ calendarHref: '/api/booking/calendar/tok_1' });
+    expect(calendar()).not.toHaveAttribute('download');
+    expect(calendar()).not.toHaveAttribute('target');
+  });
+
+  it('opens an absolute calendar file in place too: only a marked page gets a new tab', () => {
+    setup({ calendarHref: 'https://salong.example/api/booking/calendar/tok_1' });
+    expect(calendar()).not.toHaveAttribute('target');
+  });
+
+  it('opens another calendar’s page in a new tab when marked so', () => {
+    setup({
+      calendarHref: 'https://calendar.google.com/calendar/render?action=TEMPLATE',
+      calendarNewTab: true,
+    });
+    expect(calendar()).toHaveAttribute('target', '_blank');
+    expect(calendar()).not.toHaveAttribute('download');
+  });
+
+  it('draws the second way in beside it, in both layouts', () => {
+    setup({
+      calendarAlt: {
+        href: 'https://calendar.google.com/x',
+        label: 'Google Kalender',
+        newTab: true,
+      },
+    });
+    expect(screen.getByRole('link', { name: 'Google Kalender' })).toHaveAttribute(
+      'target',
+      '_blank'
+    );
+    cleanup();
+    setup({
+      layout: 'hero',
+      calendarHref: 'https://calendar.google.com/x',
+      calendarNewTab: true,
+      calendarAlt: { href: '/api/booking/calendar/tok_1', label: 'Kalenderfil' },
+    });
+    const file = screen.getByRole('link', { name: 'Kalenderfil' });
+    expect(file).not.toHaveAttribute('download');
+    expect(file).not.toHaveAttribute('target');
+    expect(calendar()).toHaveAttribute('target', '_blank');
   });
 });
