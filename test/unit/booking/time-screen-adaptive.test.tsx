@@ -233,6 +233,42 @@ describe('TimeScreen — layout="adaptive"', () => {
     expect(week()).toHaveClass('hidden', 'lg:block');
   });
 
+  it('keeps a simultaneous time to its hour in the narrow week column', () => {
+    const KIDS: WizardService = {
+      id: 'svc-kids',
+      name: 'Barneklipp',
+      category: 'kids',
+      durationMinutes: 30,
+      bufferBeforeMinutes: 0,
+      bufferAfterMinutes: 0,
+      priceOre: 49_000,
+      maxPerBooking: 3,
+      weekendSurchargePct: 0,
+    };
+    const startTs = osloTs(15);
+    const slot: PartySlot = {
+      startTs,
+      mode: 'parallel',
+      seats: [
+        { startTs, resourceId: 'res-ada' },
+        { startTs, resourceId: 'res-bo' },
+      ],
+    };
+    const party: TimeScreenParty = {
+      items: [{ service: KIDS }, { service: KIDS }],
+      mode: 'parallel',
+      slots: [slot],
+      chipEndTs: (party) => party.startTs + 30 * MINUTE,
+      resolveStylistName: (id) => (id === 'res-ada' ? 'Ada' : 'Bo'),
+      onPick: vi.fn(),
+    };
+    renderTime({ slots: [], party });
+    const name = '15:00 (Barneklipp hos Ada · Barneklipp hos Bo)';
+    const chip = within(week()).getByRole('button', { name });
+    expect(chip.textContent).toBe('15:00');
+    expect(chip).toHaveAttribute('title', name);
+  });
+
   it('has no axe violations', async () => {
     const { container } = renderTime({ slots: [at(9), at(10, 0, 18)], dayFullness: true });
     expect(await axe(container)).toHaveNoViolations();

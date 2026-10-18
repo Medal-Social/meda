@@ -58,6 +58,12 @@ export const whoScreenLabelsNb: WhoScreenLabels = {
   'who.party.fewer': 'Ett barn færre',
   'who.party.more': 'Ett barn til',
   'who.party.count': '{count} barn',
+  'who.party.adultFewer': 'En voksen færre',
+  'who.party.adultMore': 'En voksen til',
+  'who.party.adultCount': '{count} voksne',
+  'who.party.lead': 'Opptil tre i samme bestilling.',
+  'who.party.togetherHint': 'Kommer du med barnet? Legg til deg selv, så klipper vi dere samtidig.',
+  'who.family.adults': 'Voksne',
 };
 
 export const whoScreenLabelsEn: WhoScreenLabels = {
@@ -78,6 +84,12 @@ export const whoScreenLabelsEn: WhoScreenLabels = {
   'who.party.fewer': 'One child fewer',
   'who.party.more': 'One more child',
   'who.party.count': '{count} children',
+  'who.party.adultFewer': 'One adult fewer',
+  'who.party.adultMore': 'One more adult',
+  'who.party.adultCount': '{count} adults',
+  'who.party.lead': 'Up to three in one booking.',
+  'who.party.togetherHint': 'Coming with your child? Add yourself and we cut you side by side.',
+  'who.family.adults': 'Grown-ups',
 };
 
 /** The multi-select step's labels (`ServiceSelection.labels`). */
@@ -113,6 +125,9 @@ export const serviceScreenLabelsNb: ServiceScreenLabels = {
   'service.party.adultAlone': '{label} må bestilles som en egen time.',
   'service.party.nothingFits': 'Ingen tjenester kan bestilles for {label} i en så stor gruppe.',
   'service.party.remove': 'Fjern {label} fra denne timen',
+  'service.search': 'Søk: skjegg, lugg, farge …',
+  'service.searchLabel': 'Søk i behandlingene',
+  'service.searchEmpty': 'Ingen behandling heter «{query}».',
   ...serviceMultiLabelsNb,
 };
 
@@ -130,6 +145,9 @@ export const serviceScreenLabelsEn: ServiceScreenLabels = {
   'service.party.adultAlone': '{label} needs a separate appointment.',
   'service.party.nothingFits': 'Nothing can be booked for {label} in a group this size.',
   'service.party.remove': 'Remove {label} from this appointment',
+  'service.search': 'Search: beard, fringe, colour …',
+  'service.searchLabel': 'Search the services',
+  'service.searchEmpty': 'No service is called «{query}».',
   ...serviceMultiLabelsEn,
 };
 

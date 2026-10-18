@@ -4,7 +4,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, X } from 'lucide-rea
 import { type ComponentType, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import type { BookingClock, BookingDaypart, BookingFormat } from './format.js';
-import { renderLabel } from './internal/label-parts.js';
+import { labelParts, renderLabel } from './internal/label-parts.js';
 import { BookingButton, bookingButtonClass } from './internal/ui.js';
 import { visitName } from './internal/visit.js';
 import { type BookingLabel, fillLabel, labelText } from './labels.js';
@@ -238,8 +238,23 @@ export function DefaultDayChip({
 
 export interface TimeChipProps {
   startTs: number;
-  /** «14:30», a party's «15:00 → 16:00», or the current hour's «15:00 · Current time». */
+  /**
+   * «14:30», a party's «15:00 → 16:00», a simultaneous party's
+   * «15:00 (Mia with Ada · Leo with Bo)», or the current hour's
+   * «15:00 · Current time». Always the chip's whole sentence.
+   */
   label: string;
+  /**
+   * `label` as elements, in the label pack's own order, with a simultaneous
+   * party's seating in a span that may wrap — so a long seating breaks onto
+   * the next line instead of widening the chip past the screen.
+   */
+  richLabel?: ReactNode;
+  /**
+   * What a week-grid column shows: too narrow for the seating, so only the
+   * hour, with `label` as the accessible name and the tooltip.
+   */
+  compactLabel?: string;
   /** One of the nearest alternatives to a slot that was just taken. */
   nearest: boolean;
   /** The screen-reader text that says so. */
@@ -254,6 +269,8 @@ export interface TimeChipProps {
 /** One time chip. */
 export function DefaultTimeChip({
   label,
+  richLabel,
+  compactLabel,
   nearest,
   nearestLabel,
   current,
@@ -267,12 +284,29 @@ export function DefaultTimeChip({
       </BookingButton>
     );
   }
+  // A compact chip draws less than its sentence, so the sentence becomes its name.
+  const compact = compactLabel !== undefined;
   return (
-    <BookingButton variant="outline" size="lg" onClick={onPick} className={className}>
-      {label}
-      {nearest && (
+    <BookingButton
+      variant="outline"
+      size="lg"
+      onClick={onPick}
+      aria-label={compact ? `${label}${nearest ? ` ${nearestLabel}` : ''}` : undefined}
+      title={compact ? label : undefined}
+      className={cn(
+        !compact && richLabel !== undefined && 'h-auto max-w-full py-2 whitespace-normal',
+        className
+      )}
+    >
+      {compact && compactLabel}
+      {!compact && richLabel !== undefined && (
+        // One flex item, so the sentence flows and wraps as text.
+        <span className="min-w-0 text-center">{richLabel}</span>
+      )}
+      {!compact && richLabel === undefined && label}
+      {nearest && !compact && (
         // The ring says «nearest» to everyone who can see it; this says it to
-        // everyone who cannot.
+        // everyone who cannot (a compact chip says it in its name).
         <span className="sr-only"> {nearestLabel}</span>
       )}
     </BookingButton>
@@ -461,24 +495,34 @@ function buildDayStrip(
   return [...byKey.values()].sort((a, b) => a - b);
 }
 
+/** What a time chip says (`TimeChipProps`' `label`, `richLabel` and `compactLabel`). */
+interface ChipText {
+  label: string;
+  richLabel?: ReactNode;
+  compactLabel?: string;
+}
+
 /**
  * The one chip a family taps: `15:00 → 16:00`, or the parallel form
  * `15:00 (Name with Stylist · Name with Stylist)`. The parallel chip names the
- * people where the visitor has given a name and the service otherwise.
+ * people where the visitor has given a name and the service otherwise; its
+ * seating is drawn so it can wrap, and a week column shows the hour alone.
  */
-function partyChipLabel(
+function partyChipText(
   labels: TimeScreenLabels,
   clock: BookingClock,
   slot: PartySlot,
   party: TimeScreenParty
-): string {
+): ChipText {
   if (slot.mode === 'sequential') {
-    return fillLabel(labels['time.party.sequential'], {
-      start: clock.formatTime(slot.startTs),
-      end: clock.formatTime(party.chipEndTs(slot)),
-    });
+    return {
+      label: fillLabel(labels['time.party.sequential'], {
+        start: clock.formatTime(slot.startTs),
+        end: clock.formatTime(party.chipEndTs(slot)),
+      }),
+    };
   }
-  const seats = slot.seats.map((seat, index) => {
+  const names = slot.seats.map((seat, index) => {
     const item = party.items[index];
     const who = item?.bookedForName ?? (item ? visitName(item) : '');
     const stylist = party.resolveStylistName(seat.resourceId);
@@ -486,10 +530,16 @@ function partyChipLabel(
     // is a reload of the resource list, not a reason to hide the slot.
     return stylist === null ? who : fillLabel(labels['time.party.seat'], { who, stylist });
   });
-  return fillLabel(labels['time.party.parallel'], {
-    time: clock.formatTime(slot.startTs),
-    seats: seats.join(labelText(labels['time.party.seatSeparator'])),
-  });
+  const time = clock.formatTime(slot.startTs);
+  const seats = names.join(labelText(labels['time.party.seatSeparator']));
+  return {
+    label: fillLabel(labels['time.party.parallel'], { time, seats }),
+    richLabel: labelParts(labels['time.party.parallel'], {
+      time,
+      seats: <span className="font-normal text-muted-foreground">{seats}</span>,
+    }),
+    compactLabel: time,
+  };
 }
 
 /**
@@ -1100,7 +1150,7 @@ function WeekGrid({
                 <li key={slot.startTs}>
                   <TimeChip
                     startTs={slot.startTs}
-                    label={chipLabel(labels, clock, slot, current, partySlot, party)}
+                    {...chipText(labels, clock, slot, current, partySlot, party)}
                     nearest={isNearest}
                     nearestLabel={labelText(labels['time.nearest'])}
                     current={current}
@@ -1168,18 +1218,18 @@ function WeekGrid({
 }
 
 /** A time chip's words: the hour, the held hour marked, or a family's whole visit. */
-function chipLabel(
+function chipText(
   labels: TimeScreenLabels,
   clock: BookingClock,
   slot: BookingSlotDto,
   current: boolean,
   partySlot: PartySlot | undefined,
   party: TimeScreenParty | undefined
-): string {
+): ChipText {
   const time = clock.formatTime(slot.startTs);
-  if (current) return fillLabel(labels['time.current'], { time });
-  if (partySlot && party) return partyChipLabel(labels, clock, partySlot, party);
-  return time;
+  if (current) return { label: fillLabel(labels['time.current'], { time }) };
+  if (partySlot && party) return partyChipText(labels, clock, partySlot, party);
+  return { label: time };
 }
 
 /** The weekend note as one plain sentence, for a card that books without the notice on screen. */
@@ -1672,7 +1722,8 @@ function DaypartSections({
               <TimeChip
                 key={slot.startTs}
                 startTs={slot.startTs}
-                label={chipLabel(labels, clock, slot, current, partySlot, party)}
+                {...chipText(labels, clock, slot, current, partySlot, party)}
+                compactLabel={undefined}
                 nearest={isNearest}
                 nearestLabel={labelText(labels['time.nearest'])}
                 current={current}

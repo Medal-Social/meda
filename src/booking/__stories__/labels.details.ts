@@ -2,6 +2,7 @@
  * Neutral nb / en label packs for the details step, the summary bar and the
  * confirmation, written for the invented «Salong Demo». Stories and tests only.
  */
+import type { BookingPanelLabels } from '../booking-panel.js';
 import type { BookingRecapLabels } from '../booking-recap.js';
 import type { ConfirmationLabels } from '../confirmation.js';
 import type { DetailsScreenLabels } from '../details-screen.js';
@@ -113,6 +114,16 @@ export const confirmationLabelsNb: ConfirmationLabels = {
   'confirmation.manageFor': 'Flytt eller avbestill {who} kl. {time}',
   'confirmation.portal': 'Se alle timene dine',
   'confirmation.startOver': 'Bestill en ny time',
+  'confirmation.sent': 'Bekreftelsen er sendt på SMS og e-post.',
+  'confirmation.leafTime': 'kl. {time}',
+  'confirmation.detail.service': 'Klipp',
+  'confirmation.detail.stylist': 'Frisør',
+  'confirmation.detail.where': 'Hvor',
+  'confirmation.duration': '{minutes} min',
+  'confirmation.directions': 'Veibeskrivelse',
+  'confirmation.tip.heading': 'Før dere kommer',
+  'confirmation.tip.body': 'Kom gjerne fem minutter før.',
+  'confirmation.manageUntil': 'gratis til {day} kl. {time}',
 };
 
 export const confirmationLabelsEn: ConfirmationLabels = {
@@ -128,6 +139,16 @@ export const confirmationLabelsEn: ConfirmationLabels = {
   'confirmation.manageFor': 'Change or cancel {who} at {time}',
   'confirmation.portal': 'See all your bookings',
   'confirmation.startOver': 'Book another appointment',
+  'confirmation.sent': 'The confirmation is on its way by text and e-mail.',
+  'confirmation.leafTime': 'at {time}',
+  'confirmation.detail.service': 'Service',
+  'confirmation.detail.stylist': 'Stylist',
+  'confirmation.detail.where': 'Where',
+  'confirmation.duration': '{minutes} min',
+  'confirmation.directions': 'Directions',
+  'confirmation.tip.heading': 'Before you come',
+  'confirmation.tip.body': 'Come five minutes early if you can.',
+  'confirmation.manageUntil': 'free until {day} at {time}',
 };
 
 export const bookingRecapLabelsNb: BookingRecapLabels = {
@@ -154,4 +175,35 @@ export const bookingRecapLabelsEn: BookingRecapLabels = {
   'recap.editLabel': 'Change day and time',
   'recap.alsoFree': 'Also free at {time}:',
   'recap.swapTo': 'Book with {name} instead',
+};
+
+/** The desktop side panel's labels (`BookingPanel`). */
+export const bookingPanelLabelsNb: BookingPanelLabels = {
+  'panel.heading': 'Din time',
+  'panel.who': 'Hvem',
+  'panel.service': 'Klipp',
+  'panel.time': 'Tid',
+  'panel.stylist': 'Frisør',
+  'panel.notChosen': 'Ikke valgt ennå',
+  'panel.firstAvailable': 'første ledige',
+  'panel.alsoFree': 'Også ledig da:',
+  'panel.swap': 'Bytt',
+  'panel.swapTo': 'til {name}',
+  'panel.total': 'Totalt, betales i salongen',
+  'panel.continue': 'Fortsett',
+};
+
+export const bookingPanelLabelsEn: BookingPanelLabels = {
+  'panel.heading': 'Your appointment',
+  'panel.who': 'Who',
+  'panel.service': 'Service',
+  'panel.time': 'Time',
+  'panel.stylist': 'Stylist',
+  'panel.notChosen': 'Not chosen yet',
+  'panel.firstAvailable': 'first available',
+  'panel.alsoFree': 'Also free then:',
+  'panel.swap': 'Switch',
+  'panel.swapTo': 'to {name}',
+  'panel.total': 'Total, paid at the salon',
+  'panel.continue': 'Continue',
 };

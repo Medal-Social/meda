@@ -1,5 +1,41 @@
 # @medalsocial/meda
 
+## 3.13.0
+
+### Minor Changes
+
+- [#295](https://github.com/Medal-Social/meda/pull/295) [`ccf57f1`](https://github.com/Medal-Social/meda/commit/ccf57f1238e32242890948fa3dd482b85ad0577f) Thanks [@adaadev](https://github.com/adaadev)! - `WhoScreen`: a logged-in parent's list can count its grown-ups too. With `guestParty.adults` and the new optional `who.family.adults` label, the «myself» check row becomes the «Voksne» stepper — «myself» on seat 1, the guest's seats 2 and 3 after it — so a second grown-up a guest picked survives a login, and a parent can bring one. Without the label the check row stays.
+
+## 3.12.0
+
+### Minor Changes
+
+- [#292](https://github.com/Medal-Social/meda/pull/292) [`4aff65d`](https://github.com/Medal-Social/meda/commit/4aff65d680ceaaf2ef071c911dc87567616b5055) Thanks [@adaadev](https://github.com/adaadev)! - Confirmation: the calendar link only forces a download for a `data:` or `blob:` URL. A calendar file the site serves now opens in place (iOS and macOS go straight to «Add to Calendar» instead of saving it to Files), and a link marked `calendarNewTab` (another calendar's page, such as Google Calendar) opens in a new tab. New optional `calendarAlt` draws a second way into a calendar beside the first, with its own `newTab`.
+
+## 3.11.0
+
+### Minor Changes
+
+- [#289](https://github.com/Medal-Social/meda/pull/289) [`0e1144c`](https://github.com/Medal-Social/meda/commit/0e1144ccc6f33307376a3efd598c050f4daa3963) Thanks [@adaadev](https://github.com/adaadev)! - Booking screens, all opt-in:
+  
+  - WhoScreen: `guestParty.adults` draws «Adults» as a stepper beside «Children» (two grown-ups in one booking), with the optional `who.party.lead` line under the heading and `who.party.togetherHint` while there are children and no grown-up.
+  - ServiceScreen: `searchFor(personIndex)` puts a search field over that person's list (a grown-up's long catalogue), with the `service.search*` labels.
+  - Confirmation: `layout="hero"` — the day as a large calendar leaf, a details card (service, stylist, where), calendar and directions as buttons, an optional «before you come» tip, and until when a change is free (`directionsHref`, `freeChangeUntilTs`, `CONFIRMATION_HERO_LABEL_KEYS`).
+  - New `BookingPanel` — the desktop's sticky «Your appointment» side panel: who, service, time, stylist (and «first available»), a switch to anyone else free at that minute, the total, «continue» and the small print.
+  - SummaryBar: while it shows a hint, it no longer also draws the placeholder beside it.
+
+## 3.10.0
+
+### Minor Changes
+
+- [#286](https://github.com/Medal-Social/meda/pull/286) [`7ba92b1`](https://github.com/Medal-Social/meda/commit/7ba92b12b062873b95f4c7a2da47e1d012f04fd1) Thanks [@adaadev](https://github.com/adaadev)! - WhoScreen: `guestParty.startEmpty` starts a guest's party with nobody instead of one child, for a salon where a grown-up booking for themselves is as common as a child. Children go down to 0 and the grown-up's row is a free choice; «next» waits for an answer. Off by default. Also, the grown-up's note («Samtidig, i stolen ved siden av») now only shows while there is a child in the booking.
+
+## 3.9.1
+
+### Patch Changes
+
+- [#283](https://github.com/Medal-Social/meda/pull/283) [`54f3462`](https://github.com/Medal-Social/meda/commit/54f3462aa8428ae559d7debf5da90172a52d7019) Thanks [@adaadev](https://github.com/adaadev)! - TimeScreen: a simultaneous family time («15:00 (Mia hos Ada · Leo hos Bo)») now wraps inside its chip instead of running past a phone screen, with the seating drawn in muted text in the label pack's own order, and the week grid's narrow columns show only the hour (the whole sentence stays the chip's accessible name and tooltip). `TimeChipProps.label` is unchanged — still the whole sentence — and gains optional `richLabel` and `compactLabel` for a custom chip to opt into.
+
 ## 3.9.0
 
 ### Minor Changes

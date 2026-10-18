@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 import { DEMO_NOW, demoFormatNb } from '../../../src/booking/__stories__/fixtures.js';
@@ -379,5 +379,141 @@ describe('Confirmation — text nodes', () => {
     });
     expect(screen.getByRole('link', { name: 'Endre Jonas kl. 15:00' })).toBeInTheDocument();
     expect(screen.getByText('15:00 Jonas – Barneklipp')).toBeInTheDocument();
+  });
+});
+
+describe('Confirmation — layout="hero"', () => {
+  const hero = (props: Partial<ConfirmationProps> = {}) =>
+    setup({
+      layout: 'hero',
+      address: 'Schous plass 6, 0552 Oslo',
+      directionsHref: 'https://maps.example/?q=Schous+plass+6',
+      freeChangeUntilTs: MONDAY_15 - 24 * 60 * 60_000,
+      lines: [line(JONAS, { manageHref: '/manage/bk_1', stylistPhotoUrl: '/ada.webp' })],
+      ...props,
+    });
+
+  it('leads with the day as a leaf, then the heading and the sent note', () => {
+    hero();
+    const leaf = screen.getByTestId('confirmation-leaf');
+    expect(leaf).toHaveAttribute('aria-hidden', 'true');
+    expect(leaf).toHaveTextContent('14');
+    expect(leaf).toHaveTextContent('kl. 15:00');
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+      L['confirmation.heading'] as string
+    );
+    expect(screen.getByText(L['confirmation.sent'] as string)).toBeInTheDocument();
+  });
+
+  it('names service, stylist and place in a details card', () => {
+    hero();
+    expect(screen.getByText('Klipp').nextSibling).toHaveTextContent(
+      /^Barneklipp for Jonas · 30 min · 390\skr$/
+    );
+    expect(screen.getByText('Frisør').nextSibling).toHaveTextContent('Ada');
+    expect(screen.getByText('Hvor').nextSibling).toHaveTextContent('Schous plass 6, 0552 Oslo');
+  });
+
+  it('makes the calendar and the directions buttons', () => {
+    hero();
+    expect(
+      screen.getByRole('link', { name: L['confirmation.calendar'] as string })
+    ).toHaveAttribute('download', 'salong-demo.ics');
+    const directions = screen.getByRole('link', { name: 'Veibeskrivelse' });
+    expect(directions).toHaveAttribute('href', 'https://maps.example/?q=Schous+plass+6');
+    expect(directions).toHaveAttribute('target', '_blank');
+  });
+
+  it('says until when a change is free beside the manage link', () => {
+    hero();
+    expect(
+      screen.getByRole('link', { name: L['confirmation.manage'] as string })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/gratis til .* kl\. 15:00/)).toBeInTheDocument();
+  });
+
+  it('draws the tip only with both its words', () => {
+    hero();
+    expect(screen.getByText('Før dere kommer')).toBeInTheDocument();
+    const { 'confirmation.tip.body': _body, ...noBody } = L;
+    hero({ labels: noBody });
+    expect(screen.getAllByText('Før dere kommer')).toHaveLength(1);
+  });
+
+  it('says when in words beside the decorative leaf', () => {
+    hero();
+    const when = [...document.querySelectorAll('.sr-only')].map((node) => node.textContent);
+    expect(when.some((text) => /15:00/.test(text ?? ''))).toBe(true);
+  });
+
+  it('falls back to the card line when the pack has no hero row names', () => {
+    const { 'confirmation.detail.service': _service, ...bare } = L;
+    hero({ labels: bare });
+    expect(screen.getByText(/Barneklipp for Jonas · Ada · .* · 390\skr/)).toBeInTheDocument();
+  });
+
+  it('keeps the family card for a party', () => {
+    hero({ lines: [line(JONAS), line(EMMA, { bookingId: 'bk_2' })] });
+    expect(screen.queryByText('Klipp')).toBeNull();
+    expect(screen.getByText(/Jonas/)).toBeInTheDocument();
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = hero();
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe('Confirmation — calendar links', () => {
+  const calendar = () => screen.getByRole('link', { name: L['confirmation.calendar'] as string });
+
+  it('downloads a data: calendar, as before', () => {
+    setup();
+    expect(calendar()).toHaveAttribute('download', 'salong-demo.ics');
+  });
+
+  it('opens a served calendar file in place: no forced download, no new tab', () => {
+    setup({ calendarHref: '/api/booking/calendar/tok_1' });
+    expect(calendar()).not.toHaveAttribute('download');
+    expect(calendar()).not.toHaveAttribute('target');
+  });
+
+  it('opens an absolute calendar file in place too: only a marked page gets a new tab', () => {
+    setup({ calendarHref: 'https://salong.example/api/booking/calendar/tok_1' });
+    expect(calendar()).not.toHaveAttribute('target');
+  });
+
+  it('opens another calendar’s page in a new tab when marked so', () => {
+    setup({
+      calendarHref: 'https://calendar.google.com/calendar/render?action=TEMPLATE',
+      calendarNewTab: true,
+    });
+    expect(calendar()).toHaveAttribute('target', '_blank');
+    expect(calendar()).not.toHaveAttribute('download');
+  });
+
+  it('draws the second way in beside it, in both layouts', () => {
+    setup({
+      calendarAlt: {
+        href: 'https://calendar.google.com/x',
+        label: 'Google Kalender',
+        newTab: true,
+      },
+    });
+    expect(screen.getByRole('link', { name: 'Google Kalender' })).toHaveAttribute(
+      'target',
+      '_blank'
+    );
+    cleanup();
+    setup({
+      layout: 'hero',
+      calendarHref: 'https://calendar.google.com/x',
+      calendarNewTab: true,
+      calendarAlt: { href: '/api/booking/calendar/tok_1', label: 'Kalenderfil' },
+    });
+    const file = screen.getByRole('link', { name: 'Kalenderfil' });
+    expect(file).not.toHaveAttribute('download');
+    expect(file).not.toHaveAttribute('target');
+    expect(calendar()).toHaveAttribute('target', '_blank');
   });
 });
