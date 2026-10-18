@@ -262,8 +262,8 @@ export function ContextRail({
         />
       )}
 
-      {/* Inner overflow wrapper so the rail content clips cleanly during the
-          width animation without clipping the absolute toggle above.
+      {/* Inner overflow wrapper so the rail content clips cleanly at narrow or zero
+          width without clipping the absolute toggle above.
           aria-hidden + inert when collapsed so AT and keyboard users don't
           land in zero-width content. */}
       <div
