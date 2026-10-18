@@ -185,18 +185,35 @@ describe('RightPanel — mode="fullscreen"', () => {
   });
 });
 
-describe('RightPanel — motion classes', () => {
-  it('applies transition-[width], duration-[var(--motion-panel)], ease-[var(--motion-ease)]', () => {
+describe('RightPanel — no width animation', () => {
+  // ⌘I / ⌘E open, close and cycle this panel from the keyboard many times a
+  // day; a width transition re-wraps the main column on every frame and lags
+  // behind the cursor while resizing. The panel snaps.
+  it.each(['panel', 'expanded', 'fullscreen'] as const)(
+    'has no width transition in %s mode',
+    (mode) => {
+      render(
+        <Wrapper mode={mode}>
+          <RightPanel />
+        </Wrapper>
+      );
+
+      const aside = document.querySelector(`[data-meda-panel-mode="${mode}"]`) as HTMLElement;
+      expect(aside.className).not.toContain('transition-[width]');
+      expect(aside.className).not.toContain('duration-[var(--motion-panel)]');
+      expect(aside.className).not.toContain('ease-[var(--motion-ease)]');
+    }
+  );
+
+  it('has no width transition when closed', () => {
     render(
-      <Wrapper mode="panel">
+      <Wrapper mode="closed">
         <RightPanel />
       </Wrapper>
     );
 
-    const aside = document.querySelector('[data-meda-panel-mode="panel"]') as HTMLElement;
-    expect(aside.className).toContain('transition-[width]');
-    expect(aside.className).toContain('duration-[var(--motion-panel)]');
-    expect(aside.className).toContain('ease-[var(--motion-ease)]');
+    const aside = document.querySelector('[data-meda-panel-mode="closed"]') as HTMLElement;
+    expect(aside.className).not.toContain('transition-[width]');
   });
 });
 
