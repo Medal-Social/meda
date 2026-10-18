@@ -98,16 +98,15 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # `changesets/action` bases the PR on the ref it runs from, so this opens
-      # `changeset-release/dev` -> `dev`. No `publish:` input, so the action
+      # `changeset-release/dev` -> `dev`. No `publish-script:` input, so the action
       # never reaches for an npm credential even if it wanted one.
       - name: Create or update the Version Packages PR
         uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
-          commit: 'chore: version @medalsocial/meda'
-          title: 'chore: version @medalsocial/meda'
-          version: pnpm run version
-        env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          github-token: ${{ steps.app-token.outputs.token }}
+          commit-message: 'chore: version @medalsocial/meda'
+          pr-title: 'chore: version @medalsocial/meda'
+          version-script: pnpm run version
 
   # ---------------------------------------------------------------------------
   # 2. prod -> publish whatever version the promoted tree carries.
@@ -210,9 +209,9 @@ jobs:
       - name: Publish to npm
         uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
-          publish: pnpm run release
+          github-token: ${{ steps.app-token-publish.outputs.token }}
+          publish-script: pnpm run release
         env:
-          GITHUB_TOKEN: ${{ steps.app-token-publish.outputs.token }}
           NPM_CONFIG_PROVENANCE: 'true'
 
   # ---------------------------------------------------------------------------
