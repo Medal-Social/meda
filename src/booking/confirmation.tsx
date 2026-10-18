@@ -1,9 +1,13 @@
 'use client';
 
-import type { ComponentType } from 'react';
+import { CalendarPlus, MapPin } from 'lucide-react';
+import type { ComponentType, ReactNode } from 'react';
+import { cn } from '../lib/utils.js';
 import type { BookingFormat } from './format.js';
-import { BookingButton } from './internal/ui.js';
-import { fillLabel } from './labels.js';
+import { joinLabelParts, renderLabel } from './internal/label-parts.js';
+import { BookingButton, bookingButtonClass } from './internal/ui.js';
+import { visitName } from './internal/visit.js';
+import { type BookingLabel, fillLabel, labelText } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { WizardItem } from './types.js';
 
@@ -41,7 +45,33 @@ export const CONFIRMATION_LABEL_KEYS = [
   'confirmation.startOver',
 ] as const;
 
-export type ConfirmationLabels = Record<(typeof CONFIRMATION_LABEL_KEYS)[number], string>;
+/**
+ * Opt-in keys for `layout="hero"`. Each piece is drawn only when its label is
+ * there, so a pack can take the leaf and the buttons without the tip.
+ *
+ * - `confirmation.sent` — under the heading, «The confirmation is on its way by text and e-mail».
+ * - `confirmation.leafTime` `{time}` — the leaf's last line, «at {time}».
+ * - `confirmation.detail.service` / `.stylist` / `.where` — the details card's row names.
+ * - `confirmation.duration` `{minutes}` — after the service, «{minutes} min».
+ * - `confirmation.directions` — the second button (needs `directionsHref`).
+ * - `confirmation.tip.heading` / `confirmation.tip.body` — the «before you come» card.
+ * - `confirmation.manageUntil` `{day}` `{time}` — after «change or cancel», until when it is free.
+ */
+export const CONFIRMATION_HERO_LABEL_KEYS = [
+  'confirmation.sent',
+  'confirmation.leafTime',
+  'confirmation.detail.service',
+  'confirmation.detail.stylist',
+  'confirmation.detail.where',
+  'confirmation.duration',
+  'confirmation.directions',
+  'confirmation.tip.heading',
+  'confirmation.tip.body',
+  'confirmation.manageUntil',
+] as const;
+
+export type ConfirmationLabels = Record<(typeof CONFIRMATION_LABEL_KEYS)[number], BookingLabel> &
+  Partial<Record<(typeof CONFIRMATION_HERO_LABEL_KEYS)[number], BookingLabel>>;
 
 /**
  * One booked line (one person's appointment). One array rather than parallel
@@ -54,6 +84,8 @@ export interface ConfirmationLine {
   bookingId: string;
   /** Who takes this line; `null` = «first available» not worth naming. Cleaned with `format.stylistName`. */
   stylistName: string | null;
+  /** Their face, for `layout="hero"`. */
+  stylistPhotoUrl?: string | null;
   /** Where this line's own booking is managed; `null` draws no link. */
   manageHref: string | null;
   /** When this line starts (a sequential party runs back to back). */
@@ -131,16 +163,49 @@ export interface ConfirmationProps {
   /** The visit's total in minor units. */
   totalOre: number;
   address?: string | null;
-  /** The calendar file (e.g. a `data:text/calendar` URL). `null` draws no link. */
+  /**
+   * The calendar link: a calendar file the site serves (`text/calendar`, which
+   * iOS and macOS open straight into «Add to Calendar»), a calendar's own
+   * add-event page (Google Calendar), or a `data:text/calendar` URL. `null`
+   * draws no link.
+   */
   calendarHref?: string | null;
-  /** `download` filename for the calendar link. Required for a `data:` URL to work. */
+  /**
+   * `download` filename for the calendar link. Only a `data:` or `blob:` URL
+   * gets it: browsers refuse to navigate to one, so the attribute is what makes
+   * it do anything. On a real URL it would force a download, and an iPhone
+   * would save the file to Files instead of opening Calendar.
+   */
   calendarFileName?: string;
+  /**
+   * The calendar link is another site's page (Google Calendar's add-event
+   * form): it opens in a new tab. A calendar file — relative or absolute —
+   * opens in place, which is what lets iOS show «Add to Calendar».
+   */
+  calendarNewTab?: boolean;
+  /**
+   * A second way into a calendar, drawn as a small link: Google Calendar beside
+   * a calendar file, or the file beside Google Calendar. `newTab` as for
+   * `calendarNewTab`. `null` draws none.
+   */
+  calendarAlt?: { href: string; label: string; newTab?: boolean } | null;
   /** Where all of the visitor's bookings are listed. `null` draws no link. */
   portalHref?: string | null;
   /** A way back to an empty wizard. Absent, the button is not drawn. */
   onStartOver?: () => void;
   /** «today» is relative to this. Read once, so it cannot change mid-card. */
   now?: number;
+  /**
+   * `card` (the default) — heading, one card, text links. `hero` — the day as
+   * a large calendar leaf, a details card (service, stylist, where), the
+   * calendar and directions as buttons, an optional tip, and until when a
+   * change is free. Opt-in: the extra words are `CONFIRMATION_HERO_LABEL_KEYS`.
+   */
+  layout?: 'card' | 'hero';
+  /** With `hero`: a maps link for the directions button. `null` draws no button. */
+  directionsHref?: string | null;
+  /** With `hero`: until when a change or cancellation is free. `null` says nothing. */
+  freeChangeUntilTs?: number | null;
   format: BookingFormat;
   labels: ConfirmationLabels;
   classNames?: SlotClassNames<ConfirmationSlot>;
@@ -149,6 +214,20 @@ export interface ConfirmationProps {
 
 const SEPARATOR = ' · ';
 
+/** `download` only where it is needed (see `calendarFileName`). */
+function downloadFor(href: string, fileName: string): string | undefined {
+  return /^(data|blob):/i.test(href) ? fileName : undefined;
+}
+
+/** A calendar link: the file in place, another calendar's page in a new tab. */
+function calendarLinkProps(href: string, fileName: string, newTab = false) {
+  return {
+    href,
+    download: downloadFor(href, fileName),
+    ...(newTab ? { target: '_blank', rel: 'noopener' } : {}),
+  };
+}
+
 export function Confirmation({
   lines: rawLines,
   startTs,
@@ -156,15 +235,43 @@ export function Confirmation({
   address = null,
   calendarHref = null,
   calendarFileName = 'booking.ics',
+  calendarAlt = null,
+  calendarNewTab = false,
   portalHref = null,
   onStartOver,
   now = Date.now(),
+  layout = 'card',
+  directionsHref = null,
+  freeChangeUntilTs = null,
   format,
   labels,
   classNames,
   components,
 }: ConfirmationProps) {
   const { clock } = format;
+  if (layout === 'hero') {
+    return (
+      <HeroConfirmation
+        lines={rawLines}
+        startTs={startTs}
+        totalOre={totalOre}
+        address={address}
+        calendarHref={calendarHref}
+        calendarFileName={calendarFileName}
+        calendarAlt={calendarAlt}
+        calendarNewTab={calendarNewTab}
+        portalHref={portalHref}
+        onStartOver={onStartOver}
+        now={now}
+        directionsHref={directionsHref}
+        freeChangeUntilTs={freeChangeUntilTs}
+        format={format}
+        labels={labels}
+        classNames={classNames}
+        components={components}
+      />
+    );
+  }
   // Cleaned here as well as upstream: a restored confirmation carries whatever
   // name was resolved when it was stored.
   const lines = rawLines.map((line) => ({
@@ -185,24 +292,25 @@ export function Confirmation({
         'rounded-lg border border-border bg-card px-5 py-4 font-medium'
       )}
     >
-      {[
-        first.item.bookedForName
-          ? fillLabel(labels['confirmation.serviceFor'], {
-              service: first.item.service.name,
-              name: first.item.bookedForName,
-            })
-          : first.item.service.name,
-        first.stylistName,
-        fillLabel(labels['confirmation.when'], {
-          day: clock.dayLabel(startTs, now),
-          time: clock.formatTime(startTs),
-        }),
-        // This line's own price, which for one person is the whole total.
-        format.price(first.priceOre),
-      ]
-        // Filtered, not conditionally joined: an absent stylist closes the gap.
-        .filter((part): part is string => Boolean(part))
-        .join(SEPARATOR)}
+      {/* Filtered, not conditionally joined: an absent stylist closes the gap. */}
+      {joinLabelParts(
+        [
+          first.item.bookedForName
+            ? renderLabel(labels['confirmation.serviceFor'], {
+                service: visitName(first.item),
+                name: first.item.bookedForName,
+              })
+            : visitName(first.item),
+          first.stylistName,
+          renderLabel(labels['confirmation.when'], {
+            day: clock.dayLabel(startTs, now),
+            time: clock.formatTime(startTs),
+          }),
+          // This line's own price, which for one person is the whole total.
+          format.price(first.priceOre),
+        ],
+        SEPARATOR
+      )}
     </p>
   ) : null;
 
@@ -247,8 +355,19 @@ export function Confirmation({
         {/* `download` is not decoration: browsers refuse a top-level navigation
             to a `data:` URL, so it is what makes the link do anything. */}
         {calendarHref && (
-          <a href={calendarHref} download={calendarFileName} className={linkClass}>
+          <a
+            {...calendarLinkProps(calendarHref, calendarFileName, calendarNewTab)}
+            className={linkClass}
+          >
             {labels['confirmation.calendar']}
+          </a>
+        )}
+        {calendarAlt && (
+          <a
+            {...calendarLinkProps(calendarAlt.href, calendarFileName, calendarAlt.newTab)}
+            className={linkClass}
+          >
+            {calendarAlt.label}
           </a>
         )}
         {/* One line, one link, here beside the calendar. A family gets one per
@@ -316,7 +435,9 @@ function PartyCard({
       )}
     >
       <p className="font-semibold">
-        {fillLabel(labels['confirmation.party.heading'], { day: clock.dayLabel(firstStart, now) })}
+        {renderLabel(labels['confirmation.party.heading'], {
+          day: clock.dayLabel(firstStart, now),
+        })}
       </p>
       <ul className="space-y-1">
         {lines.map((line, index) => {
@@ -324,7 +445,7 @@ function PartyCard({
           const text = fillLabel(labels['confirmation.party.line'], {
             time,
             name: line.item.bookedForName ?? '',
-            service: line.item.service.name,
+            service: visitName(line.item),
             stylist: line.stylistName
               ? fillLabel(labels['confirmation.party.stylist'], { name: line.stylistName })
               : '',
@@ -340,9 +461,9 @@ function PartyCard({
               key={index}
               line={line}
               text={text}
-              manageLabel={labels['confirmation.manage']}
+              manageLabel={labelText(labels['confirmation.manage'])}
               manageAriaLabel={fillLabel(labels['confirmation.manageFor'], {
-                who: line.item.bookedForName ?? line.item.service.name,
+                who: line.item.bookedForName ?? visitName(line.item),
                 time,
               })}
               linkClassName={slotClass(
@@ -355,8 +476,317 @@ function PartyCard({
         })}
       </ul>
       <p className="font-semibold">
-        {fillLabel(labels['confirmation.party.total'], { total: format.price(totalOre) })}
+        {renderLabel(labels['confirmation.party.total'], { total: format.price(totalOre) })}
       </p>
     </div>
+  );
+}
+
+/** A visit's minutes: every service in it, back to back. */
+function visitMinutes(item: WizardItem): number {
+  return [item.service, ...(item.extraServices ?? [])].reduce(
+    (minutes, service) => minutes + service.durationMinutes,
+    0
+  );
+}
+
+/**
+ * `layout="hero"`: the day first, as a large calendar leaf, then what was
+ * booked, and the two things a parent does next — put it in the calendar and
+ * find the way — as buttons rather than links.
+ */
+function HeroConfirmation({
+  lines: rawLines,
+  startTs,
+  totalOre,
+  address,
+  calendarHref,
+  calendarFileName,
+  calendarAlt,
+  calendarNewTab,
+  portalHref,
+  onStartOver,
+  now,
+  directionsHref,
+  freeChangeUntilTs,
+  format,
+  labels,
+  classNames,
+  components,
+}: Required<
+  Pick<
+    ConfirmationProps,
+    'lines' | 'startTs' | 'totalOre' | 'calendarFileName' | 'now' | 'format' | 'labels'
+  >
+> &
+  Pick<
+    ConfirmationProps,
+    | 'address'
+    | 'calendarHref'
+    | 'calendarAlt'
+    | 'calendarNewTab'
+    | 'portalHref'
+    | 'onStartOver'
+    | 'directionsHref'
+    | 'freeChangeUntilTs'
+    | 'classNames'
+    | 'components'
+  >) {
+  const { clock } = format;
+  const lines = rawLines.map((line) => ({
+    ...line,
+    stylistName: line.stylistName ? format.stylistName(line.stylistName) || null : null,
+  }));
+  const first = lines[0];
+  const [, month, day] = clock.dayKey(startTs).split('-').map(Number);
+  const linkClass = slotClass(
+    classNames,
+    'link',
+    'font-semibold text-primary underline underline-offset-4'
+  );
+  const label = (key: (typeof CONFIRMATION_HERO_LABEL_KEYS)[number]) => labels[key];
+
+  const when = renderLabel(labels['confirmation.when'], {
+    day: clock.dayLabel(startTs, now),
+    time: clock.formatTime(startTs),
+  });
+  const rows: { name: BookingLabel; value: ReactNode }[] = [];
+  // A pack without the hero's row names still says what was booked: the card
+  // layout's one line, rather than a confirmation with no service on it.
+  const plainLine =
+    first && lines.length === 1 && !label('confirmation.detail.service') ? (
+      <p
+        className={slotClass(
+          classNames,
+          'card',
+          'rounded-lg border border-border bg-card px-5 py-4 font-medium'
+        )}
+      >
+        {joinLabelParts(
+          [
+            first.item.bookedForName
+              ? renderLabel(labels['confirmation.serviceFor'], {
+                  service: visitName(first.item),
+                  name: first.item.bookedForName,
+                })
+              : visitName(first.item),
+            first.stylistName,
+            when,
+            format.price(first.priceOre),
+          ],
+          SEPARATOR
+        )}
+      </p>
+    ) : null;
+  if (first && lines.length === 1) {
+    const service = first.item.bookedForName
+      ? renderLabel(labels['confirmation.serviceFor'], {
+          service: visitName(first.item),
+          name: first.item.bookedForName,
+        })
+      : visitName(first.item);
+    const duration = label('confirmation.duration');
+    if (label('confirmation.detail.service')) {
+      rows.push({
+        name: label('confirmation.detail.service') as BookingLabel,
+        // The price stays with what was booked, as on the card layout.
+        value: joinLabelParts(
+          [
+            service,
+            duration ? renderLabel(duration, { minutes: visitMinutes(first.item) }) : null,
+            format.price(first.priceOre),
+          ],
+          SEPARATOR
+        ),
+      });
+    }
+    if (first.stylistName && label('confirmation.detail.stylist')) {
+      rows.push({
+        name: label('confirmation.detail.stylist') as BookingLabel,
+        value: (
+          <span className="inline-flex items-center gap-1.5">
+            {first.stylistPhotoUrl && (
+              <img
+                src={first.stylistPhotoUrl}
+                alt=""
+                width={24}
+                height={24}
+                decoding="async"
+                className="size-6 shrink-0 rounded-full object-cover"
+              />
+            )}
+            {first.stylistName}
+          </span>
+        ),
+      });
+    }
+  }
+  if (address && label('confirmation.detail.where')) {
+    rows.push({ name: label('confirmation.detail.where') as BookingLabel, value: address });
+  }
+
+  const manageUntil = label('confirmation.manageUntil');
+  return (
+    <section
+      aria-labelledby="booking-confirmed-heading"
+      className={slotClass(classNames, 'root', 'space-y-5')}
+    >
+      <div className="flex flex-col items-center gap-3 pt-2 text-center">
+        {/* Decoration: the heading and the card say the same in words. */}
+        <span
+          aria-hidden="true"
+          data-testid="confirmation-leaf"
+          className="flex w-28 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+        >
+          <span className="bg-primary px-2 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground">
+            {clock.weekday(startTs)}
+          </span>
+          <span className="pt-2 font-sans text-5xl font-bold leading-none tabular-nums">{day}</span>
+          <span className="pt-1 text-sm text-muted-foreground">
+            {month ? clock.monthName(month) : ''}
+          </span>
+          <span className="pb-2 text-sm font-semibold tabular-nums">
+            {label('confirmation.leafTime')
+              ? fillLabel(label('confirmation.leafTime') as BookingLabel, {
+                  time: clock.formatTime(startTs),
+                })
+              : clock.formatTime(startTs)}
+          </span>
+        </span>
+        <h2
+          id="booking-confirmed-heading"
+          tabIndex={-1}
+          className={slotClass(
+            classNames,
+            'heading',
+            'font-sans text-2xl font-bold outline-none md:text-3xl'
+          )}
+        >
+          {labels['confirmation.heading']}
+        </h2>
+        {/* The leaf is decoration: the day and time, in words, for a screen reader. */}
+        <p className="sr-only">{when}</p>
+        {label('confirmation.sent') && (
+          <p className="text-sm text-muted-foreground">
+            {renderLabel(label('confirmation.sent') as BookingLabel)}
+          </p>
+        )}
+      </div>
+      {plainLine}
+
+      {lines.length > 1 && (
+        <PartyCard
+          lines={lines}
+          totalOre={totalOre}
+          now={now}
+          format={format}
+          labels={labels}
+          classNames={classNames}
+          PartyLine={components?.PartyLine ?? DefaultPartyLine}
+        />
+      )}
+      {rows.length > 0 && (
+        <dl
+          className={slotClass(
+            classNames,
+            'card',
+            'divide-y divide-border rounded-lg border border-border bg-card px-5'
+          )}
+        >
+          {rows.map((row) => (
+            <div key={labelText(row.name)} className="flex items-center gap-4 py-3 text-sm">
+              <dt className="w-16 shrink-0 text-muted-foreground">{renderLabel(row.name)}</dt>
+              <dd className="min-w-0 font-medium">{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
+      {(calendarHref || (directionsHref && label('confirmation.directions'))) && (
+        <div className="grid grid-cols-2 gap-2">
+          {calendarHref && (
+            <a
+              {...calendarLinkProps(calendarHref, calendarFileName, calendarNewTab)}
+              className={bookingButtonClass({ size: 'lg', className: 'gap-2' })}
+            >
+              <CalendarPlus aria-hidden="true" className="size-4" />
+              {labels['confirmation.calendar']}
+            </a>
+          )}
+          {directionsHref && label('confirmation.directions') && (
+            <a
+              href={directionsHref}
+              target="_blank"
+              rel="noopener"
+              className={bookingButtonClass({
+                variant: 'outline',
+                size: 'lg',
+                className: cn('gap-2', !calendarHref && 'col-span-2'),
+              })}
+            >
+              <MapPin aria-hidden="true" className="size-4" />
+              {renderLabel(label('confirmation.directions') as BookingLabel)}
+            </a>
+          )}
+        </div>
+      )}
+
+      {calendarAlt && (
+        <p className="-mt-2 text-center text-sm">
+          <a
+            {...calendarLinkProps(calendarAlt.href, calendarFileName, calendarAlt.newTab)}
+            className={linkClass}
+          >
+            {calendarAlt.label}
+          </a>
+        </p>
+      )}
+
+      {label('confirmation.tip.heading') && label('confirmation.tip.body') && (
+        <div className="rounded-lg bg-muted px-5 py-4 text-sm">
+          <p className="font-semibold">
+            {renderLabel(label('confirmation.tip.heading') as BookingLabel)}
+          </p>
+          <p className="text-muted-foreground">
+            {renderLabel(label('confirmation.tip.body') as BookingLabel)}
+          </p>
+        </div>
+      )}
+
+      {lines.length === 1 && first?.manageHref && (
+        <p className="text-center text-sm">
+          <a href={first.manageHref} className={linkClass}>
+            {labels['confirmation.manage']}
+          </a>
+          {manageUntil && freeChangeUntilTs !== null && freeChangeUntilTs !== undefined && (
+            <span className="text-muted-foreground">
+              {SEPARATOR}
+              {fillLabel(manageUntil, {
+                day: clock.dayLabel(freeChangeUntilTs, now),
+                time: clock.formatTime(freeChangeUntilTs),
+              })}
+            </span>
+          )}
+        </p>
+      )}
+      {portalHref && (
+        <p className="text-center text-sm">
+          <a href={portalHref} className={linkClass}>
+            {labels['confirmation.portal']}
+          </a>
+        </p>
+      )}
+      {onStartOver && (
+        <div className="flex justify-center">
+          <BookingButton
+            variant="outline"
+            className={slotClass(classNames, 'startOver')}
+            onClick={onStartOver}
+          >
+            {labels['confirmation.startOver']}
+          </BookingButton>
+        </div>
+      )}
+    </section>
   );
 }

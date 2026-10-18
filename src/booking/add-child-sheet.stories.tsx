@@ -4,6 +4,7 @@ import { demoFormatEn, demoFormatNb } from './__stories__/fixtures.js';
 import { addChildSheetLabelsEn, addChildSheetLabelsNb } from './__stories__/labels.steps.js';
 import { BookingColumn, bookingStoryParameters, SecondBrand } from './__stories__/story-helpers.js';
 import { AddChildSheet } from './add-child-sheet.js';
+import { labelText } from './labels.js';
 import type { SaveResult } from './types.js';
 
 const save = async (): Promise<SaveResult> => ({ ok: true });
@@ -38,7 +39,7 @@ export const English: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
-      canvas.getByRole('button', { name: addChildSheetLabelsEn['addChild.trigger'] })
+      canvas.getByRole('button', { name: labelText(addChildSheetLabelsEn['addChild.trigger']) })
     );
     const dialog = within(canvasElement.ownerDocument.body).getByRole('dialog');
     await expect(dialog).toHaveAttribute('open');

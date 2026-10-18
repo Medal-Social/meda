@@ -33,6 +33,16 @@ describe('package peer contract', () => {
     expect(pkg.dependencies[name]).toBeUndefined();
   });
 
+  // An exact pin forces a second copy on any consumer whose lockfile holds a
+  // compatible but different version (a duplicated tailwind-merge is ~8.5 KB
+  // gzip); a caret range lets the consumer's lockfile dedupe without overrides.
+  it('declares every runtime dependency as a caret range', () => {
+    const pinned = Object.entries(pkg.dependencies).filter(
+      ([, range]) => !/^\^\d+\.\d+\.\d+$/.test(range)
+    );
+    expect(pinned).toEqual([]);
+  });
+
   it('does not ship font packages as runtime dependencies', () => {
     expect(Object.keys(pkg.dependencies).filter((d) => d.startsWith('@fontsource'))).toEqual([]);
   });

@@ -4,7 +4,7 @@
  * fixtures only.
  */
 import type { AddChildSheetLabels } from '../add-child-sheet.js';
-import type { ServiceScreenLabels } from '../service-screen.js';
+import type { ServiceMultiLabels, ServiceScreenLabels } from '../service-screen.js';
 import type { StylistScreenLabels } from '../stylist-screen.js';
 import type { WhoScreenLabels } from '../who-screen.js';
 
@@ -51,6 +51,19 @@ export const whoScreenLabelsNb: WhoScreenLabels = {
   'who.family.legend': 'Velg opptil {max}',
   'who.family.self': 'Meg selv (voksen)',
   'who.family.limit': 'En bestilling kan gjelde opptil {max} personer.',
+  'who.party.children': 'Barn',
+  'who.party.childrenNote': '0–12 år',
+  'who.party.adult': 'Jeg skal også klippes',
+  'who.party.adultNote': 'Samtidig, i stolen ved siden av',
+  'who.party.fewer': 'Ett barn færre',
+  'who.party.more': 'Ett barn til',
+  'who.party.count': '{count} barn',
+  'who.party.adultFewer': 'En voksen færre',
+  'who.party.adultMore': 'En voksen til',
+  'who.party.adultCount': '{count} voksne',
+  'who.party.lead': 'Opptil tre i samme bestilling.',
+  'who.party.togetherHint': 'Kommer du med barnet? Legg til deg selv, så klipper vi dere samtidig.',
+  'who.family.adults': 'Voksne',
 };
 
 export const whoScreenLabelsEn: WhoScreenLabels = {
@@ -64,6 +77,38 @@ export const whoScreenLabelsEn: WhoScreenLabels = {
   'who.family.legend': 'Choose up to {max}',
   'who.family.self': 'Myself (adult)',
   'who.family.limit': 'One booking can include up to {max} people.',
+  'who.party.children': 'Children',
+  'who.party.childrenNote': 'Ages 0–12',
+  'who.party.adult': 'I’m getting a cut too',
+  'who.party.adultNote': 'At the same time, in the next chair',
+  'who.party.fewer': 'One child fewer',
+  'who.party.more': 'One more child',
+  'who.party.count': '{count} children',
+  'who.party.adultFewer': 'One adult fewer',
+  'who.party.adultMore': 'One more adult',
+  'who.party.adultCount': '{count} adults',
+  'who.party.lead': 'Up to three in one booking.',
+  'who.party.togetherHint': 'Coming with your child? Add yourself and we cut you side by side.',
+  'who.family.adults': 'Grown-ups',
+};
+
+/** The multi-select step's labels (`ServiceSelection.labels`). */
+export const serviceMultiLabelsNb: ServiceMultiLabels = {
+  'service.multiHint': 'Velg én eller flere',
+  'service.total': '{minutes} min · {price}',
+  'service.chooseFirst': 'Velg minst én tjeneste',
+  'service.continue': 'Neste',
+  'service.party.nothingBookable': 'Ingen tjenester kan bestilles på nett for {label}.',
+  'service.tabDone': 'ferdig',
+};
+
+export const serviceMultiLabelsEn: ServiceMultiLabels = {
+  'service.multiHint': 'Choose one or more',
+  'service.total': '{minutes} min · {price}',
+  'service.chooseFirst': 'Choose at least one service',
+  'service.continue': 'Next',
+  'service.party.nothingBookable': 'Nothing can be booked online for {label}.',
+  'service.tabDone': 'done',
 };
 
 export const serviceScreenLabelsNb: ServiceScreenLabels = {
@@ -80,6 +125,10 @@ export const serviceScreenLabelsNb: ServiceScreenLabels = {
   'service.party.adultAlone': '{label} må bestilles som en egen time.',
   'service.party.nothingFits': 'Ingen tjenester kan bestilles for {label} i en så stor gruppe.',
   'service.party.remove': 'Fjern {label} fra denne timen',
+  'service.search': 'Søk: skjegg, lugg, farge …',
+  'service.searchLabel': 'Søk i behandlingene',
+  'service.searchEmpty': 'Ingen behandling heter «{query}».',
+  ...serviceMultiLabelsNb,
 };
 
 export const serviceScreenLabelsEn: ServiceScreenLabels = {
@@ -96,6 +145,10 @@ export const serviceScreenLabelsEn: ServiceScreenLabels = {
   'service.party.adultAlone': '{label} needs a separate appointment.',
   'service.party.nothingFits': 'Nothing can be booked for {label} in a group this size.',
   'service.party.remove': 'Remove {label} from this appointment',
+  'service.search': 'Search: beard, fringe, colour …',
+  'service.searchLabel': 'Search the services',
+  'service.searchEmpty': 'No service is called «{query}».',
+  ...serviceMultiLabelsEn,
 };
 
 export const stylistScreenLabelsNb: StylistScreenLabels = {
@@ -116,6 +169,8 @@ export const stylistScreenLabelsNb: StylistScreenLabels = {
   'stylist.party.parallelNote.two': 'Vi finner to behandlere som er ledige samtidig.',
   'stylist.party.parallelNote.three': 'Vi finner tre behandlere som er ledige samtidig.',
   'stylist.party.parallelNote.other': 'Vi finner {count} behandlere som er ledige samtidig.',
+  'stylist.party.seatsHeading': 'Hvem skal klippe hvem? (valgfritt)',
+  'stylist.party.seat': 'Frisør for {who}',
 };
 
 export const stylistScreenLabelsEn: StylistScreenLabels = {
@@ -136,6 +191,8 @@ export const stylistScreenLabelsEn: StylistScreenLabels = {
   'stylist.party.parallelNote.two': 'We find two stylists who are free at the same time.',
   'stylist.party.parallelNote.three': 'We find three stylists who are free at the same time.',
   'stylist.party.parallelNote.other': 'We find {count} stylists who are free at the same time.',
+  'stylist.party.seatsHeading': 'Who cuts whom? (optional)',
+  'stylist.party.seat': 'Stylist for {who}',
 };
 
 /** The demo categories, in display order. */

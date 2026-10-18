@@ -13,8 +13,9 @@ import {
 } from 'react';
 import { Field } from '../primitives/field.js';
 import { Input } from '../primitives/input.js';
+import { renderLabel } from './internal/label-parts.js';
 import { BOOKING_INPUT_CLASS, BookingButton } from './internal/ui.js';
-import { fillLabel } from './labels.js';
+import type { BookingLabel } from './labels.js';
 import {
   OTP_SLOTS_LABEL_KEYS,
   OtpSlots,
@@ -39,6 +40,7 @@ export const LOGIN_PANEL_OWN_LABEL_KEYS = [
   'login.heading',
   'login.codeHeading',
   'login.or',
+  'login.continueEmail',
   'login.emailIntro',
   'login.emailLabel',
   'login.sendCode',
@@ -74,7 +76,7 @@ export const LOGIN_PANEL_LABEL_KEYS = [
  * Placeholders: `login.codeHelp` `{email}`, `login.vippsSentTo` `{to}`,
  * `login.cooldownWait` `{seconds}`, `login.resendIn` `{time}` («0:30»).
  */
-export type LoginPanelLabels = Record<(typeof LOGIN_PANEL_OWN_LABEL_KEYS)[number], string> &
+export type LoginPanelLabels = Record<(typeof LOGIN_PANEL_OWN_LABEL_KEYS)[number], BookingLabel> &
   OtpSlotsLabels &
   VippsButtonLabels;
 
@@ -94,11 +96,14 @@ export type LoginPanelSlot =
   | 'input'
   | 'submit'
   | 'divider'
+  | 'emailButton'
   | 'links'
   | 'link';
 
 /** What asking for a code answered. `invalidEmail`: the address was refused. */
-export type LoginStartResult = { ok: true } | { ok: false; reason: 'unreachable' | 'invalidEmail' };
+export type LoginStartResult =
+  | { ok: true }
+  | { ok: false; reason: 'unreachable' | 'invalidEmail' | 'throttled' };
 
 /** What checking a code answered. `conflict`: the Vipps account belongs to another profile. */
 export type LoginVerifyResult =
@@ -123,6 +128,8 @@ export interface LoginPanelMemory {
   sentTo: string;
   /** When «send a new code» opens again (epoch ms); `0` before any code went out. */
   resendAt: number;
+  /** `emailCollapsed` only: the e-mail form has been opened. */
+  emailOpen?: boolean;
 }
 
 export const FRESH_LOGIN_MEMORY: LoginPanelMemory = {
@@ -157,6 +164,8 @@ export interface LoginPanelProps {
   onVipps?: VippsStartAction;
   /** Where a Vipps login should land. */
   vippsNext?: string | null;
+  /** Show e-mail as a second button under Vipps; the form opens on tap. Ignored without `onVipps`. */
+  emailCollapsed?: boolean;
   /** Replaces the Vipps button's label. */
   vippsLabel?: string;
   /** Start on the Vipps confirm code screen (uncontrolled memory only). */
@@ -165,7 +174,7 @@ export interface LoginPanelProps {
   memory?: LoginPanelMemory;
   onMemoryChange?: Dispatch<SetStateAction<LoginPanelMemory>>;
   /** Draws the heading («Log in» / «Check your e-mail»). Default: none — the page has its own. */
-  heading?: (text: string) => ReactNode;
+  heading?: (text: ReactNode) => ReactNode;
   /** Drawn above the Vipps button on the first screen. */
   intro?: ReactNode;
   /** Wait between codes. Default 30 s. */
@@ -184,6 +193,13 @@ type Notice =
   | 'throttled'
   | 'vippsInvalid'
   | 'vippsConflict';
+
+/** Which notice each refused send shows. */
+const START_NOTICE = {
+  invalidEmail: 'badEmail',
+  throttled: 'throttled',
+  unreachable: 'unreachable',
+} as const satisfies Record<Extract<LoginStartResult, { ok: false }>['reason'], Notice>;
 
 /** The notices that describe a mistake in the field they sit under. */
 const FIELD_ERRORS: ReadonlySet<Notice> = new Set([
@@ -234,6 +250,7 @@ export function LoginPanel({
   onVipps,
   vippsNext = null,
   vippsLabel,
+  emailCollapsed = false,
   vippsConfirm = null,
   memory: memoryProp,
   onMemoryChange,
@@ -247,7 +264,7 @@ export function LoginPanel({
   const id = useId();
   const [heldHere, setHeldHere] = useState<LoginPanelMemory>(() => loginMemoryFor(vippsConfirm));
   const controlled = memoryProp !== undefined && onMemoryChange !== undefined;
-  const { mode, email, sentTo, resendAt } = controlled ? memoryProp : heldHere;
+  const { mode, email, sentTo, resendAt, emailOpen = false } = controlled ? memoryProp : heldHere;
   const setMemory = controlled ? onMemoryChange : setHeldHere;
   const remember = (patch: Partial<LoginPanelMemory>) =>
     setMemory((previous) => ({ ...previous, ...patch }));
@@ -264,6 +281,10 @@ export function LoginPanel({
   const verifying = useRef(false);
   const [checking, setChecking] = useState(false);
   const codeRef = useRef<HTMLDivElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const collapsed = emailCollapsed && !!onVipps && !emailOpen;
+  /** Focus only after a tap opened the form, not when memory restores it. */
+  const focusEmail = useRef(false);
 
   const emailId = `${id}-email`;
   const codeId = `${id}-code`;
@@ -290,6 +311,12 @@ export function LoginPanel({
     codeRef.current?.querySelector<HTMLInputElement>('input')?.focus();
   }, [focusCode, pending, mode]);
 
+  useEffect(() => {
+    if (!focusEmail.current || collapsed) return;
+    focusEmail.current = false;
+    emailRef.current?.focus();
+  }, [collapsed]);
+
   function requestCode(address: string, resend: boolean) {
     startTransition(async () => {
       let result: LoginStartResult;
@@ -299,7 +326,7 @@ export function LoginPanel({
         result = { ok: false, reason: 'unreachable' };
       }
       if (!result.ok) {
-        setNotice(result.reason === 'invalidEmail' ? 'badEmail' : 'unreachable');
+        setNotice(START_NOTICE[result.reason]);
         return;
       }
       const sentAt = Date.now();
@@ -360,13 +387,15 @@ export function LoginPanel({
   }
 
   function switchEmail() {
-    remember({ mode: 'start' });
+    // They already chose e-mail: back to the open form, not the two buttons.
+    remember({ mode: 'start', emailOpen: true });
     setCode('');
     setNotice(null);
   }
 
   const isFieldError = notice !== null && FIELD_ERRORS.has(notice);
-  const noticeText = notice === null ? null : labels[`login.notice.${notice}`];
+  // `null` for a blank notice, so no input is described by an empty one.
+  const noticeText = notice === null ? null : renderLabel(labels[`login.notice.${notice}`]);
 
   // One live region for the whole flow, ABOVE the switch between the two
   // screens so it stays mounted across it: a region that arrives already
@@ -392,7 +421,7 @@ export function LoginPanel({
   // the two things worth hearing — how long, and that it is over.
   const cooldownSentence =
     waitSeconds > 0
-      ? fillLabel(labels['login.cooldownWait'], { seconds: Math.ceil(resendCooldownMs / 1000) })
+      ? renderLabel(labels['login.cooldownWait'], { seconds: Math.ceil(resendCooldownMs / 1000) })
       : labels['login.cooldownReady'];
   const cooldownRegion = (
     <p aria-live="polite" className="sr-only">
@@ -408,20 +437,20 @@ export function LoginPanel({
 
   return (
     <div className={slotClass(classNames, 'root', 'space-y-6')}>
-      {heading(mode === 'start' ? labels['login.heading'] : labels['login.codeHeading'])}
+      {heading(renderLabel(labels[mode === 'start' ? 'login.heading' : 'login.codeHeading']))}
       {mode === 'vipps' && (
         // Text, never markup: `sentTo` may have come in on a URL.
         <p className="text-muted-foreground">
           {sentTo === ''
             ? labels['login.vippsSentToUnknown']
-            : fillLabel(labels['login.vippsSentTo'], { to: sentTo })}
+            : renderLabel(labels['login.vippsSentTo'], { to: sentTo })}
         </p>
       )}
       {liveRegion}
       {cooldownRegion}
       {mode === 'start' ? (
         <>
-          {intro}
+          {!collapsed && intro}
           {onVipps && (
             <>
               <VippsButton
@@ -431,45 +460,66 @@ export function LoginPanel({
                 labels={labels}
                 classNames={vippsClassNames}
               />
-              <div
-                className={slotClass(
-                  classNames,
-                  'divider',
-                  'flex items-center gap-4 text-sm text-muted-foreground'
-                )}
-                aria-hidden="true"
-              >
-                <span className="h-px flex-1 bg-border" />
-                {labels['login.or']}
-                <span className="h-px flex-1 bg-border" />
-              </div>
+              {!emailCollapsed && (
+                <div
+                  className={slotClass(
+                    classNames,
+                    'divider',
+                    'flex items-center gap-4 text-sm text-muted-foreground'
+                  )}
+                  aria-hidden="true"
+                >
+                  <span className="h-px flex-1 bg-border" />
+                  {labels['login.or']}
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+              )}
             </>
           )}
-          <p className="text-muted-foreground">{labels['login.emailIntro']}</p>
-          <form onSubmit={submitEmail} className={slotClass(classNames, 'form', 'space-y-6')}>
-            <Field>
-              <Field.Label htmlFor={emailId}>{labels['login.emailLabel']}</Field.Label>
-              <Input
-                id={emailId}
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                aria-describedby={noticeText ? noticeId : undefined}
-                aria-invalid={isFieldError || undefined}
-                onChange={(event) => setEmail(event.target.value)}
-                className={slotClass(classNames, 'input', BOOKING_INPUT_CLASS)}
-              />
-            </Field>
+          {collapsed ? (
             <BookingButton
-              type="submit"
+              type="button"
+              variant="outline"
               size="lg"
-              className={slotClass(classNames, 'submit', 'w-full')}
-              disabled={pending}
+              className={slotClass(classNames, 'emailButton', 'w-full')}
+              onClick={() => {
+                focusEmail.current = true;
+                remember({ emailOpen: true });
+              }}
             >
-              {labels['login.sendCode']}
+              {labels['login.continueEmail']}
             </BookingButton>
-          </form>
+          ) : (
+            <>
+              <p className="text-muted-foreground">{labels['login.emailIntro']}</p>
+              <form onSubmit={submitEmail} className={slotClass(classNames, 'form', 'space-y-6')}>
+                <Field>
+                  <Field.Label htmlFor={emailId}>{labels['login.emailLabel']}</Field.Label>
+                  <Input
+                    ref={emailRef}
+                    id={emailId}
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    aria-describedby={noticeText ? noticeId : undefined}
+                    // A rate limit says nothing about the address typed, so it never marks it.
+                    aria-invalid={(isFieldError && notice !== 'throttled') || undefined}
+                    onChange={(event) => setEmail(event.target.value)}
+                    className={slotClass(classNames, 'input', BOOKING_INPUT_CLASS)}
+                  />
+                </Field>
+                <BookingButton
+                  type="submit"
+                  size="lg"
+                  className={slotClass(classNames, 'submit', 'w-full')}
+                  disabled={pending}
+                >
+                  {labels['login.sendCode']}
+                </BookingButton>
+              </form>
+            </>
+          )}
         </>
       ) : (
         <>
@@ -495,7 +545,7 @@ export function LoginPanel({
               <Field.Description id={`${codeId}-help`}>
                 {mode === 'vipps'
                   ? labels['login.codeHelpVipps']
-                  : fillLabel(labels['login.codeHelp'], { email: sentTo })}
+                  : renderLabel(labels['login.codeHelp'], { email: sentTo })}
               </Field.Description>
             </Field>
             <BookingButton
@@ -520,7 +570,7 @@ export function LoginPanel({
                 className={link}
               >
                 {waitSeconds > 0
-                  ? fillLabel(labels['login.resendIn'], { time: timer(waitSeconds) })
+                  ? renderLabel(labels['login.resendIn'], { time: timer(waitSeconds) })
                   : labels['login.resend']}
               </button>
             )}

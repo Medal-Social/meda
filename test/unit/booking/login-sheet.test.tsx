@@ -222,3 +222,28 @@ describe('LoginSheet', () => {
     expect(await axe(dialog, opts)).toHaveNoViolations();
   });
 });
+
+describe('LoginSheet — text nodes', () => {
+  const nodes = (element: Element) =>
+    Array.from(element.childNodes)
+      .filter((node) => node.nodeType === Node.TEXT_NODE)
+      .map((node) => node.textContent);
+
+  it('keeps a string prompt’s text runs whole around the trigger', () => {
+    renderSheet();
+    const prompt = trigger().parentElement as HTMLElement;
+    const [before, after] = (labels['loginSheet.prompt'] as string).split('{trigger}');
+    expect(nodes(prompt)).toEqual([before, after]);
+  });
+
+  it('renders an array prompt one text node per element', () => {
+    renderSheet({
+      labels: {
+        ...labels,
+        'loginSheet.prompt': ['Kunde fra før? ', '{trigger}', ', så fyller vi', ' ut det vi vet.'],
+      },
+    });
+    const prompt = trigger().parentElement as HTMLElement;
+    expect(nodes(prompt)).toEqual(['Kunde fra før? ', ', så fyller vi', ' ut det vi vet.']);
+  });
+});

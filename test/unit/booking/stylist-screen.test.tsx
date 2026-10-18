@@ -482,3 +482,352 @@ describe('StylistScreen — overrides and a11y', () => {
     ).toHaveNoViolations();
   });
 });
+
+/** The text nodes directly under `element`, in order. */
+function textNodes(element: Element): string[] {
+  return Array.from(element.childNodes)
+    .filter((node) => node.nodeType === Node.TEXT_NODE)
+    .map((node) => node.textContent ?? '');
+}
+
+describe('StylistScreen — text nodes', () => {
+  const partyProps = { serviceIds: ['svc-kids', 'svc-kids-wash'], resources: [ADA, CLEO] };
+  const party = {
+    mode: 'parallel' as const,
+    minutes: { sequential: 60, parallel: 30 },
+    onMode: vi.fn(),
+  };
+
+  it('renders a string parallel note as ONE text node, the size word filled in', () => {
+    renderStylist({
+      ...partyProps,
+      labels: {
+        ...labels,
+        'stylist.party.parallelNote.two': 'Vi finner {sizeWord} behandlere som er ledige samtidig.',
+      },
+      party: { ...party, size: 2, sizeWord: 'to' },
+    });
+    const note = screen.getByText('Vi finner to behandlere som er ledige samtidig.');
+    expect(textNodes(note)).toEqual(['Vi finner to behandlere som er ledige samtidig.']);
+  });
+
+  it('renders an array parallel note as one text node per element', () => {
+    renderStylist({
+      ...partyProps,
+      labels: {
+        ...labels,
+        'stylist.party.parallelNote.two': [
+          'Vi finner ',
+          '{sizeWord}',
+          ' behandlere som er ledige samtidig.',
+        ],
+      },
+      party: { ...party, size: 2, sizeWord: 'to' },
+    });
+    const note = screen.getByText('Vi finner to behandlere som er ledige samtidig.');
+    expect(textNodes(note)).toEqual(['Vi finner ', 'to', ' behandlere som er ledige samtidig.']);
+  });
+
+  it('fills {sizeWord} with the number when no word is given', () => {
+    renderStylist({
+      ...partyProps,
+      labels: {
+        ...labels,
+        'stylist.party.parallelNote.two': ['Vi finner ', '{sizeWord}', ' behandlere.'],
+      },
+      party: { ...party, size: 2 },
+    });
+    expect(textNodes(screen.getByText('Vi finner 2 behandlere.'))).toEqual([
+      'Vi finner ',
+      '2',
+      ' behandlere.',
+    ]);
+  });
+
+  it('fills the .other note around {count}, in one node for a string', () => {
+    renderStylist({ ...partyProps, party: { ...party, size: 4 } });
+    const text = (labels['stylist.party.parallelNote.other'] as string).replace('{count}', '4');
+    expect(textNodes(screen.getByText(text))).toEqual([text]);
+  });
+
+  it("renders the mode cards' minutes in the form their labels are written", () => {
+    const { unmount } = renderStylist({ ...partyProps, party: { ...party, size: 2 } });
+    const text = (labels['stylist.party.parallelMinutes'] as string).replace('{minutes}', '30');
+    expect(textNodes(screen.getByText(text))).toEqual([text]);
+    unmount();
+    renderStylist({
+      ...partyProps,
+      labels: {
+        ...labels,
+        'stylist.party.parallelMinutes': ['Ferdig på ', '{minutes}', ' min'],
+        'stylist.party.sequentialMinutes': ['{minutes}', ' min'],
+      },
+      party: { ...party, size: 2 },
+    });
+    expect(textNodes(screen.getByText('Ferdig på 30 min'))).toEqual(['Ferdig på ', '30', ' min']);
+    expect(textNodes(screen.getByText('60 min'))).toEqual(['60', ' min']);
+  });
+});
+
+describe('StylistScreen — nextAvailable slot', () => {
+  it('merges the slot onto the next-opening line and leaves the default alone without it', () => {
+    const { unmount } = renderStylist({ nextAvailableTs: { 'res-ada': AT_THREE } });
+    const plain = screen
+      .getAllByTestId('next-available-row')
+      .find((row) => row.textContent?.includes(labels['stylist.nextAvailable']));
+    expect(plain?.className).toContain('text-foreground');
+    unmount();
+
+    renderStylist({
+      nextAvailableTs: { 'res-ada': AT_THREE },
+      classNames: { nextAvailable: 'text-primary' },
+    });
+    const row = screen
+      .getAllByTestId('next-available-row')
+      .find((entry) => entry.textContent?.includes(labels['stylist.nextAvailable']));
+    expect(row?.className).toContain('text-primary');
+    expect(row?.className).not.toContain('text-foreground');
+  });
+});
+
+describe('StylistScreen — «first available» as faces', () => {
+  const withPhoto = (resource: BookingResourceDto, photoUrl: string): BookingResourceDto => ({
+    ...resource,
+    photoUrl,
+  });
+  const ADA_P = withPhoto(ADA, '/p/ada');
+  const BO_P = withPhoto(BO, '/p/bo');
+  const CLEO_P = withPhoto(CLEO, '/p/cleo');
+  const firstOption = () => screen.getByRole('radio', { name: FIRST as string });
+  const facesIn = (element: HTMLElement) =>
+    [...element.querySelectorAll('[data-testid="stylist-faces"] img')].map((img) =>
+      img.getAttribute('src')
+    );
+
+  it('draws the faces of the stylists who can take the basket, in the salon’s order', () => {
+    renderStylist({ resources: [BO_P, CLEO_P, ADA_P], firstAvailableFaces: true });
+    // Cleo does not do the children's cut, so she is not one of «these».
+    expect(facesIn(firstOption())).toEqual(['/p/ada', '/p/bo']);
+    expect(firstOption().textContent).not.toContain(labels['stylist.firstAvailableBadge']);
+  });
+
+  it('keeps the badge with fewer than two photos, and without the prop', () => {
+    const { unmount } = renderStylist({ resources: [ADA_P, BO], firstAvailableFaces: true });
+    expect(facesIn(firstOption())).toEqual([]);
+    unmount();
+
+    renderStylist({ resources: [ADA_P, BO_P] });
+    expect(facesIn(firstOption())).toEqual([]);
+  });
+
+  it('fades the phone row’s edge only when asked', () => {
+    const { unmount } = renderStylist({ edgeFade: true });
+    expect(screen.getByTestId('stylist-options').className).toContain('mask-image');
+    unmount();
+    renderStylist();
+    expect(screen.getByTestId('stylist-options').className).not.toContain('mask-image');
+  });
+});
+
+describe('StylistScreen — faces and the fade, at the edges', () => {
+  it('draws one face for two stylists who share a photo', () => {
+    render(
+      <StylistScreen
+        labels={labels}
+        format={demoFormatNb}
+        now={NOW}
+        serviceIds={['svc-kids']}
+        resources={[
+          { ...ADA, photoUrl: '/p/same' },
+          { ...BO, photoUrl: '/p/same' },
+          { ...ADA, id: 'res-dag', name: 'Dag Demo', photoUrl: '/p/dag', sortOrder: 3 },
+        ]}
+        firstAvailableFaces
+        onPick={vi.fn()}
+      />
+    );
+    const faces = screen
+      .getByRole('radio', { name: labels['stylist.firstAvailable'] as string })
+      .querySelectorAll('[data-testid="stylist-faces"] img');
+    expect([...faces].map((img) => img.getAttribute('src'))).toEqual(['/p/same', '/p/dag']);
+  });
+
+  it('leaves room past the last card for the fade, on a phone only', () => {
+    render(
+      <StylistScreen
+        labels={labels}
+        format={demoFormatNb}
+        now={NOW}
+        serviceIds={['svc-kids']}
+        resources={[ADA, BO]}
+        edgeFade
+        onPick={vi.fn()}
+      />
+    );
+    const row = screen.getByTestId('stylist-options');
+    expect(row.className.split(' ')).toEqual(expect.arrayContaining(['pr-10', 'md:p-0']));
+  });
+});
+
+describe('StylistScreen — row', () => {
+  it('keeps the phone row at every width: no md column of cards', () => {
+    renderStylist({ row: true });
+    const group = screen.getByTestId('stylist-options');
+    expect(group.className).not.toMatch(/md:flex-col/);
+    for (const option of screen.getAllByRole('radio')) {
+      expect(option.className).not.toMatch(/md:/);
+    }
+  });
+
+  it('keeps the edge fade on wide screens too', () => {
+    renderStylist({ row: true, edgeFade: true });
+    expect(screen.getByTestId('stylist-options').className).not.toMatch(/md:\[mask-image:none\]/);
+  });
+
+  it('shows the chosen stylist’s bio under the row, and none for first available', () => {
+    const { rerender } = renderStylist({ row: true, selectedResourceId: ADA.id });
+    expect(screen.getByTestId('stylist-bio')).toHaveTextContent('Ada Demo · Barneklipp og krøller');
+    rerender(
+      <StylistScreen
+        labels={labels}
+        format={demoFormatNb}
+        now={NOW}
+        serviceIds={['svc-kids']}
+        resources={[ADA, BO]}
+        onPick={vi.fn()}
+        row
+        selectedResourceId={null}
+      />
+    );
+    expect(screen.queryByTestId('stylist-bio')).toBeNull();
+  });
+
+  it('says nothing for a stylist without a bio, and draws no bio line without row', () => {
+    renderStylist({ row: true, resources: [{ ...ADA, bio: null }], selectedResourceId: ADA.id });
+    expect(screen.queryByTestId('stylist-bio')).toBeNull();
+  });
+
+  it('draws no bio line without row', () => {
+    renderStylist({ selectedResourceId: ADA.id });
+    expect(screen.queryByTestId('stylist-bio')).toBeNull();
+  });
+
+  it('holds row-sized placeholders while the list loads', () => {
+    renderStylist({ row: true, loading: true });
+    for (const skeleton of screen.getAllByTestId('stylist-skeleton')) {
+      expect(skeleton.className).not.toMatch(/md:/);
+    }
+  });
+
+  it('keeps the faces of «first available» at the tile size', () => {
+    renderStylist({
+      row: true,
+      firstAvailableFaces: true,
+      resources: [
+        { ...ADA, photoUrl: '/a.webp' },
+        { ...BO, photoUrl: '/b.webp' },
+      ],
+    });
+    for (const face of screen.getByTestId('stylist-faces').querySelectorAll('img')) {
+      expect(face.className).not.toMatch(/md:/);
+    }
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = renderStylist({ row: true, selectedResourceId: ADA.id });
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe('StylistScreen — a stylist per person when seen at once', () => {
+  const party = (
+    seats: Array<{ who: string; serviceIds: string[]; resourceId: string | null }>
+  ) => ({
+    mode: 'parallel' as const,
+    size: seats.length,
+    minutes: { sequential: 60, parallel: 30 },
+    onMode: vi.fn(),
+    seats,
+    onSeat: vi.fn(),
+  });
+
+  it('asks who cuts whom, one choice per person, first available by default', () => {
+    const p = party([
+      { who: 'Barn 1', serviceIds: ['svc-kids'], resourceId: null },
+      { who: 'Deg', serviceIds: ['svc-kids'], resourceId: null },
+    ]);
+    renderStylist({ party: p });
+    const first = screen.getByRole('combobox', { name: 'Frisør for Barn 1' });
+    expect(first).toHaveValue('');
+    expect(screen.getByRole('combobox', { name: 'Frisør for Deg' })).toBeInTheDocument();
+    fireEvent.change(first, { target: { value: ADA.id } });
+    expect(p.onSeat).toHaveBeenCalledWith(0, ADA.id);
+    fireEvent.change(first, { target: { value: '' } });
+    expect(p.onSeat).toHaveBeenLastCalledWith(0, null);
+  });
+
+  it('offers each person only stylists who do their whole visit, and not one taken by another', () => {
+    renderStylist({
+      resources: [ADA, BO, CLEO],
+      party: party([
+        { who: 'Barn 1', serviceIds: ['svc-kids'], resourceId: ADA.id },
+        { who: 'Deg', serviceIds: ['svc-kids'], resourceId: null },
+      ]),
+    });
+    const mine = screen.getByRole('combobox', { name: 'Frisør for Barn 1' });
+    const yours = screen.getByRole('combobox', { name: 'Frisør for Deg' });
+    const names = (select: HTMLElement) =>
+      [...select.querySelectorAll('option')].map((option) => option.textContent);
+    // Cleo does not do the children's cut; Ada is already Barn 1's.
+    expect(names(mine)).toEqual([FIRST, 'Ada Demo', 'Bo Eksempel']);
+    expect(names(yours)).toEqual([FIRST, 'Bo Eksempel']);
+  });
+
+  it('keeps the note alone without seats, or without the seat words', () => {
+    expect(screen.queryByRole('combobox')).toBeNull();
+    const { 'stylist.party.seat': _seat, ...withoutSeat } = labels;
+    renderStylist({
+      labels: withoutSeat,
+      party: party([{ who: 'Barn 1', serviceIds: ['svc-kids'], resourceId: null }]),
+    });
+    expect(screen.queryByRole('combobox')).toBeNull();
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = renderStylist({
+      party: party([
+        { who: 'Barn 1', serviceIds: ['svc-kids'], resourceId: null },
+        { who: 'Deg', serviceIds: ['svc-kids'], resourceId: null },
+      ]),
+    });
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe('StylistScreen — a saved seat stylist the list cannot show', () => {
+  const party = (resourceId: string) => ({
+    mode: 'parallel' as const,
+    size: 2,
+    minutes: { sequential: 60, parallel: 30 },
+    onMode: vi.fn(),
+    seats: [
+      { who: 'Barn 1', serviceIds: ['svc-kids'], resourceId },
+      { who: 'Deg', serviceIds: ['svc-kids'], resourceId: null },
+    ],
+    onSeat: vi.fn(),
+  });
+
+  it('keeps an unqualified stylist selected by name, not as first available', () => {
+    renderStylist({ resources: [ADA, BO, CLEO], party: party(CLEO.id) });
+    const select = screen.getByRole('combobox', { name: 'Frisør for Barn 1' });
+    expect(select).toHaveValue(CLEO.id);
+    expect(select).toHaveDisplayValue('Cleo Prøve');
+  });
+
+  it('keeps a stylist the list does not know selected under the pending name', () => {
+    renderStylist({ resources: [], party: party('res-gone') });
+    const select = screen.getByRole('combobox', { name: 'Frisør for Barn 1' });
+    expect(select).toHaveValue('res-gone');
+    expect(select).toHaveDisplayValue(labels['stylist.pendingName'] as string);
+  });
+});

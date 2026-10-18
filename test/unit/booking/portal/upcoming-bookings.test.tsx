@@ -177,3 +177,26 @@ describe('UpcomingBookings', () => {
     ).toHaveNoViolations();
   });
 });
+
+describe('UpcomingBookings — text nodes', () => {
+  const nodes = (element: Element) =>
+    Array.from(element.childNodes)
+      .filter((node) => node.nodeType === Node.TEXT_NODE)
+      .map((node) => node.textContent);
+
+  it('joins a line of string labels into ONE text node', () => {
+    renderList();
+    expect(nodes(screen.getByText('Barneklipp · Mia'))).toEqual(['Barneklipp · Mia']);
+    const when = screen.getByText(/ kl\. /);
+    expect(nodes(when)).toHaveLength(1);
+  });
+
+  it('keeps the line in pieces once one of its labels is an array', () => {
+    renderList({ labels: { ...labels, 'upcoming.when': ['{day}', ' kl. ', '{time}'] } });
+    const when = screen.getByText(/ kl\. /);
+    const pieces = nodes(when);
+    expect(pieces[1]).toBe(' kl. ');
+    expect(pieces).toContain(' · ');
+    expect(pieces.length).toBeGreaterThan(4);
+  });
+});

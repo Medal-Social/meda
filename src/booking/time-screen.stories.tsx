@@ -9,10 +9,12 @@ import {
   demoFormatEn,
   demoFormatNb,
   demoOpenDays,
+  demoResources,
   demoSlots,
 } from './__stories__/fixtures.js';
 import { timeLabelsEn, timeLabelsNb } from './__stories__/labels.time.js';
 import { BookingColumn, bookingStoryParameters, SecondBrand } from './__stories__/story-helpers.js';
+import { labelText } from './labels.js';
 import { TimeScreen } from './time-screen.js';
 
 /** «Barneklipp»: 390 kr, +10 % at the weekend. */
@@ -55,7 +57,9 @@ type Story = StoryObj<typeof TimeScreen>;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const group = canvas.getByRole('group', { name: timeLabelsNb['time.dayStrip.legend'] });
+    const group = canvas.getByRole('group', {
+      name: labelText(timeLabelsNb['time.dayStrip.legend']),
+    });
     const [first, second] = within(group).getAllByRole('button');
     first?.focus();
     await userEvent.tab();
@@ -63,6 +67,19 @@ export const Default: Story = {
     await userEvent.keyboard('{Enter}');
     await expect(second).toHaveAttribute('aria-pressed', 'true');
     await expect(second).toHaveFocus();
+  },
+};
+
+/** «Ledig snart» above the days, and how full each day is on its chip. */
+export const FindFast: Story = {
+  args: {
+    soonest: {
+      resolveStylist: (id) => {
+        const resource = demoResources.find((r) => r.id === id);
+        return resource ? { name: resource.name, photoUrl: resource.photoUrl } : null;
+      },
+    },
+    dayFullness: true,
   },
 };
 

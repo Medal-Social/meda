@@ -3,7 +3,8 @@
 import { type ComponentType, useState } from 'react';
 import { cn } from '../../lib/utils.js';
 import type { BookingClock, BookingFormat } from '../format.js';
-import { fillLabel } from '../labels.js';
+import { renderLabel } from '../internal/label-parts.js';
+import type { BookingLabel } from '../labels.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 import type { PortalBookingDto } from '../types.js';
 
@@ -17,7 +18,7 @@ export const VISIT_HISTORY_LABEL_KEYS = [
 ] as const;
 
 /** `history.count.*` take `{count}` and `{year}`. */
-export type VisitHistoryLabels = Record<(typeof VISIT_HISTORY_LABEL_KEYS)[number], string>;
+export type VisitHistoryLabels = Record<(typeof VISIT_HISTORY_LABEL_KEYS)[number], BookingLabel>;
 
 /**
  * - `root`: the section. - `heading`. - `empty`: the no-visits box.
@@ -200,7 +201,7 @@ export function VisitHistory({
             )}
           >
             <span className="font-semibold">
-              {fillLabel(
+              {renderLabel(
                 labels[shown.visits.length === 1 ? 'history.count.one' : 'history.count.other'],
                 { count: shown.visits.length, year: shown.year }
               )}

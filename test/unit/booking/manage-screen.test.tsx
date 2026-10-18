@@ -529,3 +529,60 @@ describe('ManageScreen — override ladder', () => {
     expect(screen.getAllByTestId('wrapped')).toHaveLength(3);
   });
 });
+
+/** The text nodes directly under `element`, in order. */
+function textNodes(element: Element): string[] {
+  return Array.from(element.childNodes)
+    .filter((node) => node.nodeType === Node.TEXT_NODE)
+    .map((node) => node.textContent ?? '');
+}
+
+describe('ManageScreen — text nodes', () => {
+  it('renders string card lines and the reschedule lead as ONE text node each', () => {
+    setup();
+    expect(textNodes(screen.getByText('Jonas – Barneklipp'))).toEqual(['Jonas – Barneklipp']);
+    const when = screen.getByText(/ hos Ada · /);
+    expect(textNodes(when)).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: L['manage.change'] }));
+    expect(textNodes(screen.getByText('Barneklipp hos Ada – velg ny tid'))).toEqual([
+      'Barneklipp hos Ada – velg ny tid',
+    ]);
+  });
+
+  it('renders array labels one text node per element', () => {
+    setup({
+      labels: {
+        ...L,
+        'manage.card.named': ['{name}', ' – ', '{service}'],
+        'manage.card.whenWithStylist': ['{dateTime}', ' hos {stylist}', ' · {price}'],
+        'manage.reschedule.leadWithStylist': ['{service}', ' hos {stylist}', ' – velg ny tid'],
+      },
+    });
+    expect(textNodes(screen.getByText('Jonas – Barneklipp'))).toEqual([
+      'Jonas',
+      ' – ',
+      'Barneklipp',
+    ]);
+    const when = screen.getByText(/ hos Ada · /);
+    expect(textNodes(when).slice(1)).toEqual([' hos Ada', ` · 490${NBSP}kr`]);
+    fireEvent.click(screen.getByRole('button', { name: L['manage.change'] }));
+    expect(textNodes(screen.getByText('Barneklipp hos Ada – velg ny tid'))).toEqual([
+      'Barneklipp',
+      ' hos Ada',
+      ' – velg ny tid',
+    ]);
+  });
+
+  it('shows a cancel reason in its pieces and sends it as text', async () => {
+    const { onCancel } = setup({
+      labels: { ...L, 'manage.cancel.reason.illness': ['Syk', 'dom'] },
+    });
+    fireEvent.click(screen.getByRole('button', { name: L['manage.cancel'] }));
+    const chip = screen.getByRole('button', { name: 'Sykdom' });
+    expect(textNodes(chip)).toEqual(['Syk', 'dom']);
+    fireEvent.click(chip);
+    fireEvent.click(screen.getByRole('button', { name: L['manage.cancel.confirm'] }));
+    await screen.findByRole('link', { name: L['manage.cancelled.findNew'] });
+    expect(onCancel).toHaveBeenCalledWith('Sykdom');
+  });
+});

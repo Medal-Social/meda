@@ -1,7 +1,7 @@
 'use client';
 
-import { Check } from 'lucide-react';
-import { type ComponentType, type KeyboardEvent, type ReactNode, useRef } from 'react';
+import { Check, Minus, Plus } from 'lucide-react';
+import { type ComponentType, type KeyboardEvent, type ReactNode, useEffect, useRef } from 'react';
 import { cn } from '../lib/utils.js';
 import {
   ADD_CHILD_SHEET_LABEL_KEYS,
@@ -9,7 +9,8 @@ import {
   type AddChildSheetLabels,
 } from './add-child-sheet.js';
 import type { BookingFormat } from './format.js';
-import { fillLabel } from './labels.js';
+import { renderLabel } from './internal/label-parts.js';
+import { type BookingLabel, fillLabel, labelText } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { NewChild, SaveResult, WizardPerson } from './types.js';
 
@@ -58,7 +59,64 @@ export const WHO_SCREEN_LABEL_KEYS = [
   ...ADD_CHILD_SHEET_LABEL_KEYS,
 ] as const;
 
-export type WhoScreenLabels = Record<(typeof WHO_SCREEN_LABEL_KEYS)[number], string> &
+/**
+ * Opt-in keys for `guestParty`. `who.party.fewer` / `who.party.more` are the
+ * stepper buttons' accessible names; `who.party.count` `{count}` is read out
+ * when the number changes.
+ */
+export const WHO_SCREEN_PARTY_LABEL_KEYS = [
+  /** «Children». */
+  'who.party.children',
+  /** Under it, e.g. «0–12 years». */
+  'who.party.childrenNote',
+  /** The grown-up's row, e.g. «I'm getting a cut too». */
+  'who.party.adult',
+  /**
+   * Under it. Check row: about sitting beside a child («Side by side, at the
+   * same time»), so shown only while there is one. Stepper
+   * (`guestParty.adults`): it describes the grown-ups' row the way
+   * `childrenNote` does the children's («Cut, beard, colour»), so always.
+   */
+  'who.party.adultNote',
+  'who.party.fewer',
+  'who.party.more',
+  /** `{count}` — the children's number, read out, e.g. «{count} children». */
+  'who.party.count',
+  /** With `guestParty.adults`: the grown-ups' stepper buttons and their number read out. */
+  'who.party.adultFewer',
+  'who.party.adultMore',
+  /** `{count}` — e.g. «{count} grown-ups». */
+  'who.party.adultCount',
+  /** Under the heading, e.g. «Up to three in one booking». */
+  'who.party.lead',
+  /** Under the steppers while there are children and no grown-up. */
+  'who.party.togetherHint',
+  /**
+   * A logged-in parent's grown-ups row, e.g. «Grown-ups», when
+   * `guestParty.adults` makes it a stepper: «myself» is seat 1, the rest are
+   * the guest's seats 2, 3. Without it the «myself» check row stays.
+   */
+  'who.family.adults',
+] as const;
+
+/** The labels a «Voksen» stepper cannot draw without. */
+const ADULT_STEPPER_LABEL_KEYS = [
+  'who.party.adultFewer',
+  'who.party.adultMore',
+  'who.party.adultCount',
+] as const;
+
+/** The `who.party.*` keys `guestParty` cannot draw without; the two notes are extras. */
+const PARTY_REQUIRED_LABEL_KEYS = [
+  'who.party.children',
+  'who.party.adult',
+  'who.party.fewer',
+  'who.party.more',
+  'who.party.count',
+] as const;
+
+export type WhoScreenLabels = Record<(typeof WHO_SCREEN_LABEL_KEYS)[number], BookingLabel> &
+  Partial<Record<(typeof WHO_SCREEN_PARTY_LABEL_KEYS)[number], BookingLabel>> &
   AddChildSheetLabels;
 
 /**
@@ -146,6 +204,39 @@ export interface WhoScreenProps {
    * exist (or with a sentence for the sheet); a guest's is local.
    */
   onAddChild: (child: NewChild) => Promise<SaveResult>;
+  /**
+   * A guest picks how many children and whether they come too, instead of the
+   * chips: a stepper (1 child to begin with) and a «me too» row, up to
+   * `maxPeople` in all. Each change is a live answer (`advance: false`); the
+   * caller's «next» moves on. `child(seat)` is the 1-based child seat the chips
+   * use; `adult` the grown-up's seat. Named children from the add-child
+   * sheet keep their seats. Needs the `who.party.*` labels: without
+   * `children`, `adult`, `fewer`, `more` and `count` the chips are drawn
+   * instead, rather than unnamed controls.
+   */
+  guestParty?: {
+    child: (seat: number) => WizardPerson;
+    adult: WizardPerson & { adult: true };
+    /**
+     * Start with nobody, rather than one child: for a salon where a grown-up
+     * booking for themselves is as common as a child. Children go down to 0
+     * and the grown-up's row is a free choice either way; «next» waits for an
+     * answer. Default `false`.
+     */
+    startEmpty?: boolean;
+    /**
+     * The grown-ups' seats, 1-based, when «Voksen» is a number (a stepper)
+     * rather than one check row: two parents, or a parent and a grandparent,
+     * in one booking. Seat 1 must be `adult`. Needs the `who.party.adultFewer`,
+     * `adultMore` and `adultCount` labels; without them the check row stays.
+     *
+     * The one part of `guestParty` a logged-in parent's list reads too: with
+     * `who.family.adults` as well, its «myself» row is the same stepper, seat 1
+     * being `selfKey` and seats 2, 3 these — so a second grown-up survives a
+     * login. `isGuestSeat` must then not claim seats 2 and up.
+     */
+    adults?: (seat: number) => WizardPerson & { adult: true };
+  };
   /** Shown under the heading for a guest — e.g. an offer to log in. */
   loginRow?: ReactNode;
   /** Newest birth year the sheet offers (see `AddChildSheet`). */
@@ -169,13 +260,13 @@ const ARROW_STEPS: Record<string, number> = {
   ArrowUp: -1,
 };
 
-function choiceLabel(choice: WhoGuestChoice, labels: WhoScreenLabels): string {
+function choiceLabel(choice: WhoGuestChoice, labels: WhoScreenLabels): ReactNode {
   if (choice.label !== undefined) return choice.label;
   if (choice.people.length > 0 && choice.people.every((person) => person.adult)) {
     return labels['who.guest.adult'];
   }
   const count = choice.people.length;
-  return fillLabel(labels[count === 1 ? 'who.guest.children.one' : 'who.guest.children.other'], {
+  return renderLabel(labels[count === 1 ? 'who.guest.children.one' : 'who.guest.children.other'], {
     count,
   });
 }
@@ -200,6 +291,7 @@ export function WhoScreen({
   isGuestSeat = noGuestSeats,
   onChoose,
   onAddChild,
+  guestParty,
   loginRow,
   currentYear,
   classNames,
@@ -234,21 +326,35 @@ export function WhoScreen({
     selectedClassName: classNames?.cardSelected,
   };
 
+  const partyReady =
+    guestParty !== undefined && PARTY_REQUIRED_LABEL_KEYS.every((key) => labels[key] !== undefined);
+
   if (family === null) {
     return (
       <section aria-labelledby={HEADING_ID} className={slotClass(classNames, 'root', 'space-y-6')}>
         {heading}
         {loginRow}
         <div className="space-y-4">
-          <GuestChips
-            choices={guestChoices}
-            people={people}
-            labels={labels}
-            classNames={classNames}
-            onChoose={onChoose}
-          />
+          {partyReady && guestParty ? (
+            <GuestParty
+              party={guestParty}
+              people={people}
+              maxPeople={maxPeople}
+              labels={labels}
+              classNames={classNames}
+              onChoose={onChoose}
+            />
+          ) : (
+            <GuestChips
+              choices={guestChoices}
+              people={people}
+              labels={labels}
+              classNames={classNames}
+              onChoose={onChoose}
+            />
+          )}
           {addedChildren.length > 0 && (
-            <ul aria-label={labels['who.guest.addedList']} className="space-y-2">
+            <ul aria-label={labelText(labels['who.guest.addedList'])} className="space-y-2">
               {addedChildren.map((entry, index) => (
                 <li key={entry.person.key}>
                   <PersonCard
@@ -269,7 +375,10 @@ export function WhoScreen({
               ))}
             </ul>
           )}
-          {sheet(addedChildren.length >= maxPeople, false)}
+          {sheet(
+            partyReady ? people.length >= maxPeople : addedChildren.length >= maxPeople,
+            false
+          )}
         </div>
       </section>
     );
@@ -283,6 +392,33 @@ export function WhoScreen({
   const full = seated.length >= maxPeople;
   const self: WizardPerson = { key: selfKey, adult: true };
   const selfChecked = chosen.has(selfKey);
+
+  // «Voksne» as a number under a family too: «myself» first, then the guest's
+  // seats 2, 3 — a second grown-up has no profile card to tick.
+  const moreAdults =
+    guestParty?.adults !== undefined &&
+    labels['who.family.adults'] !== undefined &&
+    ADULT_STEPPER_LABEL_KEYS.every((key) => labels[key] !== undefined)
+      ? guestParty.adults
+      : undefined;
+  const otherAdultKeys = new Set(
+    moreAdults ? Array.from({ length: maxPeople - 1 }, (_, index) => moreAdults(index + 2).key) : []
+  );
+  const isGrownUp = (person: WizardPerson) =>
+    person.key === selfKey || otherAdultKeys.has(person.key);
+  const grownUps = seated.filter(isGrownUp).length;
+  const setGrownUps = (count: number) => {
+    if (!moreAdults) return;
+    const seats = Array.from({ length: count }, (_, index) =>
+      index === 0 ? self : moreAdults(index + 1)
+    );
+    onChoose([...seated.filter((person) => !isGrownUp(person)), ...seats], false);
+  };
+  const partyText = (key: (typeof WHO_SCREEN_PARTY_LABEL_KEYS)[number], values = {}) => {
+    const label = labels[key];
+    return label ? fillLabel(label, values) : '';
+  };
+  const adultNote = labels['who.party.adultNote'];
 
   function toggle(person: WizardPerson) {
     if (chosen.has(person.key)) {
@@ -301,7 +437,7 @@ export function WhoScreen({
       {heading}
       <fieldset className="space-y-4">
         <legend className="mb-2 text-sm text-muted-foreground">
-          {fillLabel(labels['who.family.legend'], { max: maxPeople })}
+          {renderLabel(labels['who.family.legend'], { max: maxPeople })}
         </legend>
         <ul className="space-y-2">
           {family.map((entry, index) => {
@@ -323,27 +459,273 @@ export function WhoScreen({
           })}
           <li>{sheet(full, true)}</li>
         </ul>
-        <CheckRow
-          checked={selfChecked}
-          disabled={!selfChecked && full}
-          describedBy={!selfChecked && full ? LIMIT_ID : undefined}
-          onToggle={() => toggle(self)}
-          className={cn('h-14 justify-between px-5 text-sm', classNames?.card)}
-          selectedClassName={classNames?.cardSelected}
-        >
-          <span className="font-medium">{labels['who.family.self']}</span>
-          <CheckCircle checked={selfChecked} />
-        </CheckRow>
+        {moreAdults ? (
+          <div className={cn('rounded-lg border border-border bg-card', classNames?.card)}>
+            <StepperRow
+              title={partyText('who.family.adults')}
+              note={adultNote ? renderLabel(adultNote) : null}
+              value={grownUps}
+              countLabel={partyText('who.party.adultCount', { count: grownUps })}
+              fewerLabel={partyText('who.party.adultFewer')}
+              moreLabel={partyText('who.party.adultMore')}
+              canFewer={grownUps > 0}
+              canMore={!full}
+              limitId={full ? LIMIT_ID : undefined}
+              onFewer={() => setGrownUps(grownUps - 1)}
+              onMore={() => setGrownUps(grownUps + 1)}
+            />
+          </div>
+        ) : (
+          <CheckRow
+            checked={selfChecked}
+            disabled={!selfChecked && full}
+            describedBy={!selfChecked && full ? LIMIT_ID : undefined}
+            onToggle={() => toggle(self)}
+            className={cn('h-14 justify-between px-5 text-sm', classNames?.card)}
+            selectedClassName={classNames?.cardSelected}
+          >
+            <span className="font-medium">{labels['who.family.self']}</span>
+            <CheckCircle checked={selfChecked} />
+          </CheckRow>
+        )}
         {/* Always mounted, so reaching the limit moves nothing. */}
         <p
           id={LIMIT_ID}
           aria-live="polite"
           className={slotClass(classNames, 'limit', 'min-h-5 text-sm text-muted-foreground')}
         >
-          {full ? fillLabel(labels['who.family.limit'], { max: maxPeople }) : ''}
+          {full ? renderLabel(labels['who.family.limit'], { max: maxPeople }) : ''}
         </p>
       </fieldset>
     </section>
+  );
+}
+
+/**
+ * A guest's party: how many children (a stepper) and whether the grown-up
+ * comes too (a check row), so «a child and me» is one booking without an
+ * account. Starts at one child, which is the common answer, so «next» is live
+ * from the first frame — or, with `startEmpty`, at nobody, so a grown-up
+ * booking for themselves is one tap like anyone else.
+ */
+function GuestParty({
+  party,
+  people,
+  maxPeople,
+  labels,
+  classNames,
+  onChoose,
+}: {
+  party: NonNullable<WhoScreenProps['guestParty']>;
+  people: WizardPerson[];
+  maxPeople: number;
+  labels: WhoScreenLabels;
+  classNames: SlotClassNames<WhoScreenSlot> | undefined;
+  onChoose: WhoScreenProps['onChoose'];
+}) {
+  const adultStepper =
+    party.adults !== undefined &&
+    ADULT_STEPPER_LABEL_KEYS.every((key) => labels[key] !== undefined);
+  const adultSeat = (seat: number) =>
+    seat === 1 || !party.adults ? party.adult : party.adults(seat);
+  const adultKeys = new Set(
+    Array.from({ length: maxPeople }, (_, index) => adultSeat(index + 1).key)
+  );
+  const isAdultSeat = (person: WizardPerson) => adultKeys.has(person.key);
+  const adults = people.filter(isAdultSeat).length;
+  const adultOn = adults > 0;
+  // A grown-up's seat is never a child, flag or no flag.
+  const childSeats = people.filter((person) => !person.adult && !isAdultSeat(person));
+  const children = childSeats.length;
+  const full = children + adults >= maxPeople;
+
+  // Named children (from the add-child sheet) keep their seats, first; the
+  // stepper adds and removes the unnamed ones after them.
+  const generatedKeys = new Set(
+    Array.from({ length: maxPeople }, (_, index) => party.child(index + 1).key)
+  );
+  const named = childSeats.filter((person) => !generatedKeys.has(person.key));
+
+  const startEmpty = party.startEmpty === true;
+  // The stepper never takes a named child away: their own card does that.
+  // Without `startEmpty` it never empties the booking either.
+  const floor = Math.max(named.length, adultOn || startEmpty ? 0 : 1);
+  const adultFloor = children === 0 && !startEmpty ? 1 : 0;
+
+  const answer = (count: number, grownUps: number) => {
+    const kept = named;
+    const used = new Set(kept.map((person) => person.key));
+    const fill: WizardPerson[] = [];
+    for (let seat = 1; kept.length + fill.length < count && seat <= maxPeople; seat += 1) {
+      const next = party.child(seat);
+      if (!used.has(next.key)) fill.push(next);
+    }
+    const seated = Array.from({ length: grownUps }, (_, index) => adultSeat(index + 1));
+    onChoose([...kept, ...fill, ...seated], false);
+  };
+
+  // One child whenever the answer becomes empty (first frame or cleared
+  // later): an empty answer would leave «next» dead on the most common visit.
+  // Once per emptying, so a parent that ignores the answer is not flooded,
+  // and a restored answer is never replaced.
+  const wasEmpty = useRef(false);
+  useEffect(() => {
+    const empty = people.length === 0;
+    if (empty && !wasEmpty.current && !startEmpty) answer(1, 0);
+    // An empty answer `startEmpty` left alone is not one already seen: if the
+    // flag goes, the child is still filled in.
+    wasEmpty.current = empty && !startEmpty;
+  });
+
+  const text = (key: (typeof WHO_SCREEN_PARTY_LABEL_KEYS)[number], values = {}) => {
+    const label = labels[key];
+    return label ? fillLabel(label, values) : '';
+  };
+  const childrenNote = labels['who.party.childrenNote'];
+  const adultNote = labels['who.party.adultNote'];
+
+  return (
+    <div className="space-y-3">
+      {labels['who.party.lead'] && (
+        <p className="text-sm text-muted-foreground">{renderLabel(labels['who.party.lead'])}</p>
+      )}
+      <div
+        className={cn(
+          'divide-y divide-border rounded-lg border border-border bg-card',
+          classNames?.card
+        )}
+      >
+        <StepperRow
+          title={text('who.party.children')}
+          note={childrenNote ? renderLabel(childrenNote) : null}
+          value={children}
+          countLabel={text('who.party.count', { count: children })}
+          fewerLabel={text('who.party.fewer')}
+          moreLabel={text('who.party.more')}
+          canFewer={children > floor}
+          canMore={!full}
+          limitId={full ? LIMIT_ID : undefined}
+          onFewer={() => answer(children - 1, adults)}
+          onMore={() => answer(children + 1, adults)}
+        />
+        {adultStepper && (
+          <StepperRow
+            title={text('who.party.adult')}
+            note={adultNote ? renderLabel(adultNote) : null}
+            value={adults}
+            countLabel={text('who.party.adultCount', { count: adults })}
+            fewerLabel={text('who.party.adultFewer')}
+            moreLabel={text('who.party.adultMore')}
+            canFewer={adults > adultFloor}
+            canMore={!full}
+            limitId={full ? LIMIT_ID : undefined}
+            onFewer={() => answer(children, adults - 1)}
+            onMore={() => answer(children, adults + 1)}
+          />
+        )}
+      </div>
+      {!adultStepper && (
+        <CheckRow
+          checked={adultOn}
+          // Never down to nobody: the last person in the booking stays — unless
+          // the booking may start (and so stand) empty.
+          disabled={(!adultOn && full) || (adultOn && children === 0 && !startEmpty)}
+          describedBy={!adultOn && full ? LIMIT_ID : undefined}
+          onToggle={() => answer(children, adultOn ? 0 : 1)}
+          className={cn('min-h-14 justify-between px-5 py-3 text-sm', classNames?.card)}
+          selectedClassName={classNames?.cardSelected}
+        >
+          <span className="flex min-w-0 flex-col text-left">
+            <span className="font-medium">{text('who.party.adult')}</span>
+            {/* «At the same time, in the next chair» is about the children: alone, it is noise. */}
+            {adultNote && children > 0 && (
+              <span className="text-muted-foreground">{renderLabel(adultNote)}</span>
+            )}
+          </span>
+          <CheckCircle checked={adultOn} />
+        </CheckRow>
+      )}
+      {labels['who.party.togetherHint'] && children > 0 && !adultOn && !full && (
+        <p className="text-sm text-muted-foreground">
+          {renderLabel(labels['who.party.togetherHint'])}
+        </p>
+      )}
+      <p
+        id={LIMIT_ID}
+        aria-live="polite"
+        className={slotClass(classNames, 'limit', 'min-h-5 text-sm text-muted-foreground')}
+      >
+        {full ? renderLabel(labels['who.family.limit'], { max: maxPeople }) : ''}
+      </p>
+    </div>
+  );
+}
+
+const STEP_BUTTON =
+  'flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-background text-foreground transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-40';
+
+/** One «name, note, − n +» row of a guest party. */
+function StepperRow({
+  title,
+  note,
+  value,
+  countLabel,
+  fewerLabel,
+  moreLabel,
+  canFewer,
+  canMore,
+  limitId,
+  onFewer,
+  onMore,
+}: {
+  title: string;
+  note: ReactNode;
+  value: number;
+  countLabel: string;
+  fewerLabel: string;
+  moreLabel: string;
+  canFewer: boolean;
+  canMore: boolean;
+  limitId: string | undefined;
+  onFewer: () => void;
+  onMore: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-4 px-5 py-4">
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold">{title}</p>
+        {note !== null && <p className="text-sm text-muted-foreground">{note}</p>}
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          aria-label={fewerLabel}
+          disabled={!canFewer}
+          onClick={onFewer}
+          className={STEP_BUTTON}
+        >
+          <Minus aria-hidden="true" className="size-4" />
+        </button>
+        <span
+          aria-live="polite"
+          aria-atomic="true"
+          className="w-6 text-center text-lg font-bold tabular-nums"
+        >
+          <span aria-hidden="true">{value}</span>
+          <span className="sr-only">{countLabel}</span>
+        </span>
+        <button
+          type="button"
+          aria-label={moreLabel}
+          aria-describedby={limitId}
+          disabled={!canMore}
+          onClick={onMore}
+          className={STEP_BUTTON}
+        >
+          <Plus aria-hidden="true" className="size-4" />
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -385,7 +767,7 @@ function GuestChips({
   return (
     <div
       role="radiogroup"
-      aria-label={labels['who.guest.groupLabel']}
+      aria-label={labelText(labels['who.guest.groupLabel'])}
       className="grid grid-cols-2 gap-2 sm:grid-cols-4"
     >
       {choices.map((choice, index) => {
@@ -426,7 +808,7 @@ function CheckCircle({ checked }: { checked: boolean }) {
       aria-hidden="true"
       className={cn(
         'flex size-6 shrink-0 items-center justify-center rounded-full border',
-        checked ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
+        checked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground'
       )}
     >
       {checked && <Check className="size-4" />}

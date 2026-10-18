@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 import { loginSheetLabelsEn, loginSheetLabelsNb } from './__stories__/labels.portal.js';
 import { BookingColumn, bookingStoryParameters, SecondBrand } from './__stories__/story-helpers.js';
+import { labelText } from './labels.js';
 import type { LoginStartResult, LoginVerifyResult } from './login-panel.js';
 import { LoginSheet } from './login-sheet.js';
 import type { VippsStartState } from './vipps-button.js';
@@ -39,10 +40,14 @@ export const English: Story = {
   args: { labels: loginSheetLabelsEn },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const trigger = canvas.getByRole('button', { name: loginSheetLabelsEn['loginSheet.trigger'] });
+    const trigger = canvas.getByRole('button', {
+      name: labelText(loginSheetLabelsEn['loginSheet.trigger']),
+    });
     await userEvent.click(trigger);
     const body = within(canvasElement.ownerDocument.body);
-    const dialog = body.getByRole('dialog', { name: loginSheetLabelsEn['login.heading'] });
+    const dialog = body.getByRole('dialog', {
+      name: labelText(loginSheetLabelsEn['login.heading']),
+    });
     await expect(dialog).toHaveAttribute('open');
     await userEvent.keyboard('{Escape}');
     await expect(dialog).not.toHaveAttribute('open');

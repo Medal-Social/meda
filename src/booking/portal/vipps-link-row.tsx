@@ -4,6 +4,7 @@ import { useActionState, useEffect, useId, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 import { cn } from '../../lib/utils.js';
 import { BookingButton } from '../internal/ui.js';
+import { type BookingLabel, labelText } from '../labels.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 
 export const VIPPS_LINK_ROW_LABEL_KEYS = [
@@ -18,7 +19,7 @@ export const VIPPS_LINK_ROW_LABEL_KEYS = [
   'vippsLink.throttled',
 ] as const;
 
-export type VippsLinkRowLabels = Record<(typeof VIPPS_LINK_ROW_LABEL_KEYS)[number], string>;
+export type VippsLinkRowLabels = Record<(typeof VIPPS_LINK_ROW_LABEL_KEYS)[number], BookingLabel>;
 
 /** `root` (the section), `card` (the bordered row), `heading`, `button`, `notice` (the live line). */
 export type VippsLinkRowSlot = 'root' | 'card' | 'heading' | 'button' | 'notice';
@@ -86,12 +87,12 @@ function noticeFor(
   labels: VippsLinkRowLabels,
   announceSuccess: boolean
 ): string | null {
-  if (state?.reason === 'unavailable') return labels['vippsLink.unavailable'];
-  if (state?.reason === 'throttled') return labels['vippsLink.throttled'];
-  if (flash === 'linked' && announceSuccess) return labels['vippsLink.success'];
+  if (state?.reason === 'unavailable') return labelText(labels['vippsLink.unavailable']);
+  if (state?.reason === 'throttled') return labelText(labels['vippsLink.throttled']);
+  if (flash === 'linked' && announceSuccess) return labelText(labels['vippsLink.success']);
   if (isLinked) return null;
-  if (flash === 'link_conflict') return labels['vippsLink.conflict'];
-  if (flash === 'link_failed') return labels['vippsLink.failed'];
+  if (flash === 'link_conflict') return labelText(labels['vippsLink.conflict']);
+  if (flash === 'link_failed') return labelText(labels['vippsLink.failed']);
   return null;
 }
 
@@ -164,7 +165,10 @@ export function VippsLinkRow({
         </div>
         {!linked && (
           <form action={formAction} aria-describedby={sentence ? noticeId : undefined}>
-            <LinkButton label={labels['vippsLink.button']} className={classNames?.button} />
+            <LinkButton
+              label={labelText(labels['vippsLink.button'])}
+              className={classNames?.button}
+            />
           </form>
         )}
       </div>

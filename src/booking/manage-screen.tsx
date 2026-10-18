@@ -3,8 +3,9 @@
 import { type ReactNode, useEffect, useState } from 'react';
 import { cn } from '../lib/utils.js';
 import type { BookingDaypart, BookingFormat } from './format.js';
+import { renderLabel } from './internal/label-parts.js';
 import { BookingButton } from './internal/ui.js';
-import { fillLabel } from './labels.js';
+import { type BookingLabel, fillLabel, labelText } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import {
   TimeScreen,
@@ -127,7 +128,7 @@ export const MANAGE_SCREEN_LABEL_KEYS = [
  * The three `cancel.reason.*` strings are both the chips' text and the value
  * `onCancel` receives.
  */
-export type ManageScreenLabels = Record<(typeof MANAGE_SCREEN_LABEL_KEYS)[number], string> &
+export type ManageScreenLabels = Record<(typeof MANAGE_SCREEN_LABEL_KEYS)[number], BookingLabel> &
   TimeScreenLabels;
 
 // ---------------------------------------------------------------------------
@@ -256,7 +257,7 @@ const LINK_CLASS = 'font-semibold text-primary underline underline-offset-4';
 
 /** «Name's appointment» when a name was given, the bare noun when not. */
 function theirAppointment(labels: ManageScreenLabels, name: string | null): string {
-  if (!name) return labels['manage.appointment.unnamed'];
+  if (!name) return labelText(labels['manage.appointment.unnamed']);
   return fillLabel(
     labels[/[sxz]$/i.test(name) ? 'manage.appointment.namedSibilant' : 'manage.appointment.named'],
     { name }
@@ -285,7 +286,7 @@ function remainingLabel(labels: ManageScreenLabels, ms: number): string {
   }
   if (hours > 0) return fillLabel(labels['manage.remaining.in'], { amount: hourPart });
   const minutes = Math.floor((ms % HOUR_MS) / 60_000);
-  if (minutes < 1) return labels['manage.remaining.underMinute'];
+  if (minutes < 1) return labelText(labels['manage.remaining.underMinute']);
   return fillLabel(labels['manage.remaining.in'], {
     amount: fillLabel(
       labels[minutes === 1 ? 'manage.remaining.minute.one' : 'manage.remaining.minute.other'],
@@ -295,11 +296,15 @@ function remainingLabel(labels: ManageScreenLabels, ms: number): string {
 }
 
 function ringUs(labels: ManageScreenLabels, phone: string | null): string {
-  return phone ? fillLabel(labels['manage.ringUsOn'], { phone }) : labels['manage.ringUs'];
+  return phone
+    ? fillLabel(labels['manage.ringUsOn'], { phone })
+    : labelText(labels['manage.ringUs']);
 }
 
 function callUs(labels: ManageScreenLabels, phone: string | null): string {
-  return phone ? fillLabel(labels['manage.callUsOn'], { phone }) : labels['manage.callUs'];
+  return phone
+    ? fillLabel(labels['manage.callUsOn'], { phone })
+    : labelText(labels['manage.callUs']);
 }
 
 /** What the visitor is told went wrong — never the upstream's own words. */
@@ -312,13 +317,13 @@ function errorSentence(
     case 'windowPassed':
       return fillLabel(labels['manage.error.windowPassed'], { ringUs: ringUs(labels, phone) });
     case 'slotTaken':
-      return labels['manage.error.slotTaken'];
+      return labelText(labels['manage.error.slotTaken']);
     case 'notFound':
       return fillLabel(labels['manage.error.notFound'], { callUs: callUs(labels, phone) });
     case 'conflict':
       return fillLabel(labels['manage.error.conflict'], { ringUs: ringUs(labels, phone) });
     case 'invalidInput':
-      return labels['manage.error.invalidInput'];
+      return labelText(labels['manage.error.invalidInput']);
     default:
       return fillLabel(labels['manage.error.unavailable'], { ringUs: ringUs(labels, phone) });
   }
@@ -333,7 +338,7 @@ function PhoneSentence({
 }: {
   format: BookingFormat;
   phone: string | null;
-  children: string;
+  children: ReactNode;
   className?: string;
 }) {
   if (phone === null) return <span className={className}>{children}</span>;
@@ -394,7 +399,7 @@ export function ManageScreen({
       : format.stylistName(booking.resourceName) || null;
   const serviceLabel =
     booking.serviceName === UNKNOWN_SERVICE
-      ? labels['manage.serviceFallback']
+      ? labelText(labels['manage.serviceFallback'])
       : booking.serviceName;
 
   // The LARGER window wins: the sentence promises both actions, and the earlier
@@ -505,7 +510,7 @@ export function ManageScreen({
           <p className="font-medium">
             {movedTo === null
               ? labels['manage.moved']
-              : fillLabel(labels['manage.movedTo'], {
+              : renderLabel(labels['manage.movedTo'], {
                   dateTime: format.clock.dateTime(movedTo),
                 })}
           </p>
@@ -537,14 +542,14 @@ export function ManageScreen({
           >
             <p className="font-semibold">
               {booking.bookedForName
-                ? fillLabel(labels['manage.card.named'], {
+                ? renderLabel(labels['manage.card.named'], {
                     name: booking.bookedForName,
                     service: serviceLabel,
                   })
                 : serviceLabel}
             </p>
             <p className="tabular-nums">
-              {fillLabel(labels[stylist ? 'manage.card.whenWithStylist' : 'manage.card.when'], {
+              {renderLabel(labels[stylist ? 'manage.card.whenWithStylist' : 'manage.card.when'], {
                 dateTime: format.clock.dateTime(booking.startTs),
                 stylist: stylist ?? '',
                 price: format.price(booking.amountOre),
@@ -602,11 +607,11 @@ export function ManageScreen({
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
                 {stylist
-                  ? fillLabel(labels['manage.reschedule.leadWithStylist'], {
+                  ? renderLabel(labels['manage.reschedule.leadWithStylist'], {
                       service: serviceLabel,
                       stylist,
                     })
-                  : fillLabel(labels['manage.reschedule.lead'], { service: serviceLabel })}
+                  : renderLabel(labels['manage.reschedule.lead'], { service: serviceLabel })}
               </p>
 
               {slotsFailed && (
@@ -747,7 +752,9 @@ function Overview({
     <>
       {booking.canCancel && booking.canReschedule && (
         <p className="text-sm text-muted-foreground">
-          {fillLabel(labels['manage.freeUntil'], { dateTime: format.clock.dateTime(freeUntilTs) })}
+          {renderLabel(labels['manage.freeUntil'], {
+            dateTime: format.clock.dateTime(freeUntilTs),
+          })}
           {remaining !== null && <span> ({remaining})</span>}
         </p>
       )}
@@ -759,7 +766,7 @@ function Overview({
           </BookingButton>
         ) : (
           <PhoneSentence format={format} phone={phone}>
-            {fillLabel(labels['manage.callToChange'], { hours: booking.rescheduleWindowHours })}
+            {renderLabel(labels['manage.callToChange'], { hours: booking.rescheduleWindowHours })}
           </PhoneSentence>
         )}
 
@@ -769,7 +776,7 @@ function Overview({
           </BookingButton>
         ) : (
           <PhoneSentence format={format} phone={phone}>
-            {fillLabel(labels['manage.callToCancel'], { hours: booking.cancelWindowHours })}
+            {renderLabel(labels['manage.callToCancel'], { hours: booking.cancelWindowHours })}
           </PhoneSentence>
         )}
 
@@ -784,11 +791,11 @@ function Overview({
 
       {blockedHours > 0 && (
         <p className="rounded-lg border border-border bg-card px-5 py-4 text-sm">
-          {fillLabel(labels['manage.blocked'], { hours: blockedHours })}{' '}
+          {renderLabel(labels['manage.blocked'], { hours: blockedHours })}{' '}
           {phone ? (
             <>
               <PhoneSentence format={format} phone={phone}>
-                {fillLabel(labels['manage.ringUsOn'], { phone })}
+                {renderLabel(labels['manage.ringUsOn'], { phone })}
               </PhoneSentence>
               {labels['manage.blocked.suffix']}
             </>
@@ -825,7 +832,7 @@ function ClosedBooking({
         <p className="text-sm">
           <PhoneSentence format={format} phone={phone}>
             {phone
-              ? fillLabel(labels['manage.closed.pendingCall'], { phone })
+              ? renderLabel(labels['manage.closed.pendingCall'], { phone })
               : labels['manage.closed.pendingCallPlain']}
           </PhoneSentence>
         </p>
@@ -861,15 +868,15 @@ function PartyChoice({
   onBack: () => void;
   className: string;
 }) {
-  const who = bookedForName ?? labels['manage.party.unnamed'];
+  const who = bookedForName ?? labelText(labels['manage.party.unnamed']);
   return (
     <div className={className}>
       <h2 className="font-sans text-lg font-bold">
-        {fillLabel(labels['manage.party.heading'], { who })}
+        {renderLabel(labels['manage.party.heading'], { who })}
       </h2>
       <div className="flex flex-wrap items-center gap-4">
         <BookingButton size="lg" onClick={onJustThisOne}>
-          {fillLabel(labels['manage.party.justThisOne'], { who })}
+          {renderLabel(labels['manage.party.justThisOne'], { who })}
         </BookingButton>
         <BookingButton size="lg" variant="outline" onClick={onBack}>
           {labels['manage.back']}
@@ -918,7 +925,7 @@ function ConfirmMove({
   const nextOre = pricing ? pricing.priceAt(pending.startTs) : 0;
   const nowOre = pricing ? pricing.priceAt(booking.startTs) : 0;
   const dearer = pricing !== null && nextOre > nowOre;
-  const question = fillLabel(
+  const question = renderLabel(
     labels[stylist ? 'manage.move.questionWithStylist' : 'manage.move.question'],
     {
       appointment: theirAppointment(labels, booking.bookedForName),
@@ -934,7 +941,7 @@ function ConfirmMove({
 
       {dearer && pricing && (
         <p className="text-sm">
-          {fillLabel(labels['manage.move.surcharge'], {
+          {renderLabel(labels['manage.move.surcharge'], {
             weekday: clock.weekday(pending.startTs),
             price: format.price(nextOre),
             pct: pricing.weekendSurchargePct,
@@ -979,7 +986,7 @@ function ConfirmCancel({
   return (
     <div className={className}>
       <p className="font-medium">
-        {fillLabel(labels['manage.cancel.question'], {
+        {renderLabel(labels['manage.cancel.question'], {
           appointment: theirAppointment(labels, booking.bookedForName),
           dateTime: format.clock.dateTime(booking.startTs),
           hours: booking.cancelWindowHours,
@@ -989,7 +996,8 @@ function ConfirmCancel({
       <fieldset className="flex flex-wrap gap-2">
         <legend className="sr-only">{labels['manage.cancel.reasonLegend']}</legend>
         {CANCEL_REASON_KEYS.map((key) => {
-          const option = labels[key];
+          // The reason travels as text; the chip shows the label in its own pieces.
+          const option = labelText(labels[key]);
           const picked = reason === option;
           return (
             <BookingButton
@@ -1002,7 +1010,7 @@ function ConfirmCancel({
               onClick={() => onPickReason(picked ? null : option)}
               className={cn('rounded-full', picked ? 'border-primary ring-2 ring-primary' : '')}
             >
-              {option}
+              {labels[key]}
             </BookingButton>
           );
         })}

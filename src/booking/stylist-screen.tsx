@@ -1,9 +1,19 @@
 'use client';
 
-import { type ComponentType, type KeyboardEvent, type Ref, useEffect, useId, useRef } from 'react';
+import {
+  type ComponentType,
+  type KeyboardEvent,
+  type ReactNode,
+  type Ref,
+  useEffect,
+  useId,
+  useRef,
+} from 'react';
 import { cn } from '../lib/utils.js';
 import type { BookingFormat } from './format.js';
-import { fillLabel } from './labels.js';
+import { renderLabel } from './internal/label-parts.js';
+import { BOOKING_SELECT_CLASS } from './internal/ui.js';
+import { type BookingLabel, labelText } from './labels.js';
 import { LiveStatus } from './live-status.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { BookingResourceDto, PartyMode } from './types.js';
@@ -46,7 +56,19 @@ export const STYLIST_SCREEN_LABEL_KEYS = [
   'stylist.party.parallelNote.other',
 ] as const;
 
-export type StylistScreenLabels = Record<(typeof STYLIST_SCREEN_LABEL_KEYS)[number], string>;
+/**
+ * Opt-in keys, for `party.seats` (a stylist per person when seen at once).
+ * Placeholders: `stylist.party.seat` `{who}`.
+ */
+export const STYLIST_SCREEN_SEAT_LABEL_KEYS = [
+  /** The heading over the per-person choices, e.g. «Who cuts whom? (optional)». */
+  'stylist.party.seatsHeading',
+  /** One person's label: `{who}`, e.g. «Stylist for {who}». */
+  'stylist.party.seat',
+] as const;
+
+export type StylistScreenLabels = Record<(typeof STYLIST_SCREEN_LABEL_KEYS)[number], BookingLabel> &
+  Partial<Record<(typeof STYLIST_SCREEN_SEAT_LABEL_KEYS)[number], BookingLabel>>;
 
 /**
  * - `root` — the `<section>`
@@ -54,6 +76,7 @@ export type StylistScreenLabels = Record<(typeof STYLIST_SCREEN_LABEL_KEYS)[numb
  * - `group` — the radiogroup (the sideways row / the column)
  * - `card` / `cardSelected` — a stylist option / the checked one (passed to `StylistCard`)
  * - `modeCard` / `modeCardSelected` — a family's mode card / the pressed one
+ * - `nextAvailable` — a stylist option's next-opening line (passed to `StylistCard`)
  */
 export type StylistScreenSlot =
   | 'root'
@@ -62,7 +85,8 @@ export type StylistScreenSlot =
   | 'card'
   | 'cardSelected'
   | 'modeCard'
-  | 'modeCardSelected';
+  | 'modeCardSelected'
+  | 'nextAvailable';
 
 /** One option of the radiogroup as the card draws it. */
 export interface StylistOption {
@@ -75,6 +99,12 @@ export interface StylistOption {
   /** The avatar's fallback: initials, or a symbol for «first available». */
   badge: string;
   photoUrl?: string | null;
+  /**
+   * For «first available» with `firstAvailableFaces`: the photos of the
+   * stylists it can be. Two or more draw a small group in the avatar instead
+   * of the badge.
+   */
+  faces?: readonly string[];
   /** The formatted next opening, when there is one. */
   availability?: string | null;
   availabilityLoading?: boolean;
@@ -91,6 +121,10 @@ export interface StylistCardProps {
   labels: StylistScreenLabels;
   className?: string;
   selectedClassName?: string;
+  /** Merged onto the next-opening line (the `nextAvailable` slot). */
+  nextAvailableClassName?: string;
+  /** `StylistScreen`'s `row`: draw the phone's avatar tile at every width. */
+  row?: boolean;
 }
 
 export interface StylistScreenComponents {
@@ -133,6 +167,25 @@ export interface StylistScreenProps {
   notice?: string | null;
   onPick: (resourceId: string | null) => void;
   /**
+   * Draw «first available» as the faces of the first three qualified stylists
+   * with a photo (in the salon's order) instead of its badge: it means «any of
+   * these», so it shows them, and only ones who can do the whole basket.
+   * Falls back to the badge with fewer than two photos.
+   */
+  firstAvailableFaces?: boolean;
+  /**
+   * On a phone, fade the right edge of the sideways row so a cut-off card reads
+   * as «there is more», not as a layout bug.
+   */
+  edgeFade?: boolean;
+  /**
+   * Keep the phone's one row of avatars at every width instead of the column
+   * of cards from `md`, so a wide screen reaches the times without scrolling
+   * past every stylist. The chosen stylist's bio, which a tile has no room
+   * for, is shown under the row.
+   */
+  row?: boolean;
+  /**
    * Present only for a family. One child gets no picker: «one after the
    * other» is not a choice when there is nobody to be after.
    */
@@ -140,9 +193,33 @@ export interface StylistScreenProps {
     mode: PartyMode;
     /** How many people, for the option labels. */
     size: number;
+    /**
+     * The size as the copy spells it (e.g. «two»), filled into `{sizeWord}`
+     * in `stylist.party.parallel.*` and `stylist.party.parallelNote.*`.
+     * Default: the number. Lets a pack keep the word as its own text piece
+     * (`'We find {sizeWord} stylists …'`) rather than writing it into the
+     * sentence.
+     */
+    sizeWord?: string;
     /** How long the visit is in each mode. */
     minutes: { sequential: number; parallel: number };
     onMode: (mode: PartyMode) => void;
+    /**
+     * Seen at once: one optional stylist per person, in basket order. Each
+     * offers «first available» and the stylists who can do that person's whole
+     * visit; the search seats the rest with anyone free at that minute. Needs
+     * the `stylist.party.seat*` labels; without `seats` the mode note stands
+     * alone, as before.
+     */
+    seats?: Array<{
+      /** Who sits there, e.g. «Barn 1», «Deg», a child's name. */
+      who: string;
+      /** Every service of this person's visit. */
+      serviceIds: string[];
+      /** Their stylist, `null` for first available. */
+      resourceId: string | null;
+    }>;
+    onSeat?: (index: number, resourceId: string | null) => void;
   };
   classNames?: SlotClassNames<StylistScreenSlot>;
   components?: StylistScreenComponents;
@@ -157,6 +234,16 @@ const OPTION_HEIGHT = 'h-32 md:h-24';
 
 const DEFAULT_SKELETON_COUNT = 5;
 
+/** How many faces «first available» draws with `firstAvailableFaces`. */
+const FACE_COUNT = 3;
+
+/** One on top, two below, overlapping like people standing together. */
+const FACE_POSITIONS = [
+  'left-1/2 top-[3px] -translate-x-1/2',
+  'bottom-[3px] left-[3px]',
+  'bottom-[3px] right-[3px]',
+] as const;
+
 const HEADING_ID = 'booking-stylist-heading';
 
 /** «Ada» from «Ada Demo»: a phone tile has room for one word. */
@@ -167,14 +254,18 @@ function firstName(displayName: string): string {
 /** Sizes the label packs write out in words; any other size reads `.other`. */
 const SIZE_WORDS: Record<number, 'two' | 'three'> = { 2: 'two', 3: 'three' };
 
-/** The size-specific label: `.two`, `.three`, else `.other` with `{count}`. */
+/**
+ * The size-specific label: `.two`, `.three`, else `.other`, filled with
+ * `{count}` (the number) and `{sizeWord}` (`party.sizeWord`, else the number).
+ */
 function bySize(
   labels: StylistScreenLabels,
   base: 'stylist.party.parallel' | 'stylist.party.parallelNote',
-  size: number
-): string {
+  size: number,
+  sizeWord: string | undefined
+): ReactNode {
   const suffix = SIZE_WORDS[size] ?? 'other';
-  return fillLabel(labels[`${base}.${suffix}`], { count: size });
+  return renderLabel(labels[`${base}.${suffix}`], { count: size, sizeWord: sizeWord ?? size });
 }
 
 export function StylistScreen({
@@ -191,6 +282,9 @@ export function StylistScreen({
   pendingName = null,
   notice = null,
   onPick,
+  firstAvailableFaces = false,
+  edgeFade = false,
+  row = false,
   party,
   classNames,
   components,
@@ -217,10 +311,20 @@ export function StylistScreen({
   const options: StylistOption[] = [
     {
       resourceId: null,
-      name: labels['stylist.firstAvailable'],
-      shortName: labels['stylist.firstAvailable'],
-      subtitle: labels['stylist.firstAvailableSubtitle'],
-      badge: labels['stylist.firstAvailableBadge'],
+      name: labelText(labels['stylist.firstAvailable']),
+      shortName: labelText(labels['stylist.firstAvailable']),
+      subtitle: labelText(labels['stylist.firstAvailableSubtitle']),
+      badge: labelText(labels['stylist.firstAvailableBadge']),
+      ...(firstAvailableFaces && !loading
+        ? {
+            // Distinct photos: two stylists sharing one picture is one face.
+            faces: [
+              ...new Set(
+                qualified.flatMap((resource) => (resource.photoUrl ? [resource.photoUrl] : []))
+              ),
+            ].slice(0, FACE_COUNT),
+          }
+        : {}),
     },
     ...(loading
       ? held
@@ -264,7 +368,7 @@ export function StylistScreen({
             selected={party.mode === 'sequential'}
             onClick={() => party.onMode('sequential')}
             title={labels['stylist.party.sequential']}
-            subtitle={fillLabel(labels['stylist.party.sequentialMinutes'], {
+            subtitle={renderLabel(labels['stylist.party.sequentialMinutes'], {
               minutes: party.minutes.sequential,
             })}
             classNames={classNames}
@@ -272,8 +376,8 @@ export function StylistScreen({
           <ModeCard
             selected={party.mode === 'parallel'}
             onClick={() => party.onMode('parallel')}
-            title={bySize(labels, 'stylist.party.parallel', party.size)}
-            subtitle={fillLabel(labels['stylist.party.parallelMinutes'], {
+            title={bySize(labels, 'stylist.party.parallel', party.size, party.sizeWord)}
+            subtitle={renderLabel(labels['stylist.party.parallelMinutes'], {
               minutes: party.minutes.parallel,
             })}
             classNames={classNames}
@@ -287,9 +391,26 @@ export function StylistScreen({
         // be true — and the machine drops the preference when the mode is
         // chosen. A list left on screen would show a stylist the search is
         // quietly ignoring, which is the worse of the two ways to be wrong.
-        <p className="rounded-lg border border-border bg-card px-5 py-4 text-sm">
-          {bySize(labels, 'stylist.party.parallelNote', party.size)}
-        </p>
+        <div className="space-y-4">
+          <p className="rounded-lg border border-border bg-card px-5 py-4 text-sm">
+            {bySize(labels, 'stylist.party.parallelNote', party.size, party.sizeWord)}
+          </p>
+          {party.seats &&
+            party.onSeat &&
+            labels['stylist.party.seatsHeading'] &&
+            labels['stylist.party.seat'] && (
+              <SeatChoices
+                seats={party.seats}
+                onSeat={party.onSeat}
+                resources={resources}
+                heading={labels['stylist.party.seatsHeading']}
+                seatLabel={labels['stylist.party.seat']}
+                anyone={labelText(labels['stylist.firstAvailable'])}
+                pending={labelText(labels['stylist.pendingName'])}
+                format={format}
+              />
+            )}
+        </div>
       ) : (
         <StylistRadioGroup
           options={options}
@@ -301,11 +422,16 @@ export function StylistScreen({
           onPick={onPick}
           labels={labels}
           classNames={classNames}
+          edgeFade={edgeFade}
+          row={row}
           Card={components?.StylistCard ?? DefaultStylistCard}
         />
       )}
+      {row && party?.mode !== 'parallel' && (
+        <ChosenBio options={options} selectedResourceId={selectedResourceId} />
+      )}
       {/* Beside the list, not in it: a status is not a list item. */}
-      <LiveStatus text={loading ? labels['stylist.loading'] : notice} />
+      <LiveStatus text={loading ? labelText(labels['stylist.loading']) : notice} />
     </section>
   );
 }
@@ -325,6 +451,8 @@ function StylistRadioGroup({
   onPick,
   labels,
   classNames,
+  edgeFade,
+  row,
   Card,
 }: {
   options: StylistOption[];
@@ -334,6 +462,8 @@ function StylistRadioGroup({
   onPick: (resourceId: string | null) => void;
   labels: StylistScreenLabels;
   classNames: SlotClassNames<StylistScreenSlot> | undefined;
+  edgeFade: boolean;
+  row: boolean;
   Card: ComponentType<StylistCardProps>;
 }) {
   const groupRef = useRef<HTMLDivElement>(null);
@@ -400,7 +530,14 @@ function StylistRadioGroup({
         classNames,
         'group',
         'relative -mx-1 flex h-36 snap-x snap-mandatory scroll-px-1 gap-1 overflow-x-auto overscroll-x-contain px-1 py-2',
-        'md:mx-0 md:h-auto md:snap-none md:flex-col md:gap-2 md:overflow-visible md:p-0'
+        // The last few pixels fade, so the cut-off card reads as «more this way».
+        // The trailing room lets the last card scroll wholly clear of the fade.
+        edgeFade &&
+          cn(
+            'pr-10 [mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)]',
+            !row && 'md:[mask-image:none]'
+          ),
+        !row && 'md:mx-0 md:h-auto md:snap-none md:flex-col md:gap-2 md:overflow-visible md:p-0'
       )}
     >
       {options.map((option, index) => (
@@ -416,11 +553,13 @@ function StylistRadioGroup({
           labels={labels}
           className={classNames?.card}
           selectedClassName={classNames?.cardSelected}
+          nextAvailableClassName={classNames?.nextAvailable}
+          row={row}
         />
       ))}
       {Array.from({ length: skeletons }, (_, index) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: placeholders have no identity
-        <SkeletonCard key={index} />
+        <SkeletonCard key={index} row={row} />
       ))}
     </div>
   );
@@ -435,7 +574,7 @@ function pendingOption(
   format: BookingFormat
 ): StylistOption {
   const known = pendingName?.trim() ? pendingName.trim() : null;
-  const name = known ?? labels['stylist.pendingName'];
+  const name = known ?? labelText(labels['stylist.pendingName']);
   return {
     resourceId,
     name,
@@ -463,8 +602,8 @@ function ModeCard({
 }: {
   selected: boolean;
   onClick: () => void;
-  title: string;
-  subtitle: string;
+  title: ReactNode;
+  subtitle: ReactNode;
   classNames: SlotClassNames<StylistScreenSlot> | undefined;
 }) {
   return (
@@ -497,8 +636,12 @@ export function DefaultStylistCard({
   labels,
   className,
   selectedClassName,
+  nextAvailableClassName,
+  row = false,
 }: StylistCardProps) {
   const id = useId();
+  // From `md` the tile becomes a card, unless the screen keeps the row.
+  const md = (classes: string) => (row ? '' : classes);
   const nameId = `${id}-name`;
   const nextId = `${id}-next`;
   const bioId = `${id}-bio`;
@@ -507,6 +650,7 @@ export function DefaultStylistCard({
     subtitle,
     badge,
     photoUrl,
+    faces,
     availability,
     availabilityLoading,
     reserveAvailability,
@@ -531,11 +675,11 @@ export function DefaultStylistCard({
       // avatar; from `md` it is on the card.
       className={cn(
         'group flex w-24 shrink-0 snap-start flex-col items-center gap-1 rounded-lg px-1 pt-1 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-        'md:w-full md:shrink md:flex-row md:gap-4 md:border md:px-5 md:py-4 md:text-left',
-        OPTION_HEIGHT,
+        md('md:w-full md:shrink md:flex-row md:gap-4 md:border md:px-5 md:py-4 md:text-left'),
+        row ? 'h-32' : OPTION_HEIGHT,
         selected
-          ? 'font-semibold md:border-primary md:bg-primary/10 md:ring-2 md:ring-primary'
-          : 'md:border-border md:bg-card md:hover:border-primary',
+          ? cn('font-semibold', md('md:border-primary md:bg-primary/10 md:ring-2 md:ring-primary'))
+          : md('md:border-border md:bg-card md:hover:border-primary'),
         className,
         selected && selectedClassName
       )}
@@ -544,35 +688,33 @@ export function DefaultStylistCard({
         aria-hidden="true"
         data-testid="stylist-avatar"
         className={cn(
-          'flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary/30 font-semibold md:size-12',
+          'flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary/30 font-semibold',
+          md('md:size-12'),
           selected
-            ? 'ring-2 ring-primary ring-offset-2 ring-offset-background md:ring-0 md:ring-offset-0'
-            : 'ring-1 ring-border md:ring-0'
+            ? cn(
+                'ring-2 ring-primary ring-offset-2 ring-offset-background',
+                md('md:ring-0 md:ring-offset-0')
+              )
+            : cn('ring-1 ring-border', md('md:ring-0'))
         )}
       >
-        {photoUrl ? (
-          <img
-            src={photoUrl}
-            alt=""
-            className="size-full object-cover"
-            width={56}
-            height={56}
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          badge
-        )}
+        <StylistAvatarContent photoUrl={photoUrl} faces={faces} badge={badge} row={row} />
       </span>
-      <span className="flex w-full min-w-0 flex-col md:w-auto">
-        <span aria-hidden="true" className="h-5 truncate text-sm font-medium md:hidden">
+      <span className={cn('flex w-full min-w-0 flex-col', md('md:w-auto'))}>
+        <span
+          aria-hidden="true"
+          className={cn('h-5 truncate text-sm font-medium', md('md:hidden'))}
+        >
           {option.shortName}
         </span>
-        <span id={nameId} className="hidden truncate font-medium md:block">
+        <span id={nameId} className={cn('hidden truncate font-medium', md('md:block'))}>
           {name}
         </span>
         {subtitle && (
-          <span id={bioId} className="hidden truncate text-sm text-muted-foreground md:block">
+          <span
+            id={bioId}
+            className={cn('hidden truncate text-sm text-muted-foreground', md('md:block'))}
+          >
             {subtitle}
           </span>
         )}
@@ -580,9 +722,15 @@ export function DefaultStylistCard({
           <span
             id={nextId}
             data-testid="next-available-row"
-            className="line-clamp-2 h-8 text-xs leading-4 text-foreground tabular-nums md:line-clamp-1 md:h-5 md:text-sm md:leading-5"
+            className={cn(
+              'line-clamp-2 h-8 text-xs leading-4 text-foreground tabular-nums',
+              md('md:line-clamp-1 md:h-5 md:text-sm md:leading-5'),
+              nextAvailableClassName
+            )}
           >
-            <span className="sr-only md:not-sr-only">{labels['stylist.nextAvailable']}</span>{' '}
+            <span className={cn('sr-only', md('md:not-sr-only'))}>
+              {labels['stylist.nextAvailable']}
+            </span>{' '}
             {availability}
           </span>
         ) : (
@@ -590,10 +738,12 @@ export function DefaultStylistCard({
             <span
               data-testid="next-available-row"
               aria-hidden="true"
-              className="flex h-8 justify-center pt-1 md:block md:h-5 md:py-1"
+              className={cn('flex h-8 justify-center pt-1', md('md:block md:h-5 md:py-1'))}
             >
               {availabilityLoading && (
-                <span className="block h-3 w-16 animate-pulse rounded bg-muted md:w-36" />
+                <span
+                  className={cn('block h-3 w-16 animate-pulse rounded bg-muted', md('md:w-36'))}
+                />
               )}
             </span>
           )
@@ -603,23 +753,187 @@ export function DefaultStylistCard({
   );
 }
 
+/**
+ * What fills the avatar circle: the stylist's photo, a small group of faces
+ * for «first available» (`firstAvailableFaces`), or the badge.
+ */
+function StylistAvatarContent({
+  photoUrl,
+  faces,
+  badge,
+  row,
+}: Pick<StylistOption, 'photoUrl' | 'faces' | 'badge'> & { row: boolean }) {
+  if (photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt=""
+        className="size-full object-cover"
+        width={56}
+        height={56}
+        loading="lazy"
+        decoding="async"
+      />
+    );
+  }
+  if (faces && faces.length >= 2) {
+    // A small group, for «any of these»: the faces of who it can be.
+    return (
+      <span data-testid="stylist-faces" className="relative size-full">
+        {faces.slice(0, FACE_POSITIONS.length).map((src, index) => (
+          <img
+            key={src}
+            src={src}
+            alt=""
+            width={30}
+            height={30}
+            decoding="async"
+            className={cn(
+              'absolute size-[30px] rounded-full object-cover ring-2 ring-background',
+              !row && 'md:size-[26px]',
+              FACE_POSITIONS[index]
+            )}
+          />
+        ))}
+      </span>
+    );
+  }
+  return badge;
+}
+
 /** A stylist option before there is a stylist: the same box, the same circle, at both widths. */
-function SkeletonCard() {
+function SkeletonCard({ row }: { row: boolean }) {
+  const md = (classes: string) => (row ? '' : classes);
   return (
     <div
       aria-hidden="true"
       data-testid="stylist-skeleton"
       className={cn(
         'flex w-24 shrink-0 flex-col items-center gap-1 px-1 pt-1',
-        'md:w-full md:flex-row md:gap-4 md:rounded-lg md:border md:border-border md:bg-card md:px-5 md:py-4',
-        OPTION_HEIGHT
+        md(
+          'md:w-full md:flex-row md:gap-4 md:rounded-lg md:border md:border-border md:bg-card md:px-5 md:py-4'
+        ),
+        row ? 'h-32' : OPTION_HEIGHT
       )}
     >
-      <span className="size-14 shrink-0 animate-pulse rounded-full bg-muted md:size-12" />
-      <span className="flex w-full min-w-0 flex-col items-center gap-2 md:w-auto md:flex-1 md:items-start">
-        <span className="h-4 w-14 animate-pulse rounded bg-muted md:w-28" />
-        <span className="h-3 w-16 animate-pulse rounded bg-muted md:w-40" />
+      <span
+        className={cn('size-14 shrink-0 animate-pulse rounded-full bg-muted', md('md:size-12'))}
+      />
+      <span
+        className={cn(
+          'flex w-full min-w-0 flex-col items-center gap-2',
+          md('md:w-auto md:flex-1 md:items-start')
+        )}
+      >
+        <span className={cn('h-4 w-14 animate-pulse rounded bg-muted', md('md:w-28'))} />
+        <span className={cn('h-3 w-16 animate-pulse rounded bg-muted', md('md:w-40'))} />
       </span>
     </div>
+  );
+}
+
+/**
+ * Under a `row`: the chosen stylist's bio, which a tile has no room for —
+ * «tar oftest de minste», read where the choice is made. Nothing for «first
+ * available», or a stylist without one.
+ */
+function ChosenBio({
+  options,
+  selectedResourceId,
+}: {
+  options: StylistOption[];
+  selectedResourceId: string | null;
+}) {
+  const chosen = options.find((option) => option.resourceId === selectedResourceId);
+  if (!chosen || chosen.resourceId === null || !chosen.subtitle) return null;
+  return (
+    <p data-testid="stylist-bio" className="-mt-3 text-sm text-muted-foreground">
+      <span className="font-medium text-foreground">{chosen.name}</span> · {chosen.subtitle}
+    </p>
+  );
+}
+
+/**
+ * Seen at once: «who cuts whom», one native select per person. A select, not a
+ * second row of avatar tiles: a family of three would be three radiogroups of
+ * the same faces, and the question is optional — most leave it on «first
+ * available». Each lists only the stylists who can do that person's whole visit,
+ * in the salon's order; one already chosen for another person is left out, as
+ * one stylist cannot cut two people at once.
+ */
+function SeatChoices({
+  seats,
+  onSeat,
+  resources,
+  heading,
+  seatLabel,
+  anyone,
+  pending,
+  format,
+}: {
+  seats: NonNullable<NonNullable<StylistScreenProps['party']>['seats']>;
+  onSeat: (index: number, resourceId: string | null) => void;
+  resources: BookingResourceDto[];
+  heading: BookingLabel;
+  seatLabel: BookingLabel;
+  anyone: string;
+  /** The name for a saved stylist the list does not hold (`stylist.pendingName`). */
+  pending: string;
+  format: BookingFormat;
+}) {
+  const id = useId();
+  const ordered = [...resources].sort((a, b) => a.sortOrder - b.sortOrder);
+  return (
+    <fieldset className="space-y-3">
+      <legend className="mb-1 font-sans text-base font-semibold">{renderLabel(heading)}</legend>
+      {seats.map((seat, index) => {
+        const takenElsewhere = new Set(
+          seats.flatMap((other, at) =>
+            at !== index && other.resourceId !== null ? [other.resourceId] : []
+          )
+        );
+        const options = ordered.filter(
+          (resource) =>
+            seat.serviceIds.every((serviceId) => resource.serviceIds.includes(serviceId)) &&
+            !takenElsewhere.has(resource.id)
+        );
+        const selectId = `${id}-seat-${index}`;
+        // A saved choice the list cannot show (still loading, gone, or no longer
+        // able to do the visit) stays the selected option, by name where known:
+        // shown as «first available» it would read as an answer never given.
+        const held =
+          seat.resourceId !== null && !options.some((resource) => resource.id === seat.resourceId)
+            ? seat.resourceId
+            : null;
+        const heldResource = held === null ? undefined : resources.find((r) => r.id === held);
+        return (
+          <div key={selectId} className="space-y-1">
+            <label htmlFor={selectId} className="block text-sm font-medium">
+              {renderLabel(seatLabel, { who: seat.who })}
+            </label>
+            <select
+              id={selectId}
+              value={seat.resourceId ?? ''}
+              onChange={(event) =>
+                onSeat(index, event.target.value === '' ? null : event.target.value)
+              }
+              className={BOOKING_SELECT_CLASS}
+            >
+              <option value="">{anyone}</option>
+              {held !== null && (
+                <option value={held}>
+                  {heldResource ? format.stylistName(heldResource.name) : pending}
+                </option>
+              )}
+              {options.map((resource) => (
+                <option key={resource.id} value={resource.id}>
+                  {format.stylistName(resource.name)}
+                </option>
+              ))}
+            </select>
+          </div>
+        );
+      })}
+    </fieldset>
   );
 }

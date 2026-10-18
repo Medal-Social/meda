@@ -12,6 +12,7 @@ import {
 } from './__stories__/fixtures.js';
 import { manageLabelsEn, manageLabelsNb } from './__stories__/labels.time.js';
 import { BookingColumn, bookingStoryParameters, SecondBrand } from './__stories__/story-helpers.js';
+import { labelText } from './labels.js';
 import { type ManageResult, ManageScreen } from './manage-screen.js';
 import type { BookingManageDto } from './types.js';
 
@@ -82,9 +83,11 @@ export const English: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: manageLabelsEn['manage.change'] }));
+    await userEvent.click(
+      canvas.getByRole('button', { name: labelText(manageLabelsEn['manage.change']) })
+    );
     await expect(
-      canvas.getByRole('heading', { name: manageLabelsEn['time.heading'] })
+      canvas.getByRole('heading', { name: labelText(manageLabelsEn['time.heading']) })
     ).toBeVisible();
   },
 };

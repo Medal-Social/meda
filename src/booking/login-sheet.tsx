@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Sheet } from '../primitives/sheet.js';
 import { labelParts } from './internal/label-parts.js';
 import { BookingButton } from './internal/ui.js';
+import { type BookingLabel, labelText } from './labels.js';
 import {
   LOGIN_PANEL_LABEL_KEYS,
   LoginPanel,
@@ -30,7 +31,7 @@ export const LOGIN_SHEET_LABEL_KEYS = [
 ] as const;
 
 /** `loginSheet.prompt` holds a `{trigger}` placeholder where the trigger button goes. */
-export type LoginSheetLabels = Record<(typeof LOGIN_SHEET_OWN_LABEL_KEYS)[number], string> &
+export type LoginSheetLabels = Record<(typeof LOGIN_SHEET_OWN_LABEL_KEYS)[number], BookingLabel> &
   LoginPanelLabels;
 
 /**
@@ -131,7 +132,7 @@ export function LoginSheet({
           onVerify={onVerify}
           onVipps={onVipps}
           vippsNext={resumePath}
-          vippsLabel={labels['loginSheet.vipps']}
+          vippsLabel={labelText(labels['loginSheet.vipps'])}
           resendCooldownMs={resendCooldownMs}
           classNames={panelClassNames}
           otpClassNames={otpClassNames}

@@ -156,6 +156,52 @@ describe('DetailsScreen', () => {
     expect(screen.queryByText(L['details.phone.error'])).toBeNull();
   });
 
+  it('shows a locked e-mail and still submits it', () => {
+    const { onSubmit } = setup({
+      emailReadOnly: true,
+      state: readyState({ contact: { phone: '40000000', name: '', email: 'kari@example.com' } }),
+    });
+    const input = screen.getByLabelText(L['details.email.label']);
+    expect(input).toHaveAttribute('readonly');
+    expect(input).toHaveAttribute('aria-readonly', 'true');
+    expect(screen.getByText(L['details.email.lockedHelp'])).toBeInTheDocument();
+    expect(screen.queryByText(L['details.email.help'])).toBeNull();
+    fireEvent.click(submitButton());
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contact: expect.objectContaining({ email: 'kari@example.com' }),
+      })
+    );
+  });
+
+  it('keeps a blank e-mail editable even when emailReadOnly is set', () => {
+    setup({
+      emailReadOnly: true,
+      state: readyState({ contact: { phone: '40000000', name: '', email: '' } }),
+    });
+    const input = screen.getByLabelText(L['details.email.label']);
+    expect(input).not.toHaveAttribute('readonly');
+    expect(input).not.toHaveAttribute('aria-readonly');
+    fireEvent.focus(input);
+    fireEvent.blur(input);
+    fireEvent.change(input, { target: { value: 'kari@example.com' } });
+    expect(screen.getByText(L['details.email.help'])).toBeInTheDocument();
+    expect(screen.queryByText(L['details.email.lockedHelp'])).toBeNull();
+  });
+
+  it('keeps a malformed e-mail editable under emailReadOnly and focuses it on submit', () => {
+    const { onSubmit } = setup({
+      emailReadOnly: true,
+      state: readyState({ contact: { phone: '40000000', name: '', email: 'not-an-email' } }),
+    });
+    const input = screen.getByLabelText(L['details.email.label']);
+    expect(input).not.toHaveAttribute('readonly');
+    expect(screen.getByText(L['details.email.help'])).toBeInTheDocument();
+    fireEvent.click(submitButton());
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(input).toHaveFocus();
+  });
+
   it('sends the optional birth year on the line item, not on the contact', () => {
     const { onSubmit } = setup();
     fill(L['details.child.year'], '2017');
@@ -204,6 +250,25 @@ describe('DetailsScreen', () => {
     expect('name' in submission.contact).toBe(false);
     expect('email' in submission.contact).toBe(false);
     expect('notes' in submission).toBe(false);
+  });
+
+  it('sends the services after the first as extraServiceIds, in order', () => {
+    const { onSubmit } = setup({
+      state: readyState({
+        items: [{ service: KIDS, extraServices: [WASH, { ...WASH, id: 'svc-x' }] }],
+      }),
+    });
+    fireEvent.click(submitButton());
+    expect(onSubmit.mock.calls[0]?.[0].items[0]).toMatchObject({
+      serviceId: 'svc-kids',
+      extraServiceIds: ['svc-wash', 'svc-x'],
+    });
+  });
+
+  it('sends no extraServiceIds for a one-service visit', () => {
+    const { onSubmit } = setup();
+    fireEvent.click(submitButton());
+    expect(onSubmit.mock.calls[0]?.[0].items[0]).not.toHaveProperty('extraServiceIds');
   });
 
   it('submits the phone through normalisePhone', () => {
@@ -536,6 +601,19 @@ describe('DetailsScreen', () => {
       });
     });
 
+    it('names a known person’s visit by all its services', () => {
+      const state = jonasState();
+      setup({
+        state: {
+          ...state,
+          items: [{ ...(state.items[0] as WizardState['items'][number]), extraServices: [WASH] }],
+        },
+      });
+      expect(screen.getByRole('list', { name: L['details.known.label'] })).toHaveTextContent(
+        'Barneklipp + Barneklipp med vask til Jonas'
+      );
+    });
+
     it('names a guardian booking for themselves, and a guest adult', () => {
       setup({
         state: readyState({
@@ -652,5 +730,42 @@ describe('looksLikeEmail', () => {
     looksLikeEmail(`!@!${'.!'.repeat(50_000)}`);
     looksLikeEmail(`a@${'.'.repeat(100_000)}`);
     expect(performance.now() - started).toBeLessThan(200);
+  });
+});
+
+describe('DetailsScreen — text nodes', () => {
+  const nodes = (element: Element) =>
+    Array.from(element.childNodes)
+      .filter((node) => node.nodeType === Node.TEXT_NODE)
+      .map((node) => node.textContent);
+
+  it('renders a string submit label as ONE text node', () => {
+    setup();
+    expect(nodes(submitButton())).toHaveLength(1);
+  });
+
+  it('renders an array submit label one text node per element', () => {
+    setup({ labels: { ...L, 'details.submit': ['Bestill – ', '{price}', ' betales i salongen'] } });
+    expect(nodes(submitButton())).toEqual([
+      'Bestill – ',
+      demoFormatNb.price(39_000),
+      ' betales i salongen',
+    ]);
+  });
+});
+
+describe('DetailsScreen — phone prefix forms', () => {
+  it('draws no prefix box and no description for a prefix the pack left blank', () => {
+    setup({ labels: { ...L, 'details.phone.prefix': [''] } });
+    const phone = screen.getByLabelText(L['details.phone.label'] as string);
+    expect(phone).not.toHaveAttribute('aria-describedby');
+    expect(screen.queryByText('+47')).toBeNull();
+  });
+
+  it('draws an array prefix one text node per element', () => {
+    setup({ labels: { ...L, 'details.phone.prefix': ['+', '47'] } });
+    const phone = screen.getByLabelText(L['details.phone.label'] as string);
+    const prefix = document.getElementById(phone.getAttribute('aria-describedby') ?? '');
+    expect(Array.from(prefix?.childNodes ?? [], (node) => node.textContent)).toEqual(['+', '47']);
   });
 });

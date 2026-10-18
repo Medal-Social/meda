@@ -1,11 +1,11 @@
 'use client';
 
-import type { ComponentType } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import { cn } from '../../lib/utils.js';
 import type { BookingFormat } from '../format.js';
-import { labelParts } from '../internal/label-parts.js';
+import { joinLabelParts, labelParts, renderLabel } from '../internal/label-parts.js';
 import { bookingButtonClass } from '../internal/ui.js';
-import { fillLabel } from '../labels.js';
+import { type BookingLabel, fillLabel, labelText } from '../labels.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 import type { PortalBookingDto } from '../types.js';
 
@@ -32,7 +32,10 @@ export const UPCOMING_BOOKINGS_LABEL_KEYS = [
  * `upcoming.noManageWithPhone` `{call}` (where the `upcoming.call` link goes),
  * `upcoming.call` `{phone}`.
  */
-export type UpcomingBookingsLabels = Record<(typeof UPCOMING_BOOKINGS_LABEL_KEYS)[number], string>;
+export type UpcomingBookingsLabels = Record<
+  (typeof UPCOMING_BOOKINGS_LABEL_KEYS)[number],
+  BookingLabel
+>;
 
 /**
  * - `root`: the section. - `heading`. - `empty`: the no-bookings box.
@@ -99,16 +102,17 @@ function howFarOff(
   format: BookingFormat
 ): string {
   const days = format.clock.daysBetween(now, startTs);
-  if (days <= 0) return labels['upcoming.today'];
-  if (days === 1) return labels['upcoming.tomorrow'];
+  if (days <= 0) return labelText(labels['upcoming.today']);
+  if (days === 1) return labelText(labels['upcoming.tomorrow']);
   return fillLabel(labels['upcoming.inDays'], { count: days });
 }
 
 /** What is booked and who for. */
-function whatLine(booking: PortalBookingDto, labels: UpcomingBookingsLabels): string {
-  return [booking.serviceName ?? labels['upcoming.serviceFallback'], booking.bookedForName]
-    .filter(Boolean)
-    .join(SEPARATOR);
+function whatLine(booking: PortalBookingDto, labels: UpcomingBookingsLabels): ReactNode {
+  return joinLabelParts(
+    [booking.serviceName ?? labels['upcoming.serviceFallback'], booking.bookedForName],
+    SEPARATOR
+  );
 }
 
 /** When, with whom, and what it costs. */
@@ -117,17 +121,18 @@ function whenLine(
   now: number,
   labels: UpcomingBookingsLabels,
   format: BookingFormat
-): string {
-  return [
-    fillLabel(labels['upcoming.when'], {
-      day: format.clock.dayLabel(booking.startTs, now),
-      time: format.clock.formatTime(booking.startTs),
-    }),
-    booking.resourceName ?? labels['upcoming.anyStylist'],
-    booking.amountOre === null ? null : format.price(booking.amountOre),
-  ]
-    .filter(Boolean)
-    .join(SEPARATOR);
+): ReactNode {
+  return joinLabelParts(
+    [
+      renderLabel(labels['upcoming.when'], {
+        day: format.clock.dayLabel(booking.startTs, now),
+        time: format.clock.formatTime(booking.startTs),
+      }),
+      booking.resourceName ?? labels['upcoming.anyStylist'],
+      booking.amountOre === null ? null : format.price(booking.amountOre),
+    ],
+    SEPARATOR
+  );
 }
 
 /**
@@ -226,7 +231,7 @@ export function DefaultBookingCard({
           )}
         >
           <span aria-hidden="true" className="size-2 rounded-full bg-current" />
-          {fillLabel(labels['upcoming.next'], {
+          {renderLabel(labels['upcoming.next'], {
             when: howFarOff(booking.startTs, now, labels, format),
           })}
         </p>
@@ -275,7 +280,7 @@ export function DefaultBookingCard({
                       hero ? 'text-primary-foreground' : 'text-primary'
                     )}
                   >
-                    {fillLabel(labels['upcoming.call'], { phone })}
+                    {renderLabel(labels['upcoming.call'], { phone })}
                   </a>
                 ),
               })

@@ -3,8 +3,9 @@
 import { type FormEvent, useId, useState, useTransition } from 'react';
 import { Field } from '../../primitives/field.js';
 import { Input } from '../../primitives/input.js';
+import { renderLabel } from '../internal/label-parts.js';
 import { BOOKING_INPUT_CLASS, BookingButton } from '../internal/ui.js';
-import { fillLabel } from '../labels.js';
+import { type BookingLabel, fillLabel, labelText } from '../labels.js';
 import { type SlotClassNames, slotClass } from '../slots.js';
 import { type PortalActionFailure, type PortalActionResult, settle } from './action-result.js';
 
@@ -27,7 +28,7 @@ export const DATA_CONTROLS_LABEL_KEYS = [
  * `confirmWord` is the literal the visitor must type (e.g. «DELETE»);
  * `confirmLabel` and `wrongWord` take `{word}`.
  */
-export type DataControlsLabels = Record<(typeof DATA_CONTROLS_LABEL_KEYS)[number], string>;
+export type DataControlsLabels = Record<(typeof DATA_CONTROLS_LABEL_KEYS)[number], BookingLabel>;
 
 /**
  * `root` (the section), `heading`, `actions` (the export/delete row),
@@ -94,7 +95,7 @@ export function DataControls({
   const [exportError, setExportError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const word = labels['dataControls.confirmWord'];
+  const word = labelText(labels['dataControls.confirmWord']);
   const confirmId = `${id}-confirm`;
   const errorId = `${id}-error`;
 
@@ -103,7 +104,7 @@ export function DataControls({
       onSessionExpired?.();
       return null;
     }
-    return failure.message ?? labels['dataControls.unreachable'];
+    return failure.message ?? labelText(labels['dataControls.unreachable']);
   }
 
   function exportData() {
@@ -180,7 +181,7 @@ export function DataControls({
           <p className="text-sm">{labels['dataControls.consequences']}</p>
           <Field>
             <Field.Label htmlFor={confirmId}>
-              {fillLabel(labels['dataControls.confirmLabel'], { word })}
+              {renderLabel(labels['dataControls.confirmLabel'], { word })}
             </Field.Label>
             <Input
               id={confirmId}

@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react';
 import { cn } from '../lib/utils.js';
+import { type BookingLabel, labelText } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 
 const LENGTH = 6;
@@ -27,7 +28,7 @@ function slotTone(invalid: boolean, active: boolean, filled: boolean): string {
 }
 
 export const OTP_SLOTS_LABEL_KEYS = ['otp.label'] as const;
-export type OtpSlotsLabels = Record<(typeof OTP_SLOTS_LABEL_KEYS)[number], string>;
+export type OtpSlotsLabels = Record<(typeof OTP_SLOTS_LABEL_KEYS)[number], BookingLabel>;
 
 /**
  * - `root`: the positioned wrapper.
@@ -177,7 +178,7 @@ export function OtpSlots({
         value={digits}
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
-        aria-label={labels['otp.label']}
+        aria-label={labelText(labels['otp.label'])}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         onKeyUp={(event) => syncCaret(event.currentTarget)}

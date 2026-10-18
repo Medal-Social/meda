@@ -54,8 +54,19 @@ const CSS_BUDGETS = {
 // ~8 KB is tailwind-merge, which every shadcn site already ships and dedupes
 // — reported below), CSS delta 6.16 KB (the whole subpath: booking.css cannot
 // be tree-shaken per page). Budgets are measured + ~14%; see the PR.
+//
+// js raised 33 KB → 37 KB (bestill phase 2, #271): the page now also counts
+// BookingRecap (it renders on the details step), and the opt-in finder
+// features — TimeScreen's «free soon» row and day fullness, WhoScreen's guest
+// party, StylistScreen's faces, SummaryBar's detail and hints. Measured
+// 33.83 KB with all of them (33.05 KB before counting the recap); ~9% headroom.
+//
+// js raised 37 KB → 41 KB (the redesign's remaining screens, #289): the page
+// also counts BookingPanel (the desktop «Din time» panel), Confirmation's hero
+// layout, ServiceScreen's search and WhoScreen's grown-ups stepper, all
+// opt-in but all on the same page. Measured 37.50 KB; ~9% headroom.
 const BOOKING_BUDGETS = {
-  js: 33 * KB,
+  js: 41 * KB,
   bridge: 7 * KB,
 };
 const BOOKING_PAGE_SCREENS = [
@@ -64,6 +75,7 @@ const BOOKING_PAGE_SCREENS = [
   'ServiceScreen',
   'StylistScreen',
   'TimeScreen',
+  'BookingRecap',
   'DetailsScreen',
   'SummaryBar',
   'Confirmation',

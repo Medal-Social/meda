@@ -6,13 +6,15 @@ import { Field } from '../primitives/field.js';
 import { Input } from '../primitives/input.js';
 import { Textarea } from '../primitives/textarea.js';
 import type { BookingFormat } from './format.js';
+import { renderLabel } from './internal/label-parts.js';
 import {
   BOOKING_CHECKBOX_CLASS,
   BOOKING_INPUT_CLASS,
   BOOKING_TEXTAREA_CLASS,
   BookingButton,
 } from './internal/ui.js';
-import { fillLabel } from './labels.js';
+import { visitName } from './internal/visit.js';
+import { type BookingLabel, fillLabel, labelText } from './labels.js';
 import { type SlotClassNames, slotClass } from './slots.js';
 import type { BookingFamilyMember, WizardAction, WizardError, WizardState } from './types.js';
 
@@ -50,6 +52,7 @@ export const DETAILS_SCREEN_LABEL_KEYS = [
   'details.child.yearPlaceholder',
   'details.email.label',
   'details.email.help',
+  'details.email.lockedHelp',
   'details.email.error',
   'details.notes.label',
   'details.notes.placeholder',
@@ -68,12 +71,15 @@ export const DETAILS_SCREEN_LABEL_KEYS = [
   'details.call.link',
   /** The rescue sentence when there is no phone number to link. */
   'details.call.none',
-  /** `{price}` — the total, already formatted. */
+  /**
+   * `{price}` — the total, already formatted; `{day}` (`clock.dayLabel`) and
+   * `{time}` — when the visit starts, so the button can name what it books.
+   */
   'details.submit',
 ] as const;
 
 export type DetailsScreenLabelKey = (typeof DETAILS_SCREEN_LABEL_KEYS)[number];
-export type DetailsScreenLabels = Record<DetailsScreenLabelKey, string>;
+export type DetailsScreenLabels = Record<DetailsScreenLabelKey, BookingLabel>;
 
 /**
  * The label key for each failure the wizard can carry. Exported because some
@@ -96,7 +102,10 @@ export const DETAILS_ERROR_LABEL_KEYS: Record<WizardError, DetailsScreenLabelKey
 
 /** One line of the submission. Optional fields are ABSENT, never blank. */
 export interface BookingSubmissionItem {
+  /** The person's first service. */
   serviceId: string;
+  /** The services after the first, in order, in the same visit. ABSENT for a one-service visit. */
+  extraServiceIds?: string[];
   resourceId?: string;
   startTs: number;
   bookedForName?: string;
@@ -213,6 +222,8 @@ export interface DetailsScreenProps {
   guardianPhone?: string | null;
   /** When set, a link to the full terms is drawn after the terms sentence. */
   termsHref?: string | null;
+  /** The e-mail is the address the guardian logged in with: shown, not editable. */
+  emailReadOnly?: boolean;
   /** Draw the (optional, unticked) marketing opt-in. */
   marketingConsent?: boolean;
   format: BookingFormat;
@@ -305,10 +316,10 @@ function knownWho(state: WizardState, index: number, labels: DetailsScreenLabels
   const item = state.items[index];
   if (item?.adult) {
     return state.people[index]?.key === 'self'
-      ? labels['details.known.self']
-      : labels['details.known.adult'];
+      ? labelText(labels['details.known.self'])
+      : labelText(labels['details.known.adult']);
   }
-  return item?.bookedForName ?? labels['details.known.child'];
+  return item?.bookedForName ?? labelText(labels['details.known.child']);
 }
 
 /**
@@ -338,6 +349,7 @@ export function DetailsScreen({
   family,
   guardianPhone = null,
   termsHref = null,
+  emailReadOnly = false,
   marketingConsent = false,
   format,
   labels,
@@ -374,12 +386,16 @@ export function DetailsScreen({
   const phoneTyped = state.contact.phone.trim().length > 0;
   const phoneValid = phoneLooksValid(state.contact.phone);
   const emailValid = looksLikeEmail(state.contact.email);
+  // Only lock an address that is present and well-formed; a blank or malformed
+  // one stays editable so the parent is never stuck with an unfixable field.
+  const emailLocked = emailReadOnly && state.contact.email.trim().length > 0 && emailValid;
   const showPhoneError = !phoneValid && (attempted || (phoneTyped && focused !== 'phone'));
   const showEmailError = !emailValid && (attempted || focused !== 'email');
   const showTermsError = attempted && !state.consentTerms;
 
   const price = format.price(totalOre);
-  const phonePrefix = labels['details.phone.prefix'];
+  // `null` when the pack leaves it blank, in either form: no box, no description.
+  const phonePrefix = renderLabel(labels['details.phone.prefix']);
   const FamilyChip = components?.FamilyChip ?? DefaultFamilyChip;
 
   function setContact(name: keyof WizardState['contact'], value: string) {
@@ -425,6 +441,9 @@ export function DetailsScreen({
       const resourceId = line?.resourceId ?? null;
       return {
         serviceId: item.service.id,
+        ...(item.extraServices && item.extraServices.length > 0
+          ? { extraServiceIds: item.extraServices.map((service) => service.id) }
+          : {}),
         ...(resourceId === null ? {} : { resourceId }),
         startTs: line?.startTs ?? startTs,
         ...present(
@@ -538,13 +557,13 @@ export function DetailsScreen({
       </Field>
 
       {state.items.some((_, index) => isKnownChair(state, index)) && (
-        <ul aria-label={labels['details.known.label']} className="space-y-1 text-sm">
+        <ul aria-label={labelText(labels['details.known.label'])} className="space-y-1 text-sm">
           {state.items.map((item, index) =>
             isKnownChair(state, index) ? (
               // biome-ignore lint/suspicious/noArrayIndexKey: two lines can share a service; the index is the identity
               <li key={index}>
-                <span className="font-semibold">{item.service.name}</span>{' '}
-                {fillLabel(labels['details.known.for'], { who: knownWho(state, index, labels) })}
+                <span className="font-semibold">{visitName(item)}</span>{' '}
+                {renderLabel(labels['details.known.for'], { who: knownWho(state, index, labels) })}
               </li>
             ) : null
           )}
@@ -557,7 +576,7 @@ export function DetailsScreen({
           <ChildFields
             // biome-ignore lint/suspicious/noArrayIndexKey: two lines can share a service; the index is the identity
             key={index}
-            legend={state.items.length > 1 ? item.service.name : null}
+            legend={state.items.length > 1 ? visitName(item) : null}
             nameId={field(`child-name-${index}`)}
             yearId={field(`child-year-${index}`)}
             value={childAt(index)}
@@ -579,6 +598,8 @@ export function DetailsScreen({
           autoComplete="email"
           className={inputClass()}
           value={state.contact.email}
+          readOnly={emailLocked || undefined}
+          aria-readonly={emailLocked || undefined}
           aria-describedby={field('email-help')}
           aria-invalid={showEmailError || undefined}
           onFocus={() => setFocused('email')}
@@ -586,7 +607,7 @@ export function DetailsScreen({
           onChange={(event) => setContact('email', event.target.value)}
         />
         <Field.Description id={field('email-help')}>
-          {labels['details.email.help']}
+          {emailLocked ? labels['details.email.lockedHelp'] : labels['details.email.help']}
         </Field.Description>
         {showEmailError && <Field.Error>{labels['details.email.error']}</Field.Error>}
       </Field>
@@ -597,7 +618,7 @@ export function DetailsScreen({
           id={field('notes')}
           rows={3}
           className={slotClass(classNames, 'input', BOOKING_TEXTAREA_CLASS)}
-          placeholder={labels['details.notes.placeholder']}
+          placeholder={labelText(labels['details.notes.placeholder'])}
           value={state.notes}
           onChange={(event) => onChange({ type: 'setNotes', value: event.target.value })}
         />
@@ -665,7 +686,11 @@ export function DetailsScreen({
         aria-busy={submitting || undefined}
         onClick={handleSubmit}
       >
-        {fillLabel(labels['details.submit'], { price })}
+        {renderLabel(labels['details.submit'], {
+          price,
+          day: state.startTs === null ? '' : format.clock.dayLabel(state.startTs),
+          time: state.startTs === null ? '' : format.clock.formatTime(state.startTs),
+        })}
       </BookingButton>
     </section>
   );
@@ -718,7 +743,7 @@ function ChildFields({
           inputMode="numeric"
           maxLength={4}
           className={slotClass(classNames, 'input', BOOKING_INPUT_CLASS)}
-          placeholder={labels['details.child.yearPlaceholder']}
+          placeholder={labelText(labels['details.child.yearPlaceholder'])}
           value={value.birthYear}
           onChange={(event) => onChange({ birthYear: event.target.value })}
         />
@@ -782,7 +807,8 @@ function SubmitFailure({
   labels: DetailsScreenLabels;
   className: string;
 }) {
-  const call = phone ? fillLabel(labels['details.call.link'], { phone }) : null;
+  const template = labels['details.call.link'];
+  const call = phone ? fillLabel(template, { phone }) : null;
   return (
     <p role="alert" className={className}>
       {labels[DETAILS_ERROR_LABEL_KEYS[error]]}{' '}
@@ -792,7 +818,7 @@ function SubmitFailure({
           aria-label={call}
           className="font-semibold text-primary underline underline-offset-4"
         >
-          {call}
+          {renderLabel(template, { phone })}
         </a>
       ) : (
         labels['details.call.none']

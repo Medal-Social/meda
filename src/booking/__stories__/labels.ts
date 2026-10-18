@@ -4,6 +4,10 @@
  */
 import type { BookingLabels } from '../label-keys.js';
 import {
+  bookingPanelLabelsEn,
+  bookingPanelLabelsNb,
+  bookingRecapLabelsEn,
+  bookingRecapLabelsNb,
   confirmationLabelsEn,
   confirmationLabelsNb,
   detailsScreenLabelsEn,
@@ -45,6 +49,8 @@ export const bookingLabelsNb: BookingLabels = {
   ...stylistScreenLabelsNb,
   ...manageLabelsNb,
   ...bookingSkeletonLabelsNb,
+  ...bookingRecapLabelsNb,
+  ...bookingPanelLabelsNb,
   ...detailsScreenLabelsNb,
   ...summaryBarLabelsNb,
   ...confirmationLabelsNb,
@@ -62,6 +68,8 @@ export const bookingLabelsEn: BookingLabels = {
   ...stylistScreenLabelsEn,
   ...manageLabelsEn,
   ...bookingSkeletonLabelsEn,
+  ...bookingRecapLabelsEn,
+  ...bookingPanelLabelsEn,
   ...detailsScreenLabelsEn,
   ...summaryBarLabelsEn,
   ...confirmationLabelsEn,

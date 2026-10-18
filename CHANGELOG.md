@@ -1,5 +1,129 @@
 # @medalsocial/meda
 
+## 3.13.0
+
+### Minor Changes
+
+- [#295](https://github.com/Medal-Social/meda/pull/295) [`ccf57f1`](https://github.com/Medal-Social/meda/commit/ccf57f1238e32242890948fa3dd482b85ad0577f) Thanks [@adaadev](https://github.com/adaadev)! - `WhoScreen`: a logged-in parent's list can count its grown-ups too. With `guestParty.adults` and the new optional `who.family.adults` label, the «myself» check row becomes the «Voksne» stepper — «myself» on seat 1, the guest's seats 2 and 3 after it — so a second grown-up a guest picked survives a login, and a parent can bring one. Without the label the check row stays.
+
+## 3.12.0
+
+### Minor Changes
+
+- [#292](https://github.com/Medal-Social/meda/pull/292) [`4aff65d`](https://github.com/Medal-Social/meda/commit/4aff65d680ceaaf2ef071c911dc87567616b5055) Thanks [@adaadev](https://github.com/adaadev)! - Confirmation: the calendar link only forces a download for a `data:` or `blob:` URL. A calendar file the site serves now opens in place (iOS and macOS go straight to «Add to Calendar» instead of saving it to Files), and a link marked `calendarNewTab` (another calendar's page, such as Google Calendar) opens in a new tab. New optional `calendarAlt` draws a second way into a calendar beside the first, with its own `newTab`.
+
+## 3.11.0
+
+### Minor Changes
+
+- [#289](https://github.com/Medal-Social/meda/pull/289) [`0e1144c`](https://github.com/Medal-Social/meda/commit/0e1144ccc6f33307376a3efd598c050f4daa3963) Thanks [@adaadev](https://github.com/adaadev)! - Booking screens, all opt-in:
+  
+  - WhoScreen: `guestParty.adults` draws «Adults» as a stepper beside «Children» (two grown-ups in one booking), with the optional `who.party.lead` line under the heading and `who.party.togetherHint` while there are children and no grown-up.
+  - ServiceScreen: `searchFor(personIndex)` puts a search field over that person's list (a grown-up's long catalogue), with the `service.search*` labels.
+  - Confirmation: `layout="hero"` — the day as a large calendar leaf, a details card (service, stylist, where), calendar and directions as buttons, an optional «before you come» tip, and until when a change is free (`directionsHref`, `freeChangeUntilTs`, `CONFIRMATION_HERO_LABEL_KEYS`).
+  - New `BookingPanel` — the desktop's sticky «Your appointment» side panel: who, service, time, stylist (and «first available»), a switch to anyone else free at that minute, the total, «continue» and the small print.
+  - SummaryBar: while it shows a hint, it no longer also draws the placeholder beside it.
+
+## 3.10.0
+
+### Minor Changes
+
+- [#286](https://github.com/Medal-Social/meda/pull/286) [`7ba92b1`](https://github.com/Medal-Social/meda/commit/7ba92b12b062873b95f4c7a2da47e1d012f04fd1) Thanks [@adaadev](https://github.com/adaadev)! - WhoScreen: `guestParty.startEmpty` starts a guest's party with nobody instead of one child, for a salon where a grown-up booking for themselves is as common as a child. Children go down to 0 and the grown-up's row is a free choice; «next» waits for an answer. Off by default. Also, the grown-up's note («Samtidig, i stolen ved siden av») now only shows while there is a child in the booking.
+
+## 3.9.1
+
+### Patch Changes
+
+- [#283](https://github.com/Medal-Social/meda/pull/283) [`54f3462`](https://github.com/Medal-Social/meda/commit/54f3462aa8428ae559d7debf5da90172a52d7019) Thanks [@adaadev](https://github.com/adaadev)! - TimeScreen: a simultaneous family time («15:00 (Mia hos Ada · Leo hos Bo)») now wraps inside its chip instead of running past a phone screen, with the seating drawn in muted text in the label pack's own order, and the week grid's narrow columns show only the hour (the whole sentence stays the chip's accessible name and tooltip). `TimeChipProps.label` is unchanged — still the whole sentence — and gains optional `richLabel` and `compactLabel` for a custom chip to opt into.
+
+## 3.9.0
+
+### Minor Changes
+
+- [#279](https://github.com/Medal-Social/meda/pull/279) [`b2d7af2`](https://github.com/Medal-Social/meda/commit/b2d7af2b1b853b27fe56dd90eccb03a38daf29df) Thanks [@adaadev](https://github.com/adaadev)! - `StylistScreen` `party.seats` / `party.onSeat`: when a family is seen at once, each person can keep an optional stylist ("who cuts whom"). There is one select per person, offering «first available» and the stylists who do that person's whole visit, minus any stylist already chosen for someone else. Needs the new optional `stylist.party.seatsHeading` and `stylist.party.seat` labels. Without `seats`, the mode note stands alone as before.
+
+## 3.8.0
+
+### Minor Changes
+
+- [#275](https://github.com/Medal-Social/meda/pull/275) [`29e2d0c`](https://github.com/Medal-Social/meda/commit/29e2d0cbf0d7933c3836b6209352658dc38fbfb1) Thanks [@adaadev](https://github.com/adaadev)! - Booking layouts for wide screens, both opt-in:
+  
+  - `TimeScreen` `layout="adaptive"`: on a phone the days, month and weekend note stay together with no gap before the first time; from `md` the days are a column beside the chosen day's times; from `lg` the week is a seven-column grid of times (each day headed with how full it is, folding after eight times, «Ingen ledige» or a family's simultaneous time on an empty day). The grid needs the new optional `time.week.none` and `time.week.more` labels and a strip of at most seven days; without them the columns layout is used.
+  - `StylistScreen` `row`: the phone's avatar row at every width, so a desktop reaches the times without scrolling past every stylist, with the chosen stylist's bio shown under the row.
+  
+  The default layouts are unchanged.
+
+## 3.7.0
+
+### Minor Changes
+
+- [#271](https://github.com/Medal-Social/meda/pull/271) [`79f8ce3`](https://github.com/Medal-Social/meda/commit/79f8ce340e7724bd82267d688e2430a7d8e4115b) Thanks [@adaadev](https://github.com/adaadev)! - `WhoScreen` takes `guestParty`: a guest picks how many children (a stepper, starting at one, so «next» is live from the first frame) and whether they come too (a «me too» row), up to `maxPeople` — «a child and me» in one booking without an account. Each change is a live answer (`advance: false`); the caller's «next» moves on. New opt-in label keys `who.party.children`, `who.party.childrenNote`, `who.party.adult`, `who.party.adultNote`, `who.party.fewer`, `who.party.more`, `who.party.count`. Without the prop the chips are unchanged.
+
+- [#271](https://github.com/Medal-Social/meda/pull/271) [`a58f423`](https://github.com/Medal-Social/meda/commit/a58f4237251a7a36c6888073946c8b6051e17d02) Thanks [@adaadev](https://github.com/adaadev)! - `BookingRecap` (`@medalsocial/meda/booking`): what is about to be booked, for the top of the details step — a calendar leaf for the day, the hours, each person's services and stylist, the total, an «edit» back to the time step, and, when «first available» resolved to one stylist while others are free at the same minute, a one-tap swap. New opt-in label keys (`BookingOptionalLabelKey`): `recap.label`, `recap.time`, `recap.line`, `recap.lineFor`, `recap.anyStylist`, `recap.total`, `recap.edit`, `recap.editLabel`, `recap.alsoFree`, `recap.swapTo`. `details.submit` also fills `{day}` and `{time}`, so the button can name what it books.
+
+- [#271](https://github.com/Medal-Social/meda/pull/271) [`ba23699`](https://github.com/Medal-Social/meda/commit/ba236991fba7ed37f29e5fb6134a4d65fcf69876) Thanks [@adaadev](https://github.com/adaadev)! - `StylistScreen` takes `firstAvailableFaces`: «first available» is drawn as the faces of the first three stylists with a photo who can do the whole basket, instead of its badge, falling back to the badge with fewer than two photos. `edgeFade` fades the right edge of the phone's sideways row, so a cut-off card reads as «more this way». `StylistOption` has an optional `faces`. Both are off unless passed.
+
+- [#271](https://github.com/Medal-Social/meda/pull/271) [`9dd73ae`](https://github.com/Medal-Social/meda/commit/9dd73aedcaf3662ad30338d7e8c62a22b59feee8) Thanks [@adaadev](https://github.com/adaadev)! - `SummaryBar` takes an optional `detail`, a second, smaller line under the summary (e.g. the time and the price), so the part a parent checks is not the part an ellipsis eats on a phone; the bar keeps its fixed height. `hideNextWhenDisabled` draws «next» only while it does something and puts the step's hint in its place (opt-in keys `summary.hint.who`, `summary.hint.service`, `summary.hint.when`), for steps that move on by themselves once answered. New class-name slots `detail` and `hint`.
+
+- [#271](https://github.com/Medal-Social/meda/pull/271) [`268c12a`](https://github.com/Medal-Social/meda/commit/268c12a856954b84732ddf569aa0752d166a21a4) Thanks [@adaadev](https://github.com/adaadev)! - `TimeScreen` can answer «when is the first time?» before a day is picked. `soonest` draws a «free soon» row above the days: the earliest starts across the window as one-tap cards with the day, the time and (through `resolveStylist`) who each is with, booking exactly the slot `onPick` would. `dayFullness` gives each day chip marks for how many starts it has free, or «full» (only for an open day asked for everyone), as a 44 px target; a weekend card shows its surcharge. `DefaultDayChip` takes the new optional `free` / `freeLabel`, and `dayFreeMarks` is exported. New opt-in label keys: `time.soonest.heading`, `time.soonest.pick`, `time.soonest.with`, `time.dayChip.free`, `time.dayChip.freeOne`, `time.dayChip.full`. Both are off unless passed.
+
+## 3.6.1
+
+### Patch Changes
+
+- [#263](https://github.com/Medal-Social/meda/pull/263) [`1076129`](https://github.com/Medal-Social/meda/commit/1076129b8ab6856cd0cab3651f0d738e57ae0753) Thanks [@alioftech](https://github.com/alioftech)! - Booking: in a family, a child's service menu also offers the groups meant for anyone (`ServiceScreenCategory.audience: 'any'`, e.g. an ear piercing) besides `childCategory`, never a grown-ups' group. Categories without `audience` behave as before. A finished person's tab is named «Theo · 7 år, ferdig» through `aria-label`, so Chrome no longer reads a space before the comma.
+
+## 3.6.0
+
+### Minor Changes
+
+- [#254](https://github.com/Medal-Social/meda/pull/254) [`52d99cd`](https://github.com/Medal-Social/meda/commit/52d99cd7cdc0c5d2c4d740276218f04f549bbb68) Thanks [@alioftech](https://github.com/alioftech)! - LoginPanel `emailCollapsed` (Vipps and e-mail as two equal choices) and DetailsScreen `emailReadOnly`.
+  
+  New label keys, which typed label maps must now provide: `login.continueEmail` (LoginPanel) and `details.email.lockedHelp` (DetailsScreen).
+
+## 3.5.0
+
+### Minor Changes
+
+- [#255](https://github.com/Medal-Social/meda/pull/255) [`0e466d4`](https://github.com/Medal-Social/meda/commit/0e466d441646996e0a130a611322a163ef785e5c) Thanks [@alioftech](https://github.com/alioftech)! - Booking: the service step can be multi-select (`ServiceScreen`'s new `selection` prop, which carries its own required `labels: ServiceMultiLabels`) so one person books several services as one visit, and the other screens and the submission (`extraServiceIds`) carry a visit's extra services.
+
+## 3.4.1
+
+### Patch Changes
+
+- [#256](https://github.com/Medal-Social/meda/pull/256) [`e7f118a`](https://github.com/Medal-Social/meda/commit/e7f118a87a5e9a48582438765a775da70165c814) Thanks [@alioftech](https://github.com/alioftech)! - The booking time step shows a week of day chips. Later days in the fetched window are chosen from the month, not from a strip of every open day.
+
+## 3.4.0
+
+### Minor Changes
+
+- [#250](https://github.com/Medal-Social/meda/pull/250) [`fc2b3b3`](https://github.com/Medal-Social/meda/commit/fc2b3b3dc5c0146295491af6e2baf2d48ac53ce4) Thanks [@alioftech](https://github.com/alioftech)! - Booking labels can be a string or an array of strings (`BookingLabel`), and the pack decides where a sentence breaks into text nodes:
+  
+  - A **string** renders as ONE text node once filled, like a template literal. This reverses 3.3.0, which split every filled label at each `{placeholder}`.
+  - A **string array** renders one text node per element, each element filled with the same values: `['Total ', '{total}', ' · ', 'paid at the salon']` is four nodes, the DOM of the sentence written out in JSX. An element that fills to `''` renders nothing.
+  - `joinLabelParts(parts, separator, { pieces })`: a line joined from plain strings (the confirmation card, the portal's booking lines) is one text node; it renders in pieces once one of its labels is an array, and `pieces` forces either.
+  - `labelParts` keeps a string's text runs whole around element holes and an array's elements apart.
+  - `BookingLabels` and every screen's `*Labels` type accept either form for every key. Text-only targets (`aria-label`, placeholders, file names, messages, a value filled into another label, a custom component's `string` prop) read an array joined, through `fillLabel` or the new `labelText`.
+  - `LoginPanel`'s `heading` render prop receives the label as `ReactNode` (its pieces), not a `string`.
+  - New exports: `BookingLabel`, `labelText`, `fillLabelPieces`, `JoinLabelPartsOptions`.
+  
+  A pack that relied on 3.3's automatic split writes those labels as arrays.
+
+## 3.3.0
+
+### Minor Changes
+
+- [#247](https://github.com/Medal-Social/meda/pull/247) [`4e3268b`](https://github.com/Medal-Social/meda/commit/4e3268b81f63728ff4e85d54132ace4c55f8801c) Thanks [@alioftech](https://github.com/alioftech)! - Booking screens now render filled labels as their template pieces: the label split around its `{placeholders}`, one text node per literal run and per value, the same DOM as the sentence written out in JSX. A browser lays text out per text node, so one joined string could land a line's glyphs a sub-pixel away from a JSX-composed original and fail a pixel-exact screenshot. Covers every label a screen renders as children (e.g. `stylist.party.parallelNote.*`, `confirmation.party.total`, `confirmation.serviceFor` / `.when`, `service.duration`, `time.empty.*`, `time.weekend.*`, `manage.card.*`, `upcoming.*`, `childCards.*`, `details.submit`); text-only targets (`aria-label`, file names) keep `fillLabel`. The visible text is unchanged.
+  
+  New, all opt-in:
+  
+  - `renderLabel(template, values)`, `labelParts(template, parts)` and `joinLabelParts(parts, separator)` are exported from `@medalsocial/meda/booking`, for consumers composing their own booking UI the same way.
+  - `StylistScreen` `party.sizeWord`: the party size as the copy spells it («two»), filled into `{sizeWord}` in `stylist.party.parallel.*` / `stylist.party.parallelNote.*` (default: the number), so a pack can keep the word as its own text piece.
+  - `ServiceScreen` `classNames.price` (and `ServiceCardProps.priceClassName`): a slot for the service price.
+  - `StylistScreen` `classNames.nextAvailable` (and `StylistCardProps.nextAvailableClassName`): a slot for the next-opening line.
+  
+  Runtime dependencies are now caret ranges (`@base-ui/react ^1.7.0`, `tailwind-merge ^3.6.0`, and the rest at their current floors), so a consumer's lockfile can dedupe them without overrides.
+
 ## 3.2.0
 
 ### Minor Changes

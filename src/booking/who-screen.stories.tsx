@@ -81,6 +81,20 @@ export const Default: Story = {
   ),
 };
 
+/** A guest with `guestParty`: how many children, and «me too», in one booking. */
+export const GuestParty: Story = {
+  render: () => (
+    <BookingColumn>
+      <Stateful
+        {...base}
+        family={null}
+        initial={[]}
+        guestParty={{ child: guest, adult: { key: 'adult', adult: true } }}
+      />
+    </BookingColumn>
+  ),
+};
+
 /** A logged-in parent, in English: tick up to three. */
 export const LoggedIn: Story = {
   render: () => (
@@ -91,6 +105,33 @@ export const LoggedIn: Story = {
         format={demoFormatEn}
         family={FAMILY_EN}
         initial={[FAMILY_EN?.[0]?.person as WizardPerson]}
+      />
+    </BookingColumn>
+  ),
+};
+
+/**
+ * A logged-in parent at a salon whose guests count their grown-ups: «Meg selv»
+ * is the first of a «Voksne» stepper, so a second grown-up has a place here too.
+ */
+export const FamilyWithAdults: Story = {
+  name: 'Family, grown-ups as a number',
+  render: () => (
+    <BookingColumn>
+      <Stateful
+        {...base}
+        family={FAMILY_NB}
+        guestParty={{
+          child: guest,
+          adult: { key: 'adult', adult: true },
+          adults: (seat) =>
+            seat === 1 ? { key: 'adult', adult: true } : { key: `adult:${seat}`, adult: true },
+        }}
+        initial={[
+          FAMILY_NB?.[0]?.person as WizardPerson,
+          { key: 'self', adult: true },
+          { key: 'adult:2', adult: true },
+        ]}
       />
     </BookingColumn>
   ),
