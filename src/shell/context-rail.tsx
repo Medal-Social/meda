@@ -125,7 +125,6 @@ function ContextRailSeam({ railId, currentWidth, onResize, onCommit }: ContextRa
     // the collapse grip is a sibling button, so no interactive roles nest
     // (avoids axe `nested-interactive`). One `group/seam` scope still drives the
     // shared hover/focus reveal for both the line and the grip.
-    // biome-ignore lint/a11y/noStaticElementInteractions: pointer-only resize affordance; the keyboard-accessible control is the grip <button> sibling
     <div
       data-testid="context-rail-seam"
       data-collapsed={collapsed ? 'true' : 'false'}

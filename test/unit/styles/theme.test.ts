@@ -8,7 +8,9 @@ declare const __dirname: string;
 
 const fs = require('node:fs') as { readFileSync(p: string, enc: string): string };
 const path = require('node:path') as { join(...parts: string[]): string };
-const themeCss = fs.readFileSync(path.join(__dirname, '../../../src/styles/theme.css'), 'utf8');
+const stylesDir = path.join(__dirname, '../../../src/styles');
+const themeCss = fs.readFileSync(path.join(stylesDir, 'theme.css'), 'utf8');
+const baseCss = fs.readFileSync(path.join(stylesDir, 'base.css'), 'utf8');
 
 describe('theme.css', () => {
   // Tailwind v4 only generates utility classes for class names it sees in
@@ -28,9 +30,11 @@ describe('theme.css', () => {
   });
 
   it('declares dedicated auth gradient tokens for consumer overrides', () => {
-    expect(themeCss).toContain('--auth-gradient-primary: var(--color-brand-500);');
-    expect(themeCss).toContain('--auth-gradient-secondary: var(--color-brand-700);');
-    expect(themeCss).toContain('--auth-gradient-base: var(--color-brand-800);');
+    // theme.css layers on top of base.css, which owns the base layer.
+    expect(themeCss).toMatch(/@import\s+["']\.\/base\.css["']/);
+    expect(baseCss).toContain('--auth-gradient-primary: var(--color-brand-500);');
+    expect(baseCss).toContain('--auth-gradient-secondary: var(--color-brand-700);');
+    expect(baseCss).toContain('--auth-gradient-base: var(--color-brand-800);');
   });
 
   it('neutralizes vaul drawer layer hints after mobile drawers are open', () => {

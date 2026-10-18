@@ -12,6 +12,11 @@ name: Auto-resolve bot threads on merge-up PRs
 #   - Only fires when CI on a same-repo PR finished with `success`
 #   - Only runs on PRs whose head ref matches the merge-up patterns
 #   - Only resolves threads opened by known bot accounts
+#
+# `release/promote-*` is in the list for the same reason `dev` is: the standing
+# release PR that `promote.yml` keeps open carries `dev`'s tree verbatim, so
+# every line in it was already reviewed on its way into `dev`. It is NOT
+# auto-approved — the human approval on that PR is the release decision.
 
 on:
   # `check_suite.completed` is unreliable here: per GitHub docs, check_suite
@@ -86,7 +91,7 @@ jobs:
           fi
 
           case "$HEAD_REF" in
-            dev|changeset-release/*|chore/auto-sync-*)
+            dev|changeset-release/*|chore/auto-sync-*|release/promote-*)
               echo "PR #${PR_NUMBER} head ref '${HEAD_REF}' is a merge-up PR — proceeding."
               ;;
             *)

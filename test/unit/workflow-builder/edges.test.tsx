@@ -31,7 +31,6 @@ const baseEdgeProps = {
 describe('DefaultWorkflowEdge', () => {
   it('renders an SVG path without crashing', () => {
     const { container } = render(
-      // biome-ignore lint/a11y/noSvgWithoutTitle: test scaffold only
       <svg aria-hidden>
         <DefaultWorkflowEdge {...baseEdgeProps} />
       </svg>
@@ -41,7 +40,6 @@ describe('DefaultWorkflowEdge', () => {
 
   it('renders with custom style merged', () => {
     const { container } = render(
-      // biome-ignore lint/a11y/noSvgWithoutTitle: test scaffold only
       <svg aria-hidden>
         <DefaultWorkflowEdge {...baseEdgeProps} style={{ opacity: 0.5 }} />
       </svg>
@@ -51,7 +49,6 @@ describe('DefaultWorkflowEdge', () => {
 
   it('renders with markerEnd', () => {
     const { container } = render(
-      // biome-ignore lint/a11y/noSvgWithoutTitle: test scaffold only
       <svg aria-hidden>
         <DefaultWorkflowEdge {...baseEdgeProps} markerEnd="url(#arrow)" />
       </svg>

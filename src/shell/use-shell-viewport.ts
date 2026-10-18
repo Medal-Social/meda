@@ -12,30 +12,7 @@ const BREAKPOINTS = {
 
 type MatchMedia = (query: string) => MediaQueryList;
 
-/**
- * Optional SSR device-class hint.
- *
- * The server cannot measure the window, so by default server output (and the
- * hydration snapshot) assumes 'desktop' — on phones that means the desktop
- * shell is the first HTML on screen. Apps that can classify the request
- * (Sec-CH-UA-Mobile, User-Agent markers) may supply a coarse band to emit the
- * right chrome from the first byte.
- *
- * Render the hint through the `ShellViewportHintProvider` client component
- * rather than this context directly: React Context providers cannot be
- * rendered from a React Server Component, so an App Router server component —
- * where request headers are available — has to go through a client wrapper.
- *
- *   // app/layout.tsx — server component
- *   <ShellViewportHintProvider value={isPhoneRequest ? 'mobile' : null}>
- *     <AppShell ... />
- *   </ShellViewportHintProvider>
- *
- * The context stays exported for client-side consumers that already own a
- * provider tree (and for tests). The hint feeds ONLY the server/hydration
- * snapshot; matchMedia owns the value from hydration onward, and `null` keeps
- * the desktop-first default.
- */
+/** Optional request-derived band for server rendering and hydration only. */
 export const ShellViewportHintContext = createContext<ShellViewport | null>(null);
 
 function getMatchMedia(): MatchMedia | null {
@@ -53,33 +30,65 @@ function detectViewport(matchMedia: MatchMedia | null = getMatchMedia()): ShellV
   return 'desktop';
 }
 
+// MediaQueryLists captured at subscribe time. The snapshot reads THESE
+// instances (not fresh matchMedia() calls) so a change event and the state it
+// reports come from the same objects — and each snapshot read is a property
+// access instead of five matchMedia() calls. Refreshed on every subscribe so
+// a swapped window.matchMedia (tests, polyfills) is picked up per mount.
+let subscribedMqls: [ShellViewport, MediaQueryList][] | null = null;
+
 function subscribeToViewport(onChange: () => void): () => void {
   const matchMedia = getMatchMedia();
-  if (!matchMedia) return () => {};
-
-  const cleanups = Object.values(BREAKPOINTS).map((query) => {
-    const mql = matchMedia(query);
+  if (!matchMedia) {
+    subscribedMqls = null;
+    return () => {
+      // no matchMedia (SSR/test) - nothing to unsubscribe
+    };
+  }
+  const mqls = (Object.entries(BREAKPOINTS) as [ShellViewport, string][]).map(
+    ([band, query]) => [band, matchMedia(query)] as [ShellViewport, MediaQueryList]
+  );
+  subscribedMqls = mqls;
+  const cleanups = mqls.map(([, mql]) => {
     mql.addEventListener('change', onChange);
     return () => mql.removeEventListener('change', onChange);
   });
-
   return () => {
     for (const cleanup of cleanups) cleanup();
+    // Don't clobber a newer subscriber's registration.
+    if (subscribedMqls === mqls) subscribedMqls = null;
   };
 }
 
-function getViewportSnapshot(): ShellViewport {
+function getClientViewport(): ShellViewport {
+  if (subscribedMqls) {
+    for (const [band, mql] of subscribedMqls) {
+      if (mql.matches) return band;
+    }
+    return 'desktop';
+  }
+  // First render happens before subscribe — detect directly.
   return detectViewport();
 }
 
+/**
+ * The shell's viewport band, resolved SYNCHRONOUSLY on the first client
+ * render.
+ *
+ * The previous implementation seeded `useState('desktop')` and detected the
+ * real band in a post-mount effect. Because effects run after the first
+ * commit, phones mounted the entire desktop shell tree (ShellHeader,
+ * IconRail, ContextRail, RightPanel — plus whatever subscriptions consumers
+ * hang off them) and immediately tore it down for the mobile tree: throwaway
+ * work on the mobile critical path on every load.
+ *
+ * `useSyncExternalStore` reads `matchMedia` during the first client render,
+ * so client-rendered apps commit the correct tree once. Server rendering
+ * uses the optional request-derived hint, otherwise 'desktop'. Hydration uses
+ * that same snapshot before switching to the live viewport. A hint lets an
+ * app send mobile shell HTML before its JavaScript loads.
+ */
 export function useShellViewport(): ShellViewport {
-  // Read matchMedia synchronously through useSyncExternalStore. The previous
-  // useState('desktop') + post-mount effect shape guaranteed at least one
-  // painted desktop frame on phones after hydration; with a sync external
-  // store React reconciles the server snapshot against the live matchMedia
-  // value before the browser paints, so a wrong server guess never reaches
-  // the screen. The server snapshot comes from the optional app-provided
-  // hint and falls back to the historical 'desktop' default.
   const hint = useContext(ShellViewportHintContext);
-  return useSyncExternalStore(subscribeToViewport, getViewportSnapshot, () => hint ?? 'desktop');
+  return useSyncExternalStore(subscribeToViewport, getClientViewport, () => hint ?? 'desktop');
 }

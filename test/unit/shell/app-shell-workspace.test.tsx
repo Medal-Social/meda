@@ -722,3 +722,111 @@ describe('AppShellWorkspace — mobile bottom nav includes AI button when panelV
     expect(screen.getByRole('button', { name: 'AI' })).toBeInTheDocument();
   });
 });
+
+describe('AppShellWorkspace — rightPanel.showToggle', () => {
+  it('shows the header panel toggle by default when panel views exist', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+    const { container } = render(
+      <Provider>
+        <AppShellWorkspace {...config}>
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+    expect(screen.getByRole('button', { name: /right panel/i })).toBeInTheDocument();
+    expect(container.querySelector('[data-meda-panel-mode]')).toBeInTheDocument();
+  });
+
+  it('keeps the panel views but drops the header toggle when showToggle is false', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+    const { container } = render(
+      <Provider>
+        <AppShellWorkspace {...config} rightPanel={{ ...config.rightPanel, showToggle: false }}>
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+    expect(screen.queryByRole('button', { name: /right panel/i })).toBeNull();
+    // The panel itself is still mounted — only the header control is gone.
+    expect(container.querySelector('[data-meda-panel-mode]')).toBeInTheDocument();
+  });
+});
+
+describe('AppShellWorkspace — headerLayout="rail"', () => {
+  it('keeps the split header by default', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+    const { container } = render(
+      <Provider>
+        <AppShellWorkspace {...config}>
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+    expect(container.querySelector('[data-meda-shell-header]')).toHaveAttribute(
+      'data-meda-header-layout',
+      'split'
+    );
+  });
+
+  it('forwards the rail layout and sizes the header column from iconRail.labelVisibility', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('desktop');
+    const { container } = render(
+      <Provider>
+        <AppShellWorkspace
+          {...config}
+          iconRail={{ ...config.iconRail, labelVisibility: 'visible' as const }}
+          headerLayout="rail"
+        >
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+    const header = container.querySelector('[data-meda-shell-header]');
+    expect(header).toHaveAttribute('data-meda-header-layout', 'rail');
+    expect(header?.className).toContain(
+      'grid-cols-[var(--shell-rail-label-width)_minmax(0,1fr)_auto]'
+    );
+    expect(screen.getByRole('button', { name: 'W workspace menu' })).toBeInTheDocument();
+  });
+});
+
+describe('AppShellWorkspace — mobileNav activeId passthrough', () => {
+  it('lights the dock slot by app id even when activeTo points deeper', () => {
+    (useShellViewport as ReturnType<typeof vi.fn>).mockReturnValue('mobile');
+    render(
+      <Provider>
+        <AppShellWorkspace
+          {...config}
+          mobileNav={{
+            dock: [
+              { id: 'home', label: 'Home', icon: Inbox, to: '/home' },
+              { id: 'crm', label: 'CRM', icon: Inbox, to: '/crm/contacts' },
+            ],
+            tree: {
+              groups: [
+                {
+                  id: 'g',
+                  label: 'Workspace',
+                  items: [
+                    {
+                      id: 'crm',
+                      label: 'CRM',
+                      to: '/crm/contacts',
+                      views: [{ id: 'leads', label: 'Leads', to: '/crm/contacts?view=leads' }],
+                    },
+                  ],
+                },
+              ],
+            },
+            activeTo: '/crm/contacts/42',
+            activeId: 'crm',
+          }}
+        >
+          <main aria-label="content">hi</main>
+        </AppShellWorkspace>
+      </Provider>
+    );
+    expect(screen.getByRole('link', { name: 'CRM' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current');
+  });
+});

@@ -1,5 +1,339 @@
 # @medalsocial/meda
 
+## 3.13.0
+
+### Minor Changes
+
+- [#295](https://github.com/Medal-Social/meda/pull/295) [`ccf57f1`](https://github.com/Medal-Social/meda/commit/ccf57f1238e32242890948fa3dd482b85ad0577f) Thanks [@adaadev](https://github.com/adaadev)! - `WhoScreen`: a logged-in parent's list can count its grown-ups too. With `guestParty.adults` and the new optional `who.family.adults` label, the «myself» check row becomes the «Voksne» stepper — «myself» on seat 1, the guest's seats 2 and 3 after it — so a second grown-up a guest picked survives a login, and a parent can bring one. Without the label the check row stays.
+
+## 3.12.0
+
+### Minor Changes
+
+- [#292](https://github.com/Medal-Social/meda/pull/292) [`4aff65d`](https://github.com/Medal-Social/meda/commit/4aff65d680ceaaf2ef071c911dc87567616b5055) Thanks [@adaadev](https://github.com/adaadev)! - Confirmation: the calendar link only forces a download for a `data:` or `blob:` URL. A calendar file the site serves now opens in place (iOS and macOS go straight to «Add to Calendar» instead of saving it to Files), and a link marked `calendarNewTab` (another calendar's page, such as Google Calendar) opens in a new tab. New optional `calendarAlt` draws a second way into a calendar beside the first, with its own `newTab`.
+
+## 3.11.0
+
+### Minor Changes
+
+- [#289](https://github.com/Medal-Social/meda/pull/289) [`0e1144c`](https://github.com/Medal-Social/meda/commit/0e1144ccc6f33307376a3efd598c050f4daa3963) Thanks [@adaadev](https://github.com/adaadev)! - Booking screens, all opt-in:
+  
+  - WhoScreen: `guestParty.adults` draws «Adults» as a stepper beside «Children» (two grown-ups in one booking), with the optional `who.party.lead` line under the heading and `who.party.togetherHint` while there are children and no grown-up.
+  - ServiceScreen: `searchFor(personIndex)` puts a search field over that person's list (a grown-up's long catalogue), with the `service.search*` labels.
+  - Confirmation: `layout="hero"` — the day as a large calendar leaf, a details card (service, stylist, where), calendar and directions as buttons, an optional «before you come» tip, and until when a change is free (`directionsHref`, `freeChangeUntilTs`, `CONFIRMATION_HERO_LABEL_KEYS`).
+  - New `BookingPanel` — the desktop's sticky «Your appointment» side panel: who, service, time, stylist (and «first available»), a switch to anyone else free at that minute, the total, «continue» and the small print.
+  - SummaryBar: while it shows a hint, it no longer also draws the placeholder beside it.
+
+## 3.10.0
+
+### Minor Changes
+
+- [#286](https://github.com/Medal-Social/meda/pull/286) [`7ba92b1`](https://github.com/Medal-Social/meda/commit/7ba92b12b062873b95f4c7a2da47e1d012f04fd1) Thanks [@adaadev](https://github.com/adaadev)! - WhoScreen: `guestParty.startEmpty` starts a guest's party with nobody instead of one child, for a salon where a grown-up booking for themselves is as common as a child. Children go down to 0 and the grown-up's row is a free choice; «next» waits for an answer. Off by default. Also, the grown-up's note («Samtidig, i stolen ved siden av») now only shows while there is a child in the booking.
+
+## 3.9.1
+
+### Patch Changes
+
+- [#283](https://github.com/Medal-Social/meda/pull/283) [`54f3462`](https://github.com/Medal-Social/meda/commit/54f3462aa8428ae559d7debf5da90172a52d7019) Thanks [@adaadev](https://github.com/adaadev)! - TimeScreen: a simultaneous family time («15:00 (Mia hos Ada · Leo hos Bo)») now wraps inside its chip instead of running past a phone screen, with the seating drawn in muted text in the label pack's own order, and the week grid's narrow columns show only the hour (the whole sentence stays the chip's accessible name and tooltip). `TimeChipProps.label` is unchanged — still the whole sentence — and gains optional `richLabel` and `compactLabel` for a custom chip to opt into.
+
+## 3.9.0
+
+### Minor Changes
+
+- [#279](https://github.com/Medal-Social/meda/pull/279) [`b2d7af2`](https://github.com/Medal-Social/meda/commit/b2d7af2b1b853b27fe56dd90eccb03a38daf29df) Thanks [@adaadev](https://github.com/adaadev)! - `StylistScreen` `party.seats` / `party.onSeat`: when a family is seen at once, each person can keep an optional stylist ("who cuts whom"). There is one select per person, offering «first available» and the stylists who do that person's whole visit, minus any stylist already chosen for someone else. Needs the new optional `stylist.party.seatsHeading` and `stylist.party.seat` labels. Without `seats`, the mode note stands alone as before.
+
+## 3.8.0
+
+### Minor Changes
+
+- [#275](https://github.com/Medal-Social/meda/pull/275) [`29e2d0c`](https://github.com/Medal-Social/meda/commit/29e2d0cbf0d7933c3836b6209352658dc38fbfb1) Thanks [@adaadev](https://github.com/adaadev)! - Booking layouts for wide screens, both opt-in:
+  
+  - `TimeScreen` `layout="adaptive"`: on a phone the days, month and weekend note stay together with no gap before the first time; from `md` the days are a column beside the chosen day's times; from `lg` the week is a seven-column grid of times (each day headed with how full it is, folding after eight times, «Ingen ledige» or a family's simultaneous time on an empty day). The grid needs the new optional `time.week.none` and `time.week.more` labels and a strip of at most seven days; without them the columns layout is used.
+  - `StylistScreen` `row`: the phone's avatar row at every width, so a desktop reaches the times without scrolling past every stylist, with the chosen stylist's bio shown under the row.
+  
+  The default layouts are unchanged.
+
+## 3.7.0
+
+### Minor Changes
+
+- [#271](https://github.com/Medal-Social/meda/pull/271) [`79f8ce3`](https://github.com/Medal-Social/meda/commit/79f8ce340e7724bd82267d688e2430a7d8e4115b) Thanks [@adaadev](https://github.com/adaadev)! - `WhoScreen` takes `guestParty`: a guest picks how many children (a stepper, starting at one, so «next» is live from the first frame) and whether they come too (a «me too» row), up to `maxPeople` — «a child and me» in one booking without an account. Each change is a live answer (`advance: false`); the caller's «next» moves on. New opt-in label keys `who.party.children`, `who.party.childrenNote`, `who.party.adult`, `who.party.adultNote`, `who.party.fewer`, `who.party.more`, `who.party.count`. Without the prop the chips are unchanged.
+
+- [#271](https://github.com/Medal-Social/meda/pull/271) [`a58f423`](https://github.com/Medal-Social/meda/commit/a58f4237251a7a36c6888073946c8b6051e17d02) Thanks [@adaadev](https://github.com/adaadev)! - `BookingRecap` (`@medalsocial/meda/booking`): what is about to be booked, for the top of the details step — a calendar leaf for the day, the hours, each person's services and stylist, the total, an «edit» back to the time step, and, when «first available» resolved to one stylist while others are free at the same minute, a one-tap swap. New opt-in label keys (`BookingOptionalLabelKey`): `recap.label`, `recap.time`, `recap.line`, `recap.lineFor`, `recap.anyStylist`, `recap.total`, `recap.edit`, `recap.editLabel`, `recap.alsoFree`, `recap.swapTo`. `details.submit` also fills `{day}` and `{time}`, so the button can name what it books.
+
+- [#271](https://github.com/Medal-Social/meda/pull/271) [`ba23699`](https://github.com/Medal-Social/meda/commit/ba236991fba7ed37f29e5fb6134a4d65fcf69876) Thanks [@adaadev](https://github.com/adaadev)! - `StylistScreen` takes `firstAvailableFaces`: «first available» is drawn as the faces of the first three stylists with a photo who can do the whole basket, instead of its badge, falling back to the badge with fewer than two photos. `edgeFade` fades the right edge of the phone's sideways row, so a cut-off card reads as «more this way». `StylistOption` has an optional `faces`. Both are off unless passed.
+
+- [#271](https://github.com/Medal-Social/meda/pull/271) [`9dd73ae`](https://github.com/Medal-Social/meda/commit/9dd73aedcaf3662ad30338d7e8c62a22b59feee8) Thanks [@adaadev](https://github.com/adaadev)! - `SummaryBar` takes an optional `detail`, a second, smaller line under the summary (e.g. the time and the price), so the part a parent checks is not the part an ellipsis eats on a phone; the bar keeps its fixed height. `hideNextWhenDisabled` draws «next» only while it does something and puts the step's hint in its place (opt-in keys `summary.hint.who`, `summary.hint.service`, `summary.hint.when`), for steps that move on by themselves once answered. New class-name slots `detail` and `hint`.
+
+- [#271](https://github.com/Medal-Social/meda/pull/271) [`268c12a`](https://github.com/Medal-Social/meda/commit/268c12a856954b84732ddf569aa0752d166a21a4) Thanks [@adaadev](https://github.com/adaadev)! - `TimeScreen` can answer «when is the first time?» before a day is picked. `soonest` draws a «free soon» row above the days: the earliest starts across the window as one-tap cards with the day, the time and (through `resolveStylist`) who each is with, booking exactly the slot `onPick` would. `dayFullness` gives each day chip marks for how many starts it has free, or «full» (only for an open day asked for everyone), as a 44 px target; a weekend card shows its surcharge. `DefaultDayChip` takes the new optional `free` / `freeLabel`, and `dayFreeMarks` is exported. New opt-in label keys: `time.soonest.heading`, `time.soonest.pick`, `time.soonest.with`, `time.dayChip.free`, `time.dayChip.freeOne`, `time.dayChip.full`. Both are off unless passed.
+
+## 3.6.1
+
+### Patch Changes
+
+- [#263](https://github.com/Medal-Social/meda/pull/263) [`1076129`](https://github.com/Medal-Social/meda/commit/1076129b8ab6856cd0cab3651f0d738e57ae0753) Thanks [@alioftech](https://github.com/alioftech)! - Booking: in a family, a child's service menu also offers the groups meant for anyone (`ServiceScreenCategory.audience: 'any'`, e.g. an ear piercing) besides `childCategory`, never a grown-ups' group. Categories without `audience` behave as before. A finished person's tab is named «Theo · 7 år, ferdig» through `aria-label`, so Chrome no longer reads a space before the comma.
+
+## 3.6.0
+
+### Minor Changes
+
+- [#254](https://github.com/Medal-Social/meda/pull/254) [`52d99cd`](https://github.com/Medal-Social/meda/commit/52d99cd7cdc0c5d2c4d740276218f04f549bbb68) Thanks [@alioftech](https://github.com/alioftech)! - LoginPanel `emailCollapsed` (Vipps and e-mail as two equal choices) and DetailsScreen `emailReadOnly`.
+  
+  New label keys, which typed label maps must now provide: `login.continueEmail` (LoginPanel) and `details.email.lockedHelp` (DetailsScreen).
+
+## 3.5.0
+
+### Minor Changes
+
+- [#255](https://github.com/Medal-Social/meda/pull/255) [`0e466d4`](https://github.com/Medal-Social/meda/commit/0e466d441646996e0a130a611322a163ef785e5c) Thanks [@alioftech](https://github.com/alioftech)! - Booking: the service step can be multi-select (`ServiceScreen`'s new `selection` prop, which carries its own required `labels: ServiceMultiLabels`) so one person books several services as one visit, and the other screens and the submission (`extraServiceIds`) carry a visit's extra services.
+
+## 3.4.1
+
+### Patch Changes
+
+- [#256](https://github.com/Medal-Social/meda/pull/256) [`e7f118a`](https://github.com/Medal-Social/meda/commit/e7f118a87a5e9a48582438765a775da70165c814) Thanks [@alioftech](https://github.com/alioftech)! - The booking time step shows a week of day chips. Later days in the fetched window are chosen from the month, not from a strip of every open day.
+
+## 3.4.0
+
+### Minor Changes
+
+- [#250](https://github.com/Medal-Social/meda/pull/250) [`fc2b3b3`](https://github.com/Medal-Social/meda/commit/fc2b3b3dc5c0146295491af6e2baf2d48ac53ce4) Thanks [@alioftech](https://github.com/alioftech)! - Booking labels can be a string or an array of strings (`BookingLabel`), and the pack decides where a sentence breaks into text nodes:
+  
+  - A **string** renders as ONE text node once filled, like a template literal. This reverses 3.3.0, which split every filled label at each `{placeholder}`.
+  - A **string array** renders one text node per element, each element filled with the same values: `['Total ', '{total}', ' · ', 'paid at the salon']` is four nodes, the DOM of the sentence written out in JSX. An element that fills to `''` renders nothing.
+  - `joinLabelParts(parts, separator, { pieces })`: a line joined from plain strings (the confirmation card, the portal's booking lines) is one text node; it renders in pieces once one of its labels is an array, and `pieces` forces either.
+  - `labelParts` keeps a string's text runs whole around element holes and an array's elements apart.
+  - `BookingLabels` and every screen's `*Labels` type accept either form for every key. Text-only targets (`aria-label`, placeholders, file names, messages, a value filled into another label, a custom component's `string` prop) read an array joined, through `fillLabel` or the new `labelText`.
+  - `LoginPanel`'s `heading` render prop receives the label as `ReactNode` (its pieces), not a `string`.
+  - New exports: `BookingLabel`, `labelText`, `fillLabelPieces`, `JoinLabelPartsOptions`.
+  
+  A pack that relied on 3.3's automatic split writes those labels as arrays.
+
+## 3.3.0
+
+### Minor Changes
+
+- [#247](https://github.com/Medal-Social/meda/pull/247) [`4e3268b`](https://github.com/Medal-Social/meda/commit/4e3268b81f63728ff4e85d54132ace4c55f8801c) Thanks [@alioftech](https://github.com/alioftech)! - Booking screens now render filled labels as their template pieces: the label split around its `{placeholders}`, one text node per literal run and per value, the same DOM as the sentence written out in JSX. A browser lays text out per text node, so one joined string could land a line's glyphs a sub-pixel away from a JSX-composed original and fail a pixel-exact screenshot. Covers every label a screen renders as children (e.g. `stylist.party.parallelNote.*`, `confirmation.party.total`, `confirmation.serviceFor` / `.when`, `service.duration`, `time.empty.*`, `time.weekend.*`, `manage.card.*`, `upcoming.*`, `childCards.*`, `details.submit`); text-only targets (`aria-label`, file names) keep `fillLabel`. The visible text is unchanged.
+  
+  New, all opt-in:
+  
+  - `renderLabel(template, values)`, `labelParts(template, parts)` and `joinLabelParts(parts, separator)` are exported from `@medalsocial/meda/booking`, for consumers composing their own booking UI the same way.
+  - `StylistScreen` `party.sizeWord`: the party size as the copy spells it («two»), filled into `{sizeWord}` in `stylist.party.parallel.*` / `stylist.party.parallelNote.*` (default: the number), so a pack can keep the word as its own text piece.
+  - `ServiceScreen` `classNames.price` (and `ServiceCardProps.priceClassName`): a slot for the service price.
+  - `StylistScreen` `classNames.nextAvailable` (and `StylistCardProps.nextAvailableClassName`): a slot for the next-opening line.
+  
+  Runtime dependencies are now caret ranges (`@base-ui/react ^1.7.0`, `tailwind-merge ^3.6.0`, and the rest at their current floors), so a consumer's lockfile can dedupe them without overrides.
+
+## 3.2.0
+
+### Minor Changes
+
+- [#245](https://github.com/Medal-Social/meda/pull/245) [`ab4cb78`](https://github.com/Medal-Social/meda/commit/ab4cb7826ad51777eccee67d063cdb1c8db16b42) Thanks [@alioftech](https://github.com/alioftech)! - Add `@medalsocial/meda/booking` (and `@medalsocial/meda/booking/styles.css`): unbranded, presentational booking screens — the wizard steps (`WhoScreen`, `ServiceScreen`, `StylistScreen`, `TimeScreen`, `DetailsScreen`, `SummaryBar`, `Confirmation`, `BookingSkeleton`, `AddChildSheet`), `ManageScreen`, login (`LoginSheet`, `LoginPanel`, `OtpSlots`, `VippsButton`) and portal screens (`PortalShell`, `UpcomingBookings`, `VisitHistory`, `ChildCards`, `RebookCards`, `FamilyEditor`, `ProfileForm`, `DataControls`, `AccountCard`, `PortalUnreachable`, `LogoutButton`, `VippsLinkRow`, `AgeConfirmCard`). Screens are props in / callbacks out, take all copy through a typed `labels` record (`BookingLabels`, `BOOKING_LABEL_KEYS`), format dates and prices through an injected `BookingFormat`, accept per-slot `classNames`, and let card renderers be replaced through `components` (defaults exported). Colours come only from the theme bridge's shadcn variables.
+
+## 3.1.0
+
+### Minor Changes
+
+- [#242](https://github.com/Medal-Social/meda/pull/242) [`625b3f6`](https://github.com/Medal-Social/meda/commit/625b3f69f9b41d66329d93dfa215bed8d4a617ee) Thanks [@alioftech](https://github.com/alioftech)! - Add `Checkbox`, `Field` (`Field.Label`, `Field.Description`, `Field.Error`, `Field.Set`, `Field.Legend`), `Textarea` and `Sheet` primitives to `@medalsocial/meda/primitives` (and the root). `Sheet` is built on the native `<dialog>` element (`showModal()`, inert background, focus return, Escape / backdrop dismissal, scroll lock, `prefers-reduced-motion`) and lays out as a bottom sheet on phones and a centred dialog from `md` up. `Checkbox` is a native `<input type="checkbox">` with an `onCheckedChange` callback.
+
+## 3.0.0
+
+### Major Changes
+
+- [#236](https://github.com/Medal-Social/meda/pull/236) [`fc8e0c6`](https://github.com/Medal-Social/meda/commit/fc8e0c64faeb3d22f8a6d20c301efd51d0728743) Thanks [@alioftech](https://github.com/alioftech)! - Lean entry points for customer sites that render only a few meda surfaces (e.g. booking UI), optional feature peers, and booking primitives.
+  
+  ## Breaking: feature peers are optional — migration
+  
+  `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` and `@xyflow/react` are now **optional** peers, and `three` moved from `dependencies` to an optional peer (next to the already-optional `@react-three/fiber`). npm and pnpm no longer install them automatically, so a consumer that relied on auto-installed peers fails to resolve them after upgrading.
+  
+  Anyone importing the root `@medalsocial/meda`, `@medalsocial/meda/shell`, `/email-builder`, `/kanban`, `/workflow-builder` or `@medalsocial/meda/styles.css` must run:
+  
+  ```bash
+  pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities @xyflow/react
+  ```
+  
+  and, if using the 3D `VoiceOrb` entry (`@medalsocial/meda/voice`), additionally:
+  
+  ```bash
+  pnpm add three @react-three/fiber
+  ```
+  
+  Lean consumers — `@medalsocial/meda/calendar`, `@medalsocial/meda/primitives`, `styles/bridge.css`, `styles/base.css` and the per-feature stylesheets — need nothing.
+  
+  Known consumers that do not list all of these peers and need the migration before bumping: `dispatch`, `medal-monorepo/open/pilot-ui`, `pilot-talk/web`, `medal-labs/Picasso/software/dashboard`, `medal-labs/pr-dashboard`.
+  
+  The unused `@fontsource-variable/geist*` runtime dependencies were dropped; if you `@import` them, list them yourself.
+  
+  `@xyflow/react`'s stylesheet is now vendored into the package (`dist/styles/vendor/xyflow.css`, pinned to the xyflow version meda is built against), so `styles.css` and `workflow-builder/styles.css` compile even without `@xyflow/react` installed.
+  
+  ## Lean stylesheets
+  
+  `@medalsocial/meda/styles.css` still scans every meda component and produces the same CSS as before (~21 KB gzip). New lean entries generate only what you render:
+  
+  - `@medalsocial/meda/styles/base.css` — tokens + Tailwind theme bridge + base layer; no component scan, no xyflow CSS.
+  - `@medalsocial/meda/styles/bridge.css` — the theme bridge only, for sites that bring their own shadcn-style tokens (`--primary`, `--card`, `--muted`, …) so meda parts re-theme to them.
+  - `@medalsocial/meda/calendar/styles.css`, `@medalsocial/meda/primitives/styles.css`, `@medalsocial/meda/workflow-builder/styles.css` — per-feature `@source`. xyflow's CSS lives in the workflow-builder sheet (which `styles.css` still imports).
+  
+  Calendar + primitives on a lean setup adds ~3.6 KB gzip of CSS (bridge) or ~5.2 KB (base), down from ~21 KB. See README "Lean consumer setup".
+  
+  ## New primitives
+  
+  Exported from the root and the new `@medalsocial/meda/primitives` subpath; no new runtime deps, semantic tokens only: `Button` (primary / secondary / ghost / outline, sm / md / lg, `loading`, `render` prop), `Input` (`invalid` → `aria-invalid`), `ToggleGroup` (chip single-select radiogroup or multi-select `aria-pressed` group, roving tabindex) and `Avatar` with the letters-only `getInitials` helper.
+
+## 2.8.1
+
+### Patch Changes
+
+- [#217](https://github.com/Medal-Social/meda/pull/217) [`e42eb45`](https://github.com/Medal-Social/meda/commit/e42eb45089eacdb19b0d50cb94c4534f8f4792a5) Thanks [@adaadev](https://github.com/adaadev)! - Close the five live advisories and take the safe patch upgrades.
+  
+  The existing `sharp` override lifted only to `^0.35.0`, which still permitted
+  the vulnerable 0.35.3 — it is retargeted at `^0.35.4`, the version that fixes
+  GHSA-rgj7-g3m4-5g8c. Three more transitive advisories get overrides, and
+  wrangler moves to 4.130.0 to match the rest of the estate.
+
+- [#225](https://github.com/Medal-Social/meda/pull/225) [`6b1581f`](https://github.com/Medal-Social/meda/commit/6b1581f15fa9250b4fd76925412714d3d0ff41b9) Thanks [@adaadev](https://github.com/adaadev)! - Refresh every dependency to the newest version this package can take. The code this
+  package ships is unchanged — all 467 files in `dist/` are byte-identical before and
+  after — and no export, no type and no `peerDependencies` range moved, so nothing in a
+  consuming app has to change to take this.
+  
+  Three runtime dependencies do move underneath it: `@base-ui/react` 1.7.0 → 1.8.0,
+  `react-resizable-panels` 4.12.4 → 4.13.1 and `tailwind-merge` 3.6.0 → 3.7.0. Those
+  resolve in your install rather than being bundled here, so behaviour inherited from
+  them can differ even though meda's own output does not.
+
+- [#216](https://github.com/Medal-Social/meda/pull/216) [`46aab63`](https://github.com/Medal-Social/meda/commit/46aab631130d46072b4bfca158deace27c54160e) Thanks [@adaadev](https://github.com/adaadev)! - Remove the unused `fast-glob` devDependency added in [#215](https://github.com/Medal-Social/meda/issues/215).
+  
+  `scripts/lint-tokens.mjs` on this branch uses Node's built-in
+  `glob` from `node:fs/promises`; nothing in the repo imports `fast-glob`.
+  The CI wiring from [#215](https://github.com/Medal-Social/meda/issues/215) stays — `pnpm lint:tokens` still runs, and still fails
+  on a violation.
+
+- [#215](https://github.com/Medal-Social/meda/pull/215) [`6a846a7`](https://github.com/Medal-Social/meda/commit/6a846a718257059805c0083ccc8f6f1c67c8ca54) Thanks [@adaadev](https://github.com/adaadev)! - Declare `fast-glob`, which `scripts/lint-tokens.mjs` imports, and run
+  `lint:tokens` in CI.
+  
+  The design-token linter has been dead: `fast-glob` was never declared, so
+  `pnpm lint:tokens` failed with `ERR_MODULE_NOT_FOUND` on a clean install. It
+  went unnoticed because it only ever ran through the `quality` script, and CI
+  runs `lint`, `typecheck`, `check:stories`, `build`, `test:coverage`,
+  `registry:validate` and `size-limit` — never `quality`.
+  
+  No runtime change; devDependency and CI only.
+
+- [#210](https://github.com/Medal-Social/meda/pull/210) [`40b56bd`](https://github.com/Medal-Social/meda/commit/40b56bdb21ccb9d1336d130346d2bcbb484a8730) Thanks [@adaadev](https://github.com/adaadev)! - Dependency security refresh: upgrade all dependencies to latest (vitest 4.1.11 clearing three critical @vitest/browser advisories, vite 8.2.2, storybook 10.5.10, biome 2.5.11, wrangler 4.127.1, changesets 3, size-limit 13, jsdom 30, @testing-library/jest-dom 7, chromatic 18, three 0.185, @base-ui/react 1.7, and more), resolving all 31 open Dependabot alerts (undici, js-yaml, postcss, ws, sharp, esbuild, @babel/core, brace-expansion, vite). The mobile dock brand chip now uses the `--color-brand-600` token instead of a hard-coded hex so it follows consumer themes.
+
+## 2.8.0
+
+### Minor Changes
+
+- [#220](https://github.com/Medal-Social/meda/pull/220) [`d9b2abe`](https://github.com/Medal-Social/meda/commit/d9b2abe43c6c7af28c6a337c9bb8b947411b1c9b) Thanks [@adaadev](https://github.com/adaadev)! - Five additive shell capabilities for header and mobile-nav adopters. Every one
+  is opt-in: a consumer that passes none of the new props renders exactly as
+  before.
+
+  - **`AppShell`/`ShellHeader` `headerLayout?: 'split' | 'rail'`** (default
+    `split`, today's markup). `rail` lays the desktop header out as
+    `[rail column | fill | actions]`: column 1 is exactly the icon rail's width
+    and holds the workspace switcher as a tile on the rail's axis, column 2 is
+    `headerLeading` with `min-w-0` and every remaining pixel, column 3 is
+    `globalActions` plus the panel toggle. No left padding, `pr-4`.
+    `headerCenter` is ignored in this layout. The column width follows the rail's
+    own label mode: `AppShell` forwards `iconRail.labelVisibility` into the new
+    `ShellHeader` prop `railLabelVisibility`. This fixes header section tabs both
+    shifting horizontally with the workspace name and being capped at roughly
+    half the window.
+  - **`data-meda-shell-header`** on the `<header>` in BOTH layouts, with
+    `data-meda-header-layout="split" | "rail"` beside it, so consumers stop
+    selecting the header structurally.
+  - **`WorkspaceSwitcher` `variant?: 'chip' | 'tile'`** (default `chip`) plus
+    `showLabel?: boolean`. The tile is a rail-column button: the mark with the
+    same ring and radius, the workspace name beneath it in the icon-rail label
+    type, and a chevron hung off the mark so the mark stays on the axis.
+    Accessible name is `"<workspace name> workspace menu"`; the dropdown content,
+    keyboard handling and dismiss behaviour are the chip's. Its height is
+    budgeted to 44px — 28px mark + 2px gap + ONE truncated 14px label line, no
+    vertical padding — with `max-h-full` inside an `overflow-hidden` column, so
+    it fits any `--shell-header-height` down to 52px instead of spilling past a
+    64px one. Because that label truncates, and hides below 700px viewport
+    height like every icon-rail label, the tile also renders the rail's
+    `Tooltip` carrying the full workspace name.
+  - **`rightPanel.showToggle?: boolean`** (default `true`) so a consumer can keep
+    its panel views and drop the header toggle, instead of hiding it with CSS.
+  - **`mobileNav.activeId?: string`** — the active app's id. The dock lights on
+    `item.id === activeId` rather than an exact `to` match, so it stays lit on
+    every route inside that app; the workspace sheet opens with that row expanded
+    and scrolled into view, resetting on each open and still collapsible by hand.
+    Without `activeId` both surfaces keep comparing against `activeTo`.
+    **`mobileNav.currentFirst?: boolean`** additionally renders that row first in
+    its group.
+
+  Also newly exported: the `ShellHeaderLayout` and `WorkspaceSwitcherVariant`
+  types, and the `ShellHeaderProps` / `WorkspaceSwitcherProps` interfaces.
+
+  Two narrow fixes to the existing mobile dock come along with `activeId`, because
+  that prop is what finally makes a branded slot reachable as the active one:
+  an `emphasis: 'brand'` slot now keeps its brand disc **and** shows an active
+  treatment (ring plus a primary label) instead of being forced to the muted tone
+  by the brand branch — previously it could carry `aria-current="page"` with no
+  visible state at all. In the `pill` variant the glyph inside the brand disc also
+  stops overriding the disc's own `text-white` with `text-muted-foreground`, which
+  had been painting a grey icon on the purple circle.
+
+## 2.7.2
+
+### Patch Changes
+
+- [#211](https://github.com/Medal-Social/meda/pull/211) [`7e8b9fb`](https://github.com/Medal-Social/meda/commit/7e8b9fb58af32de34552f36d3fed17e20edc7a7a) Thanks [@adaadev](https://github.com/adaadev)! - `cn` no longer imports `clsx` at runtime — the class-value flattener is inlined
+  instead. `clsx` remains a dependency for its `ClassValue` type, which is part of
+  `cn`'s public signature; `import type` is erased at compile time. No API or
+  behaviour change.
+
+  Why a twenty-line inline is worth it: `clsx` is also a dependency of `recharts`,
+  so a bundler that keeps the chart vendor graph in one chunk puts the single
+  shared `clsx` module in **that** chunk. Every eager importer of `cn` — which is
+  nearly every component here — then hard-depends on the whole chart bundle, even
+  on surfaces that render no chart.
+
+  Measured in the Medal Social web app (2026-09-06), same commit, only this file
+  changed:
+
+  |        | chunks in the `/login` server closure | bytes     | chart chunk reachable          |
+  | ------ | ------------------------------------- | --------- | ------------------------------ |
+  | before | 165                                   | 4,758,902 | yes (392 kB `vendor-recharts`) |
+  | after  | 164                                   | 4,357,355 | no                             |
+
+  That is **−401,547 bytes (−8.4%)** off the login server closure, and the chart
+  vendor chunk drops out of the first-request graph entirely. The edge was a
+  single `import { x }` — `clsx` — from the shell's `cn`.
+
+  Naming `clsx` into another manual chunk was tried first and does **not** work:
+  Rolldown honours the assignment (verified by probing the `manualChunks` return)
+  but still emits `clsx` inside the chart chunk, byte-identically, because the
+  recharts CommonJS-interop group is kept cohesive. Removing the import is the
+  only reliable fix.
+
+  The reimplementation is pinned to the implementation it replaced by an
+  equivalence test over nested arrays, dictionaries, falsy values, numbers,
+  bigints and tailwind-conflict cases, so any drift in the flattener fails the
+  suite rather than silently changing class output.
+
+## 2.7.1
+
+### Patch Changes
+
+- [#206](https://github.com/Medal-Social/meda/pull/206) [`e218be4`](https://github.com/Medal-Social/meda/commit/e218be4921f03eb0dff03c467d1c245c530f040a) Thanks [@adaadev](https://github.com/adaadev)! - Shell perceived-speed fixes from the Medal Social app-shell audit (2026-08-30):
+
+  - `useShellViewport` now resolves the viewport band synchronously on the first
+    client render via `useSyncExternalStore` (matchMedia as the store, 'desktop'
+    as the server snapshot). Previously the hook seeded `useState('desktop')`
+    and corrected itself in a post-mount effect, so phones mounted the full
+    desktop shell tree (header, rails, right panel — and whatever subscriptions
+    consumers hang off them) and immediately tore it down: throwaway work on the
+    mobile critical path on every load. SSR consumers keep the exact previous
+    behavior via the server snapshot.
+
+  - `AppShellWorkspace` mobile scroll reserve reduced from 80px to 64px + safe
+    area, matching the bar-variant dock's intrinsic height — the old value left
+    16px of permanently unreachable space at the bottom of every mobile surface.
+
 ## 2.7.0
 
 ### Minor Changes

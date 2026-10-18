@@ -1,0 +1,10 @@
+/* @medalsocial/meda/booking/styles.css
+ *
+ * Generates only the Tailwind utilities used by `@medalsocial/meda/booking`
+ * (the booking screens). The screens are built on meda primitives, so import
+ * `@medalsocial/meda/primitives/styles.css` too. Requires the theme bridge:
+ * import `@medalsocial/meda/styles/bridge.css` (your own shadcn tokens) or
+ * `@medalsocial/meda/styles/base.css` (meda tokens) once, before this file.
+ * Paths resolve relative to dist/styles/.
+ */
+@source "../booking/**/*.js";

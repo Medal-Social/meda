@@ -15,6 +15,7 @@ import type {
   AppShellMobileNavConfig,
   AppShellRightPanelConfig,
   AppShellWorkspaceConfig,
+  ShellHeaderLayout,
   ShellMainLayout,
 } from './types.js';
 
@@ -51,14 +52,24 @@ export type AppShellProps = AppShellBaseProps &
         globalActions?: ReactNode;
         /**
          * Optional center-region header content. Replaces the default
-         * application tabs when provided.
+         * application tabs when provided. Ignored when
+         * `headerLayout="rail"` — that layout has no centre column.
          */
         headerCenter?: ReactNode;
         /**
          * Optional leading content rendered in the LEFT header region immediately
          * after the workspace switcher. On mobile, surfaced inside the menu drawer.
+         * Under `headerLayout="rail"` it owns the header's whole fill column.
          */
         headerLeading?: ReactNode;
+        /**
+         * Desktop header grid. `split` (the default) is the pre-2.8 layout,
+         * byte-for-byte unchanged. `rail` switches to
+         * `[rail column | fill | actions]`: the workspace switcher renders as a
+         * tile the width of the icon rail, and `headerLeading` gets every
+         * remaining pixel. See `ShellHeaderLayout`.
+         */
+        headerLayout?: ShellHeaderLayout;
         /**
          * Optional chrome-level content rendered below the header and above
          * the workspace rail row.
@@ -125,6 +136,7 @@ export function AppShell(props: AppShellProps) {
           globalActions={props.globalActions}
           headerCenter={props.headerCenter}
           headerLeading={props.headerLeading}
+          headerLayout={props.headerLayout}
           banners={props.banners}
           mainLayout={props.mainLayout}
           mainClassName={props.mainClassName}

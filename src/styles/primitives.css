@@ -1,0 +1,10 @@
+/* @medalsocial/meda/primitives/styles.css
+ *
+ * Generates only the Tailwind utilities used by the foundation primitives
+ * (`@medalsocial/meda/primitives`). MarkdownView is excluded — it ships from
+ * its own subpath with optional peers. Requires the theme bridge: import
+ * `@medalsocial/meda/styles/base.css` or `.../styles/bridge.css` once,
+ * before this file. Paths resolve relative to dist/styles/.
+ */
+@source "../primitives/*.js";
+@source not "../primitives/markdown-view*.js";

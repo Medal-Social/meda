@@ -58,6 +58,19 @@ export interface PanelView {
 
 export type PanelMode = 'closed' | 'panel' | 'expanded' | 'fullscreen';
 export type ShellMainLayout = 'workspace' | 'centered' | 'fullbleed';
+/**
+ * Desktop header grid.
+ *
+ * - `split` (default, unchanged) — the workspace switcher and `headerLeading`
+ *   share the LEFT region; `headerCenter`, when supplied, owns the middle and
+ *   the leading region is capped at roughly half the window.
+ * - `rail` — a three-column grid `[rail column | fill | actions]`. Column 1 is
+ *   exactly as wide as the icon rail below it and holds the workspace switcher
+ *   in its `tile` variant; column 2 is `headerLeading` and gets ALL remaining
+ *   width; column 3 is `globalActions` (plus the panel toggle). `headerCenter`
+ *   is ignored in this layout.
+ */
+export type ShellHeaderLayout = 'split' | 'rail';
 export type ShellViewport = 'mobile' | 'tablet' | 'desktop' | 'wide' | 'ultrawide';
 export type ContextRailHeader = 'auto' | 'visible' | 'hidden';
 export type ContextRailScroll = 'auto' | 'none';
@@ -149,6 +162,23 @@ export interface AppShellMobileNavConfig {
   tree: MobileNavTree;
   /** The `to` of the currently-active row, for highlighting. */
   activeTo?: string;
+  /**
+   * The `id` of the currently-active APP (a `dock` item id and/or a
+   * `tree` row id). When set it wins over `activeTo` for:
+   *
+   * - the dock — a slot lights when `item.id === activeId`, so the dock stays
+   *   lit on every route inside that app instead of only on its first tab;
+   * - the workspace sheet — that row is the one expanded and scrolled into
+   *   view when the sheet opens.
+   *
+   * Omit it to keep the pre-2.8 behaviour (both derive from `activeTo`).
+   */
+  activeId?: string;
+  /**
+   * Render the current row (see `activeId` / `activeTo`) first inside its
+   * group in the workspace sheet. Defaults to `false` — the tree order.
+   */
+  currentFirst?: boolean;
   /** Render dock/sheet targets as router links (else plain `<a>`). */
   renderLink?: (args: MobileNavLinkArgs) => ReactNode;
   /**
@@ -224,6 +254,14 @@ export interface AppShellContextRailConfig {
 export interface AppShellRightPanelConfig {
   panelViews: PanelView[];
   defaultView?: string;
+  /**
+   * Whether the header renders its `PanelToggle`. Defaults to `true`, i.e. the
+   * toggle shows whenever at least one panel view is registered (the pre-2.8
+   * behaviour). Set `false` to keep the panel views — and every other way of
+   * opening them, such as `useMedaShell().panel.focus(id)` or a command — while
+   * dropping the header control.
+   */
+  showToggle?: boolean;
 }
 
 /**

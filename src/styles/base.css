@@ -1,0 +1,40 @@
+/* @medalsocial/meda/styles/base.css
+ *
+ * Lean foundation for consumers that render only a few meda surfaces:
+ * canonical design tokens + the Tailwind theme bridge + the base layer.
+ *
+ * Deliberately does NOT `@source` meda's component output and does NOT pull
+ * in `@xyflow/react`'s stylesheet. Pair it with the per-feature stylesheets
+ * for the surfaces you render, e.g.
+ *
+ *   @import "tailwindcss";
+ *   @import "@medalsocial/meda/styles/base.css";
+ *   @import "@medalsocial/meda/primitives/styles.css";
+ *   @import "@medalsocial/meda/calendar/styles.css";
+ *
+ * `@medalsocial/meda/styles.css` (theme.css) remains the batteries-included
+ * entry: base + every feature, including workflow-builder.
+ */
+
+@import "./tokens.css";
+@import "./bridge.css";
+
+@theme inline {
+  /* Font families — Geist + Geist Mono only (no Inter) */
+  --font-sans: var(--font-family-sans);
+  --font-mono: var(--font-family-mono);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --auth-gradient-primary: var(--color-brand-500);
+    --auth-gradient-secondary: var(--color-brand-700);
+    --auth-gradient-base: var(--color-brand-800);
+  }
+
+  .dark,
+  [data-theme="dark"] {
+    color-scheme: dark;
+  }
+}

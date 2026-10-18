@@ -12,6 +12,123 @@ pnpm add @medalsocial/meda lucide-react
 
 Peer deps: `react >= 19`, `react-dom >= 19`, and `lucide-react`.
 
+Feature peers are **optional** — install them only for the entry points that use
+them (package managers no longer auto-install them):
+
+| Peer | Needed by |
+| --- | --- |
+| `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` | `@medalsocial/meda` (root barrel), `/shell`, `/kanban`, `/email-builder` |
+| `@xyflow/react` | `@medalsocial/meda` (root barrel), `/workflow-builder`. (Its stylesheet is vendored into `styles.css` / `workflow-builder/styles.css`, so the CSS compiles without the package.) |
+| `three`, `@react-three/fiber` | `/voice` (`VoiceOrb`) |
+| `react-markdown`, `remark-gfm`, `rehype-highlight` | `/markdown-view` |
+| `next-themes` | `NextThemesAdapter` / `themeAdapter="next-themes"` in `/shell` |
+
+```bash
+# Full Medal app (root barrel / shell):
+pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities @xyflow/react
+```
+
+Lean surfaces such as `@medalsocial/meda/calendar`, `@medalsocial/meda/booking` and
+`@medalsocial/meda/primitives` need none of them. Fonts are not bundled either:
+the tokens name `Geist` / `Geist Mono`, so load them yourself (for example
+`@fontsource-variable/geist` + `@fontsource-variable/geist-mono`, or
+`next/font`).
+
+## Upgrading to 3.0
+
+3.0 makes the feature peers **optional**, so npm and pnpm no longer install them
+for you. Nothing else in the API changed.
+
+**If you import any of** the root `@medalsocial/meda`, `@medalsocial/meda/shell`,
+`/email-builder`, `/kanban`, `/workflow-builder`, or `@medalsocial/meda/styles.css`,
+add the peers to your own `package.json`:
+
+```bash
+pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities @xyflow/react
+```
+
+**If you render the 3D `VoiceOrb`** (`@medalsocial/meda/voice`), also add:
+
+```bash
+pnpm add three @react-three/fiber
+```
+
+`three` used to be a regular dependency of meda; it is now an optional peer.
+The `@fontsource-variable/geist*` packages are no longer installed by meda
+either — if you `@import` them, list them yourself.
+
+**Lean consumers need nothing:** `@medalsocial/meda/calendar`,
+`@medalsocial/meda/primitives`, `styles/bridge.css`, `styles/base.css` and the
+per-feature stylesheets never reach an optional peer (see
+[Lean consumer setup](#lean-consumer-setup)).
+
+## Booking screens (`@medalsocial/meda/booking`)
+
+Unbranded, presentational screens for a customer booking flow: the wizard steps
+(`WhoScreen`, `ServiceScreen`, `StylistScreen`, `TimeScreen`, `DetailsScreen`,
+`SummaryBar`, `Confirmation`, `BookingSkeleton`, `AddChildSheet`), `ManageScreen`,
+login (`LoginSheet`, `LoginPanel`, `OtpSlots`, `VippsButton`) and the customer
+portal (`PortalShell`, `UpcomingBookings`, `VisitHistory`, `ChildCards`,
+`RebookCards`, `FamilyEditor`, `ProfileForm`, `DataControls`, `AccountCard`,
+`PortalUnreachable`, …).
+
+They are **props in, callbacks out**: nothing fetches, routes or touches storage.
+The data is plain structural shapes (`BookingServiceDto`, `WizardState`, …), every
+date and price goes through the `format` prop (`BookingFormat`: the business's
+clock, money, phone and name formatting), and every word through `labels` — meda
+ships no default language and no brand. Override, cheapest first:
+
+1. **CSS variables** — the shadcn tokens the bridge maps (`--primary`, `--card`,
+   `--muted`, `--border`, `--ring`, `--radius`, …). Colours come from nowhere else.
+2. **`labels`** — a flat record (`'who.heading'`, …); `BookingLabels` is the full set
+   and `BOOKING_LABEL_KEYS` lists it. `{placeholders}` are filled by the screen. A
+   value is a `BookingLabel`: a **string** renders as one text node once filled (like
+   a template literal), a **string array** renders one text node per element, each
+   element filled with the same values (see below).
+3. **`classNames`** — per documented slot (`root`, `card`, `cardSelected`, `chip`, …),
+   merged after the defaults so an override wins.
+4. **`components`** — card renderers (`ServiceCard`, `StylistCard`, `TimeChip`,
+   `DayChip`, `PersonCard`, …). The defaults are exported (`DefaultServiceCard`, …)
+   so an override can wrap them.
+
+### Where a sentence breaks into text nodes
+
+A browser lays text out per DOM text node, so the same sentence split differently can
+land its later glyphs a sub-pixel apart. The pack decides; a screen never splits a
+string on its own:
+
+```ts
+// One text node: «Total 840 kr · paid at the salon».
+const asOneNode = {
+  'confirmation.party.total': 'Total {total} · paid at the salon',
+} satisfies Partial<BookingLabels>;
+
+// Four text nodes, the DOM of `Total {total}{' · '}paid at the salon` in JSX.
+const asPieces = {
+  'confirmation.party.total': ['Total ', '{total}', ' · ', 'paid at the salon'],
+} satisfies Partial<BookingLabels>;
+```
+
+- An element that fills to `''` renders nothing; a label that fills to nothing renders
+  nothing at all.
+- Lines joined from several parts (the confirmation card's `service · stylist · when ·
+  price`, the portal's booking lines) are one text node while every part is a string,
+  and in pieces (each part and separator its own node) once one of their labels is an
+  array. `joinLabelParts(parts, separator, { pieces })` forces either.
+- Text-only targets — `aria-label`, `placeholder`, file names, error and status
+  messages, live-region announcements, a value filled into another label, and a custom
+  component's `string` prop — read the label flattened (`fillLabel`, `labelText`).
+- Helpers, for UI composed around the screens: `renderLabel(label, values)` (element
+  children), `fillLabel(label, values)` (text), `labelParts(label, { hole: <el/> })`
+  (element holes), `fillLabelPieces`, `labelText`, `joinLabelParts`.
+
+```css
+@import 'tailwindcss';
+@import '@medalsocial/meda/styles/bridge.css';      /* your own shadcn tokens */
+@import '@medalsocial/meda/primitives/styles.css';
+@import '@medalsocial/meda/booking/styles.css';
+```
+
 ## Tailwind CSS v4 setup
 
 Meda ships a `styles.css` with its design tokens. Import it once in your entry stylesheet or entry script:
@@ -41,6 +158,50 @@ Avoid placing token overrides before the Meda import; `tokens.css` defines the p
 
 @import '@medalsocial/meda/styles.css';
 ```
+
+### Lean consumer setup
+
+`styles.css` is batteries-included: it scans **every** meda component so
+Tailwind generates all of their utilities (~22 KB gzip of CSS), and it pulls in
+the `@xyflow/react` stylesheet. That is right for full Medal apps; it is
+overkill for a marketing or customer site that renders a calendar and a few
+primitives. Use the lean entries instead — each feature stylesheet generates
+only the utilities its own compiled output uses:
+
+```css
+@import 'tailwindcss';
+
+/* 1. Foundation — pick ONE */
+@import '@medalsocial/meda/styles/base.css';   /* meda tokens + theme bridge + base layer */
+/* @import '@medalsocial/meda/styles/bridge.css'; */ /* theme bridge only: bring your own tokens */
+
+/* 2. Only the surfaces you render */
+@import '@medalsocial/meda/primitives/styles.css';
+@import '@medalsocial/meda/calendar/styles.css';
+```
+
+| Entry | Contains |
+| --- | --- |
+| `styles.css` | `styles/base.css` + every feature (full component scan + xyflow CSS). Unchanged for existing consumers. |
+| `styles/base.css` | `tokens.css` + `bridge.css` + the `color-scheme` base layer + Geist font mapping. No component scan, no xyflow. |
+| `styles/bridge.css` | `@custom-variant dark` + the `@theme inline` mappings (`bg-primary`, `text-muted-foreground`, `bg-brand-500`, ...). No token values, no fonts. |
+| `styles/tokens.css` | Raw CSS custom properties only. |
+| `primitives/styles.css` | Utilities for `@medalsocial/meda/primitives` (Button, Input, Textarea, Checkbox, Field, Sheet, ToggleGroup, Avatar, Card, Skeleton, StatusPill, EmptyState, FilterRail; not MarkdownView). |
+| `calendar/styles.css` | Utilities for `@medalsocial/meda/calendar`. |
+| `booking/styles.css` | Utilities for `@medalsocial/meda/booking`. Import `primitives/styles.css` too — the screens are built on the primitives. |
+| `workflow-builder/styles.css` | `@xyflow/react`'s stylesheet + utilities for `@medalsocial/meda/workflow-builder`. The only lean entry that ships xyflow CSS. |
+
+Feature stylesheets never include the foundation, so importing several of them
+does not duplicate tokens — import exactly one foundation first. Never combine
+the lean entries with `styles.css` (it already contains all of them).
+
+**Bring your own tokens.** meda components use shadcn-style semantic tokens
+(`--background`, `--foreground`, `--primary`, `--primary-foreground`, `--card`,
+`--muted`, `--muted-foreground`, `--accent`, `--border`, `--input`, `--ring`,
+`--destructive`, ...). A site that already defines those names can import
+`styles/bridge.css` instead of `styles/base.css`, and meda parts re-theme to the
+site's palette automatically. `bridge.css` does not map `--font-sans`, so the
+site's own font stack is kept.
 
 ## Usage
 
@@ -107,6 +268,62 @@ Workspace shells also expose chrome-level composition slots:
 </AppShell>
 ```
 
+### Rail header (`headerLayout="rail"`)
+
+By default the desktop header is a `split` grid: the workspace switcher and `headerLeading` share
+the left region, and `headerCenter` owns the middle. Because the switcher is as wide as the
+workspace name, the leading region both moves per workspace and never gets more than about half
+the window. `headerLayout="rail"` swaps in a three-column grid instead — rail column · fill ·
+actions:
+
+```tsx
+<AppShell
+  variant="workspace"
+  headerLayout="rail"
+  iconRail={{ mainItems, labelVisibility: 'visible' }}
+  headerLeading={<SectionTabs />}          // owns the whole fill column
+  // Keep the panel views, drop the header's toggle:
+  rightPanel={{ panelViews, showToggle: false }}
+  globalActions={<NewButton />}
+>
+  {children}
+</AppShell>
+```
+
+- Column 1 is exactly the icon rail's width (`--shell-rail-label-width` when
+  `iconRail.labelVisibility` is `visible`, `--shell-rail-width` otherwise) and holds the workspace
+  switcher in its `tile` variant: the mark centred on the rail's axis with the workspace name
+  beneath it, in the icon-rail label type. The dropdown is the chip's, unchanged.
+- Column 2 is `headerLeading`, `min-w-0`, and gets every remaining pixel.
+- Column 3 is `globalActions` plus the panel toggle.
+- `headerCenter` is **ignored** in this layout — there is no centre column.
+
+The tile is metered to **44px** — a 28px mark, a 2px gap and ONE 14px label line, with no vertical
+padding — and carries `max-h-full` inside an `overflow-hidden` column. So it fits whatever you set
+`--shell-header-height` to, down to 52px (the web app runs 52px under its desktop window-tab
+strip), and can never paint past the header:
+
+```css
+/* a tighter header — the tile follows it */
+:root { --shell-header-height: 52px; }
+```
+
+Because the label is truncated to one line — and hidden entirely below 700px viewport height, the
+same tier at which every icon-rail label hides — the full workspace name is always recoverable two
+other ways: the tile's tooltip, and its accessible name (`"<workspace> workspace menu"`).
+
+Both layouts put `data-meda-shell-header` on the `<header>` (with
+`data-meda-header-layout="split" | "rail"`), so consumer CSS and tests can target the header
+without depending on its structure.
+
+### Mobile nav: light by app
+
+`mobileNav.activeTo` marks the exact address. Pass `mobileNav.activeId` (the active APP's id) as
+well and the dock lights whenever `item.id === activeId`, so it stays lit on every route inside
+that app rather than only on its first tab; the workspace sheet then opens with that row expanded
+and scrolled into view. `mobileNav.currentFirst` additionally hoists that row to the top of its
+group. Omit `activeId` and both surfaces keep comparing against `activeTo` as before.
+
 `workspace.menuItems`, `workspace.menuFooter`, and the theme toggle are available from the mobile Menu drawer. Use `mainLayout`/`mainClassName` when a workspace shell needs the same mobile chrome but a custom main scroll region, such as a full-bleed marketing page. `useCommands()` works from workspace descendants without manually mounting `CommandPalette`; lower-level primitive compositions can still mount `CommandPalette` directly.
 
 `ContextRail` is usable for both navigation rails and custom rendered rails. Navigation rails show Meda's label header by default. Custom rendered rails hide the automatic visible header by default so consumers can render their own heading without duplication. Rail bodies scroll vertically by default; use `contextRail={{ header: "visible" }}` or `contextRail={{ scroll: "none" }}` when you need explicit control.
@@ -163,7 +380,9 @@ See the [demo app](./demo) for a live playground.
 - `@medalsocial/meda/recipes/next` — copyable Next.js adoption recipe metadata
 - `@medalsocial/meda/theme` — app-scoped token bridge helpers
 - `@medalsocial/meda/marketing` — marketing sections and campaign blocks
-- `@medalsocial/meda/styles.css` — design tokens + base styles
+- `@medalsocial/meda/primitives` — foundation primitives (`Button`, `Input`, `ToggleGroup`, `Avatar` + `getInitials`, `Card`, `Skeleton`, `StatusPill`, `EmptyState`, `FilterRail`); also re-exported from the root
+- `@medalsocial/meda/styles.css` — design tokens + base styles + every component's utilities
+- `@medalsocial/meda/styles/base.css`, `@medalsocial/meda/styles/bridge.css`, `@medalsocial/meda/<feature>/styles.css` — lean stylesheet entries (see [Lean consumer setup](#lean-consumer-setup))
 
 ## Alternative: shadcn registry
 
@@ -216,7 +435,15 @@ not committed to this repository.
 
 ## Release
 
-Changesets + GitHub Actions (OIDC trusted publishing). Add a changeset with `pnpm changeset`, merge to the release branch, and the `Release` workflow handles npm publish with provenance.
+Changesets + GitHub Actions (OIDC trusted publishing). Add a changeset with
+`pnpm changeset` and merge into `dev`; the version bump lands on `dev` by itself, and a
+standing `release: promote dev → prod` pull request is kept open for you. **Approving
+that PR is the release** — it merges itself and publishes to npm with provenance.
+
+Need a build before then? Run the `Release` workflow with `mode: snapshot` for a
+throwaway prerelease under its own dist-tag.
+
+Full flow, hotfixes and failure handling: [CONTRIBUTING.md → Releasing](./CONTRIBUTING.md#releasing).
 
 ## License
 
