@@ -62,8 +62,8 @@ describe('Sheet', () => {
         <Sheet.Content>
           <Sheet.Title>Code</Sheet.Title>
           <button type="button">First</button>
-          {/* biome-ignore lint/a11y/noAutofocus: exercising the autofocus path */}
-          <input aria-label="Code" autoFocus />
+          {/* Exercise the native attribute; React autoFocus only invokes focus(). */}
+          <input aria-label="Code" ref={(element) => element?.setAttribute('autofocus', '')} />
         </Sheet.Content>
       </Sheet>
     );
@@ -256,6 +256,8 @@ describe('Sheet', () => {
       this.removeAttribute('open');
     });
     const proto = HTMLDialogElement.prototype as unknown as Record<string, unknown>;
+    const originalShowModal = Object.getOwnPropertyDescriptor(proto, 'showModal');
+    const originalClose = Object.getOwnPropertyDescriptor(proto, 'close');
     proto.showModal = showModal;
     proto.close = close;
     try {
@@ -267,6 +269,8 @@ describe('Sheet', () => {
     } finally {
       delete proto.showModal;
       delete proto.close;
+      if (originalShowModal) Object.defineProperty(proto, 'showModal', originalShowModal);
+      if (originalClose) Object.defineProperty(proto, 'close', originalClose);
     }
   });
 
