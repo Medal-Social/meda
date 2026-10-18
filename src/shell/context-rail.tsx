@@ -233,12 +233,10 @@ export function ContextRail({
     ctx.contextRail.setWidth(w);
   };
 
-  // Only animate width during collapse/expand toggles, not during manual
-  // pointer drag on the ResizeHandle. displayWidth is non-null only while
-  // the user is mid-drag — using it as the drag signal suppresses the
-  // transition then so the rail snaps to the cursor instead of lagging
-  // behind it.
-  const isDragging = displayWidth !== null;
+  // The rail never animates its width. Collapse/expand is mostly ⌘B, a
+  // keyboard action used many times a day, and a width transition re-wraps
+  // the whole main column on every frame. It snaps on the keyboard, on a
+  // click and while dragging.
   return (
     <aside
       id={railId}
@@ -246,7 +244,6 @@ export function ContextRail({
       aria-label={module.label}
       className={cn(
         'group/rail relative h-full shrink-0 bg-shell-context',
-        !isDragging && 'transition-[width] duration-200 ease-in-out motion-reduce:transition-none',
         collapsed && 'w-0',
         className
       )}
