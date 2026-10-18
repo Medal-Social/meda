@@ -227,9 +227,11 @@ export function RightPanel({
     <aside
       data-meda-panel-mode={mode}
       aria-hidden={mode === 'closed' ? 'true' : undefined}
+      // No width transition: ⌘I / ⌘E are keyboard actions used many times a
+      // day, and an animated width re-wraps the main column every frame (and
+      // lags behind the cursor while resizing). The panel snaps.
       className={cn(
         'relative h-full shrink-0 overflow-hidden border-l border-shell-border bg-shell-panel',
-        'transition-[width] ease-[var(--motion-ease)] duration-[var(--motion-panel)]',
         mode === 'fullscreen' && 'fixed inset-0 h-screen w-screen border-none',
         zIndexClass,
         className

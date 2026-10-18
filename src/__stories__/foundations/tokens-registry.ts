@@ -119,7 +119,12 @@ export const motionTokens: { name: string; duration: string; cssVar: string; usa
     cssVar: '--motion-default',
     usage: 'Standard transitions.',
   },
-  { name: 'panel', duration: '240ms', cssVar: '--motion-panel', usage: 'Panel open and close.' },
+  {
+    name: 'panel',
+    duration: '240ms',
+    cssVar: '--motion-panel',
+    usage: 'Unused by the shell panels, which snap; kept for API compatibility.',
+  },
   {
     name: 'fullscreen',
     duration: '280ms',
