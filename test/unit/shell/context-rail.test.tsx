@@ -742,3 +742,34 @@ describe('ContextRail — resize handle no-op when not dragging', () => {
     expect(aside).toHaveStyle({ width: '260px' });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Motion: ⌘B is a keyboard action used many times a day. Animating `width`
+// re-wraps the whole main column every frame, so the rail snaps instead.
+// ---------------------------------------------------------------------------
+
+describe('ContextRail — no width animation', () => {
+  it('has no width transition while expanded', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+    const aside = screen.getByRole('complementary', { name: 'Mail' });
+    expect(aside.className).not.toContain('transition-[width]');
+    expect(aside.className).not.toMatch(/(^|\s)duration-\d/);
+    expect(aside.className).not.toContain('ease-in-out');
+  });
+
+  it('has no width transition after collapsing', () => {
+    render(
+      <Wrapper>
+        <ContextRail appId="mail" module={MODULE} />
+      </Wrapper>
+    );
+    const aside = screen.getByRole('complementary', { name: 'Mail' });
+    fireEvent.click(screen.getByTestId('context-rail-toggle'));
+    expect(aside).toHaveStyle({ width: '0px' });
+    expect(aside.className).not.toContain('transition-[width]');
+  });
+});
