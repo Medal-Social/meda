@@ -1,5 +1,5 @@
 'use client';
-import { useSyncExternalStore } from 'react';
+import { createContext, useContext, useSyncExternalStore } from 'react';
 import type { ShellViewport } from './types.js';
 
 const BREAKPOINTS = {
@@ -11,6 +11,9 @@ const BREAKPOINTS = {
 } as const;
 
 type MatchMedia = (query: string) => MediaQueryList;
+
+/** Optional request-derived band for server rendering and hydration only. */
+export const ShellViewportHintContext = createContext<ShellViewport | null>(null);
 
 function getMatchMedia(): MatchMedia | null {
   /* v8 ignore next — SSR guard: window is always defined in jsdom test env */
@@ -67,7 +70,6 @@ function getClientViewport(): ShellViewport {
   // First render happens before subscribe — detect directly.
   return detectViewport();
 }
-const getServerViewport = (): ShellViewport => 'desktop';
 
 /**
  * The shell's viewport band, resolved SYNCHRONOUSLY on the first client
@@ -82,10 +84,11 @@ const getServerViewport = (): ShellViewport => 'desktop';
  *
  * `useSyncExternalStore` reads `matchMedia` during the first client render,
  * so client-rendered apps commit the correct tree once. Server rendering
- * still returns 'desktop' via the server snapshot, and hydration stays
- * mismatch-safe (React uses the server snapshot while hydrating, then
- * re-reads — SSR consumers keep exactly the old behavior).
+ * uses the optional request-derived hint, otherwise 'desktop'. Hydration uses
+ * that same snapshot before switching to the live viewport. A hint lets an
+ * app send mobile shell HTML before its JavaScript loads.
  */
 export function useShellViewport(): ShellViewport {
-  return useSyncExternalStore(subscribeToViewport, getClientViewport, getServerViewport);
+  const hint = useContext(ShellViewportHintContext);
+  return useSyncExternalStore(subscribeToViewport, getClientViewport, () => hint ?? 'desktop');
 }

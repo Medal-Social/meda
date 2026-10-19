@@ -1,6 +1,12 @@
 import { act, renderHook } from '@testing-library/react';
+import { createElement, type ReactNode } from 'react';
+import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { useShellViewport } from '../../../src/shell/use-shell-viewport.js';
+import { ShellViewportHintProvider } from '../../../src/shell/shell-viewport-hint.js';
+import {
+  ShellViewportHintContext,
+  useShellViewport,
+} from '../../../src/shell/use-shell-viewport.js';
 
 const QUERIES = {
   mobile: '(max-width: 767px)',
@@ -90,37 +96,46 @@ describe('useShellViewport', () => {
     expect(result.current).toBe('desktop');
   });
 
-  it("SSR-safe: returns 'desktop' before hydration", () => {
-    // The vitest.setup.ts default matchMedia mock returns matches: false for
-    // every query, so detectViewport() falls through to the 'desktop' default.
-    // This confirms the hook's SSR-safe initial state survives the effect
-    // when no band matches — exactly what would happen on first server render.
-    const { result } = renderHook(() => useShellViewport());
-    act(() => {});
-    expect(result.current).toBe('desktop');
+  it('reads the band synchronously on the first client render (no post-mount flash)', () => {
+    // Regression guard for the SSR first-paint fix: with useSyncExternalStore
+    // the very first render already reflects matchMedia — there is no
+    // intermediate 'desktop' render waiting for a post-mount effect.
+    mockMatchMedia(QUERIES.mobile);
+    const bands: string[] = [];
+    renderHook(() => {
+      const band = useShellViewport();
+      bands.push(band);
+      return band;
+    });
+    expect(bands[0]).toBe('mobile');
   });
 
   it('updates viewport when MediaQueryList fires a change event with matches=true', () => {
     // Map query → { mql, listeners[] }
     const registry = new Map<string, { mql: { matches: boolean }; listeners: (() => void)[] }>();
 
-    // Build a matchMedia stub that stores mql references so we can mutate
-    // `matches` before firing the change listener (the hook reads mql.matches
-    // from the closure, not from the event argument).
+    // Build a matchMedia stub with one shared state entry per query: the
+    // store re-detects the band by calling matchMedia again when notified
+    // (like a real browser, where every MediaQueryList reflects live window
+    // state), so repeated calls for the same query must see the mutation.
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
       value: vi.fn().mockImplementation((query: string) => {
-        const entry = { mql: { matches: false }, listeners: [] as (() => void)[] };
-        registry.set(query, entry);
+        let entry = registry.get(query);
+        if (!entry) {
+          entry = { mql: { matches: false }, listeners: [] as (() => void)[] };
+          registry.set(query, entry);
+        }
+        const state = entry;
 
         return {
           get matches() {
-            return entry.mql.matches;
+            return state.mql.matches;
           },
           media: query,
           onchange: null,
           addEventListener: vi.fn((_event: string, listener: () => void) => {
-            entry.listeners.push(listener);
+            state.listeners.push(listener);
           }),
           removeEventListener: vi.fn(),
           dispatchEvent: vi.fn(),
@@ -143,5 +158,74 @@ describe('useShellViewport', () => {
     });
 
     expect(result.current).toBe('mobile');
+  });
+});
+
+describe('ShellViewportHintContext', () => {
+  function hintWrapper(value: 'mobile' | 'desktop' | null) {
+    return ({ children }: { children: ReactNode }) =>
+      createElement(ShellViewportHintContext.Provider, { value }, children);
+  }
+
+  function Probe() {
+    return createElement('span', null, useShellViewport());
+  }
+
+  it('server render emits the hinted band', () => {
+    // renderToString exercises the getServerSnapshot path — the same one the
+    // real server renderer uses — so a 'mobile' hint must produce mobile
+    // markup from the first byte.
+    const html = renderToString(
+      createElement(ShellViewportHintContext.Provider, { value: 'mobile' }, createElement(Probe))
+    );
+    expect(html).toContain('mobile');
+  });
+
+  it("server render stays 'desktop' without a hint", () => {
+    const html = renderToString(createElement(Probe));
+    expect(html).toContain('desktop');
+  });
+
+  it('client renders ignore the hint once matchMedia is readable', () => {
+    // The hint is a server/hydration snapshot only — a live client whose
+    // matchMedia reports desktop must render desktop even under a 'mobile'
+    // hint provider.
+    mockMatchMedia(QUERIES.desktop);
+    const { result } = renderHook(() => useShellViewport(), { wrapper: hintWrapper('mobile') });
+    act(() => {});
+    expect(result.current).toBe('desktop');
+  });
+});
+
+describe('ShellViewportHintProvider', () => {
+  function Probe() {
+    return createElement('span', null, useShellViewport());
+  }
+
+  // The component exists because React Context providers cannot be rendered
+  // from a Server Component — an App Router server component (the only place
+  // request headers are available) must go through this client wrapper.
+  it('supplies the hinted band to the server render', () => {
+    const html = renderToString(
+      createElement(ShellViewportHintProvider, { value: 'mobile' }, createElement(Probe))
+    );
+    expect(html).toContain('mobile');
+  });
+
+  it('keeps the desktop default when passed a null hint', () => {
+    const html = renderToString(
+      createElement(ShellViewportHintProvider, { value: null }, createElement(Probe))
+    );
+    expect(html).toContain('desktop');
+  });
+
+  it('defers to matchMedia on the client', () => {
+    mockMatchMedia(QUERIES.tablet);
+    const { result } = renderHook(() => useShellViewport(), {
+      wrapper: ({ children }: { children: ReactNode }) =>
+        createElement(ShellViewportHintProvider, { value: 'mobile' }, children),
+    });
+    act(() => {});
+    expect(result.current).toBe('tablet');
   });
 });
