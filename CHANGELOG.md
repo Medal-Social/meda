@@ -1,5 +1,15 @@
 # @medalsocial/meda
 
+## 3.14.0
+
+### Minor Changes
+
+- [#205](https://github.com/Medal-Social/meda/pull/205) [`1c424c5`](https://github.com/Medal-Social/meda/commit/1c424c5a890c1150e6e26a902f506db8c4c3fd04) Thanks [@alihousebets](https://github.com/alihousebets)! - Add opt-in `ShellViewportHintProvider` and `ShellViewportHintContext` exports from `@medalsocial/meda/shell`. Apps can pass a request-derived device class as the server and hydration snapshot, so phones receive mobile shell HTML before JavaScript loads. Without a hint, server rendering retains the desktop default; live client behavior continues to use the existing synchronous viewport store. The provider is a client component that can be rendered from an App Router server component.
+
+### Patch Changes
+
+- [#301](https://github.com/Medal-Social/meda/pull/301) [`2963d98`](https://github.com/Medal-Social/meda/commit/2963d98cebbb85648efa2bed9e7ebb0c4c6418ef) Thanks [@alioftech](https://github.com/alioftech)! - `ContextRail` and `RightPanel` no longer animate their `width`. Collapsing the rail (⌘B) and opening, closing or cycling the right panel (⌘I / ⌘E) are keyboard actions used many times a day, and the 200–240 ms width transition re-wrapped the whole main column on every frame. Both now snap, on the keyboard, on a click and while drag-resizing. No API change.
+
 ## 3.13.0
 
 ### Minor Changes

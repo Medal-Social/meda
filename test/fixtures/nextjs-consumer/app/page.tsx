@@ -6,12 +6,15 @@
 // boundary. The meda components themselves carry 'use client' in dist
 // output; Next.js traces them and applies the boundary at the underlying
 // component files.
+import { ShellViewportHintProvider } from '@medalsocial/meda/shell';
 import { ConsumerShell } from './shell';
 
 export default function Page() {
   return (
-    <ConsumerShell>
-      <main>content</main>
-    </ConsumerShell>
+    <ShellViewportHintProvider value="mobile">
+      <ConsumerShell>
+        <main>content</main>
+      </ConsumerShell>
+    </ShellViewportHintProvider>
   );
 }

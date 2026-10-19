@@ -123,6 +123,23 @@ describe('ShellHeader — has h-[var(--shell-header-height)] class', () => {
   });
 });
 
+describe('ShellHeader — data-meda-shell-header marker', () => {
+  // Stable hook for styling/QA (mirrors the mobile header's
+  // data-meda-mobile-header) — e.g. apps hiding the desktop header with a
+  // media query before hydration settles the viewport band.
+  it('marks the root header in the default variant', () => {
+    const { container } = renderWithProvider(<ShellHeader />);
+
+    expect(container.querySelector('header')).toHaveAttribute('data-meda-shell-header');
+  });
+
+  it('marks the root header in the headerCenter variant', () => {
+    const { container } = renderWithProvider(<ShellHeader headerCenter={<span>Tabs</span>} />);
+
+    expect(container.querySelector('header')).toHaveAttribute('data-meda-shell-header');
+  });
+});
+
 describe('ShellHeader — headerCenter slot', () => {
   it('renders provided center content instead of default app tabs', () => {
     renderWithProvider(<ShellHeader headerCenter={<nav aria-label="Section tabs">Inbox</nav>} />);
