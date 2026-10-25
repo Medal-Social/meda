@@ -284,7 +284,7 @@
     "rehype-highlight": "7.0.2",
     "remark-gfm": "4.0.1",
     "size-limit": "13.1.1",
-    "storybook": "10.6.1",
+    "storybook": "10.6.2",
     "tailwindcss": "4.3.3",
     "three": "0.186.1",
     "typescript": "~6.0.3",
