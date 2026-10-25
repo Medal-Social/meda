@@ -66,7 +66,8 @@ per-feature stylesheets never reach an optional peer (see
 
 Unbranded, presentational screens for a customer booking flow: the wizard steps
 (`WhoScreen`, `ServiceScreen`, `StylistScreen`, `TimeScreen`, `DetailsScreen`,
-`SummaryBar`, `Confirmation`, `BookingSkeleton`, `AddChildSheet`), `ManageScreen`,
+`SummaryBar`, `Confirmation`, `BookingSkeleton`, `AddChildSheet`), the desktop's
+sticky side panel (`BookingPanel`), `ManageScreen`,
 login (`LoginSheet`, `LoginPanel`, `OtpSlots`, `VippsButton`) and the customer
 portal (`PortalShell`, `UpcomingBookings`, `VisitHistory`, `ChildCards`,
 `RebookCards`, `FamilyEditor`, `ProfileForm`, `DataControls`, `AccountCard`,
