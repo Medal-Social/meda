@@ -776,6 +776,43 @@ describe('ServiceScreen — multi-select (`selection`)', () => {
     expect(screen.queryByRole('status')?.textContent ?? '').toBe('');
   });
 
+  it('takes the «Next» slot class on the bar’s button', () => {
+    renderService({ selection: selection(), classNames: { next: 'my-next' } });
+    expect(screen.getByRole('button', { name: multi['service.continue'] })).toHaveClass('my-next');
+  });
+
+  it('holds «Next» back while something is missing, with `disableUntilReady`', () => {
+    const sel = selection({ canContinue: false, disableUntilReady: true });
+    renderService({ selection: sel });
+    const next = screen.getByRole('button', { name: multi['service.continue'] });
+    expect(next).toBeDisabled();
+    expect(next).toHaveAttribute('aria-disabled', 'true');
+    expect(next).toHaveAttribute('data-disabled', '');
+    expect(next).toHaveClass('disabled:bg-foreground/12', 'disabled:text-foreground/38');
+    expect(screen.getByText(multi['service.chooseFirst'])).toBeInTheDocument();
+    fireEvent.click(next);
+    expect(sel.onContinue).not.toHaveBeenCalled();
+  });
+
+  it('lets «Next» go once everyone has something, with `disableUntilReady`', () => {
+    const sel = selection({ canContinue: true, disableUntilReady: true });
+    renderService({ selection: sel });
+    const next = screen.getByRole('button', { name: multi['service.continue'] });
+    expect(next).toBeEnabled();
+    expect(next).not.toHaveAttribute('aria-disabled');
+    expect(next).not.toHaveAttribute('data-disabled');
+    fireEvent.click(next);
+    expect(sel.onContinue).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps «Next» enabled without `disableUntilReady`, as before', () => {
+    renderService({ selection: selection({ canContinue: false }) });
+    const next = screen.getByRole('button', { name: multi['service.continue'] });
+    expect(next).toBeEnabled();
+    expect(next).not.toHaveAttribute('aria-disabled');
+    expect(next).not.toHaveAttribute('data-disabled');
+  });
+
   it('takes the sticky bar slot class', () => {
     renderService({
       selection: selection(),

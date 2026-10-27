@@ -118,9 +118,10 @@ export function PersonTabs({
  * missing, and «Next». The same bar as `SummaryBar`, so the step reads as one
  * flow; a caller that also renders `SummaryBar` hides it on this step.
  *
- * «Next» is never disabled. A disabled button explains nothing and is skipped
- * by a screen reader's tab order; this one stays, the line says what is
- * missing, and the caller decides what pressing it does.
+ * «Next» is not disabled by default. A disabled button explains nothing and
+ * is skipped by a screen reader's tab order; this one stays, the line says
+ * what is missing, and the caller decides what pressing it does. A site that
+ * wants it held back anyway opts in with `selection.disableUntilReady`.
  */
 export function TotalBar({
   selection,
@@ -132,6 +133,7 @@ export function TotalBar({
   classNames: SlotClassNames<ServiceScreenSlot> | undefined;
 }) {
   const { total, canContinue, labels } = selection;
+  const held = selection.disableUntilReady === true && !canContinue;
   return (
     <div
       className={slotClass(
@@ -163,7 +165,18 @@ export function TotalBar({
             </p>
           )}
         </div>
-        <BookingButton size="lg" onClick={selection.onContinue}>
+        <BookingButton
+          size="lg"
+          onClick={selection.onContinue}
+          disabled={held}
+          aria-disabled={held || undefined}
+          data-disabled={held ? '' : undefined}
+          className={cn(
+            // Material 3's disabled button: 38 % content on a 12 % container.
+            held && 'disabled:bg-foreground/12 disabled:text-foreground/38 disabled:opacity-100',
+            classNames?.next
+          )}
+        >
           {renderLabel(labels['service.continue'])}
         </BookingButton>
       </div>

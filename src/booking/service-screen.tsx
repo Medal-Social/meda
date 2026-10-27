@@ -101,11 +101,14 @@ export type ServiceScreenLabels = Record<(typeof SERVICE_SCREEN_LABEL_KEYS)[numb
  * - `price` — a card's price (passed to `ServiceCard`, and the «same as last time» card's)
  * - `tab` / `tabSelected` — a person's tab in a multi-select family / the open one
  * - `bar` — the multi-select step's sticky total bar
+ * - `next` — the bar's «Next» button (`data-disabled` while
+ *   `selection.disableUntilReady` holds it back, for a site's own disabled look)
  */
 export type ServiceScreenSlot =
   | 'tab'
   | 'tabSelected'
   | 'bar'
+  | 'next'
   | 'root'
   | 'heading'
   | 'pill'
@@ -188,10 +191,18 @@ export interface ServiceSelection {
   total: { minutes: number; priceOre: number } | null;
   /**
    * Whether every person has at least one service. «Next» stays enabled
-   * either way (a disabled button explains nothing); while `false` the bar
-   * shows `service.chooseFirst` instead of the total.
+   * either way (a disabled button explains nothing) unless
+   * `disableUntilReady`; while `false` the bar shows `service.chooseFirst`
+   * under the total.
    */
   canContinue: boolean;
+  /**
+   * Opt-in: hold «Next» back — `disabled`, `aria-disabled` and
+   * `data-disabled` — while `canContinue` is `false`, drawn in the Material 3
+   * disabled look (38 % content on a 12 % container). The line under the
+   * total still says what is missing. Default: off, «Next» always enabled.
+   */
+  disableUntilReady?: boolean;
   /** A refusal to say politely (e.g. too many services), announced as a live region. */
   notice?: string | null;
   /**
