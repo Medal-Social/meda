@@ -22,6 +22,11 @@ export type BookingButtonVariant =
   | 'destructive'
   | 'link';
 export type BookingButtonSize = 'default' | 'sm' | 'lg' | 'icon' | 'icon-sm';
+/**
+ * The corners: `default` is booking's near-square look (each size's own);
+ * `full` a pill, for a site whose buttons are round.
+ */
+export type BookingButtonRadius = 'default' | 'full';
 
 const BUTTON_BASE =
   'group/button inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap rounded-[3px] border border-transparent bg-clip-padding text-sm font-semibold transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4';
@@ -51,24 +56,35 @@ const BUTTON_SIZES: Record<BookingButtonSize, string> = {
 export function bookingButtonClass({
   variant = 'default',
   size = 'default',
+  radius = 'default',
   className,
 }: {
   variant?: BookingButtonVariant;
   size?: BookingButtonSize;
+  radius?: BookingButtonRadius;
   className?: string;
 } = {}): string {
-  return cn(BUTTON_BASE, BUTTON_VARIANTS[variant], BUTTON_SIZES[size], className);
+  return cn(
+    BUTTON_BASE,
+    BUTTON_VARIANTS[variant],
+    BUTTON_SIZES[size],
+    radius === 'full' && 'rounded-full',
+    className
+  );
 }
 
 export interface BookingButtonProps extends ComponentProps<'button'> {
   variant?: BookingButtonVariant;
   size?: BookingButtonSize;
+  /** `full` for pill-shaped corners. Default: booking's near-square ones. */
+  radius?: BookingButtonRadius;
 }
 
 /** The booking screens' button. A native `<button type="button">` unless told otherwise. */
 export function BookingButton({
   variant,
   size,
+  radius,
   className,
   type = 'button',
   ...props
@@ -77,7 +93,7 @@ export function BookingButton({
     <button
       type={type}
       data-slot="button"
-      className={bookingButtonClass({ variant, size, className })}
+      className={bookingButtonClass({ variant, size, radius, className })}
       {...props}
     />
   );
