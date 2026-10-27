@@ -1,5 +1,11 @@
 # @medalsocial/meda
 
+## 3.15.0
+
+### Minor Changes
+
+- [#318](https://github.com/Medal-Social/meda/pull/318) [`16f9813`](https://github.com/Medal-Social/meda/commit/16f98137dcdf2a06555831126bd3d03a640ea061) Thanks [@alioftech](https://github.com/alioftech)! - Booking: three opt-in hooks for the multi-select service step and its buttons. `ServiceScreen` takes a `next` slot class for the sticky bar's «Next» button; `selection.disableUntilReady` holds «Next» back (`disabled`, `aria-disabled`, `data-disabled`, the Material 3 disabled look) while `canContinue` is `false`; and `BookingButton` / `bookingButtonClass` take `radius: 'full'` for pill-shaped corners. Defaults are unchanged.
+
 ## 3.14.0
 
 ### Minor Changes
