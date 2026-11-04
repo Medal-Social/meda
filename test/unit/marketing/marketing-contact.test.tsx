@@ -11,7 +11,7 @@ describe('MarketingContact', () => {
         office={{
           title: 'Oslo office',
           address: 'Torggata 1, Oslo',
-          email: 'hello@medalsocial.com',
+          email: 'hi@medalsocial.com',
           phone: '+47 22 00 00 00',
           hours: 'Mon-Fri, 09:00-17:00',
         }}
@@ -30,9 +30,9 @@ describe('MarketingContact', () => {
     expect(screen.getByRole('form', { name: 'Lead form' })).toHaveTextContent('FORM SLOT');
     expect(screen.getByText('Oslo office')).toBeInTheDocument();
     expect(screen.getByText('Torggata 1, Oslo')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'hello@medalsocial.com' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'hi@medalsocial.com' })).toHaveAttribute(
       'href',
-      'mailto:hello@medalsocial.com'
+      'mailto:hi@medalsocial.com'
     );
     expect(screen.getByRole('link', { name: '+47 22 00 00 00' })).toHaveAttribute(
       'href',
