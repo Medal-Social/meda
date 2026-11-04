@@ -53,6 +53,7 @@ export const DETAILS_SCREEN_LABEL_KEYS = [
   'details.email.label',
   'details.email.help',
   'details.email.lockedHelp',
+  /** A malformed address (and, without `details.email.required`, a missing one). */
   'details.email.error',
   'details.notes.label',
   'details.notes.placeholder',
@@ -78,8 +79,18 @@ export const DETAILS_SCREEN_LABEL_KEYS = [
   'details.submit',
 ] as const;
 
+/**
+ * Opt-in keys for `emailRequired`. A pack may leave them out; without
+ * `details.email.required` a blank address is refused with `details.email.error`.
+ */
+export const DETAILS_SCREEN_EMAIL_REQUIRED_LABEL_KEYS = [
+  /** A blank address when `emailRequired` is set, e.g. «Enter your email address». */
+  'details.email.required',
+] as const;
+
 export type DetailsScreenLabelKey = (typeof DETAILS_SCREEN_LABEL_KEYS)[number];
-export type DetailsScreenLabels = Record<DetailsScreenLabelKey, BookingLabel>;
+export type DetailsScreenLabels = Record<DetailsScreenLabelKey, BookingLabel> &
+  Partial<Record<(typeof DETAILS_SCREEN_EMAIL_REQUIRED_LABEL_KEYS)[number], BookingLabel>>;
 
 /**
  * The label key for each failure the wizard can carry. Exported because some
@@ -224,6 +235,15 @@ export interface DetailsScreenProps {
   termsHref?: string | null;
   /** The e-mail is the address the guardian logged in with: shown, not editable. */
   emailReadOnly?: boolean;
+  /**
+   * The e-mail must be filled in: a blank address is refused like a malformed
+   * one, with its own message (`details.email.required`, falling back to
+   * `details.email.error`). For a business that
+   * sends its confirmation and reminder by e-mail only. Default `false`: blank
+   * is allowed. When set, give `details.email.help` a sentence that does not
+   * call the field optional.
+   */
+  emailRequired?: boolean;
   /** Draw the (optional, unticked) marketing opt-in. */
   marketingConsent?: boolean;
   format: BookingFormat;
@@ -236,12 +256,6 @@ export interface DetailsScreenProps {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Deliberately loose: one `@`, something on each side, a dot in the domain,
- * no spaces. The field is optional, so the only job is to catch an address
- * that cannot receive anything. Not RFC 5322 — a stricter pattern rejects real
- * addresses.
- */
 /**
  * A random submission id. `crypto.randomUUID` only exists in secure contexts
  * (https, localhost); a plain-http origin falls back to `getRandomValues`,
@@ -256,7 +270,13 @@ function mintNonce(): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
-/** Blank is fine (the field is optional). Anything else has to be reachable. */
+/**
+ * Deliberately loose: one `@`, something on each side, a dot in the domain,
+ * no spaces. Blank passes (the field is optional unless the screen is told
+ * `emailRequired`, which checks blank separately), so the only job is to catch
+ * an address that cannot receive anything. Not RFC 5322 — a stricter pattern
+ * rejects real addresses.
+ */
 export function looksLikeEmail(value: string): boolean {
   const trimmed = value.trim();
   if (trimmed.length === 0) return true;
@@ -350,6 +370,7 @@ export function DetailsScreen({
   guardianPhone = null,
   termsHref = null,
   emailReadOnly = false,
+  emailRequired = false,
   marketingConsent = false,
   format,
   labels,
@@ -385,12 +406,19 @@ export function DetailsScreen({
 
   const phoneTyped = state.contact.phone.trim().length > 0;
   const phoneValid = phoneLooksValid(state.contact.phone);
-  const emailValid = looksLikeEmail(state.contact.email);
+  const emailBlank = state.contact.email.trim().length === 0;
+  // Blank is its own refusal (a different sentence), not a malformed address.
+  const emailMissing = emailRequired && emailBlank;
+  const emailValid = looksLikeEmail(state.contact.email) && !emailMissing;
   // Only lock an address that is present and well-formed; a blank or malformed
   // one stays editable so the parent is never stuck with an unfixable field.
-  const emailLocked = emailReadOnly && state.contact.email.trim().length > 0 && emailValid;
+  const emailLocked = emailReadOnly && !emailBlank && emailValid;
   const showPhoneError = !phoneValid && (attempted || (phoneTyped && focused !== 'phone'));
-  const showEmailError = !emailValid && (attempted || focused !== 'email');
+  // A malformed address shows as soon as the field is left; a missing one only
+  // once submit is pressed, so an untouched form does not open on an error.
+  const showEmailError = emailMissing
+    ? attempted
+    : !emailValid && (attempted || focused !== 'email');
   const showTermsError = attempted && !state.consentTerms;
 
   const price = format.price(totalOre);
@@ -535,14 +563,23 @@ export function DetailsScreen({
             autoComplete="tel-national"
             className={inputClass(phonePrefix ? 'rounded-l-none' : '')}
             value={state.contact.phone}
-            aria-describedby={phonePrefix ? field('phone-prefix') : undefined}
+            aria-describedby={
+              [
+                phonePrefix ? field('phone-prefix') : null,
+                showPhoneError ? field('phone-error') : null,
+              ]
+                .filter(Boolean)
+                .join(' ') || undefined
+            }
             aria-invalid={showPhoneError || undefined}
             onFocus={() => setFocused('phone')}
             onBlur={() => setFocused(null)}
             onChange={(event) => setContact('phone', event.target.value)}
           />
         </div>
-        {showPhoneError && <Field.Error>{labels['details.phone.error']}</Field.Error>}
+        {showPhoneError && (
+          <Field.Error id={field('phone-error')}>{labels['details.phone.error']}</Field.Error>
+        )}
       </Field>
 
       <Field className={fieldClass}>
@@ -598,9 +635,15 @@ export function DetailsScreen({
           autoComplete="email"
           className={inputClass()}
           value={state.contact.email}
+          required={emailRequired || undefined}
+          aria-required={emailRequired || undefined}
           readOnly={emailLocked || undefined}
           aria-readonly={emailLocked || undefined}
-          aria-describedby={field('email-help')}
+          // The error joins the help text, so a screen reader landing on the
+          // invalid field (submit focuses it) hears how to fix it.
+          aria-describedby={
+            showEmailError ? `${field('email-help')} ${field('email-error')}` : field('email-help')
+          }
           aria-invalid={showEmailError || undefined}
           onFocus={() => setFocused('email')}
           onBlur={() => setFocused(null)}
@@ -609,7 +652,13 @@ export function DetailsScreen({
         <Field.Description id={field('email-help')}>
           {emailLocked ? labels['details.email.lockedHelp'] : labels['details.email.help']}
         </Field.Description>
-        {showEmailError && <Field.Error>{labels['details.email.error']}</Field.Error>}
+        {showEmailError && (
+          <Field.Error id={field('email-error')}>
+            {emailMissing
+              ? (labels['details.email.required'] ?? labels['details.email.error'])
+              : labels['details.email.error']}
+          </Field.Error>
+        )}
       </Field>
 
       <Field className={fieldClass}>
