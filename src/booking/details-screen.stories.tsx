@@ -136,6 +136,11 @@ export const EmailReadOnly: Story = {
   },
 };
 
+/** The business confirms and reminds by e-mail only, so a blank address is refused. */
+export const EmailRequired: Story = {
+  args: { emailRequired: true },
+};
+
 export const SecondBrandTheme: Story = {
   name: 'Second brand',
   render: (args) => (

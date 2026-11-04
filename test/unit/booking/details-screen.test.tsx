@@ -390,6 +390,105 @@ describe('DetailsScreen', () => {
     expect(ordinary.onSubmit).toHaveBeenCalled();
   });
 
+  describe('emailRequired', () => {
+    const blankEmail = () => readyState({ contact: { phone: '40000000', name: '', email: '  ' } });
+
+    it('marks the field required only when asked', () => {
+      const optional = setup();
+      const input = screen.getByLabelText(L['details.email.label']);
+      expect(input).not.toBeRequired();
+      expect(input).not.toHaveAttribute('aria-required');
+      optional.unmount();
+
+      setup({ emailRequired: true });
+      const required = screen.getByLabelText(L['details.email.label']);
+      expect(required).toBeRequired();
+      expect(required).toHaveAttribute('aria-required', 'true');
+    });
+
+    it('does not open on an error before submit is pressed', () => {
+      setup({ emailRequired: true, state: blankEmail() });
+      const input = screen.getByLabelText(L['details.email.label']);
+      fireEvent.focus(input);
+      fireEvent.blur(input);
+      expect(input).not.toHaveAttribute('aria-invalid');
+      expect(screen.queryByText(L['details.email.required'])).toBeNull();
+    });
+
+    it('refuses a blank address with its own sentence, and focuses the field', () => {
+      const { onSubmit } = setup({ emailRequired: true, state: blankEmail() });
+      fireEvent.click(submitButton());
+      expect(onSubmit).not.toHaveBeenCalled();
+      const input = screen.getByLabelText(L['details.email.label']);
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+      expect(input).toHaveFocus();
+      expect(screen.getByText(L['details.email.required'])).toBeInTheDocument();
+      expect(screen.queryByText(L['details.email.error'])).toBeNull();
+      // The refusal is part of the field's description, not just nearby text.
+      expect(input).toHaveAccessibleDescription(
+        expect.stringContaining(String(L['details.email.required']))
+      );
+    });
+
+    it("names a phone error in the phone field's description", () => {
+      setup({
+        emailRequired: true,
+        state: readyState({ contact: { phone: '12', name: '', email: '' } }),
+      });
+      fireEvent.click(submitButton());
+      const phone = screen.getByLabelText(L['details.phone.label']);
+      expect(phone).toHaveAccessibleDescription(
+        expect.stringContaining(String(L['details.phone.error']))
+      );
+    });
+
+    it('still names a malformed address as malformed', () => {
+      const { onSubmit } = setup({
+        emailRequired: true,
+        state: readyState({ contact: { phone: '40000000', name: '', email: 'kari@' } }),
+      });
+      fireEvent.click(submitButton());
+      expect(onSubmit).not.toHaveBeenCalled();
+      expect(screen.getByText(L['details.email.error'])).toBeInTheDocument();
+      expect(screen.queryByText(L['details.email.required'])).toBeNull();
+    });
+
+    it('asks for the phone first, then the address', () => {
+      setup({
+        emailRequired: true,
+        state: readyState({ contact: { phone: '4000000', name: '', email: '' } }),
+      });
+      fireEvent.click(submitButton());
+      expect(screen.getByLabelText(L['details.phone.label'])).toHaveFocus();
+    });
+
+    it('books with an address, sending it trimmed', () => {
+      const { onSubmit } = setup({
+        emailRequired: true,
+        state: readyState({ contact: { phone: '40000000', name: '', email: ' kari@example.no ' } }),
+      });
+      fireEvent.click(submitButton());
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          contact: expect.objectContaining({ email: 'kari@example.no' }),
+        })
+      );
+    });
+
+    it('falls back to the malformed-address sentence when the pack has no blank one', () => {
+      const { 'details.email.required': _omitted, ...pack } = L;
+      setup({ emailRequired: true, state: blankEmail(), labels: pack });
+      fireEvent.click(submitButton());
+      expect(screen.getByText(L['details.email.error'])).toBeInTheDocument();
+    });
+
+    it('has no axe violations with the refusal showing', async () => {
+      const { container } = setup({ emailRequired: true, state: blankEmail() });
+      fireEvent.click(submitButton());
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
   it('refuses an unaccepted terms box, and focuses that box', () => {
     const { onSubmit } = setup({ state: readyState({ consentTerms: false }) });
     fireEvent.click(submitButton());
