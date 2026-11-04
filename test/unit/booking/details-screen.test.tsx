@@ -424,6 +424,22 @@ describe('DetailsScreen', () => {
       expect(input).toHaveFocus();
       expect(screen.getByText(L['details.email.required'])).toBeInTheDocument();
       expect(screen.queryByText(L['details.email.error'])).toBeNull();
+      // The refusal is part of the field's description, not just nearby text.
+      expect(input).toHaveAccessibleDescription(
+        expect.stringContaining(String(L['details.email.required']))
+      );
+    });
+
+    it("names a phone error in the phone field's description", () => {
+      setup({
+        emailRequired: true,
+        state: readyState({ contact: { phone: '12', name: '', email: '' } }),
+      });
+      fireEvent.click(submitButton());
+      const phone = screen.getByLabelText(L['details.phone.label']);
+      expect(phone).toHaveAccessibleDescription(
+        expect.stringContaining(String(L['details.phone.error']))
+      );
     });
 
     it('still names a malformed address as malformed', () => {

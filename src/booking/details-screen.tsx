@@ -563,14 +563,23 @@ export function DetailsScreen({
             autoComplete="tel-national"
             className={inputClass(phonePrefix ? 'rounded-l-none' : '')}
             value={state.contact.phone}
-            aria-describedby={phonePrefix ? field('phone-prefix') : undefined}
+            aria-describedby={
+              [
+                phonePrefix ? field('phone-prefix') : null,
+                showPhoneError ? field('phone-error') : null,
+              ]
+                .filter(Boolean)
+                .join(' ') || undefined
+            }
             aria-invalid={showPhoneError || undefined}
             onFocus={() => setFocused('phone')}
             onBlur={() => setFocused(null)}
             onChange={(event) => setContact('phone', event.target.value)}
           />
         </div>
-        {showPhoneError && <Field.Error>{labels['details.phone.error']}</Field.Error>}
+        {showPhoneError && (
+          <Field.Error id={field('phone-error')}>{labels['details.phone.error']}</Field.Error>
+        )}
       </Field>
 
       <Field className={fieldClass}>
@@ -630,7 +639,11 @@ export function DetailsScreen({
           aria-required={emailRequired || undefined}
           readOnly={emailLocked || undefined}
           aria-readonly={emailLocked || undefined}
-          aria-describedby={field('email-help')}
+          // The error joins the help text, so a screen reader landing on the
+          // invalid field (submit focuses it) hears how to fix it.
+          aria-describedby={
+            showEmailError ? `${field('email-help')} ${field('email-error')}` : field('email-help')
+          }
           aria-invalid={showEmailError || undefined}
           onFocus={() => setFocused('email')}
           onBlur={() => setFocused(null)}
@@ -640,7 +653,7 @@ export function DetailsScreen({
           {emailLocked ? labels['details.email.lockedHelp'] : labels['details.email.help']}
         </Field.Description>
         {showEmailError && (
-          <Field.Error>
+          <Field.Error id={field('email-error')}>
             {emailMissing
               ? (labels['details.email.required'] ?? labels['details.email.error'])
               : labels['details.email.error']}
