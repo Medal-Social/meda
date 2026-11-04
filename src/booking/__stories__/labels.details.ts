@@ -26,6 +26,8 @@ export const detailsScreenLabelsNb: DetailsScreenLabels = {
   'details.email.help': 'Vi sender bekreftelsen og en kalenderfil hit.',
   'details.email.lockedHelp': 'E-posten du logget inn med',
   'details.email.error': 'E-postadressen ser ikke riktig ut.',
+  'details.email.required':
+    'Skriv inn e-postadressen din – bekreftelsen og påminnelsen kommer dit.',
   'details.notes.label': 'Beskjed til salongen',
   'details.notes.placeholder': 'For eksempel ønsker eller hensyn vi bør kjenne til',
   'details.terms.text': 'Jeg vet at timen kan flyttes eller avlyses gratis innen salongens frist.',
@@ -63,6 +65,7 @@ export const detailsScreenLabelsEn: DetailsScreenLabels = {
   'details.email.help': 'We send the confirmation and a calendar file here.',
   'details.email.lockedHelp': 'The e-mail you signed in with',
   'details.email.error': 'That email address does not look right.',
+  'details.email.required': 'Enter your email address – your confirmation and reminder go there.',
   'details.notes.label': 'Message for the salon',
   'details.notes.placeholder': 'Anything we should know in advance',
   'details.terms.text':
