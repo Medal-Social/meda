@@ -28,6 +28,10 @@ export const detailsScreenLabelsNb: DetailsScreenLabels = {
   'details.email.error': 'E-postadressen ser ikke riktig ut.',
   'details.email.required':
     'Skriv inn e-postadressen din – bekreftelsen og påminnelsen kommer dit.',
+  'details.required': '(må fylles ut)',
+  'details.optional': '(valgfritt)',
+  'details.terms.error': 'Kryss av for at du godtar vilkårene for å bestille.',
+  'details.error.nameRequired': 'Skriv inn navnet ditt.',
   'details.notes.label': 'Beskjed til salongen',
   'details.notes.placeholder': 'For eksempel ønsker eller hensyn vi bør kjenne til',
   'details.terms.text': 'Jeg vet at timen kan flyttes eller avlyses gratis innen salongens frist.',
@@ -66,6 +70,10 @@ export const detailsScreenLabelsEn: DetailsScreenLabels = {
   'details.email.lockedHelp': 'The e-mail you signed in with',
   'details.email.error': 'That email address does not look right.',
   'details.email.required': 'Enter your email address – your confirmation and reminder go there.',
+  'details.required': '(required)',
+  'details.optional': '(optional)',
+  'details.terms.error': 'Tick the box to accept the terms before booking.',
+  'details.error.nameRequired': 'Enter your name.',
   'details.notes.label': 'Message for the salon',
   'details.notes.placeholder': 'Anything we should know in advance',
   'details.terms.text':

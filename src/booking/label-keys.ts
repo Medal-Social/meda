@@ -5,6 +5,7 @@ import { BOOKING_SKELETON_LABEL_KEYS } from './booking-skeleton.js';
 import { CONFIRMATION_HERO_LABEL_KEYS, CONFIRMATION_LABEL_KEYS } from './confirmation.js';
 import {
   DETAILS_SCREEN_EMAIL_REQUIRED_LABEL_KEYS,
+  DETAILS_SCREEN_FORM_LABEL_KEYS,
   DETAILS_SCREEN_LABEL_KEYS,
 } from './details-screen.js';
 import type { BookingLabel } from './labels.js';
@@ -56,6 +57,7 @@ export const BOOKING_LABEL_KEYS = [
     ...BOOKING_PANEL_LABEL_KEYS,
     ...DETAILS_SCREEN_LABEL_KEYS,
     ...DETAILS_SCREEN_EMAIL_REQUIRED_LABEL_KEYS,
+    ...DETAILS_SCREEN_FORM_LABEL_KEYS,
     ...SUMMARY_BAR_LABEL_KEYS,
     ...SUMMARY_BAR_HINT_LABEL_KEYS,
     ...CONFIRMATION_LABEL_KEYS,
@@ -92,7 +94,8 @@ export type BookingOptionalLabelKey =
   | (typeof SERVICE_SCREEN_SEARCH_LABEL_KEYS)[number]
   | (typeof CONFIRMATION_HERO_LABEL_KEYS)[number]
   | (typeof BOOKING_PANEL_LABEL_KEYS)[number]
-  | (typeof DETAILS_SCREEN_EMAIL_REQUIRED_LABEL_KEYS)[number];
+  | (typeof DETAILS_SCREEN_EMAIL_REQUIRED_LABEL_KEYS)[number]
+  | (typeof DETAILS_SCREEN_FORM_LABEL_KEYS)[number];
 
 /** Keys every complete pack defines. */
 export type BookingRequiredLabelKey =

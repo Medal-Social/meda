@@ -165,6 +165,13 @@ same wizard / manage page / portal. Rules when editing or adding one:
   colour values in `src/booking`.
 - **Override ladder:** CSS variables → `labels` → `classNames` slots → `components` card
   renderers (export the default renderer). Keep all four working in tests.
+- **Forms announce their errors.** Every field error gets an id in its field's
+  `aria-describedby` (after any help text) and `role="alert"`; required inputs carry
+  `aria-required`; a refused submit focuses the first field to fix. `DetailsScreen`'s
+  required / optional markers and extra messages are the opt-in
+  `DETAILS_SCREEN_FORM_LABEL_KEYS` (`details.required`, `details.optional`,
+  `details.terms.error`, `details.error.nameRequired`); `requireName` makes the name
+  required. `BookingPanel`'s `showWho={false}` omits the «who» row.
 - **Public repo:** no customer names, copy, URLs or data. Stories and tests use the invented
   «Salong Demo» fixtures in `src/booking/__stories__/`.
 

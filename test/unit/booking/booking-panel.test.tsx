@@ -102,6 +102,19 @@ describe('BookingPanel', () => {
     expect(container.querySelectorAll('li svg[aria-hidden="true"]')).toHaveLength(2);
   });
 
+  it('omits the «who» row when told to, and keeps the rest', () => {
+    const { container } = setup({ showWho: false });
+    expect(screen.queryByText('Hvem')).toBeNull();
+    expect(screen.queryByText('1 barn')).toBeNull();
+    expect(container.querySelectorAll('dt')).toHaveLength(3);
+    expect(row('Klipp')).toHaveTextContent('Gutteklipp · 30 min');
+  });
+
+  it('has no axe violations without the «who» row', async () => {
+    const { container } = setup({ showWho: false });
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
   it('has no axe violations', async () => {
     const { container } = setup({
       onContinue: vi.fn(),
