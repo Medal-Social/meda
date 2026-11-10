@@ -151,11 +151,19 @@ Pass `activeId` to mark which item is active; usually derived from your router's
 `IconRail` and other rail components accept a `renderLink` prop that wraps the default `<a>`:
 
 ```tsx
-renderLink={({ item, isActive, className, children, linkProps }) => (
-  <NextLink href={item.to} className={className} {...linkProps}>
-    {children}
-  </NextLink>
-)}
+import NextLink from 'next/link';
+import { IconRail, type IconRailItem } from '@medalsocial/meda/shell';
+
+declare const items: IconRailItem[];
+
+<IconRail
+  mainItems={items}
+  renderLink={({ item, isActive, className, children, linkProps }) => (
+    <NextLink href={item.to} className={className} {...linkProps}>
+      {children}
+    </NextLink>
+  )}
+/>;
 ```
 
 **Use it for:** integrating with Next.js `Link`, TanStack Router, React Router — anything that needs client-side navigation hooks.

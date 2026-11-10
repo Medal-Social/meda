@@ -100,9 +100,11 @@ The `icon` prop accepts a Lucide component (`Inbox`) OR a rendered element (cust
 ```tsx
 import { StatusPill } from '@medalsocial/meda';
 
-<StatusPill tone="success">Synced</StatusPill>
-<StatusPill tone="warning" size="md">Action required</StatusPill>
-<StatusPill tone="danger" dot={false}>Failed</StatusPill>
+<>
+  <StatusPill tone="success">Synced</StatusPill>
+  <StatusPill tone="warning" size="md">Action required</StatusPill>
+  <StatusPill tone="danger" dot={false}>Failed</StatusPill>
+</>;
 ```
 
 - `tone`: `'neutral' | 'info' | 'success' | 'warning' | 'danger'`
@@ -118,25 +120,36 @@ import { StatusPill } from '@medalsocial/meda';
 native elements so they stay small and work without JavaScript-heavy machinery:
 
 ```tsx
-import { Checkbox, Field, Input, Sheet, Textarea } from '@medalsocial/meda/primitives';
+import { useState } from 'react';
+import { Button, Checkbox, Field, Input, Sheet, Textarea } from '@medalsocial/meda/primitives';
 
-<Field>
-  <Field.Label htmlFor="email">E-mail</Field.Label>
-  <Input id="email" invalid aria-describedby="email-error" />
-  <Field.Error id="email-error">Enter a valid e-mail address.</Field.Error>
-</Field>
+function AddChild({ saving }: { saving: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+  return (
+    <>
+      <Field>
+        <Field.Label htmlFor="email">E-mail</Field.Label>
+        <Input id="email" invalid aria-describedby="email-error" />
+        <Field.Error id="email-error">Enter a valid e-mail address.</Field.Error>
+      </Field>
 
-<Checkbox id="terms" onCheckedChange={setAccepted} />   {/* native <input type="checkbox"> */}
+      {/* native <input type="checkbox"> */}
+      <Checkbox id="terms" checked={accepted} onCheckedChange={setAccepted} />
 
-<Sheet open={open} onOpenChange={setOpen} dismissible={!saving}>
-  <Sheet.Trigger render={<Button variant="outline" />}>Add child</Sheet.Trigger>
-  <Sheet.Content>                                       {/* native <dialog>, showModal() */}
-    <Sheet.Title>Add child</Sheet.Title>
-    <Sheet.Description>Only for this booking.</Sheet.Description>
-    …
-    <Sheet.Close render={<Button variant="ghost" size="sm" />} aria-label="Close">×</Sheet.Close>
-  </Sheet.Content>
-</Sheet>
+      <Sheet open={open} onOpenChange={setOpen} dismissible={!saving}>
+        <Sheet.Trigger render={<Button variant="outline" />}>Add child</Sheet.Trigger>
+        {/* native <dialog>, showModal() */}
+        <Sheet.Content>
+          <Sheet.Title>Add child</Sheet.Title>
+          <Sheet.Description>Only for this booking.</Sheet.Description>
+          <Textarea aria-label="Notes" />
+          <Sheet.Close render={<Button variant="ghost" size="sm" />} aria-label="Close">×</Sheet.Close>
+        </Sheet.Content>
+      </Sheet>
+    </>
+  );
+}
 ```
 
 - `Field` owns no ids or state — wire `htmlFor` / `aria-describedby` yourself.
@@ -195,9 +208,10 @@ Do NOT try `import { Dialog } from '@medalsocial/meda'` — it will fail with a 
 
 ## Optional peer dependencies — MarkdownView pattern
 
-`MarkdownView` has optional peers (`react-markdown`, `remark-gfm`, `rehype-highlight`). It is **intentionally not re-exported from `src/primitives/index.ts`** — even type re-exports cause TS to follow the chain and break consumers who haven't installed the peers. Import via the dedicated subpath:
+`MarkdownView` has optional peers (`react-markdown`, `remark-gfm`, `rehype-highlight`). It is **intentionally not re-exported from `src/primitives/index.ts`** — even type re-exports cause TS to follow the chain and break consumers who haven't installed the peers. Import via the dedicated subpath (the block is not typechecked: `intent validate` maps
+subpaths onto `src/`, where this entry lives at `src/primitives/markdown-view-entry.ts`):
 
-```ts
+```ts no-check
 import { MarkdownView, type MarkdownViewProps } from '@medalsocial/meda/markdown-view';
 ```
 
