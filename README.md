@@ -126,9 +126,11 @@ const asPieces = {
 ### The details form: required fields and errors
 
 `DetailsScreen` ties every field error (phone, name, e-mail, terms box) to its field
-through `aria-describedby` (after any help text) and announces it with `role="alert"`;
-a refused submit focuses the first field to fix (phone, name, e-mail, terms). The
-phone and the terms box always carry `aria-required="true"`.
+through `aria-describedby` (after any help text). An error that appears when a field is
+left is announced with `role="alert"`. A refused submit focuses the first field to fix
+(phone, name, e-mail, terms), so a screen reader reads that field's error as its
+description; the errors the same press revealed are not alerts, so they do not all
+speak at once. The phone and the terms box always carry `aria-required="true"`.
 
 - `requireName` (default `false`) makes the name required: a blank name is refused
   when the field is left and on submit, with `details.error.nameRequired`.

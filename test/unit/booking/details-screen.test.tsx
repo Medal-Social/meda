@@ -95,6 +95,11 @@ function setup(props: Partial<DetailsScreenProps> = {}) {
   };
 }
 
+/** The texts a field is described by, in order. */
+const describedBy = (element: HTMLElement) =>
+  (element.getAttribute('aria-describedby') ?? '')
+    .split(' ')
+    .map((id) => document.getElementById(id)?.textContent);
 const badPhoneState = () => readyState({ contact: { phone: '4000000', name: '', email: '' } });
 const submitButton = () => screen.getByRole('button', { name: /^Bestill –/ });
 function fill(label: string, value: string) {
@@ -496,12 +501,7 @@ describe('DetailsScreen', () => {
   });
 
   describe('accessible errors and required fields', () => {
-    const describedBy = (element: HTMLElement) =>
-      (element.getAttribute('aria-describedby') ?? '')
-        .split(' ')
-        .map((id) => document.getElementById(id)?.textContent);
-
-    it('ties every field error to its field and announces it', () => {
+    it('ties every field error to its field, and lets focus speak for a refused submit', () => {
       setup({
         requireName: true,
         state: readyState({
@@ -523,8 +523,40 @@ describe('DetailsScreen', () => {
         expect(input).toHaveAttribute('aria-invalid', 'true');
         expect(describedBy(input)).toContain(message);
       }
-      const alerts = screen.getAllByRole('alert').map((alert) => alert.textContent);
-      expect(alerts).toEqual(fields.map(([, message]) => message));
+      // Focus lands on the first, whose message is its description; four
+      // alerts at once would talk over it.
+      expect(fields[0]?.[0]).toHaveFocus();
+      expect(screen.queryByRole('alert')).toBeNull();
+    });
+
+    it('announces an error revealed by leaving a field, when nothing else moved', () => {
+      setup({ state: badPhoneState() });
+      const phone = screen.getByLabelText(L['details.phone.label']);
+      fireEvent.focus(phone);
+      fireEvent.blur(phone);
+      expect(screen.getByRole('alert')).toHaveTextContent(L['details.phone.error']);
+      expect(describedBy(phone)).toContain(L['details.phone.error']);
+    });
+
+    it('announces a mistake made after a refused submit was fixed', () => {
+      const onChange = vi.fn();
+      const { rerender } = setup({ state: readyState({ consentTerms: false }), onChange });
+      fireEvent.click(submitButton());
+      expect(screen.queryByRole('alert')).toBeNull();
+      const props = {
+        onChange,
+        onSubmit: vi.fn(),
+        lines: [{ startTs: THURSDAY_15, resourceId: 'res-ada' }],
+        totalOre: 39_000,
+        phoneLooksValid,
+        normalisePhone,
+        format: demoFormatNb,
+        labels: L,
+      };
+      rerender(<DetailsScreen {...props} state={readyState({ consentTerms: true })} />);
+      expect(screen.queryByText(L['details.terms.error'] ?? '')).toBeNull();
+      rerender(<DetailsScreen {...props} state={readyState({ consentTerms: false })} />);
+      expect(screen.getByRole('alert')).toHaveTextContent(L['details.terms.error'] ?? '');
     });
 
     it('keeps the help text in the e-mail description beside its error', () => {
@@ -540,7 +572,7 @@ describe('DetailsScreen', () => {
       const { unmount } = setup({ state: readyState({ consentTerms: false }) });
       expect(screen.queryByText(L['details.terms.error'] ?? '')).toBeNull();
       fireEvent.click(submitButton());
-      expect(screen.getByRole('alert')).toHaveTextContent(L['details.terms.error'] ?? '');
+      expect(screen.getByText(L['details.terms.error'] ?? '')).toBeInTheDocument();
       unmount();
       const { 'details.terms.error': _terms, ...older } = L;
       setup({ state: readyState({ consentTerms: false }), labels: older });
@@ -576,6 +608,16 @@ describe('DetailsScreen', () => {
     it('draws no marker for a pack without the marker keys', () => {
       const { container } = setup();
       expect(container.querySelector('[data-slot="field-marker"]')).toBeNull();
+    });
+
+    it('keeps a marker in the same run of text as its label, so it wraps after the last word', () => {
+      const { container } = setup({ labels: FULL });
+      for (const marker of container.querySelectorAll('[data-slot="field-marker"]')) {
+        // One flex item inside the label, not a column beside the sentence.
+        expect(marker.parentElement?.tagName).toBe('SPAN');
+        expect(marker.parentElement?.parentElement?.tagName).toBe('LABEL');
+        expect(marker.parentElement?.parentElement?.children).toHaveLength(1);
+      }
     });
 
     it('draws the pack’s markers after each label, as part of its name', () => {
@@ -684,7 +726,9 @@ describe('DetailsScreen', () => {
       const { 'details.error.nameRequired': _name, ...older } = L;
       setup({ requireName: true, state: blankName(), labels: older });
       fireEvent.click(submitButton());
-      expect(screen.getByRole('alert')).toHaveTextContent(L['details.error.invalidInput']);
+      expect(describedBy(screen.getByLabelText(L['details.name.label']))).toEqual([
+        L['details.error.invalidInput'],
+      ]);
     });
   });
 

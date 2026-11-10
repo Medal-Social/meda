@@ -1,6 +1,6 @@
 'use client';
 
-import { type ComponentType, type ReactNode, useId, useRef, useState } from 'react';
+import { type ComponentType, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { Checkbox } from '../primitives/checkbox.js';
 import { Field } from '../primitives/field.js';
 import { Input } from '../primitives/input.js';
@@ -330,6 +330,10 @@ export function looksLikeEmail(value: string): boolean {
   return false;
 }
 
+/** The fields whose errors the screen draws, in the order a refused submit visits them. */
+const ERROR_FIELDS = ['phone', 'name', 'email', 'terms'] as const;
+type ErrorField = (typeof ERROR_FIELDS)[number];
+
 /** The child's two fields as typed — both strings, including the year. */
 interface ChildInput {
   name: string;
@@ -446,6 +450,12 @@ export function DetailsScreen({
   // A required name left blank is refused once the field has been left, not
   // while the visitor has yet to reach it.
   const [nameLeft, setNameLeft] = useState(false);
+  // The errors a refused submit revealed. They are not alerts: submit moves
+  // focus to the first of them, which reads its message as the description,
+  // and announcing every one at once would talk over it. An error revealed by
+  // leaving a field (nothing else moved) is an alert. Pruned once fixed, so a
+  // later mistake is announced again.
+  const [revealedBySubmit, setRevealedBySubmit] = useState<readonly ErrorField[]>([]);
 
   const phoneTyped = state.contact.phone.trim().length > 0;
   const phoneValid = phoneLooksValid(state.contact.phone);
@@ -465,6 +475,31 @@ export function DetailsScreen({
   const showTermsError = attempted && !state.consentTerms;
   const nameMissing = requireName && state.contact.name.trim().length === 0;
   const showNameError = nameMissing && (attempted || (nameLeft && focused !== 'name'));
+  const invalid: Record<ErrorField, boolean> = {
+    phone: !phoneValid,
+    name: nameMissing,
+    email: !emailValid,
+    terms: !state.consentTerms,
+  };
+  const showing: Record<ErrorField, boolean> = {
+    phone: showPhoneError,
+    name: showNameError,
+    email: showEmailError,
+    terms: showTermsError,
+  };
+
+  useEffect(() => {
+    const showingNow = {
+      phone: showPhoneError,
+      name: showNameError,
+      email: showEmailError,
+      terms: showTermsError,
+    };
+    setRevealedBySubmit((previous) => {
+      const next = previous.filter((name) => showingNow[name]);
+      return next.length === previous.length ? previous : next;
+    });
+  }, [showPhoneError, showNameError, showEmailError, showTermsError]);
 
   const price = format.price(totalOre);
   // `null` when the pack leaves it blank, in either form: no box, no description.
@@ -533,6 +568,8 @@ export function DetailsScreen({
 
   function handleSubmit() {
     setAttempted(true);
+    // Everything wrong is about to show: quiet, but for focus (see `revealedBySubmit`).
+    setRevealedBySubmit(ERROR_FIELDS.filter((name) => invalid[name]));
 
     // Unreachable through the wizard, but submitting without a slot would book 1970.
     if (state.startTs === null) return;
@@ -570,16 +607,29 @@ export function DetailsScreen({
     });
   }
 
-  /** The required / optional marker after a label, when the pack has one. */
-  const marker = (required: boolean) => (
-    <LabelMarker label={required ? labels['details.required'] : labels['details.optional']} />
-  );
-  /** A field's error as the screen draws every one: an id to describe the field by, announced. */
-  const error = (name: string, label: BookingLabel) => (
-    <Field.Error id={field(`${name}-error`)} role="alert">
-      {label}
-    </Field.Error>
-  );
+  /**
+   * A label's text with the required / optional marker after it, when the
+   * pack has one. `null`: a field that is neither (a locked address).
+   */
+  const marked = (text: BookingLabel, required: boolean | null) => {
+    if (required === null) return <MarkedLabel text={text} marker={undefined} />;
+    const marker = required ? labels['details.required'] : labels['details.optional'];
+    return <MarkedLabel text={text} marker={marker} />;
+  };
+  /**
+   * A field's error as the screen draws every one: an id to describe the
+   * field by, and an alert unless a submit revealed it (see `revealedBySubmit`).
+   */
+  const error = (name: ErrorField, label: BookingLabel, className?: string) =>
+    showing[name] && (
+      <Field.Error
+        id={field(`${name}-error`)}
+        role={revealedBySubmit.includes(name) ? undefined : 'alert'}
+        className={className}
+      >
+        {label}
+      </Field.Error>
+    );
   const describedBy = (...ids: (string | false | null)[]) =>
     ids.filter(Boolean).join(' ') || undefined;
 
@@ -606,8 +656,7 @@ export function DetailsScreen({
 
       <Field className={fieldClass}>
         <Field.Label htmlFor={field('phone')}>
-          {labels['details.phone.label']}
-          {marker(true)}
+          {marked(labels['details.phone.label'], true)}
         </Field.Label>
         {/* The country code is shown rather than typed. `aria-describedby`
             rather than `aria-hidden`: the prefix is information. */}
@@ -639,13 +688,12 @@ export function DetailsScreen({
             onChange={(event) => setContact('phone', event.target.value)}
           />
         </div>
-        {showPhoneError && error('phone', labels['details.phone.error'])}
+        {error('phone', labels['details.phone.error'])}
       </Field>
 
       <Field className={fieldClass}>
         <Field.Label htmlFor={field('name')}>
-          {labels['details.name.label']}
-          {marker(requireName)}
+          {marked(labels['details.name.label'], requireName)}
         </Field.Label>
         <Input
           id={field('name')}
@@ -663,11 +711,10 @@ export function DetailsScreen({
           }}
           onChange={(event) => setContact('name', event.target.value)}
         />
-        {showNameError &&
-          error(
-            'name',
-            labels['details.error.nameRequired'] ?? labels['details.error.invalidInput']
-          )}
+        {error(
+          'name',
+          labels['details.error.nameRequired'] ?? labels['details.error.invalidInput']
+        )}
       </Field>
 
       {state.items.some((_, index) => isKnownChair(state, index)) && (
@@ -697,7 +744,7 @@ export function DetailsScreen({
             family={family}
             labels={labels}
             classNames={classNames}
-            optionalMarker={marker(false)}
+            marked={(text) => marked(text, false)}
             FamilyChip={FamilyChip}
             onChange={(patch, personId) => setChild(index, patch, personId)}
           />
@@ -706,9 +753,8 @@ export function DetailsScreen({
 
       <Field className={fieldClass}>
         <Field.Label htmlFor={field('email')}>
-          {labels['details.email.label']}
           {/* A locked address is not a question, so it gets no marker. */}
-          {!emailLocked && marker(emailRequired)}
+          {marked(labels['details.email.label'], emailLocked ? null : emailRequired)}
         </Field.Label>
         <Input
           id={field('email')}
@@ -735,19 +781,17 @@ export function DetailsScreen({
         <Field.Description id={field('email-help')}>
           {emailLocked ? labels['details.email.lockedHelp'] : labels['details.email.help']}
         </Field.Description>
-        {showEmailError &&
-          error(
-            'email',
-            emailMissing
-              ? (labels['details.email.required'] ?? labels['details.email.error'])
-              : labels['details.email.error']
-          )}
+        {error(
+          'email',
+          emailMissing
+            ? (labels['details.email.required'] ?? labels['details.email.error'])
+            : labels['details.email.error']
+        )}
       </Field>
 
       <Field className={fieldClass}>
         <Field.Label htmlFor={field('notes')}>
-          {labels['details.notes.label']}
-          {marker(false)}
+          {marked(labels['details.notes.label'], false)}
         </Field.Label>
         <Textarea
           id={field('notes')}
@@ -771,8 +815,7 @@ export function DetailsScreen({
           onCheckedChange={(accepted) => onChange({ type: 'setConsent', which: 'terms', accepted })}
         />
         <Field.Label htmlFor={field('terms')} className="cursor-pointer font-normal">
-          {labels['details.terms.text']}
-          {marker(true)}
+          {marked(labels['details.terms.text'], true)}
         </Field.Label>
         {termsHref && (
           <a
@@ -782,10 +825,10 @@ export function DetailsScreen({
             {labels['details.terms.link']}
           </a>
         )}
-        {showTermsError && (
-          <Field.Error id={field('terms-error')} role="alert" className="col-start-2">
-            {labels['details.terms.error'] ?? labels['details.error.invalidInput']}
-          </Field.Error>
+        {error(
+          'terms',
+          labels['details.terms.error'] ?? labels['details.error.invalidInput'],
+          'col-start-2'
         )}
       </Field>
 
@@ -852,7 +895,7 @@ function ChildFields({
   family,
   labels,
   classNames,
-  optionalMarker,
+  marked,
   FamilyChip,
   onChange,
 }: {
@@ -863,7 +906,8 @@ function ChildFields({
   family?: readonly BookingFamilyMember[];
   labels: DetailsScreenLabels;
   classNames?: SlotClassNames<DetailsScreenSlot>;
-  optionalMarker: ReactNode;
+  /** The label's text with the optional marker, when the pack has one. */
+  marked: (text: BookingLabel) => ReactNode;
   FamilyChip: ComponentType<FamilyChipProps>;
   onChange: (patch: Partial<ChildInput>, personId?: string) => void;
 }) {
@@ -871,10 +915,7 @@ function ChildFields({
     // Side by side: the year qualifies the name.
     <div className="grid grid-cols-[1fr_7rem] gap-3">
       <Field className={slotClass(classNames, 'field')}>
-        <Field.Label htmlFor={nameId}>
-          {labels['details.child.name']}
-          {optionalMarker}
-        </Field.Label>
+        <Field.Label htmlFor={nameId}>{marked(labels['details.child.name'])}</Field.Label>
         <Input
           id={nameId}
           className={slotClass(classNames, 'input', BOOKING_INPUT_CLASS)}
@@ -883,10 +924,7 @@ function ChildFields({
         />
       </Field>
       <Field className={slotClass(classNames, 'field')}>
-        <Field.Label htmlFor={yearId}>
-          {labels['details.child.year']}
-          {optionalMarker}
-        </Field.Label>
+        <Field.Label htmlFor={yearId}>{marked(labels['details.child.year'])}</Field.Label>
         {/* Text with a numeric keypad rather than `type="number"`: no spinner
             to nudge a birth year, and an emptied field stays a string. */}
         <Input
@@ -941,21 +979,23 @@ function ChildFields({
 }
 
 /**
- * The required / optional marker after a field's label. The space is a real
- * text node: the label's flex gap is only visual, and the accessible name
- * would otherwise run the two words together.
+ * A field's label text, with the required / optional marker after it when the
+ * pack has one. Text and marker sit in one `<span>`: `Field.Label` is a flex
+ * row, and as two flex items a wrapped sentence would push the marker into a
+ * column of its own instead of after the last word. The space is a real text
+ * node, so the accessible name does not run the two words together. Without a
+ * marker the text renders exactly as before.
  */
-function LabelMarker({ label }: { label: BookingLabel | undefined }) {
-  if (label === undefined) return null;
-  const text = renderLabel(label);
-  if (!text) return null;
+function MarkedLabel({ text, marker }: { text: BookingLabel; marker: BookingLabel | undefined }) {
+  const markerText = marker === undefined ? null : renderLabel(marker);
+  if (!markerText) return <>{text}</>;
   return (
-    <>
-      {' '}
+    <span>
+      {text}{' '}
       <span data-slot="field-marker" className="font-normal text-muted-foreground">
-        {text}
+        {markerText}
       </span>
-    </>
+    </span>
   );
 }
 

@@ -179,8 +179,10 @@ same wizard / manage page / portal. Rules when editing or adding one:
 - **Override ladder:** CSS variables → `labels` → `classNames` slots → `components` card
   renderers (export the default renderer). Keep all four working in tests.
 - **Forms announce their errors.** Every field error gets an id in its field's
-  `aria-describedby` (after any help text) and `role="alert"`; required inputs carry
-  `aria-required`; a refused submit focuses the first field to fix. `DetailsScreen`'s
+  `aria-describedby` (after any help text); one revealed by leaving a field is a
+  `role="alert"`, while a refused submit focuses the first field to fix and leaves the
+  errors it revealed quiet (several alerts at once talk over the focused field); required
+  inputs carry `aria-required`. `DetailsScreen`'s
   required / optional markers and extra messages are the opt-in
   `DETAILS_SCREEN_FORM_LABEL_KEYS` (`details.required`, `details.optional`,
   `details.terms.error`, `details.error.nameRequired`); `requireName` makes the name
