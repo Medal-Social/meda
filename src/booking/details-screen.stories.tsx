@@ -136,7 +136,10 @@ export const EmailReadOnly: Story = {
   },
 };
 
-/** The business confirms and reminds by e-mail only, so a blank address is refused. */
+/**
+ * The business confirms and reminds by e-mail only, so a blank address is
+ * refused. `requireName` does the same for the name (try it in the controls).
+ */
 export const EmailRequired: Story = {
   args: { emailRequired: true },
 };

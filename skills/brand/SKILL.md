@@ -51,13 +51,13 @@ CSS framework: **Tailwind v4**, CSS-first via `@theme inline` in `src/styles/the
 
 ```tsx
 // ❌ Wrong: pale in dark
-<Button className="bg-primary text-primary-foreground">Get started</Button>
+const wrong = <Button className="bg-primary text-primary-foreground">Get started</Button>;
 
 // ✅ Right: constant brand-purple in both themes
-<Button className="bg-brand-500 hover:bg-brand-600 text-white">Get started</Button>
+const right = <Button className="bg-brand-500 hover:bg-brand-600 text-white">Get started</Button>;
 
 // ✅ Also right (active state, tinted overlay)
-<Link className="bg-primary/12 text-primary">Dashboard</Link>
+const activeItem = <Link className="bg-primary/12 text-primary">Dashboard</Link>;
 ```
 
 Logos and brand marks render in `var(--color-brand-500)`, not `currentColor`.
