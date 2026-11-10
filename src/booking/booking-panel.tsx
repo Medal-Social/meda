@@ -81,6 +81,12 @@ export interface BookingPanelProps {
   format: BookingFormat;
   /** «1 child, 1 adult»; `null` while nobody is chosen. */
   who: string | null;
+  /**
+   * Draw the «who» row. Default `true`. `false` omits it (and `who` is not
+   * read) — for a flow that never asks who the visit is for, where a row
+   * stuck on «not chosen» would describe a question nobody was shown.
+   */
+  showWho?: boolean;
   /** «Boys' cut · 30 min»; `null` while nothing is chosen. */
   services: string | null;
   /** The chosen start; `null` before a time is picked. */
@@ -123,6 +129,7 @@ export function BookingPanel({
   labels,
   format,
   who,
+  showWho = true,
   services,
   startTs,
   stylist,
@@ -139,7 +146,7 @@ export function BookingPanel({
   );
   const swaps = onSwap ? (alternatives ?? []).slice(0, MAX_ALTERNATIVES) : [];
   const rows: { name: BookingLabel; value: ReactNode; strong?: boolean }[] = [
-    { name: labels['panel.who'], value: who ?? notChosen },
+    ...(showWho ? [{ name: labels['panel.who'], value: who ?? notChosen }] : []),
     { name: labels['panel.service'], value: services ?? notChosen },
     {
       name: labels['panel.time'],

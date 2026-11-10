@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 import { demoFormatNb } from '../../../src/booking/__stories__/fixtures.js';
-import { detailsScreenLabelsNb as L } from '../../../src/booking/__stories__/labels.details.js';
+import { detailsScreenLabelsNb as FULL } from '../../../src/booking/__stories__/labels.details.js';
 import {
   DETAILS_ERROR_LABEL_KEYS,
   DETAILS_SCREEN_LABEL_KEYS,
@@ -12,6 +12,12 @@ import {
   looksLikeEmail,
 } from '../../../src/booking/details-screen.js';
 import type { WizardError, WizardService, WizardState } from '../../../src/booking/types.js';
+
+/**
+ * The demo pack without the opt-in markers, so a label's accessible name is
+ * its key's text alone — what a pack written before the markers renders.
+ */
+const { 'details.required': _required, 'details.optional': _optional, ...L } = FULL;
 
 const KIDS: WizardService = {
   id: 'svc-kids',
@@ -89,6 +95,11 @@ function setup(props: Partial<DetailsScreenProps> = {}) {
   };
 }
 
+/** The texts a field is described by, in order. */
+const describedBy = (element: HTMLElement) =>
+  (element.getAttribute('aria-describedby') ?? '')
+    .split(' ')
+    .map((id) => document.getElementById(id)?.textContent);
 const badPhoneState = () => readyState({ contact: { phone: '4000000', name: '', email: '' } });
 const submitButton = () => screen.getByRole('button', { name: /^Bestill –/ });
 function fill(label: string, value: string) {
@@ -486,6 +497,238 @@ describe('DetailsScreen', () => {
       const { container } = setup({ emailRequired: true, state: blankEmail() });
       fireEvent.click(submitButton());
       expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+  describe('accessible errors and required fields', () => {
+    it('ties every field error to its field, and lets focus speak for a refused submit', () => {
+      setup({
+        requireName: true,
+        state: readyState({
+          contact: { phone: '4000000', name: '', email: 'kari@' },
+          consentTerms: false,
+        }),
+      });
+      fireEvent.click(submitButton());
+      const fields: [HTMLElement, string][] = [
+        [screen.getByLabelText(L['details.phone.label']), L['details.phone.error']],
+        [screen.getByLabelText(L['details.name.label']), L['details.error.nameRequired'] ?? ''],
+        [screen.getByLabelText(L['details.email.label']), L['details.email.error']],
+        [
+          screen.getByRole('checkbox', { name: L['details.terms.text'] }),
+          L['details.terms.error'] ?? '',
+        ],
+      ];
+      for (const [input, message] of fields) {
+        expect(input).toHaveAttribute('aria-invalid', 'true');
+        expect(describedBy(input)).toContain(message);
+      }
+      // Focus lands on the first, whose message is its description; four
+      // alerts at once would talk over it.
+      expect(fields[0]?.[0]).toHaveFocus();
+      expect(screen.queryByRole('alert')).toBeNull();
+    });
+
+    it('announces an error revealed by leaving a field, when nothing else moved', () => {
+      setup({ state: badPhoneState() });
+      const phone = screen.getByLabelText(L['details.phone.label']);
+      fireEvent.focus(phone);
+      fireEvent.blur(phone);
+      expect(screen.getByRole('alert')).toHaveTextContent(L['details.phone.error']);
+      expect(describedBy(phone)).toContain(L['details.phone.error']);
+    });
+
+    it('announces a mistake made after a refused submit was fixed', () => {
+      const onChange = vi.fn();
+      const { rerender } = setup({ state: readyState({ consentTerms: false }), onChange });
+      fireEvent.click(submitButton());
+      expect(screen.queryByRole('alert')).toBeNull();
+      const props = {
+        onChange,
+        onSubmit: vi.fn(),
+        lines: [{ startTs: THURSDAY_15, resourceId: 'res-ada' }],
+        totalOre: 39_000,
+        phoneLooksValid,
+        normalisePhone,
+        format: demoFormatNb,
+        labels: L,
+      };
+      rerender(<DetailsScreen {...props} state={readyState({ consentTerms: true })} />);
+      expect(screen.queryByText(L['details.terms.error'] ?? '')).toBeNull();
+      rerender(<DetailsScreen {...props} state={readyState({ consentTerms: false })} />);
+      expect(screen.getByRole('alert')).toHaveTextContent(L['details.terms.error'] ?? '');
+    });
+
+    it('keeps the help text in the e-mail description beside its error', () => {
+      setup({ state: readyState({ contact: { phone: '40000000', name: '', email: 'kari@' } }) });
+      fireEvent.click(submitButton());
+      expect(describedBy(screen.getByLabelText(L['details.email.label']))).toEqual([
+        L['details.email.help'],
+        L['details.email.error'],
+      ]);
+    });
+
+    it('shows why an unticked terms box is refused, in the pack’s words or the generic ones', () => {
+      const { unmount } = setup({ state: readyState({ consentTerms: false }) });
+      expect(screen.queryByText(L['details.terms.error'] ?? '')).toBeNull();
+      fireEvent.click(submitButton());
+      expect(screen.getByText(L['details.terms.error'] ?? '')).toBeInTheDocument();
+      unmount();
+      const { 'details.terms.error': _terms, ...older } = L;
+      setup({ state: readyState({ consentTerms: false }), labels: older });
+      fireEvent.click(submitButton());
+      const terms = screen.getByRole('checkbox', { name: L['details.terms.text'] });
+      expect(describedBy(terms)).toEqual([L['details.error.invalidInput']]);
+    });
+
+    it('marks the phone and the terms required, and nothing optional', () => {
+      setup();
+      expect(screen.getByLabelText(L['details.phone.label'])).toHaveAttribute(
+        'aria-required',
+        'true'
+      );
+      expect(screen.getByRole('checkbox', { name: L['details.terms.text'] })).toHaveAttribute(
+        'aria-required',
+        'true'
+      );
+      for (const label of [
+        L['details.name.label'],
+        L['details.email.label'],
+        L['details.notes.label'],
+        L['details.child.name'],
+        L['details.child.year'],
+      ]) {
+        expect(screen.getByLabelText(label)).not.toHaveAttribute('aria-required');
+      }
+      expect(
+        screen.getByRole('checkbox', { name: L['details.marketing.text'] })
+      ).not.toHaveAttribute('aria-required');
+    });
+
+    it('draws no marker for a pack without the marker keys', () => {
+      const { container } = setup();
+      expect(container.querySelector('[data-slot="field-marker"]')).toBeNull();
+    });
+
+    it('keeps a marker in the same run of text as its label, so it wraps after the last word', () => {
+      const { container } = setup({ labels: FULL });
+      for (const marker of container.querySelectorAll('[data-slot="field-marker"]')) {
+        // One flex item inside the label, not a column beside the sentence.
+        expect(marker.parentElement?.tagName).toBe('SPAN');
+        expect(marker.parentElement?.parentElement?.tagName).toBe('LABEL');
+        expect(marker.parentElement?.parentElement?.children).toHaveLength(1);
+      }
+    });
+
+    it('draws the pack’s markers after each label, as part of its name', () => {
+      setup({ labels: FULL });
+      const required = (label: string) => `${label} ${FULL['details.required']}`;
+      const optional = (label: string) => `${label} ${FULL['details.optional']}`;
+      expect(screen.getByLabelText(required(L['details.phone.label']))).toHaveAttribute(
+        'type',
+        'tel'
+      );
+      for (const label of [
+        L['details.name.label'],
+        L['details.email.label'],
+        L['details.notes.label'],
+        L['details.child.name'],
+        L['details.child.year'],
+      ]) {
+        expect(screen.getByLabelText(optional(label))).toBeInTheDocument();
+      }
+      expect(
+        screen.getByRole('checkbox', { name: required(L['details.terms.text']) })
+      ).toBeInTheDocument();
+      // Not a question about the booking, so neither marker.
+      expect(
+        screen.getByRole('checkbox', { name: L['details.marketing.text'] })
+      ).toBeInTheDocument();
+    });
+
+    it('marks the name and the e-mail required when the screen is told to', () => {
+      setup({ labels: FULL, requireName: true, emailRequired: true });
+      const required = (label: string) => `${label} ${FULL['details.required']}`;
+      expect(screen.getByLabelText(required(L['details.name.label']))).toHaveAttribute(
+        'aria-required',
+        'true'
+      );
+      expect(screen.getByLabelText(required(L['details.email.label']))).toHaveAttribute(
+        'aria-required',
+        'true'
+      );
+    });
+
+    it('has no axe violations with markers and every error showing', async () => {
+      const { container } = setup({
+        labels: FULL,
+        requireName: true,
+        termsHref: '/terms',
+        state: readyState({
+          contact: { phone: '4000000', name: '', email: 'kari@' },
+          consentTerms: false,
+        }),
+      });
+      fireEvent.click(submitButton());
+      expect(
+        await axe(container, { rules: { 'color-contrast': { enabled: false } } })
+      ).toHaveNoViolations();
+    });
+  });
+
+  describe('requireName', () => {
+    const blankName = () => readyState({ contact: { phone: '40000000', name: '', email: '' } });
+
+    it('leaves the name optional by default', () => {
+      const { onSubmit } = setup({ state: blankName() });
+      fireEvent.blur(screen.getByLabelText(L['details.name.label']));
+      fireEvent.click(submitButton());
+      expect(onSubmit).toHaveBeenCalledOnce();
+      expect(onSubmit.mock.calls[0]?.[0].contact).toEqual({ phone: '40000000' });
+    });
+
+    it('says nothing until the field is left, then refuses a blank name', () => {
+      setup({ requireName: true, state: blankName() });
+      const name = screen.getByLabelText(L['details.name.label']);
+      expect(screen.queryByText(L['details.error.nameRequired'] ?? '')).toBeNull();
+      fireEvent.focus(name);
+      expect(screen.queryByText(L['details.error.nameRequired'] ?? '')).toBeNull();
+      fireEvent.blur(name);
+      expect(screen.getByRole('alert')).toHaveTextContent(L['details.error.nameRequired'] ?? '');
+      expect(name).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it('refuses a blank name on submit and focuses it, after the phone', () => {
+      const { onSubmit, unmount } = setup({ requireName: true, state: blankName() });
+      fireEvent.click(submitButton());
+      expect(onSubmit).not.toHaveBeenCalled();
+      expect(screen.getByLabelText(L['details.name.label'])).toHaveFocus();
+      unmount();
+      setup({
+        requireName: true,
+        state: readyState({ contact: { phone: '4000000', name: '  ', email: '' } }),
+      });
+      fireEvent.click(submitButton());
+      expect(screen.getByLabelText(L['details.phone.label'])).toHaveFocus();
+      expect(screen.getByText(L['details.error.nameRequired'] ?? '')).toBeInTheDocument();
+    });
+
+    it('books once a name is there', () => {
+      const { onSubmit } = setup({
+        requireName: true,
+        state: readyState({ contact: { phone: '40000000', name: ' Kari ', email: '' } }),
+      });
+      fireEvent.click(submitButton());
+      expect(onSubmit.mock.calls[0]?.[0].contact).toEqual({ phone: '40000000', name: 'Kari' });
+    });
+
+    it('falls back to the generic sentence when the pack has no name one', () => {
+      const { 'details.error.nameRequired': _name, ...older } = L;
+      setup({ requireName: true, state: blankName(), labels: older });
+      fireEvent.click(submitButton());
+      expect(describedBy(screen.getByLabelText(L['details.name.label']))).toEqual([
+        L['details.error.invalidInput'],
+      ]);
     });
   });
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { type ComponentType, useId, useRef, useState } from 'react';
+import { type ComponentType, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { Checkbox } from '../primitives/checkbox.js';
 import { Field } from '../primitives/field.js';
 import { Input } from '../primitives/input.js';
@@ -88,9 +88,40 @@ export const DETAILS_SCREEN_EMAIL_REQUIRED_LABEL_KEYS = [
   'details.email.required',
 ] as const;
 
+/**
+ * Opt-in keys for the form's required / optional markers and the messages a
+ * pack written before them lacks. Every one may be left out:
+ *
+ * - without `details.required` / `details.optional` no marker is drawn (the
+ *   inputs still carry `aria-required`, which does not need copy);
+ * - without `details.terms.error` / `details.error.nameRequired` the refusal
+ *   is explained with `details.error.invalidInput`.
+ */
+export const DETAILS_SCREEN_FORM_LABEL_KEYS = [
+  /**
+   * Drawn after the label of every field that must be filled in (the phone,
+   * the terms box, and the name / e-mail when `requireName` / `emailRequired`
+   * is set), e.g. «(må fylles ut)». It is part of the field's accessible name,
+   * so prefer words to a lone «*», which a screen reader reads as «star».
+   */
+  'details.required',
+  /** Drawn after the label of every field that may be left blank, e.g. «(valgfritt)». */
+  'details.optional',
+  /** The terms box left unticked when submit is pressed, e.g. «Du må godta vilkårene». */
+  'details.terms.error',
+  /** A blank name when `requireName` is set, e.g. «Skriv inn navnet ditt». */
+  'details.error.nameRequired',
+] as const;
+
 export type DetailsScreenLabelKey = (typeof DETAILS_SCREEN_LABEL_KEYS)[number];
 export type DetailsScreenLabels = Record<DetailsScreenLabelKey, BookingLabel> &
-  Partial<Record<(typeof DETAILS_SCREEN_EMAIL_REQUIRED_LABEL_KEYS)[number], BookingLabel>>;
+  Partial<
+    Record<
+      | (typeof DETAILS_SCREEN_EMAIL_REQUIRED_LABEL_KEYS)[number]
+      | (typeof DETAILS_SCREEN_FORM_LABEL_KEYS)[number],
+      BookingLabel
+    >
+  >;
 
 /**
  * The label key for each failure the wizard can carry. Exported because some
@@ -244,6 +275,13 @@ export interface DetailsScreenProps {
    * call the field optional.
    */
   emailRequired?: boolean;
+  /**
+   * The name must be filled in: a blank name is refused when the field is
+   * left and on submit, with `details.error.nameRequired` (falling back to
+   * `details.error.invalidInput`), and the input carries `aria-required`.
+   * Default `false`: the name is optional.
+   */
+  requireName?: boolean;
   /** Draw the (optional, unticked) marketing opt-in. */
   marketingConsent?: boolean;
   format: BookingFormat;
@@ -291,6 +329,10 @@ export function looksLikeEmail(value: string): boolean {
   }
   return false;
 }
+
+/** The fields whose errors the screen draws, in the order a refused submit visits them. */
+const ERROR_FIELDS = ['phone', 'name', 'email', 'terms'] as const;
+type ErrorField = (typeof ERROR_FIELDS)[number];
 
 /** The child's two fields as typed — both strings, including the year. */
 interface ChildInput {
@@ -371,6 +413,7 @@ export function DetailsScreen({
   termsHref = null,
   emailReadOnly = false,
   emailRequired = false,
+  requireName = false,
   marketingConsent = false,
   format,
   labels,
@@ -380,6 +423,7 @@ export function DetailsScreen({
   const ids = useId();
   const field = (name: string) => `${ids}-${name}`;
   const phoneRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const termsRef = useRef<HTMLInputElement>(null);
 
@@ -403,6 +447,15 @@ export function DetailsScreen({
   const [focused, setFocused] = useState<string | null>(null);
   // Submit is never disabled for validation, so pressing it is what explains a refusal.
   const [attempted, setAttempted] = useState(false);
+  // A required name left blank is refused once the field has been left, not
+  // while the visitor has yet to reach it.
+  const [nameLeft, setNameLeft] = useState(false);
+  // The errors a refused submit revealed. They are not alerts: submit moves
+  // focus to the first of them, which reads its message as the description,
+  // and announcing every one at once would talk over it. An error revealed by
+  // leaving a field (nothing else moved) is an alert. Pruned once fixed, so a
+  // later mistake is announced again.
+  const [revealedBySubmit, setRevealedBySubmit] = useState<readonly ErrorField[]>([]);
 
   const phoneTyped = state.contact.phone.trim().length > 0;
   const phoneValid = phoneLooksValid(state.contact.phone);
@@ -420,6 +473,33 @@ export function DetailsScreen({
     ? attempted
     : !emailValid && (attempted || focused !== 'email');
   const showTermsError = attempted && !state.consentTerms;
+  const nameMissing = requireName && state.contact.name.trim().length === 0;
+  const showNameError = nameMissing && (attempted || (nameLeft && focused !== 'name'));
+  const invalid: Record<ErrorField, boolean> = {
+    phone: !phoneValid,
+    name: nameMissing,
+    email: !emailValid,
+    terms: !state.consentTerms,
+  };
+  const showing: Record<ErrorField, boolean> = {
+    phone: showPhoneError,
+    name: showNameError,
+    email: showEmailError,
+    terms: showTermsError,
+  };
+
+  useEffect(() => {
+    const showingNow = {
+      phone: showPhoneError,
+      name: showNameError,
+      email: showEmailError,
+      terms: showTermsError,
+    };
+    setRevealedBySubmit((previous) => {
+      const next = previous.filter((name) => showingNow[name]);
+      return next.length === previous.length ? previous : next;
+    });
+  }, [showPhoneError, showNameError, showEmailError, showTermsError]);
 
   const price = format.price(totalOre);
   // `null` when the pack leaves it blank, in either form: no box, no description.
@@ -488,6 +568,8 @@ export function DetailsScreen({
 
   function handleSubmit() {
     setAttempted(true);
+    // Everything wrong is about to show: quiet, but for focus (see `revealedBySubmit`).
+    setRevealedBySubmit(ERROR_FIELDS.filter((name) => invalid[name]));
 
     // Unreachable through the wizard, but submitting without a slot would book 1970.
     if (state.startTs === null) return;
@@ -496,6 +578,10 @@ export function DetailsScreen({
     // fix is needed, and works for whoever is not looking at the screen.
     if (!phoneValid) {
       phoneRef.current?.focus();
+      return;
+    }
+    if (nameMissing) {
+      nameRef.current?.focus();
       return;
     }
     if (!emailValid) {
@@ -521,6 +607,32 @@ export function DetailsScreen({
     });
   }
 
+  /**
+   * A label's text with the required / optional marker after it, when the
+   * pack has one. `null`: a field that is neither (a locked address).
+   */
+  const marked = (text: BookingLabel, required: boolean | null) => {
+    if (required === null) return <MarkedLabel text={text} marker={undefined} />;
+    const marker = required ? labels['details.required'] : labels['details.optional'];
+    return <MarkedLabel text={text} marker={marker} />;
+  };
+  /**
+   * A field's error as the screen draws every one: an id to describe the
+   * field by, and an alert unless a submit revealed it (see `revealedBySubmit`).
+   */
+  const error = (name: ErrorField, label: BookingLabel, className?: string) =>
+    showing[name] && (
+      <Field.Error
+        id={field(`${name}-error`)}
+        role={revealedBySubmit.includes(name) ? undefined : 'alert'}
+        className={className}
+      >
+        {label}
+      </Field.Error>
+    );
+  const describedBy = (...ids: (string | false | null)[]) =>
+    ids.filter(Boolean).join(' ') || undefined;
+
   const inputClass = (...extra: string[]) =>
     slotClass(classNames, 'input', BOOKING_INPUT_CLASS, ...extra);
   const fieldClass = slotClass(classNames, 'field');
@@ -543,7 +655,9 @@ export function DetailsScreen({
       </h2>
 
       <Field className={fieldClass}>
-        <Field.Label htmlFor={field('phone')}>{labels['details.phone.label']}</Field.Label>
+        <Field.Label htmlFor={field('phone')}>
+          {marked(labels['details.phone.label'], true)}
+        </Field.Label>
         {/* The country code is shown rather than typed. `aria-describedby`
             rather than `aria-hidden`: the prefix is information. */}
         <div className="flex items-stretch">
@@ -563,34 +677,44 @@ export function DetailsScreen({
             autoComplete="tel-national"
             className={inputClass(phonePrefix ? 'rounded-l-none' : '')}
             value={state.contact.phone}
-            aria-describedby={
-              [
-                phonePrefix ? field('phone-prefix') : null,
-                showPhoneError ? field('phone-error') : null,
-              ]
-                .filter(Boolean)
-                .join(' ') || undefined
-            }
+            aria-describedby={describedBy(
+              phonePrefix ? field('phone-prefix') : null,
+              showPhoneError && field('phone-error')
+            )}
+            aria-required="true"
             aria-invalid={showPhoneError || undefined}
             onFocus={() => setFocused('phone')}
             onBlur={() => setFocused(null)}
             onChange={(event) => setContact('phone', event.target.value)}
           />
         </div>
-        {showPhoneError && (
-          <Field.Error id={field('phone-error')}>{labels['details.phone.error']}</Field.Error>
-        )}
+        {error('phone', labels['details.phone.error'])}
       </Field>
 
       <Field className={fieldClass}>
-        <Field.Label htmlFor={field('name')}>{labels['details.name.label']}</Field.Label>
+        <Field.Label htmlFor={field('name')}>
+          {marked(labels['details.name.label'], requireName)}
+        </Field.Label>
         <Input
           id={field('name')}
+          ref={nameRef}
           autoComplete="name"
           className={inputClass()}
           value={state.contact.name}
+          aria-required={requireName || undefined}
+          aria-describedby={describedBy(showNameError && field('name-error'))}
+          aria-invalid={showNameError || undefined}
+          onFocus={() => setFocused('name')}
+          onBlur={() => {
+            setFocused(null);
+            setNameLeft(true);
+          }}
           onChange={(event) => setContact('name', event.target.value)}
         />
+        {error(
+          'name',
+          labels['details.error.nameRequired'] ?? labels['details.error.invalidInput']
+        )}
       </Field>
 
       {state.items.some((_, index) => isKnownChair(state, index)) && (
@@ -620,6 +744,7 @@ export function DetailsScreen({
             family={family}
             labels={labels}
             classNames={classNames}
+            marked={(text) => marked(text, false)}
             FamilyChip={FamilyChip}
             onChange={(patch, personId) => setChild(index, patch, personId)}
           />
@@ -627,7 +752,10 @@ export function DetailsScreen({
       )}
 
       <Field className={fieldClass}>
-        <Field.Label htmlFor={field('email')}>{labels['details.email.label']}</Field.Label>
+        <Field.Label htmlFor={field('email')}>
+          {/* A locked address is not a question, so it gets no marker. */}
+          {marked(labels['details.email.label'], emailLocked ? null : emailRequired)}
+        </Field.Label>
         <Input
           id={field('email')}
           ref={emailRef}
@@ -641,9 +769,10 @@ export function DetailsScreen({
           aria-readonly={emailLocked || undefined}
           // The error joins the help text, so a screen reader landing on the
           // invalid field (submit focuses it) hears how to fix it.
-          aria-describedby={
-            showEmailError ? `${field('email-help')} ${field('email-error')}` : field('email-help')
-          }
+          aria-describedby={describedBy(
+            field('email-help'),
+            showEmailError && field('email-error')
+          )}
           aria-invalid={showEmailError || undefined}
           onFocus={() => setFocused('email')}
           onBlur={() => setFocused(null)}
@@ -652,17 +781,18 @@ export function DetailsScreen({
         <Field.Description id={field('email-help')}>
           {emailLocked ? labels['details.email.lockedHelp'] : labels['details.email.help']}
         </Field.Description>
-        {showEmailError && (
-          <Field.Error id={field('email-error')}>
-            {emailMissing
-              ? (labels['details.email.required'] ?? labels['details.email.error'])
-              : labels['details.email.error']}
-          </Field.Error>
+        {error(
+          'email',
+          emailMissing
+            ? (labels['details.email.required'] ?? labels['details.email.error'])
+            : labels['details.email.error']
         )}
       </Field>
 
       <Field className={fieldClass}>
-        <Field.Label htmlFor={field('notes')}>{labels['details.notes.label']}</Field.Label>
+        <Field.Label htmlFor={field('notes')}>
+          {marked(labels['details.notes.label'], false)}
+        </Field.Label>
         <Textarea
           id={field('notes')}
           rows={3}
@@ -679,11 +809,13 @@ export function DetailsScreen({
           ref={termsRef}
           className={BOOKING_CHECKBOX_CLASS}
           checked={state.consentTerms}
+          aria-required="true"
           aria-invalid={showTermsError || undefined}
+          aria-describedby={describedBy(showTermsError && field('terms-error'))}
           onCheckedChange={(accepted) => onChange({ type: 'setConsent', which: 'terms', accepted })}
         />
         <Field.Label htmlFor={field('terms')} className="cursor-pointer font-normal">
-          {labels['details.terms.text']}
+          {marked(labels['details.terms.text'], true)}
         </Field.Label>
         {termsHref && (
           <a
@@ -692,6 +824,11 @@ export function DetailsScreen({
           >
             {labels['details.terms.link']}
           </a>
+        )}
+        {error(
+          'terms',
+          labels['details.terms.error'] ?? labels['details.error.invalidInput'],
+          'col-start-2'
         )}
       </Field>
 
@@ -758,6 +895,7 @@ function ChildFields({
   family,
   labels,
   classNames,
+  marked,
   FamilyChip,
   onChange,
 }: {
@@ -768,6 +906,8 @@ function ChildFields({
   family?: readonly BookingFamilyMember[];
   labels: DetailsScreenLabels;
   classNames?: SlotClassNames<DetailsScreenSlot>;
+  /** The label's text with the optional marker, when the pack has one. */
+  marked: (text: BookingLabel) => ReactNode;
   FamilyChip: ComponentType<FamilyChipProps>;
   onChange: (patch: Partial<ChildInput>, personId?: string) => void;
 }) {
@@ -775,7 +915,7 @@ function ChildFields({
     // Side by side: the year qualifies the name.
     <div className="grid grid-cols-[1fr_7rem] gap-3">
       <Field className={slotClass(classNames, 'field')}>
-        <Field.Label htmlFor={nameId}>{labels['details.child.name']}</Field.Label>
+        <Field.Label htmlFor={nameId}>{marked(labels['details.child.name'])}</Field.Label>
         <Input
           id={nameId}
           className={slotClass(classNames, 'input', BOOKING_INPUT_CLASS)}
@@ -784,7 +924,7 @@ function ChildFields({
         />
       </Field>
       <Field className={slotClass(classNames, 'field')}>
-        <Field.Label htmlFor={yearId}>{labels['details.child.year']}</Field.Label>
+        <Field.Label htmlFor={yearId}>{marked(labels['details.child.year'])}</Field.Label>
         {/* Text with a numeric keypad rather than `type="number"`: no spinner
             to nudge a birth year, and an emptied field stays a string. */}
         <Input
@@ -835,6 +975,27 @@ function ChildFields({
       <legend className="px-1 font-sans text-sm font-bold text-muted-foreground">{legend}</legend>
       {withSuggestions}
     </fieldset>
+  );
+}
+
+/**
+ * A field's label text, with the required / optional marker after it when the
+ * pack has one. Text and marker sit in one `<span>`: `Field.Label` is a flex
+ * row, and as two flex items a wrapped sentence would push the marker into a
+ * column of its own instead of after the last word. The space is a real text
+ * node, so the accessible name does not run the two words together. Without a
+ * marker the text renders exactly as before.
+ */
+function MarkedLabel({ text, marker }: { text: BookingLabel; marker: BookingLabel | undefined }) {
+  const markerText = marker === undefined ? null : renderLabel(marker);
+  if (!markerText) return <>{text}</>;
+  return (
+    <span>
+      {text}{' '}
+      <span data-slot="field-marker" className="font-normal text-muted-foreground">
+        {markerText}
+      </span>
+    </span>
   );
 }
 

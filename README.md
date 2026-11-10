@@ -123,6 +123,36 @@ const asPieces = {
   children), `fillLabel(label, values)` (text), `labelParts(label, { hole: <el/> })`
   (element holes), `fillLabelPieces`, `labelText`, `joinLabelParts`.
 
+### The details form: required fields and errors
+
+`DetailsScreen` ties every field error (phone, name, e-mail, terms box) to its field
+through `aria-describedby` (after any help text). An error that appears when a field is
+left is announced with `role="alert"`. A refused submit focuses the first field to fix
+(phone, name, e-mail, terms), so a screen reader reads that field's error as its
+description; the errors the same press revealed are not alerts, so they do not all
+speak at once. The phone and the terms box always carry `aria-required="true"`.
+
+- `requireName` (default `false`) makes the name required: a blank name is refused
+  when the field is left and on submit, with `details.error.nameRequired`.
+- `emailRequired` (default `false`) does the same for the e-mail, with
+  `details.email.required`.
+
+Opt-in label keys (`DETAILS_SCREEN_FORM_LABEL_KEYS`; a pack without them renders as
+before):
+
+| Key | Shown |
+| --- | --- |
+| `details.required` | after the label of each required field, e.g. «(må fylles ut)». Part of the accessible name, so prefer words to a lone «*» |
+| `details.optional` | after the label of each field that may be left blank, e.g. «(valgfritt)» |
+| `details.terms.error` | under an unticked terms box when submit is pressed |
+| `details.error.nameRequired` | under a blank name when `requireName` is set |
+
+Without `details.terms.error` / `details.error.nameRequired` the refusal is explained
+with `details.error.invalidInput`.
+
+`BookingPanel` takes `showWho` (default `true`); `false` omits the «who» row, for a
+flow that never asks who the visit is for.
+
 ```css
 @import 'tailwindcss';
 @import '@medalsocial/meda/styles/bridge.css';      /* your own shadcn tokens */

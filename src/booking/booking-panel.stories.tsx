@@ -39,6 +39,11 @@ type Story = StoryObj<typeof BookingPanel>;
 /** A time picked with «first available», someone else free at the same minute. */
 export const Default: Story = {};
 
+/** A flow that never asks who the visit is for: no «who» row. */
+export const WithoutWho: Story = {
+  args: { showWho: false },
+};
+
 /** Before anything is chosen: every row says so, and there is no total. */
 export const Empty: Story = {
   args: {
