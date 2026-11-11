@@ -272,8 +272,9 @@ export function usePanelSwipe(
         current.offset,
         target,
         velocity,
-        // A closing spring may not overshoot past the edge and show a gap.
-        (value) => paint(close ? Math.min(value, width) : value, current.sign),
+        // Neither spring may overshoot: past the width a closing panel would
+        // show a gap, and below 0 a returning one would leave its edge.
+        (value) => paint(Math.max(0, Math.min(value, width)), current.sign),
         done
       );
     };

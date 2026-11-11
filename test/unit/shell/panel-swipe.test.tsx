@@ -161,6 +161,45 @@ function drag(
   };
 }
 
+describe('springing home', () => {
+  it('never crosses its edge, even after a hard inward flick', () => {
+    stubMatchMedia(false);
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => frames.push(cb));
+    vi.stubGlobal('cancelAnimationFrame', () => {});
+    const el = document.createElement('div');
+    const child = document.createElement('p');
+    el.appendChild(child);
+    document.body.appendChild(el);
+    renderHook(() => usePanelSwipe({ current: el }, { enabled: true, onClose: vi.fn() }));
+    const pointer = { pointerId: 1, pointerType: 'touch' };
+    vi.useFakeTimers({ toFake: ['Date'] });
+    fireEvent.pointerDown(child, { ...pointer, clientX: 500, clientY: 100 });
+    vi.advanceTimersByTime(300);
+    fireEvent.pointerMove(child, { ...pointer, clientX: 700, clientY: 100 });
+    vi.advanceTimersByTime(300);
+    fireEvent.pointerMove(child, { ...pointer, clientX: 700, clientY: 100 });
+    vi.advanceTimersByTime(16);
+    fireEvent.pointerMove(child, { ...pointer, clientX: 610, clientY: 100 });
+    vi.advanceTimersByTime(16);
+    // A hard flick back toward the content, let go 20 px out at about
+    // −5600 px/s: an unclamped spring home would cross the edge by ~45 px.
+    fireEvent.pointerUp(child, { ...pointer, clientX: 520, clientY: 100 });
+    vi.useRealTimers();
+    let t = performance.now();
+    for (let i = 0; i < 200 && frames.length > 0; i++) {
+      t += 16;
+      const cb = frames.shift();
+      cb?.(t);
+      const match = /translateX\((-?[\d.]+)px\)/.exec(el.style.transform);
+      if (match) expect(Number(match[1])).toBeGreaterThanOrEqual(0);
+    }
+    // It did spring home (the flick kept it open).
+    expect(frames.length).toBe(0);
+    el.remove();
+  });
+});
+
 describe('RightPanel swipeToClose', () => {
   it('moves with the finger and closes on a long release', () => {
     const aside = renderPanel(true);
