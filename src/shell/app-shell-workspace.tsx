@@ -173,7 +173,11 @@ export function AppShellWorkspace({
           {children}
         </ShellMain>
         {!isMobile && resolvedRightPanel.panelViews.length > 0 && (
-          <RightPanel panelViews={staticPanelViews} defaultView={rightPanel?.defaultView} />
+          <RightPanel
+            panelViews={staticPanelViews}
+            defaultView={rightPanel?.defaultView}
+            swipeToClose={rightPanel?.swipeToClose}
+          />
         )}
       </div>
       {/* Mobile nav: opt-in floating dock + workspace sheet, else the legacy
