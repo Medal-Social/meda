@@ -58,6 +58,24 @@ export function shouldClosePanel(offset: number, width: number, velocity: number
 }
 
 /**
+ * Release speed (px/s, along x) from the samples of the last
+ * `VELOCITY_WINDOW_MS` before `now`, the lift included. A finger that rested
+ * before lifting has fewer than two recent samples and so no speed, whatever
+ * its last move was.
+ */
+export function releaseVelocity(
+  samples: ReadonlyArray<{ t: number; x: number }>,
+  now: number
+): number {
+  const recent = samples.filter((sample) => now - sample.t <= VELOCITY_WINDOW_MS);
+  const first = recent[0];
+  const last = recent[recent.length - 1];
+  if (!first || !last || recent.length < 2) return 0;
+  const dt = (last.t - first.t) / 1000;
+  return dt > 0 ? (last.x - first.x) / dt : 0;
+}
+
+/**
  * A critically-damped-ish spring from `from` to `to` with an initial velocity
  * (px/s), stepped on rAF. Returns a cancel function.
  */
@@ -128,13 +146,26 @@ interface Drag {
 
 export function usePanelSwipe(
   ref: RefObject<HTMLElement | null>,
-  { enabled, onClose }: { enabled: boolean; onClose: () => void }
+  {
+    enabled,
+    onClose,
+    resetKey,
+  }: {
+    enabled: boolean;
+    onClose: () => void;
+    /**
+     * A change (the panel's mode) cancels any drag or spring in flight, so an
+     * old closing spring cannot undo a newer choice.
+     */
+    resetKey?: unknown;
+  }
 ): void {
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `resetKey` is a trigger only; its change tears the gesture down
   useEffect(() => {
     const el = ref.current;
     if (!enabled || !el) return;
@@ -201,7 +232,8 @@ export function usePanelSwipe(
       }
       const now = event.timeStamp;
       drag.samples.push({ t: now, x: event.clientX });
-      while (drag.samples.length > 2 && now - (drag.samples[0]?.t ?? now) > VELOCITY_WINDOW_MS) {
+      // Keep one sample older than the window so a steady drag always has a span.
+      while (drag.samples.length > 2 && now - (drag.samples[1]?.t ?? now) > VELOCITY_WINDOW_MS) {
         drag.samples.shift();
       }
       const travel = drag.baseOffset + drag.sign * dx;
@@ -215,16 +247,19 @@ export function usePanelSwipe(
       drag = null;
       if (current.axis !== 'x') return;
       el.removeAttribute('data-meda-panel-swiping');
-      const first = current.samples[0];
-      const last = current.samples[current.samples.length - 1];
-      const dt = first && last ? (last.t - first.t) / 1000 : 0;
-      const velocity =
-        event.type === 'pointercancel' || !first || !last || dt <= 0
-          ? 0
-          : (current.sign * (last.x - first.x)) / dt;
+      const cancelled = event.type === 'pointercancel';
+      if (!cancelled) {
+        // The lift is a sample too: where the finger let go, and when.
+        current.samples.push({ t: event.timeStamp, x: event.clientX });
+        const travel = current.baseOffset + current.sign * (event.clientX - current.startX);
+        current.offset = panelSwipeOffset(travel, el.offsetWidth);
+        paint(current.offset, current.sign);
+      }
+      const velocity = cancelled
+        ? 0
+        : current.sign * releaseVelocity(current.samples, event.timeStamp);
       const width = el.offsetWidth;
-      const close =
-        event.type !== 'pointercancel' && shouldClosePanel(current.offset, width, velocity);
+      const close = !cancelled && shouldClosePanel(current.offset, width, velocity);
       const target = close ? width : 0;
       const done = () => {
         cancelSpring = null;
@@ -263,5 +298,5 @@ export function usePanelSwipe(
       el.removeEventListener('pointercancel', finish);
       reset();
     };
-  }, [enabled, ref]);
+  }, [enabled, ref, resetKey]);
 }

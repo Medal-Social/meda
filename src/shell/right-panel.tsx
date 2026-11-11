@@ -180,7 +180,11 @@ export function RightPanel({
   const asideRef = useRef<HTMLElement>(null);
   const swipeEnabled =
     swipeToClose && band !== 'mobile' && (mode === 'panel' || mode === 'expanded');
-  usePanelSwipe(asideRef, { enabled: swipeEnabled, onClose: () => setMode('closed') });
+  usePanelSwipe(asideRef, {
+    enabled: swipeEnabled,
+    onClose: () => setMode('closed'),
+    resetKey: mode,
+  });
 
   // On mobile, the right panel renders as a drawer via <MobileDrawers > PanelsDrawer />.
   // The desktop-shaped <RightPanel> hides; consumers must mount <MobileDrawers> to expose
@@ -247,8 +251,10 @@ export function RightPanel({
       className={cn(
         'relative h-full shrink-0 overflow-hidden border-l border-shell-border bg-shell-panel',
         mode === 'fullscreen' && 'fixed inset-0 h-screen w-screen border-none',
-        // The page keeps vertical scrolling; a sideways finger is the swipe's.
-        swipeEnabled && 'touch-pan-y',
+        // The page keeps vertical scrolling and pinch-zoom; a sideways finger
+        // is the swipe's. The body scroller repeats it below, because a
+        // browser reads touch-action only up to the nearest scroll container.
+        swipeEnabled && 'touch-pan-y touch-pinch-zoom',
         zIndexClass,
         className
       )}
@@ -323,7 +329,9 @@ export function RightPanel({
           </div>
 
           {/* Panel body */}
-          <div className="flex-1 overflow-y-auto">
+          <div
+            className={cn('flex-1 overflow-y-auto', swipeEnabled && 'touch-pan-y touch-pinch-zoom')}
+          >
             {activePanelView != null ? (
               activePanelView.render(renderCtx)
             ) : (

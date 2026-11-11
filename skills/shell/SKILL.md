@@ -90,7 +90,7 @@ what this prop replaces.
 toward its edge to close it. It is touch-only: mouse and pen keep the resize handle and buttons.
 The panel follows the finger 1:1 (no React render per move), rubber-bands when pulled inward,
 closes past 40% of its width or on a 500 px/s flick, and springs home otherwise. A finger can catch
-it mid-spring. While open it is `touch-action: pan-y`, so vertical scrolling inside stays native.
+it mid-spring. While open it and its body scroller are `touch-action: pan-y pinch-zoom`, so vertical scrolling and pinch-zoom stay native, and a horizontal scroller inside keeps its own panning.
 Fields, sliders, separators, horizontal scrollers and anything marked `data-meda-swipe-ignore`
 never start a swipe. The `aside` carries `--meda-panel-swipe-progress` (0 open, 1 gone) during the
 drag, so consumer CSS can fade the panel's shadow with it, and `data-meda-panel-swiping` while a

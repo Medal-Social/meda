@@ -6,6 +6,7 @@ import {
   PANEL_SWIPE_CLOSE_RATIO,
   PANEL_SWIPE_CLOSE_VELOCITY,
   panelSwipeOffset,
+  releaseVelocity,
   rubberband,
   shouldClosePanel,
 } from '../../../src/shell/internal/panel-swipe.js';
@@ -74,6 +75,30 @@ describe('panel swipe physics', () => {
     expect(shouldClosePanel(20, WIDTH, PANEL_SWIPE_CLOSE_VELOCITY)).toBe(true);
     // A flick back inward keeps it open even from far out.
     expect(shouldClosePanel(WIDTH * 0.8, WIDTH, -PANEL_SWIPE_CLOSE_VELOCITY)).toBe(false);
+  });
+});
+
+describe('release velocity', () => {
+  it('reads the last 100 ms, lift included', () => {
+    const samples = [
+      { t: 0, x: 0 },
+      { t: 950, x: 100 },
+      { t: 1000, x: 140 },
+    ];
+    // 40 px over 50 ms = 800 px/s; the sample at 0 is outside the window.
+    expect(releaseVelocity(samples, 1000)).toBeCloseTo(800);
+  });
+
+  it('is zero for a finger that rested before lifting', () => {
+    // A fast move, then a 1 s pause, then the lift where the finger rested.
+    const samples = [
+      { t: 0, x: 0 },
+      { t: 50, x: 100 },
+      { t: 1050, x: 100 },
+    ];
+    expect(releaseVelocity(samples, 1050)).toBe(0);
+    // Without the lift sample, nothing recent is left either.
+    expect(releaseVelocity(samples.slice(0, 2), 1050)).toBe(0);
   });
 });
 
@@ -181,6 +206,40 @@ describe('RightPanel swipeToClose', () => {
     expect(shell?.panel.mode).toBe('panel');
     drag(aside.querySelector('[data-testid="body"]') as Element, 500, 800, { type: 'mouse' })();
     expect(shell?.panel.mode).toBe('panel');
+  });
+
+  it('takes the lift position into the close decision', () => {
+    const aside = renderPanel(true);
+    const body = aside.querySelector('[data-testid="body"]') as Element;
+    const pointer = { pointerId: 1, pointerType: 'touch' };
+    vi.useFakeTimers({ toFake: ['Date'] });
+    fireEvent.pointerDown(body, { ...pointer, clientX: 500, clientY: 100 });
+    vi.advanceTimersByTime(200);
+    fireEvent.pointerMove(body, { ...pointer, clientX: 520, clientY: 100 });
+    vi.advanceTimersByTime(400);
+    // The last stretch arrives only with the lift: 520 → 700 is past 40%.
+    act(() => {
+      fireEvent.pointerUp(body, { ...pointer, clientX: 700, clientY: 100 });
+    });
+    vi.useRealTimers();
+    expect(shell?.panel.mode).toBe('closed');
+  });
+
+  it('drops a half-finished swipe when the mode changes', () => {
+    const aside = renderPanel(true);
+    drag(aside.querySelector('[data-testid="body"]') as Element, 500, 600);
+    vi.useRealTimers();
+    expect(aside.style.transform).toBe('translateX(100px)');
+    act(() => shell?.panel.setMode('expanded'));
+    expect(aside.style.transform).toBe('');
+    expect(shell?.panel.mode).toBe('expanded');
+  });
+
+  it('keeps vertical scrolling and pinch-zoom on the panel and its body scroller', () => {
+    const aside = renderPanel(true);
+    expect(aside).toHaveClass('touch-pan-y', 'touch-pinch-zoom');
+    const scroller = aside.querySelector('.overflow-y-auto') as HTMLElement;
+    expect(scroller).toHaveClass('touch-pan-y', 'touch-pinch-zoom');
   });
 
   it('is off unless asked for', () => {
