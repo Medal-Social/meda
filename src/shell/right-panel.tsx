@@ -20,6 +20,7 @@ import { Maximize2, Minimize2, X } from 'lucide-react';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { cn } from '../lib/utils.js';
+import { usePanelSwipe } from './internal/panel-swipe.js';
 import { useResolvedPanelViews } from './panel-views-provider.js';
 import { useMedaShell } from './shell-provider.js';
 import type { PanelMode, PanelView, ShellRenderContext } from './types.js';
@@ -50,6 +51,12 @@ export interface RightPanelProps {
   modes?: PanelMode[];
   renderTab?: (args: RightPanelTabRenderArgs) => ReactNode;
   className?: string;
+  /**
+   * A finger drags the open panel toward its edge to close it (touch only;
+   * mouse and pen are unchanged). Meant for a layout where the panel lies
+   * over the content, such as a tablet. See `internal/panel-swipe.ts`.
+   */
+  swipeToClose?: boolean;
 }
 
 export interface RightPanelTabRenderArgs {
@@ -136,6 +143,7 @@ export function RightPanel({
   modes = ['panel', 'expanded', 'fullscreen'],
   renderTab,
   className,
+  swipeToClose = false,
 }: RightPanelProps) {
   const band = useShellViewport();
   const ctx = useMedaShell();
@@ -168,6 +176,15 @@ export function RightPanel({
   // setWidth (persist) is called on pointerUp.
   const [displayWidth, setDisplayWidth] = useState<number | null>(null);
   const resolvedWidth = displayWidth ?? width;
+
+  const asideRef = useRef<HTMLElement>(null);
+  const swipeEnabled =
+    swipeToClose && band !== 'mobile' && (mode === 'panel' || mode === 'expanded');
+  usePanelSwipe(asideRef, {
+    enabled: swipeEnabled,
+    onClose: () => setMode('closed'),
+    resetKey: mode,
+  });
 
   // On mobile, the right panel renders as a drawer via <MobileDrawers > PanelsDrawer />.
   // The desktop-shaped <RightPanel> hides; consumers must mount <MobileDrawers> to expose
@@ -225,6 +242,7 @@ export function RightPanel({
 
   return (
     <aside
+      ref={asideRef}
       data-meda-panel-mode={mode}
       aria-hidden={mode === 'closed' ? 'true' : undefined}
       // No width transition: ⌘I / ⌘E are keyboard actions used many times a
@@ -233,6 +251,10 @@ export function RightPanel({
       className={cn(
         'relative h-full shrink-0 overflow-hidden border-l border-shell-border bg-shell-panel',
         mode === 'fullscreen' && 'fixed inset-0 h-screen w-screen border-none',
+        // The page keeps vertical scrolling and pinch-zoom; a sideways finger
+        // is the swipe's. The body scroller repeats it below, because a
+        // browser reads touch-action only up to the nearest scroll container.
+        swipeEnabled && 'touch-pan-y touch-pinch-zoom',
         zIndexClass,
         className
       )}
@@ -307,7 +329,9 @@ export function RightPanel({
           </div>
 
           {/* Panel body */}
-          <div className="flex-1 overflow-y-auto">
+          <div
+            className={cn('flex-1 overflow-y-auto', swipeEnabled && 'touch-pan-y touch-pinch-zoom')}
+          >
             {activePanelView != null ? (
               activePanelView.render(renderCtx)
             ) : (

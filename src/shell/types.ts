@@ -262,6 +262,12 @@ export interface AppShellRightPanelConfig {
    * dropping the header control.
    */
   showToggle?: boolean;
+  /**
+   * A finger drags the open panel toward its edge to close it (touch only).
+   * Defaults to `false`. Turn it on where the panel lies over the content,
+   * such as a tablet layout.
+   */
+  swipeToClose?: boolean;
 }
 
 /**
