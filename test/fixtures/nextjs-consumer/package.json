@@ -11,13 +11,13 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@medalsocial/meda": "file:../../..",
     "@xyflow/react": "^12.12.0",
-    "lucide-react": "^1.48.0",
-    "next": "16.3.6",
+    "lucide-react": "^1.63.0",
+    "next": "16.4.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@types/node": "26.6.3",
+    "@types/node": "26.6.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "typescript": "~7.0.2"
