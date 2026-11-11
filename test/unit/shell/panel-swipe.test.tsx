@@ -7,7 +7,6 @@ import {
   PANEL_SWIPE_CLOSE_VELOCITY,
   panelSwipeOffset,
   releaseVelocity,
-  rubberband,
   shouldClosePanel,
   usePanelSwipe,
 } from '../../../src/shell/internal/panel-swipe.js';
@@ -53,21 +52,12 @@ beforeEach(() => {
 });
 
 describe('panel swipe physics', () => {
-  it('rubber-bands an inward pull, ever more stiffly', () => {
-    expect(rubberband(0, WIDTH)).toBe(0);
-    const small = rubberband(40, WIDTH);
-    const large = rubberband(400, WIDTH);
-    expect(small).toBeGreaterThan(0);
-    expect(small).toBeLessThan(40);
-    expect(large - small).toBeLessThan(400 - 40);
-    expect(rubberband(1e6, WIDTH)).toBeLessThan(WIDTH);
-  });
-
   it('follows the finger 1:1 toward the edge, never past the width', () => {
     expect(panelSwipeOffset(120, WIDTH)).toBe(120);
     expect(panelSwipeOffset(WIDTH + 50, WIDTH)).toBe(WIDTH);
-    expect(panelSwipeOffset(-60, WIDTH)).toBeLessThan(0);
-    expect(panelSwipeOffset(-60, WIDTH)).toBeGreaterThan(-60);
+    // Pulled inward it stays on its edge: no strip of the page behind it.
+    expect(panelSwipeOffset(-60, WIDTH)).toBe(0);
+    expect(panelSwipeOffset(-1000, WIDTH)).toBe(0);
   });
 
   it('closes past 40% of the width or on a 500 px/s flick, else springs home', () => {

@@ -5,7 +5,8 @@
  *
  * A finger drags the panel toward its own edge 1:1: the transform is written
  * straight to the element, so React never renders during a drag. Pulled the
- * other way it rubber-bands. On release it closes past 40% of its width or a
+ * other way it stays put: the panel is pinned to that edge, and moving it inward
+ * would open a strip of whatever lies behind it. On release it closes past 40% of its width or a
  * 500 px/s flick toward the edge, and otherwise springs home; a finger that
  * lands while it is still moving catches it where it is.
  *
@@ -33,21 +34,11 @@ const IGNORE_SELECTOR =
   'input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="slider"], [role="separator"], [data-meda-swipe-ignore]';
 
 /**
- * Rubber band past a limit (iOS's curve): the further the overshoot, the less
- * each pixel of finger travel moves the panel, approaching `dimension * 0.55`.
- */
-export function rubberband(overshoot: number, dimension: number, constant = 0.55): number {
-  if (overshoot <= 0 || dimension <= 0) return 0;
-  return (1 - 1 / ((overshoot * constant) / dimension + 1)) * dimension;
-}
-
-/**
- * Where a drag puts the panel: `travel` is finger travel toward the edge (a
- * negative value pulls it inward). Returns the visual offset toward the edge.
+ * Where a drag puts the panel: `travel` is finger travel toward the edge. An
+ * inward pull (negative travel) holds it at 0, never off its edge.
  */
 export function panelSwipeOffset(travel: number, width: number): number {
-  if (travel >= 0) return Math.min(travel, width);
-  return -rubberband(-travel, width);
+  return Math.max(0, Math.min(travel, width));
 }
 
 /** The release decision. `velocity` is px/s toward the edge. */
