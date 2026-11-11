@@ -264,9 +264,10 @@ export function usePanelSwipe(
       const done = () => {
         cancelSpring = null;
         if (close) {
+          // Stay off-screen until the closed mode commits: its change of
+          // `enabled`/`resetKey` runs this effect's cleanup, which resets.
+          // Resetting here would paint the panel back for a frame first.
           onCloseRef.current();
-          // The panel is closed at width 0 now; drop the transform for the next open.
-          reset();
         } else {
           reset();
         }

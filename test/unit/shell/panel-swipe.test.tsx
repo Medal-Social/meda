@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render, renderHook } from '@testing-library/react';
 import { Info } from 'lucide-react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -9,6 +9,7 @@ import {
   releaseVelocity,
   rubberband,
   shouldClosePanel,
+  usePanelSwipe,
 } from '../../../src/shell/internal/panel-swipe.js';
 import { RightPanel } from '../../../src/shell/right-panel.js';
 import { MedaShellProvider, useMedaShell } from '../../../src/shell/shell-provider.js';
@@ -180,6 +181,27 @@ describe('RightPanel swipeToClose', () => {
     release();
     expect(shell?.panel.mode).toBe('closed');
     expect(aside.style.transform).toBe('');
+  });
+
+  it('stays off-screen after a close until the closed mode commits, never painting back first', () => {
+    const el = document.createElement('div');
+    const child = document.createElement('p');
+    el.appendChild(child);
+    document.body.appendChild(el);
+    const ref = { current: el };
+    const onClose = vi.fn();
+    const { rerender } = renderHook(
+      ({ enabled }) => usePanelSwipe(ref, { enabled, onClose, resetKey: 'panel' }),
+      { initialProps: { enabled: true } }
+    );
+    drag(child, 500, 700)();
+    // onClose ran, but nothing has re-rendered the closed panel yet.
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(el.style.transform).toBe(`translateX(${WIDTH}px)`);
+    // The closed mode turns the swipe off: the cleanup clears it.
+    rerender({ enabled: false });
+    expect(el.style.transform).toBe('');
+    el.remove();
   });
 
   it('springs home on a short release', () => {
